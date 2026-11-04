@@ -2773,4 +2773,13 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.ReviewMethodologyTemplateDraft))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.ApproveMethodologyTemplateDraft))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.DiscardMethodologyTemplateDraft))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Events.MethodologyTemplateCreatedV4))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Events.MethodologyTemplateVersionPublishedV4))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Events.MethodologyTemplateDraftClosed))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Events.MethodologyTemplateRetiredV4))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.StartMethodologyTemplateDraft))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.PublishMethodologyTemplateVersion))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.CloseMethodologyTemplateDraft))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Commands.RecordCorrectiveActionOutcome))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Events.FindingCorrectiveActionResolved))]
 sealed partial class ComplianceCoreJsonContext : JsonSerializerContext;

@@ -207,6 +207,7 @@ sealed class OperationsFixture
                 .AddRequestHandler<AddCorrectiveActionHandler>()
                 .AddRequestHandler<CompleteCorrectiveActionHandler>()
                 .AddRequestHandler<CancelCorrectiveActionHandler>()
+                .AddRequestHandler<RecordCorrectiveActionOutcomeHandler>()
                 .AddRequestHandler<LinkFindingAcceptanceHandler>()
                 .AddRequestHandler<CloseFindingHandler>()
                 .AddRequestHandler<ReopenFindingHandler>()
@@ -554,10 +555,42 @@ sealed class OperationsFixture
     }
 
     /// <summary>Completes an action with one evidence reference and returns the finding view.</summary>
-    public Task<FindingView> CompleteActionAsync(Uuid userId, FindingView finding, Uuid actionId,
-        string notes = "Access removed.") => AsAsync(userId, new CompleteCorrectiveAction(Uuid.CreateVersion4(), TenantId,
-        ProgramId, finding.FindingId, finding.CorrectiveActions.Single(item => item.ActionId == actionId).Revision,
-        actionId, notes, [new EvidenceReference(0, "external", "ticket-1", "Removal ticket", "unresolved")]));
+    public async Task<FindingView> CompleteActionAsync(Uuid userId, FindingView finding, Uuid actionId,
+        string notes = "Access removed.")
+    {
+        await AsAsync(userId, new CompleteCorrectiveAction(Uuid.CreateVersion4(), TenantId,
+            ProgramId, finding.FindingId, finding.CorrectiveActions.Single(item => item.ActionId == actionId).Revision,
+            actionId, notes, [new EvidenceReference(0, "external", "ticket-1", "Removal ticket", "unresolved")]));
+        return await ReportCorrectiveActionOutcomesAsync(finding.FindingId);
+    }
+
+    /// <summary>Delivers original committed action outcomes through the real business reactor.</summary>
+    public async Task<FindingView> ReportCorrectiveActionOutcomesAsync(Uuid findingId)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        var reactor = new Bdgrz.Compliance.Features.Remediation.Reactors.CorrectiveActionOutcomeReactor(
+            new InMemoryProjectionCheckpointStore(), scope.ServiceProvider.GetRequiredService<IRequestBus>(),
+            scope.ServiceProvider.GetRequiredService<ISourceFactResolver>(), Content);
+        await new ReactorScenario(new TenantId(TenantId.ToString())).RunAsync(reactor);
+        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(),
+                           CorrectiveAction.Area), EventCursor.Start, CancellationToken.None))
+        {
+            Result? reported = record.Event switch
+            {
+                Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCompletedV2 fact
+                    when fact.ProgramId == ProgramId && fact.FindingId == findingId =>
+                    await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCompletedV2>(record), CancellationToken.None),
+                Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCancelled fact
+                    when fact.ProgramId == ProgramId && fact.FindingId == findingId =>
+                    await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCancelled>(record), CancellationToken.None),
+                _ => null,
+            };
+            if (reported is { } result)
+                Assert.True(result.IsSuccess, result.Error?.Message);
+        }
+        return await GetFindingAsync(findingId);
+    }
 
     public CompleteCorrectiveAction Complete(FindingView finding, Uuid actionId, string notes,
         IReadOnlyList<EvidenceReference> evidence) => new(Uuid.CreateVersion4(), TenantId, ProgramId, finding.FindingId,
@@ -572,7 +605,11 @@ sealed class OperationsFixture
     /// <summary>Accepts a closure as a reviewer over personal HTTP, runs its process, and returns the finding view.</summary>
     public async Task<FindingView> CloseAsync(Uuid userId, FindingView finding, Uuid? waiverId = null)
     {
-        var request = Close(finding, waiverId);
+        var before = await GetFindingAsync(finding.FindingId);
+        var reported = await ReportCorrectiveActionOutcomesAsync(finding.FindingId);
+        // Account only for delivery performed by this helper; preserve any pre-existing stale revision.
+        var request = Close(finding, waiverId,
+            expectedRevision: finding.Revision + reported.Revision - before.Revision);
         var accepted = await PersonalReadinessClosureTransportTests.CloseHttpAsync(Provider, userId, request);
         Assert.True(accepted.IsSuccess, accepted.Error?.Message);
         await RunClosureAsync(finding.FindingId, request.CommandId);

@@ -106,6 +106,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ListPlatformOperators>(tool => tool.ReadOnly())
         .AddMcpTool<ReviseMethodologyTemplateDraftV3>(tool => tool.Idempotent())
         .AddMcpTool<DiscardMethodologyTemplateDraft>(tool => tool.Destructive())
+        .AddMcpTool<StartMethodologyTemplateDraft>(tool => tool.Idempotent())
         .AddMcpTool<GetWorkDigestDispatchStatus>(tool => tool.ReadOnly())
         .AddMcpTool<InviteTenantMember>(tool => tool.Idempotent())
         .AddMcpTool<InviteOrganizationMember>(tool => tool.Idempotent())
@@ -577,6 +578,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Platform operators");
     app.MapPortiaPut<ReviseMethodologyTemplateDraftV3>(
             "/api/v1/platform/methodology-templates/{template_id}/drafts/{draft_id}/revisions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseMethodologyTemplateDraftV3>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Methodology templates");
+    app.MapPortiaPut<StartMethodologyTemplateDraft>(
+            "/api/v1/platform/methodology-templates/{template_id}/drafts/{draft_id}/starts/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<StartMethodologyTemplateDraft>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Methodology templates");
     app.MapPortiaPut<ReviewMethodologyTemplateDraft>(

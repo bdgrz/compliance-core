@@ -156,7 +156,7 @@ checks. The inspected inventory adds 12 facts (one explicit line-start producer
 gap), one owner and six registered requests. Counts describe source navigation,
 not whole-domain completion. PR [#1181](https://github.com/bdgrz/compliance-core/pull/1181) passed exact-head
 Backend CI and merged to main as `7df499fd`. The integration merge preserved the
-next source batch byte-for-byte; post-merge main CI is separate and pending.
+next source batch byte-for-byte; post-merge main CI also passed.
 
 ## Next source batch (unvalidated)
 
@@ -175,3 +175,26 @@ Both slices received live Jev source review (`jev-1.14.0`). These source checkpo
 are not compiled/tested acceptance. AW-09 finding-owned corrective outcomes and
 methodology line choreography are being prepared independently. No new local .NET
 run will start until sufficient source and central wiring are assembled.
+
+### Batch 3 assembled source checkpoint
+
+Prepared source now includes 104 authored cases across human draft commands (14),
+line start/publish/discard choreography (21), initial workforce provenance (19),
+initial lifecycle/sponsor admission (22), and finding-owned action outcomes (28).
+No pre-implementation execution or RED is claimed for this batch. All source slices
+received live Jev review before assembly. Central handlers, authorizers, JSON,
+reactors, HTTP/MCP and native response wiring are assembled.
+
+The Operations fixture now delivers original committed action records through the
+real outcome reactor; direct Complete/Cancel still leave a reporting-lag window.
+Close convenience accounts only for revisions appended by its own delivery,
+preserving prior staleness: expected-after minus actual-after equals supplied-before
+minus actual-before. This direct source/algebra check resolved Jev's uncertain
+0.34 staleness candidate; runtime qualification is pending. Other assembled adverse
+questions ranged 0.04–0.22. Personal draft review/approval have no MCP registration.
+
+New-line public creation/name admission, retirement transport, truthful V4 reads
+and ordered application support remain explicit; legacy DTO attribution is not
+fabricated. New line producers are present in this source batch. Generic workforce
+revision retirement is a separate next slice. Full compiled/behavioral acceptance
+will be recorded after the combined checkpoint.
