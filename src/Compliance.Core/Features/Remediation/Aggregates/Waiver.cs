@@ -220,7 +220,7 @@ public sealed class Waiver : Aggregate
         return canonical.Distinct().Count() == canonical.Length ? canonical : null;
     }
 
-    static IReadOnlyList<WaiverScopeRecord> Snapshot(IEnumerable<WaiverScopeRecord> scope) =>
+    static System.Collections.ObjectModel.ReadOnlyCollection<WaiverScopeRecord> Snapshot(IEnumerable<WaiverScopeRecord> scope) =>
         Array.AsReadOnly(scope.ToArray());
 
     static RequestError Invalid(string message) => new(RequestErrorKind.Validation, message);
