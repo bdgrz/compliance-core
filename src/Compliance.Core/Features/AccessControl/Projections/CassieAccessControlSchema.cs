@@ -11,7 +11,7 @@ static class CassieAccessControlSchema
         "CREATE TABLE IF NOT EXISTS access_role_permissions (row_key TEXT PRIMARY KEY, projection_key TEXT NOT NULL, role_id TEXT NOT NULL, permission TEXT NOT NULL, assignment_id TEXT NOT NULL, revision TEXT NOT NULL)",
         "CREATE TABLE IF NOT EXISTS access_role_teams (row_key TEXT PRIMARY KEY, projection_key TEXT NOT NULL, role_id TEXT NOT NULL, team_id TEXT NOT NULL, assignment_id TEXT NOT NULL, revision TEXT NOT NULL)",
         "CREATE TABLE IF NOT EXISTS access_team_roles (row_key TEXT PRIMARY KEY, projection_key TEXT NOT NULL, team_id TEXT NOT NULL, role_id TEXT NOT NULL, assignment_id TEXT NOT NULL, revision TEXT NOT NULL)",
-        "CREATE TABLE IF NOT EXISTS access_permission_states (projection_key TEXT PRIMARY KEY, payload JSONB NOT NULL)",
+        "CREATE TABLE IF NOT EXISTS access_permission_states (projection_key TEXT PRIMARY KEY, payload TEXT NOT NULL)",
         "CREATE TABLE IF NOT EXISTS access_permission_grants (row_key TEXT PRIMARY KEY, projection_key TEXT NOT NULL, member_id TEXT NOT NULL, permission TEXT NOT NULL)",
         "CREATE INDEX IF NOT EXISTS access_team_members_by_team ON access_team_members USING btree (projection_key, team_id, member_id)",
         "CREATE INDEX IF NOT EXISTS access_role_permissions_by_role ON access_role_permissions USING btree (projection_key, role_id, permission)",
