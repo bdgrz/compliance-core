@@ -94,6 +94,33 @@ public sealed class CustomRoleLifecycleTests
     }
 
     [Fact]
+    public void ShouldKeepProgramRoleOutOfOrganizationPermissionGivenScopedAssignment()
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
+        var member = RbacIds.Member(tenant, user);
+        var team = Uuid.CreateVersion4();
+        var role = Uuid.CreateVersion4();
+        var scope = new AccessGrantScope(AccessGrantScopeKind.Program, Uuid.CreateVersion4());
+        var state = new PermissionProjectionState();
+        state.Apply(MemberFacts.Registered(tenant, member, user));
+        state.Apply(RbacFacts.TeamDefinedFact(tenant, team, "Reviewers"));
+        state.Apply(RbacFacts.RoleDefinedFact(tenant, role, "Control reviewers"));
+        state.Apply(TeamMemberFacts.Assigned(tenant, team, member));
+        state.Apply(RbacTeamRoleFacts.Assigned(tenant, team, role) with { Scope = scope });
+        state.Apply(RbacPermissionFacts.Assigned(tenant, role, RbacPermissions.ProgramManage));
+
+        // Act
+        var grants = state.Materialize();
+        var explanation = state.Explain(member);
+
+        // Assert
+        Assert.Empty(grants);
+        Assert.Equal(scope, Assert.Single(explanation).Scope);
+    }
+
+    [Fact]
     public void ShouldMaterializeCustomRolePermissionGivenActiveTeamAndRole()
     {
         // Arrange
