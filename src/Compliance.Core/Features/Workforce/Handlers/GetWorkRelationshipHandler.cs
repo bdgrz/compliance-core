@@ -25,7 +25,8 @@ namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 ///     the <c>workforce.manager_chain</c> field grant (M0-D06).
 /// </summary>
 public sealed class GetWorkRelationshipHandler(WorkRelationshipReadConsistency consistency,
-    IPermissionAuthorizer permissions) : IRequestHandler<GetWorkRelationship, WorkRelationshipView>
+    IPermissionAuthorizer permissions, WorkRelationshipSponsorship sponsorship)
+    : IRequestHandler<GetWorkRelationship, WorkRelationshipView>
 {
     public async ValueTask<Result<WorkRelationshipView>> HandleAsync(
         IRequestContext<GetWorkRelationship> context, CancellationToken ct)
@@ -35,6 +36,10 @@ public sealed class GetWorkRelationshipHandler(WorkRelationshipReadConsistency c
             request.MinimumRevision, ct).ConfigureAwait(false);
         if (!view.IsSuccess)
             return view;
+        var evaluated = await sponsorship.EvaluateAsync(request.TenantId, [view.Value], ct).ConfigureAwait(false);
+        if (!evaluated.IsSuccess)
+            return Result<WorkRelationshipView>.Failure(evaluated.Error);
+        view = Result<WorkRelationshipView>.Success(evaluated.Value[0]);
         var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
             ? subject
             : throw new InvalidOperationException("WorkforceAuthorizer must reject this actor.");

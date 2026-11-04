@@ -206,6 +206,7 @@ sealed class OperationsFixture
                 .AddRequestHandler<ReviseFindingHandler>()
                 .AddRequestHandler<AddCorrectiveActionHandler>()
                 .AddRequestHandler<CompleteCorrectiveActionHandler>()
+                .AddRequestHandler<CancelCorrectiveActionHandler>()
                 .AddRequestHandler<LinkFindingAcceptanceHandler>()
                 .AddRequestHandler<CloseFindingHandler>()
                 .AddRequestHandler<ReopenFindingHandler>()

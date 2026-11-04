@@ -9,7 +9,9 @@ public sealed partial class WorkforceObservationProjector(IWorkforceObservationP
             "WorkforceObservationsV1"),
       IProjectorHandler<WorkRelationshipRecorded>, IProjectorHandler<WorkRelationshipRevised>,
       IProjectorHandler<WorkRelationshipStarted>, IProjectorHandler<WorkRelationshipLeaveStarted>,
-      IProjectorHandler<WorkRelationshipLeaveEnded>, IProjectorHandler<WorkRelationshipEnded>
+      IProjectorHandler<WorkRelationshipLeaveEnded>, IProjectorHandler<WorkRelationshipEnded>,
+      IProjectorHandler<WorkRelationshipManagerChanged>, IProjectorHandler<WorkRelationshipDepartmentChanged>,
+      IProjectorHandler<WorkRelationshipSponsorChanged>, IProjectorHandler<WorkRelationshipDatesCorrected>
 {
     public async ValueTask<Result> HandleAsync(IProjectorContext<WorkRelationshipRecorded> context,
         CancellationToken ct)
@@ -49,6 +51,34 @@ public sealed partial class WorkforceObservationProjector(IWorkforceObservationP
     }
 
     public async ValueTask<Result> HandleAsync(IProjectorContext<WorkRelationshipEnded> context,
+        CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<WorkRelationshipManagerChanged> context,
+        CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<WorkRelationshipDepartmentChanged> context,
+        CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<WorkRelationshipSponsorChanged> context,
+        CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<WorkRelationshipDatesCorrected> context,
         CancellationToken ct)
     {
         await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);

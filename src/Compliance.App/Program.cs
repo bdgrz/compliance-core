@@ -273,6 +273,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<StartLeave>(tool => tool.Idempotent())
         .AddMcpTool<EndLeave>(tool => tool.Idempotent())
         .AddMcpTool<EndWorkRelationship>(tool => tool.Idempotent())
+        .AddMcpTool<ChangeManager>(tool => tool.Idempotent())
+        .AddMcpTool<ChangeDepartment>(tool => tool.Idempotent())
+        .AddMcpTool<ChangeSponsor>(tool => tool.Idempotent())
+        .AddMcpTool<CorrectWorkRelationshipDates>(tool => tool.Idempotent())
         .AddMcpTool<GetWorkRelationship>(tool => tool.ReadOnly())
         .AddMcpTool<ListWorkRelationships>(tool => tool.ReadOnly())
         .AddMcpTool<ListWorkforceObservations>(tool => tool.ReadOnly())
@@ -388,8 +392,9 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetControlEvaluation>(tool => tool.ReadOnly())
         .AddMcpTool<ListControlEvaluations>(tool => tool.ReadOnly())
         .AddMcpTool<RaiseFinding>()
+        .AddMcpTool<CancelCorrectiveAction>(tool => tool.Idempotent())
         .AddMcpTool<RequestWaiver>(tool => tool.Idempotent())
-        .AddMcpTool<Bdgrz.Compliance.Features.Remediation.Queries.GetWaiver>()
+        .AddMcpTool<Bdgrz.Compliance.Features.Remediation.Queries.GetWaiver>(tool => tool.ReadOnly())
         .AddMcpTool<GetFinding>(tool => tool.ReadOnly())
         .AddMcpTool<ListFindings>(tool => tool.ReadOnly())
         .AddMcpTool<OpenEvidenceRequest>()
@@ -1613,6 +1618,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<CompleteCorrectiveAction>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
+    app.MapPortiaPut<CancelCorrectiveAction, FindingView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/cancellations/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<CancelCorrectiveAction>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Findings");
     app.MapPortiaPut<LinkFindingAcceptance, FindingView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<LinkFindingAcceptance>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
@@ -2043,6 +2052,22 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Workforce");
     app.MapPortiaPost<EndWorkRelationship>(
             "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}/end", config => config.OnNativeResult()).WithNativeFirstResponse<EndWorkRelationship>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<ChangeManager>(
+            "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}/manager", config => config.OnNativeResult()).WithNativeFirstResponse<ChangeManager>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<ChangeDepartment>(
+            "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}/department", config => config.OnNativeResult()).WithNativeFirstResponse<ChangeDepartment>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<ChangeSponsor>(
+            "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}/sponsor", config => config.OnNativeResult()).WithNativeFirstResponse<ChangeSponsor>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<CorrectWorkRelationshipDates>(
+            "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}/dates/correction", config => config.OnNativeResult()).WithNativeFirstResponse<CorrectWorkRelationshipDates>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
     app.MapPortiaGet<GetWorkRelationship, WorkRelationshipView>(

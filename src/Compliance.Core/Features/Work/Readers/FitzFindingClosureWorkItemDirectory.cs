@@ -136,9 +136,13 @@ sealed class FitzFindingClosureWorkItemDirectory(IKvClient client,
                     finding.FindingId == Uuid.Empty || finding.OwnerMemberId == Uuid.Empty ||
                     finding.Revision < 1 || finding.Actions is null || finding.Actions.Any(static action =>
                         action is null || action.OwnerMemberId == Uuid.Empty || action.ActionId == Uuid.Empty ||
-                        action.Status is not (FindingStates.Open or FindingStates.Completed) ||
+                        action.Status is not (FindingStates.Open or FindingStates.Completed or FindingStates.Cancelled) ||
                         action.Status == FindingStates.Completed &&
-                        (action.CompletedByMemberId is null || action.CompletedByMemberId == Uuid.Empty)))
+                        (action.CompletedByMemberId is null || action.CompletedByMemberId == Uuid.Empty) ||
+                        action.Status == FindingStates.Cancelled &&
+                        (action.CancelledByMemberId is null || action.CancelledByMemberId == Uuid.Empty ||
+                         string.IsNullOrWhiteSpace(action.CancellationReason) ||
+                         action.CancellationReason.Length > 4000 || action.CompletedByMemberId is not null)))
                     return Result<IReadOnlyList<WorkCandidate>>.Failure(new RequestError(
                         RequestErrorKind.Conflict, "The finding closure work projection has invalid source scope."));
                 if (FindingClosureWork.Candidate(finding) is { } candidate)
@@ -152,7 +156,8 @@ sealed class FitzFindingClosureWorkItemDirectory(IKvClient client,
     static FindingClosureWorkState Project(FindingView view) => new(view.TenantId, view.ProgramId, view.FindingId,
         view.Revision, view.Title, view.Severity, view.OwnerMemberId, view.DueOn,
         view.CorrectiveActions.Select(static action => new FindingClosureActionState(action.ActionId,
-            action.OwnerMemberId, action.Status, action.CompletedByMemberId)).ToArray(),
+            action.OwnerMemberId, action.Status, action.CompletedByMemberId, action.CancelledByMemberId,
+            action.CancellationReason)).ToArray(),
         view.Closure is not null, view.History.Max(static entry => entry.At));
 
     static bool SameCandidates(WorkCandidate[] expected, IReadOnlyList<WorkCandidate> actual) =>

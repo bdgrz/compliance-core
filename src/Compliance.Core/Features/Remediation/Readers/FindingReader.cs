@@ -128,10 +128,12 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
         foreach (var (completed, _) in completions)
         {
             // A completion belongs after the last finding fact that did not happen after it.
-            var at = completed.CompletedAt!.Value;
+            var at = completed.CompletedAt ?? completed.CancelledAt!.Value;
             var position = history.FindLastIndex(item => item.Entry.At <= at) + 1;
-            history.Insert(position, (new FindingHistoryEntryView(completed.Revision, "corrective_action_completed",
-                completed.ResolutionNotes!, completed.CompletedBy!, at), -1));
+            var change = completed.Status == FindingStates.Cancelled
+                ? "corrective_action_cancelled" : "corrective_action_completed";
+            history.Insert(position, (new FindingHistoryEntryView(completed.Revision, change,
+                completed.ResolutionNotes ?? completed.CancellationReason!, completed.CompletedBy ?? completed.CancelledBy!, at), -1));
         }
 
         var view = new FindingView(tenant, raised.ProgramId, raised.FindingId, finding.Revision, raised.Source,
@@ -233,6 +235,19 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
         if (!action.IsMaterialized)
             return (open, null);
         open = open with { Revision = action.Revision };
+        if (action.Cancelled is { } cancelled)
+        {
+            var resolved = open with
+            {
+                Status = FindingStates.Cancelled,
+                CancellationReason = cancelled.Reason,
+                CancelledByMemberId = cancelled.CancelledByMemberId,
+                CancelledBy = cancelled.CancelledBy,
+                CancelledAt = cancelled.CancelledAt,
+                Revision = cancelled.Revision,
+            };
+            return (resolved, resolved);
+        }
         if (action.Completed is not { } completed)
             return (open, null);
         var evidence = await FindingContent.ReadAsync<IReadOnlyList<Operations.Models.EvidenceReference>>(content,

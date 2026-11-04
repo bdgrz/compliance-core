@@ -478,6 +478,7 @@ public sealed class WorkforceSourceHandlerTests
                     services.AddSingleton<IWorkforceSourceDirectoryReader>(fixture.Sources);
                     services.AddScoped<PersonReadConsistency>();
                     services.AddScoped<WorkRelationshipReadConsistency>();
+                    services.AddScoped<WorkRelationshipSponsorship>();
                     services.AddScoped<ServiceIdentityReadConsistency>();
                     services.AddScoped<WorkforceSourceReadConsistency>();
                     services.AddScoped<WorkforceSourceTargets>();

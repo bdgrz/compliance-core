@@ -36,7 +36,7 @@ static class FindingViews
             State = acceptance.ExpiresAt > now ? "active" : "expired",
         }).ToArray();
         var remediated = view.CorrectiveActions.Count > 0 &&
-                         view.CorrectiveActions.All(static action => action.Status == FindingStates.Completed);
+                         view.CorrectiveActions.All(static action => action.Status is FindingStates.Completed or FindingStates.Cancelled);
         var status = view.Closure is not null ? FindingStates.Closed
             : remediated ? FindingStates.Remediated
             : FindingStates.Open;
@@ -101,4 +101,13 @@ static class FindingViews
         }, now);
 
     public static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    public static FindingView WithCancelledAction(FindingView view, CorrectiveActionView action, DateTimeOffset now) =>
+        Settle(view with
+        {
+            CorrectiveActions = view.CorrectiveActions.Select(item => item.ActionId == action.ActionId ? action : item)
+                .ToArray(),
+            History = [.. view.History, new FindingHistoryEntryView(action.Revision, "corrective_action_cancelled",
+                action.CancellationReason!, action.CancelledBy!, action.CancelledAt!.Value)],
+        }, now);
 }

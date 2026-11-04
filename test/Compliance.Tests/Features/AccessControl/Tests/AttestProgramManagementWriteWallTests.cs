@@ -151,7 +151,7 @@ public sealed class AttestProgramManagementWriteWallTests
             "evaluation_plan" => (await bus.DispatchAsync(new DefineControlEvaluationPlan(Tenant, Program,
                 Uuid.CreateVersion4(), Uuid.CreateVersion4(), 0, "Review control design", [], true), context, CancellationToken.None)).Error,
             "finding" => (await bus.DispatchAsync(new RaiseFinding(Uuid.CreateVersion4(), Tenant, Program,
-                new FindingSource("manual", null, null, "Client source finding"), "Finding", "Description", "medium",
+                new FindingSource("manual", null, null, "Client source finding"), "Finding", "Description", "moderate",
                 "Client scope", RbacIds.Member(Tenant, User), new DateOnly(2027, 1, 1)), context, CancellationToken.None)).Error,
             "readiness" => (await bus.DispatchAsync(new RunReadinessAssessment(Uuid.CreateVersion4(), Tenant, Program, 0,
                 Now), context, CancellationToken.None)).Error,

@@ -19,6 +19,9 @@ public interface IWorkforceObservationDirectoryReader
         string? cursor, CancellationToken ct = default);
     ValueTask<WorkforceObservationView?> GetAsync(Uuid tenantId, Uuid observationId,
         CancellationToken ct = default);
+    /// <summary>Whether a person has an active employee or contractor relationship in this tenant.</summary>
+    ValueTask<bool> HasActiveInternalRelationshipAsync(Uuid tenantId, Uuid personId,
+        CancellationToken ct = default);
     /// <summary>Returns the lifecycle status of every recorded relationship of one person.</summary>
     ValueTask<IReadOnlyList<string>> ListRelationshipStatusesAsync(Uuid tenantId, Uuid personId,
         CancellationToken ct = default);

@@ -63,5 +63,7 @@ work.
 | Owner | Implementation status | Evidence |
 | --- | --- | --- |
 | RiskControlTreatment (`RiskTreatmentAssertion` in current source) | Partial: reviewer independence enforced in the owner; control-retirement coordination and proposed-owner migration remain | [Review](reviews/risk-control-treatment.md) |
-| WorkRelationship | Partial: ending is terminal for new revisions; full identity/lifecycle and named-event migration remain | [Review](reviews/work-relationship-terminal-status.md) |
+| WorkRelationship | Partial: named lifecycle/changes and computed sponsorship; initial/source conformance and whole-owner qualification remain | [Terminal review](reviews/work-relationship-terminal-status.md), [named changes and sponsorship](reviews/workforce-named-and-sponsorship.md) |
 | ServiceIdentity | Partial: retirement freezes changed terms; full owner/review model and named-event migration remain | [Review](reviews/service-identity-retirement.md) |
+| MethodologyTemplateDraft | Partial: separate draft owner and source-bound opener; human and line workflows remain | [Review](reviews/methodology-template-draft.md) |
+| CorrectiveAction / Finding | Partial: cancellation and severity vocabulary; finding-owned outcomes and proposed closure migration remain | [Review](reviews/corrective-action-cancellation.md) |

@@ -171,6 +171,8 @@ public sealed class FindingTypeIBaselineSourceContributor(
             yield return added;
         if (action.Completed is { } completed)
             yield return completed;
+        if (action.Cancelled is { } cancelled)
+            yield return cancelled;
     }
 
     static bool InsideCutoff(DomainEvent fact, DateTimeOffset through) =>
@@ -189,6 +191,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
         FindingReopenedV2 ev => ev.Revision,
         CorrectiveActionAddedV2 ev => ev.Revision,
         CorrectiveActionCompletedV2 ev => ev.Revision,
+        CorrectiveActionCancelled ev => ev.Revision,
         _ => throw new InvalidOperationException($"{fact.GetType().Name} is not a remediation fact."),
     };
 
@@ -221,6 +224,8 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 break;
             case CorrectiveActionCompletedV2 value:
                 Add(value.EvidenceManifest);
+                break;
+            case CorrectiveActionCancelled:
                 break;
             case FindingAcceptanceLinkedV2 value:
                 Add(value.AcceptanceContent);
@@ -287,6 +292,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
         FindingReopenedV2 => "finding_reopened",
         CorrectiveActionAddedV2 => "corrective_action_added",
         CorrectiveActionCompletedV2 => "corrective_action_completed",
+        CorrectiveActionCancelled => "corrective_action_cancelled",
         _ => throw new JsonException("The remediation stream contains an unknown event."),
     };
 

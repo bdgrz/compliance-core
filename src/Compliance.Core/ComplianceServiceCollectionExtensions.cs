@@ -653,6 +653,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<PersonReader>();
         services.AddScoped<PersonOperations>();
         services.AddScoped<WorkRelationshipReadConsistency>();
+        services.AddScoped<WorkRelationshipSponsorship>();
         services.AddScoped<FitzWorkforceObservationDirectory>();
         services.AddScoped<IWorkforceObservationProjection>(provider =>
             provider.GetRequiredService<FitzWorkforceObservationDirectory>());
@@ -1467,6 +1468,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<StartLeaveHandler>()
             .AddRequestHandler<EndLeaveHandler>()
             .AddRequestHandler<EndWorkRelationshipHandler>()
+            .AddRequestHandler<ChangeManagerHandler>()
+            .AddRequestHandler<ChangeDepartmentHandler>()
+            .AddRequestHandler<ChangeSponsorHandler>()
+            .AddRequestHandler<CorrectWorkRelationshipDatesHandler>()
             .AddRequestHandler<GetWorkRelationshipHandler>()
             .AddRequestHandler<ListWorkRelationshipsHandler>()
             .AddRequestHandler<ListWorkforceObservationsHandler>()
@@ -1712,6 +1717,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviseFindingHandler>()
             .AddRequestHandler<AddCorrectiveActionHandler>()
             .AddRequestHandler<CompleteCorrectiveActionHandler>()
+            .AddRequestHandler<CancelCorrectiveActionHandler>()
             .AddRequestHandler<LinkFindingAcceptanceHandler>()
             .AddRequestHandler<CloseFindingHandler>()
             .AddRequestHandler<ReopenFindingHandler>()
@@ -1910,6 +1916,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<GetTemplateApplicationHandler>()
             .AddRequestHandler<ApplyMethodologyTemplateHandler>()
             .AddRequestHandler<OpenTemplateVersionApplicationHandler>()
+            .AddRequestHandler<OpenMethodologyTemplateDraftHandler>()
+            .AddRequestAuthorizer<Bdgrz.Compliance.Features.MethodologyTemplates.Authorizers.MethodologyTemplateDraftOpeningAuthorizer>()
             .AddRequestHandler<RecordTemplateEntryOutcomeHandler>()
             .AddRequestAuthorizer<Bdgrz.Compliance.Features.MethodologyTemplates.Authorizers.TemplateVersionApplicationAuthorizer>()
             .AddRequestHandler<ProposeTemplateSuccessorAdoptionHandler>()
@@ -2041,6 +2049,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<IdentityRecoveryAcceptanceReactor>("IdentityRecoveryAcceptanceV1", WorkloadScope.Global,
                 options => options.FailureAttemptLimit = int.MaxValue)
             .AddProjector<MethodologyTemplateDirectoryProjector>(FitzMethodologyTemplateDirectory.ProjectorName, WorkloadScope.Global)
+            .AddReactor<Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.MethodologyTemplateDraftOpeningReactor>(
+                Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.MethodologyTemplateDraftOpeningReactor.WorkloadName, WorkloadScope.Global)
             .AddReactor<Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.TemplateVersionApplicationOpeningReactor>(
                 Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.TemplateVersionApplicationOpeningReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddProjector<ObservationPeriodDirectoryProjector>(FitzObservationPeriodDirectory.ProjectorName, WorkloadScope.PerTenant)

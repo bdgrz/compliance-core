@@ -125,13 +125,13 @@ public sealed class FindingAggregateTests
         var owner = Raised(out _);
 
         // Act
-        var result = owner.Revise(Op(owner, Uuid.CreateVersion4(), nameof(ReviseFinding), 1), Revision("critical"),
+        var result = owner.Revise(Op(owner, Uuid.CreateVersion4(), nameof(ReviseFinding), 1), Revision("moderate"),
             NativeFacts.Ref(), NativeFacts.Ref());
 
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(2, owner.Revision);
-        Assert.Equal("critical", owner.Severity);
+        Assert.Equal("moderate", owner.Severity);
         Assert.Equal("Original source text.", owner.Raised!.Source.SourceText);
         Assert.Equal(2, Pending(owner));
     }
@@ -141,7 +141,7 @@ public sealed class FindingAggregateTests
     {
         // Arrange
         var owner = Raised(out _);
-        Assert.True(owner.Revise(Op(owner, Uuid.CreateVersion4(), nameof(ReviseFinding), 1), Revision("critical"),
+        Assert.True(owner.Revise(Op(owner, Uuid.CreateVersion4(), nameof(ReviseFinding), 1), Revision("moderate"),
             NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
 
         // Act
@@ -150,7 +150,7 @@ public sealed class FindingAggregateTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Equal("critical", owner.Severity);
+        Assert.Equal("moderate", owner.Severity);
         Assert.Equal(2, Pending(owner));
     }
 
@@ -383,7 +383,7 @@ public sealed class FindingAggregateTests
         var source = Raised(out var id, action);
         Assert.True(source.AdmitAction(Op(source, action, nameof(AddCorrectiveAction), 1),
             NativeFacts.Ref(ChildAdmissionIntent.Schema), NativeFacts.Ref()).IsSuccess);
-        Assert.True(source.Revise(Op(source, Uuid.CreateVersion4(), nameof(ReviseFinding), 2), Revision("critical"),
+        Assert.True(source.Revise(Op(source, Uuid.CreateVersion4(), nameof(ReviseFinding), 2), Revision("moderate"),
             NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
         var closeOp = Op(source, closureRoot, nameof(CloseFinding), 3);
         var intent = NativeFacts.Ref(ClosureIntent.Schema);
@@ -406,7 +406,7 @@ public sealed class FindingAggregateTests
         // Assert
         Assert.Equal(6, owner.Revision);
         Assert.Equal(2, owner.Generation);
-        Assert.Equal("critical", owner.Severity);
+        Assert.Equal("moderate", owner.Severity);
         Assert.Null(owner.Closed);
         Assert.Null(owner.PendingClosure);
         Assert.True(admitted);
