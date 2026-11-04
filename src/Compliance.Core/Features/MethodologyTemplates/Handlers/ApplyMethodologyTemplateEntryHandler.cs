@@ -75,8 +75,7 @@ public sealed class ApplyMethodologyTemplateEntryHandler(IAggregateExecutor exec
             {
                 selected = await SelectProposalBaseAsync(request, planned.Value, ct).ConfigureAwait(false);
                 if (selected is null)
-                    return await RecordAsync(context, new TemplateEntryOutcome(request.EntryKey, "refused", null,
-                        "approved_destination_revision_required"), ct).ConfigureAwait(false);
+                    return Pending("An authoritative approved destination revision is required before selecting a proposal base.");
                 var candidate = selected;
                 var prepared = await executor.ExecuteAsync(Owner(request), owner => AggregateOutcome.CommitOnSuccess(
                     owner.PreparedProposalFor(request.EntryKey) is null ? owner.PrepareProposal(candidate) : Result.Success),
@@ -110,11 +109,17 @@ public sealed class ApplyMethodologyTemplateEntryHandler(IAggregateExecutor exec
                 new Claim("sub", source.AppliedBy.ToString())], "VerifiedMethodologyApplication"));
             var delegated = bus.CreateContext(actor, RequestMetadata.FromRequest(destination.Request, context));
             var applied = await DispatchAsync(destination.Request, delegated, ct).ConfigureAwait(false);
-            if (!applied.IsSuccess)
-                return applied.Error!.IsTransient ? applied
-                    : await RecordAsync(context, Refusal(request.EntryKey, applied.Error), ct).ConfigureAwait(false);
             acceptance = await ReadAcceptanceAsync(request, destination, ct).ConfigureAwait(false);
-            if (acceptance.Acceptance.Decide(binding) != NativeAcceptanceDecision.Replayed)
+            decision = acceptance.Acceptance.Decide(binding);
+            // A destination may have committed and then failed reading its response. Its committed
+            // acceptance wins over transport/readback failure; such an effect must never be refused.
+            if (decision == NativeAcceptanceDecision.Conflict)
+                return await RecordAsync(context, new TemplateEntryOutcome(request.EntryKey, "refused", null,
+                    "identifier_in_use"), ct).ConfigureAwait(false);
+            if (decision == NativeAcceptanceDecision.None && !applied.IsSuccess)
+                return applied.Error!.IsTransient ? applied : Pending(
+                    "The destination has not retained a terminal answer for this source: " + applied.Error.Message);
+            if (decision != NativeAcceptanceDecision.Replayed)
                 return Pending("The destination's exact accepted operation is not visible yet.");
         }
         if (acceptance.Acceptance.SelectedFact is not { } accepted)
