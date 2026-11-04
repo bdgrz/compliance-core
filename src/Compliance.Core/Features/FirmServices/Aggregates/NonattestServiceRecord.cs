@@ -101,7 +101,7 @@ public sealed class NonattestServiceRecord : Aggregate
             commandId == Uuid.Empty || actorUserId == Uuid.Empty || occurredAt == default ||
             View is not null && occurredAt < View.RecordedAt)
             return new(RequestErrorKind.Validation, "The service decision requires its exact identity and attributed time.");
-        return expectedRevision != Revision
+        return expectedRevision != Revision || _commands.Contains(commandId)
             ? new(RequestErrorKind.Conflict, "Reload the current service revision before changing it.")
             : null;
     }
