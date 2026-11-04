@@ -14,5 +14,7 @@ public sealed record ReadinessEvaluation(IReadOnlyList<ReadinessInputView> Input
     IReadOnlyList<ReadinessFindingView> Findings, IReadOnlyList<ReadinessGapView> Gaps,
     string InputFingerprint)
 {
+    public ReadinessCompleteness Completeness => ReadinessCompletenessRules.Evaluate(Inputs, Gaps);
+
     public IReadOnlyList<ReadinessAccessReviewScopeView> AccessReviewScopes { get; init; } = [];
 }
