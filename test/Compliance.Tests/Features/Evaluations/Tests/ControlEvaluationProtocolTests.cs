@@ -250,6 +250,34 @@ public sealed class ControlEvaluationProtocolTests
         Assert.Equal(recorded.Revision + 1, (await StreamAsync(fixture, recorded.EvaluationId)).Count);
     }
 
+    [Theory]
+    [InlineData("missing")]
+    [InlineData("empty")]
+    [InlineData("foreign")]
+    [InlineData("duplicate")]
+    public async Task ShouldRefuseRetestGivenInvalidExplicitDeviationSelection(string kind)
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var accepted = await AcceptedWithMaterialDeviationAsync(fixture);
+        var deviation = Assert.Single(accepted.Deviations).DeviationId;
+        var plan = await fixture.GetOrDefineEvaluationPlanAsync();
+        IReadOnlyList<Uuid>? selected = kind switch
+        {
+            "missing" => null,
+            "empty" => [],
+            "foreign" => [Uuid.CreateVersion4()],
+            _ => [deviation, deviation],
+        };
+        var request = StartRequest(fixture, plan, accepted.EvaluationId) with { RetestOfDeviationIds = selected };
+
+        // Act
+        await fixture.Scenario(fixture.OwnerUserId).When(request)
+            // Assert
+            .ExpectError(RequestErrorKind.Validation);
+        Assert.Empty(await StreamAsync(fixture, request.EvaluationId));
+    }
+
     [Fact]
     public async Task ShouldBindRetestToExactPredecessorReviewAndLeavePredecessorUntouchedGivenRetestStart()
     {
@@ -261,7 +289,8 @@ public sealed class ControlEvaluationProtocolTests
         var plan = await fixture.GetOrDefineEvaluationPlanAsync();
 
         // Act
-        var retest = await fixture.AsAsync(fixture.OwnerUserId, StartRequest(fixture, plan, accepted.EvaluationId));
+        var retest = await fixture.AsAsync(fixture.OwnerUserId, StartRequest(fixture, plan, accepted.EvaluationId) with
+        { RetestOfDeviationIds = accepted.Deviations.Select(static deviation => deviation.DeviationId).ToArray() });
         var predecessorAfter = await StreamAsync(fixture, accepted.EvaluationId);
         var read = await fixture.AsAsync(fixture.OutsiderUserId, new GetControlEvaluation(fixture.TenantId,
             fixture.ProgramId, fixture.ControlId, accepted.EvaluationId));
