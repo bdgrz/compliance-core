@@ -15,6 +15,7 @@ public sealed class TemplateVersionApplication : Aggregate
     readonly long _version;
     readonly HashSet<string> _entries = new(StringComparer.Ordinal);
     readonly Dictionary<string, TemplateEntryOutcome> _outcomes = new(StringComparer.Ordinal);
+    readonly Dictionary<string, TemplateEntryProposalBase> _proposalBases = new(StringComparer.Ordinal);
 
     public TemplateVersionApplication(Uuid tenantId, Uuid programId, Uuid templateId, long version)
         : base(Identity(tenantId, programId, templateId, version),
@@ -23,11 +24,32 @@ public sealed class TemplateVersionApplication : Aggregate
         (_tenantId, _programId, _templateId, _version) = (tenantId, programId, templateId, version);
         On<TemplateVersionApplicationOpened>(Apply);
         On<TemplateEntryOutcomeRecorded>(Apply);
+        On<TemplateEntryProposalPrepared>(Apply);
         On<TemplateVersionApplicationCompleted>(Apply);
     }
 
     public Uuid ApplicationEventId { get; private set; }
+    public Uuid ApplicationCommandId { get; private set; }
     public bool IsOpened => ApplicationEventId != Uuid.Empty;
+    public TemplateEntryOutcome? OutcomeFor(string entryKey) => _outcomes.GetValueOrDefault(entryKey);
+    public TemplateEntryProposalBase? PreparedProposalFor(string entryKey) => _proposalBases.GetValueOrDefault(entryKey);
+
+    public Result PrepareProposal(TemplateEntryProposalBase proposal)
+    {
+        if (!IsOpened)
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
+                "The template version application is not open yet.", isTransient: true));
+        if (!ValidProposal(proposal) || !_entries.Contains(proposal.EntryKey))
+            return Invalid("Proposal preparation requires a listed entry and one exact approved destination base.");
+        if (_proposalBases.TryGetValue(proposal.EntryKey, out var prior))
+            return prior == proposal ? Result.Success : Conflict("The entry's approved proposal base is already frozen.");
+        if (IsCompleted || _outcomes.ContainsKey(proposal.EntryKey))
+            return Conflict("A terminal entry cannot select another proposal base.");
+        RaiseEvent(new TemplateEntryProposalPrepared(_tenantId, _programId, _templateId, _version,
+            ApplicationEventId, proposal));
+        return Result.Success;
+    }
+
     public bool IsCompleted { get; private set; }
     public TemplateApplicationOutcomeCounts Counts => new(
         _outcomes.Values.Count(item => item.Outcome == "created"),
@@ -43,15 +65,15 @@ public sealed class TemplateVersionApplication : Aggregate
             $"template-version-application:{programId}:{templateId}:{version.ToString(CultureInfo.InvariantCulture)}");
     }
 
-    public Result Open(Uuid applicationEventId, IReadOnlyList<string> entryKeys)
+    public Result Open(Uuid applicationEventId, IReadOnlyList<string> entryKeys, Uuid applicationCommandId = default)
     {
         if (applicationEventId == Uuid.Empty || !ValidEntries(entryKeys))
             return Invalid("Opening requires an exact application source and unique bounded entry keys.");
         if (IsOpened)
-            return ApplicationEventId == applicationEventId && _entries.SetEquals(entryKeys)
+            return ApplicationEventId == applicationEventId && ApplicationCommandId == applicationCommandId && _entries.SetEquals(entryKeys)
                 ? Result.Success : Conflict("The version application cannot replace its original source or entry set.");
         RaiseEvent(new TemplateVersionApplicationOpened(_tenantId, _programId, _templateId, _version,
-            applicationEventId, entryKeys.Order(StringComparer.Ordinal).ToArray()));
+            applicationEventId, entryKeys.Order(StringComparer.Ordinal).ToArray(), applicationCommandId));
         CompleteIfReady();
         return Result.Success;
     }
@@ -77,7 +99,7 @@ public sealed class TemplateVersionApplication : Aggregate
     {
         if (!IsCompleted && _outcomes.Count == _entries.Count)
             RaiseEvent(new TemplateVersionApplicationCompleted(_tenantId, _programId, _templateId, _version,
-                ApplicationEventId, Counts));
+                ApplicationEventId, Counts, ApplicationCommandId));
     }
 
     void Apply(TemplateVersionApplicationOpened fact)
@@ -86,8 +108,23 @@ public sealed class TemplateVersionApplication : Aggregate
         if (IsOpened || fact.ApplicationEventId == Uuid.Empty || !ValidEntries(fact.EntryKeys))
             throw new InvalidOperationException("A version application opens once from an exact source and unique entries.");
         ApplicationEventId = fact.ApplicationEventId;
+        ApplicationCommandId = fact.ApplicationCommandId;
         _entries.UnionWith(fact.EntryKeys);
     }
+
+    void Apply(TemplateEntryProposalPrepared fact)
+    {
+        RequireScope(fact.TenantId, fact.ProgramId, fact.TemplateId, fact.TemplateVersion);
+        if (!IsOpened || IsCompleted || fact.ApplicationEventId != ApplicationEventId ||
+            !ValidProposal(fact.ProposalBase) || !_entries.Contains(fact.ProposalBase.EntryKey) ||
+            _outcomes.ContainsKey(fact.ProposalBase.EntryKey) || !_proposalBases.TryAdd(fact.ProposalBase.EntryKey, fact.ProposalBase))
+            throw new InvalidOperationException("A listed nonterminal entry freezes one exact approved destination base.");
+    }
+
+    static bool ValidProposal(TemplateEntryProposalBase? proposal) => proposal is not null && ValidKey(proposal.EntryKey) &&
+        proposal.RecordKind is "control" or "policy" or "risk" && proposal.RecordId != Uuid.Empty &&
+        (proposal.ApprovedVersionId is { } version && version != Uuid.Empty && proposal.ApprovedRevision is null ||
+         proposal.ApprovedVersionId is null && proposal.ApprovedRevision is > 0);
 
     void Apply(TemplateEntryOutcomeRecorded fact)
     {
@@ -101,7 +138,7 @@ public sealed class TemplateVersionApplication : Aggregate
     void Apply(TemplateVersionApplicationCompleted fact)
     {
         RequireScope(fact.TenantId, fact.ProgramId, fact.TemplateId, fact.TemplateVersion);
-        if (!IsOpened || IsCompleted || fact.ApplicationEventId != ApplicationEventId ||
+        if (!IsOpened || IsCompleted || fact.ApplicationEventId != ApplicationEventId || fact.ApplicationCommandId != ApplicationCommandId ||
             _outcomes.Count != _entries.Count || fact.Counts != Counts)
             throw new InvalidOperationException("Completion requires one outcome per entry and its exact outcome totals.");
         IsCompleted = true;

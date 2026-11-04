@@ -49,6 +49,9 @@ public sealed class TemplateApplication : Aggregate
     public const string Area = "template-applications";
     readonly Uuid _tenantId;
     readonly Uuid _programId;
+    readonly Uuid _canonicalTemplateId;
+    readonly Dictionary<Uuid, MethodologyTemplateAppliedV4> _versionApplications = [];
+    readonly Dictionary<Uuid, TemplateApplicationCompleted> _versionCompletions = [];
 
     public TemplateApplication(Uuid tenantId, Uuid programId, Uuid applicationId, Uuid selectedCommandId = default,
         string? selectedCommandKind = null) : base(applicationId,
@@ -60,17 +63,121 @@ public sealed class TemplateApplication : Aggregate
         On<MethodologyTemplateApplied>(ApplyFact);
         On<TemplateSuccessorAdoptionProposed>(ApplyFact);
         On<TemplateSuccessorDispositionRecorded>(ApplyFact);
+        On<MethodologyTemplateAppliedV4>(ApplyVersionFact);
+        On<TemplateApplicationCompleted>(ApplyCompletionFact);
     }
+
+    public TemplateApplication(Uuid tenantId, Uuid programId, Uuid templateId, bool canonical)
+        : this(tenantId, programId, CanonicalIdentity(tenantId, programId, templateId))
+    {
+        if (!canonical)
+            throw new ArgumentException("The canonical constructor requires canonical identity.", nameof(canonical));
+        _canonicalTemplateId = templateId;
+    }
+
+    public static Uuid CanonicalIdentity(Uuid tenantId, Uuid programId, Uuid templateId)
+    {
+        if (tenantId == Uuid.Empty || programId == Uuid.Empty || templateId == Uuid.Empty)
+            throw new ArgumentException("An application requires its tenant, program and template identities.");
+        return Uuid.CreateVersion5(tenantId, $"methodology-template-application:{programId}:{templateId}");
+    }
+
+    public long LastAppliedVersion { get; private set; }
+    public Uuid CurrentApplicationCommandId { get; private set; }
+    public bool IsVersionCompleted { get; private set; } = true;
+    public MethodologyTemplateAppliedV4? AppliedVersionFor(Uuid commandId) => _versionApplications.GetValueOrDefault(commandId);
+    public TemplateApplicationCompleted? CompletionFor(Uuid commandId) => _versionCompletions.GetValueOrDefault(commandId);
+
+    public Result ApplyVersion(Uuid commandId, long version, Uuid actor, NativeFactReference publicationSource,
+        ulong publicationPosition, ImmutableContentRef entriesContent, IReadOnlyList<string> create,
+        IReadOnlyList<string> propose)
+    {
+        if (_canonicalTemplateId == Uuid.Empty || Header is not null || commandId == Uuid.Empty || actor == Uuid.Empty ||
+            version <= 0 || publicationSource is null || publicationSource.EventId == Uuid.Empty ||
+            publicationSource.AggregateVersion == 0 || publicationPosition < publicationSource.AggregateVersion - 1 || publicationSource.Stream != new MethodologyTemplate(_canonicalTemplateId).Stream ||
+            !MethodologyTemplateDraft.ValidReference(entriesContent) || !ValidPlan(create, propose))
+            return Invalid("Applying a version requires the canonical owner, exact publication and bounded disjoint entry plan.");
+        if (_versionApplications.TryGetValue(commandId, out var prior))
+            return prior.TemplateVersion == version && prior.AppliedBy == actor && prior.PublicationSource == publicationSource &&
+                prior.PublicationPosition == publicationPosition && prior.EntriesContent == entriesContent &&
+                prior.EntriesToCreate.SequenceEqual(create) && prior.EntriesToPropose.SequenceEqual(propose)
+                ? Result.Success : Conflict("This application command is already bound to another intent.");
+        if (LastAppliedVersion == 0 && propose.Count != 0)
+            return Invalid("A first application creates drafts and cannot propose revisions to an earlier application.");
+        if (!IsVersionCompleted || version <= LastAppliedVersion)
+            return Conflict("Apply a later version only after the preceding application completes.");
+        RaiseEvent(new MethodologyTemplateAppliedV4(_tenantId, _programId, _canonicalTemplateId, version,
+            LastAppliedVersion, commandId, actor, publicationSource, publicationPosition, entriesContent,
+            create.ToArray(), propose.ToArray()));
+        return Result.Success;
+    }
+
+    public Result CompleteVersion(Uuid applicationCommandId, long version, TemplateApplicationOutcomeCounts counts,
+        Uuid completionEventId)
+    {
+        if (_versionCompletions.TryGetValue(applicationCommandId, out var prior))
+            return prior.TemplateVersion == version && prior.Counts == counts && prior.CompletionSourceEventId == completionEventId
+                ? Result.Success : Conflict("The completion is already bound to another exact version outcome.");
+        if (_canonicalTemplateId == Uuid.Empty || CurrentApplicationCommandId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The canonical application is not open yet.", isTransient: true));
+        if (IsVersionCompleted || applicationCommandId != CurrentApplicationCommandId || version != LastAppliedVersion)
+            return Conflict("Completion must answer the exact in-flight template version.");
+        var application = _versionApplications[applicationCommandId];
+        if (completionEventId == Uuid.Empty || counts is null || counts.Created < 0 || counts.Proposed < 0 || counts.Refused < 0 ||
+            (long)counts.Created + counts.Proposed + counts.Refused != application.EntriesToCreate.Count + application.EntriesToPropose.Count)
+            return Invalid("Completion totals must exactly cover the planned entries.");
+        RaiseEvent(new TemplateApplicationCompleted(_tenantId, _programId, _canonicalTemplateId, version,
+            applicationCommandId, counts, completionEventId));
+        return Result.Success;
+    }
+
+    void ApplyVersionFact(MethodologyTemplateAppliedV4 fact)
+    {
+        if (fact.TenantId != _tenantId || fact.ProgramId != _programId || fact.TemplateId != _canonicalTemplateId ||
+            Id != CanonicalIdentity(_tenantId, _programId, fact.TemplateId) || Header is not null ||
+            fact.CommandId == Uuid.Empty || fact.AppliedBy == Uuid.Empty || fact.TemplateVersion <= LastAppliedVersion ||
+            fact.PreviousVersion != LastAppliedVersion || !ValidPlan(fact.EntriesToCreate, fact.EntriesToPropose) ||
+            LastAppliedVersion == 0 && fact.EntriesToPropose.Count != 0 ||
+            !IsVersionCompleted || _versionApplications.ContainsKey(fact.CommandId) ||
+            fact.PublicationSource is null || fact.PublicationSource.EventId == Uuid.Empty || fact.PublicationSource.AggregateVersion == 0 ||
+            fact.PublicationPosition < fact.PublicationSource.AggregateVersion - 1 ||
+            fact.PublicationSource.Stream != new MethodologyTemplate(fact.TemplateId).Stream ||
+            !MethodologyTemplateDraft.ValidReference(fact.EntriesContent))
+            throw new InvalidOperationException("A canonical application must advance one complete exact version at a time.");
+        _versionApplications.Add(fact.CommandId, fact);
+        LastAppliedVersion = fact.TemplateVersion;
+        CurrentApplicationCommandId = fact.CommandId;
+        IsVersionCompleted = false;
+    }
+
+    void ApplyCompletionFact(TemplateApplicationCompleted fact)
+    {
+        if (fact.TenantId != _tenantId || fact.ProgramId != _programId || fact.TemplateId != _canonicalTemplateId ||
+            fact.ApplicationCommandId != CurrentApplicationCommandId || fact.TemplateVersion != LastAppliedVersion ||
+            IsVersionCompleted || fact.CompletionSourceEventId == Uuid.Empty || fact.Counts is null ||
+            fact.Counts.Created < 0 || fact.Counts.Proposed < 0 || fact.Counts.Refused < 0 ||
+            (long)fact.Counts.Created + fact.Counts.Proposed + fact.Counts.Refused !=
+                _versionApplications[fact.ApplicationCommandId].EntriesToCreate.Count + _versionApplications[fact.ApplicationCommandId].EntriesToPropose.Count)
+            throw new InvalidOperationException("Completion must retain the exact current application and all entry outcomes.");
+        _versionCompletions.Add(fact.ApplicationCommandId, fact);
+        IsVersionCompleted = true;
+    }
+
+    static bool ValidPlan(IReadOnlyList<string>? create, IReadOnlyList<string>? propose) =>
+        create is not null && propose is not null && create.Count + propose.Count <= 100 &&
+        create.Concat(propose).All(key => key is { Length: > 0 and <= 200 } && key == key.Trim() &&
+            key.All(character => char.IsAsciiLetterOrDigit(character) || character is '-' or '_' or '.')) &&
+        create.Concat(propose).Distinct(StringComparer.Ordinal).Count() == create.Count + propose.Count;
 
     public NativeAcceptance Acceptance { get; }
     public TemplateApplicationHeader? Header { get; private set; }
-    public long Revision => Header?.Revision ?? 0;
-    public bool IsCreated => Header is not null;
+    public long Revision => Header?.Revision ?? _versionApplications.Count + _versionCompletions.Count;
+    public bool IsCreated => Header is not null || LastAppliedVersion > 0;
 
     public Result Append(DomainEvent value, long preparedRevision, ulong preparedPhysicalPosition,
         TemplateApplicationMutationContent mutation, TemplateApplicationView? before, TemplateApplicationView after)
     {
-        if (preparedRevision != Revision || preparedPhysicalPosition != CommittedStreamPosition)
+        if (_canonicalTemplateId != Uuid.Empty || preparedRevision != Revision || preparedPhysicalPosition != CommittedStreamPosition)
             return Conflict("The template application changed while its immutable content was prepared.");
         if (value is not ITemplateApplicationFact fact || fact.Header is null || fact.Content is null || mutation is null || after is null ||
             (Header is null) != (before is null))
