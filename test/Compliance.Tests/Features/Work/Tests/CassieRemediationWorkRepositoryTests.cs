@@ -276,6 +276,49 @@ public sealed class CassieRemediationWorkRepositoryTests
         Assert.Equal(revision, await work.LoadRevisionAsync(fixture.TenantId));
     }
 
+    [Fact]
+    public async Task ShouldRefuseRefreshWithoutMutationGivenWorkIdentityBelongsToAnotherFinding()
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
+        var finding = await CorrectiveActionChangeWorkflowTests.OpenAsync(fixture);
+        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
+        await using var repository = new CassieCorrectiveActionWorkItemDirectory(database.Database,
+            scope.ServiceProvider.GetRequiredService<FindingReader>(), TimeProvider.System);
+        var pattern = repository.SourcePattern(fixture.TenantId);
+        var identity = new CheckpointIdentity(CassieCorrectiveActionWorkItemDirectory.ProjectorName, pattern);
+        await ProjectAsync(repository, CassieCorrectiveActionWorkItemDirectory.ProjectorName, pattern,
+            ProjectionCheckpoint.Start, events, repository.ApplyAsync);
+        var checkpoint = await repository.LoadCheckpointAsync(fixture.TenantId);
+        var revision = await repository.LoadRevisionAsync(fixture.TenantId);
+        var original = await ReadPayloadAsync(database, "work_corrective_actions");
+        var otherFinding = Uuid.CreateVersion4();
+        var foreign = original.Replace(finding.FindingId.ToString(), otherFinding.ToString(), StringComparison.Ordinal);
+        Assert.NotEqual(original, foreign);
+        await using (var connection = await database.DataSource.OpenConnectionAsync())
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "UPDATE work_corrective_actions SET finding_id = @finding, payload = @payload";
+            _ = command.Parameters.Add(new CassieParameter { ParameterName = "finding", Value = otherFinding.ToString() });
+            _ = command.Parameters.Add(new CassieParameter { ParameterName = "payload", Value = foreign });
+            Assert.Equal(1, await command.ExecuteNonQueryAsync());
+        }
+        var retained = await ReadPayloadAsync(database, "work_corrective_actions");
+        await fixture.AsAsync(fixture.LeadUserId, CorrectiveActionChangeWorkflowTests.Change(fixture, finding));
+
+        // Act
+        await Assert.ThrowsAsync<InvalidOperationException>(() => ProjectAsync(repository,
+            CassieCorrectiveActionWorkItemDirectory.ProjectorName, pattern, checkpoint, events, repository.ApplyAsync));
+
+        // Assert
+        Assert.Equal(retained, await ReadPayloadAsync(database, "work_corrective_actions"));
+        Assert.Equal(checkpoint, await repository.LoadCheckpointAsync(identity));
+        Assert.Equal(revision, await repository.LoadRevisionAsync(fixture.TenantId));
+    }
+
     static async Task<string> ReadPayloadAsync(CassieRepositoryTestDatabase database, string table)
     {
         await using var connection = await database.DataSource.OpenConnectionAsync();
