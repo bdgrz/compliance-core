@@ -139,6 +139,32 @@ public sealed class TemplateApplicationOrderingTests
         Assert.NotEqual(expected, other);
     }
 
+    [Fact]
+    public void ShouldFreezeProposalBaseAndReplayItGivenDestinationDispatchMayRetry()
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var scenario = new AggregateScenario<TemplateVersionApplication>(new TemplateVersionApplication(tenant, Program, Template, 1));
+        Assert.True(scenario.Aggregate.Open(Uuid.CreateVersion4(), ["control"], Uuid.CreateVersion4()).IsSuccess);
+        var basis = new TemplateEntryProposalBase("control", "control", Uuid.CreateVersion4(), Uuid.CreateVersion4(), null);
+
+        // Act
+        var prepared = scenario.Aggregate.PrepareProposal(basis);
+        var count = scenario.PendingEvents.Count;
+        var retry = scenario.Aggregate.PrepareProposal(basis);
+        var changed = scenario.Aggregate.PrepareProposal(basis with { ApprovedVersionId = Uuid.CreateVersion4() });
+        var replay = new AggregateScenario<TemplateVersionApplication>(new TemplateVersionApplication(tenant, Program, Template, 1))
+            .Given(scenario.PendingEvents.ToArray());
+
+        // Assert
+        Assert.True(prepared.IsSuccess);
+        Assert.True(retry.IsSuccess);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(count, scenario.PendingEvents.Count);
+        Assert.Equal(basis, replay.Aggregate.PreparedProposalFor("control"));
+        Assert.Null(replay.Aggregate.OutcomeFor("control"));
+    }
+
     static AggregateScenario<TemplateApplication> Scenario() => new(new TemplateApplication(Tenant, Program, Template, true));
 
     static Result Apply(TemplateApplication owner, Uuid command, long version) => owner.ApplyVersion(command,
