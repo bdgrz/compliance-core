@@ -127,16 +127,20 @@ sealed class AuthorizeCorrectiveActionFindingClosureUseHandler(IAggregateReader 
         }
 
         var completed = action.Completed;
+        var cancelled = action.Cancelled;
         var waiverProven = intent.WaiverProof is not null;
         var refusal = terminal is FindingClosureCanceled ? "The closure was canceled."
-            : completed is null ? "The corrective action is not completed."
-            : completed.CompletedByMemberId == decision.CloserMemberId && !waiverProven ||
+            : completed is null && cancelled is null ? "The corrective action is not completed or cancelled."
+            : completed?.CompletedByMemberId == decision.CloserMemberId && !waiverProven ||
+              cancelled?.CancelledByMemberId == decision.CloserMemberId && !waiverProven ||
               actionOwner == decision.CloserMemberId && !waiverProven
-                ? "A corrective action owner or completer cannot verify and close their own remediation without a separation-of-duties waiver."
+                ? "A corrective action owner or resolution author cannot verify and close their own remediation without a separation-of-duties waiver."
                 : null;
         var facts = new ClosureActionFacts(request.SourceOwnerId, actionOwner, completed is not null,
             completed?.CompletedByMemberId, completed is null ? null : NativeFactReference.Of(action.Stream, completed),
-            completed?.EvidenceManifest, decision.CloserMemberId, waiverProven, refusal);
+            completed?.EvidenceManifest, decision.CloserMemberId, waiverProven, refusal, cancelled is not null,
+            cancelled is null ? null : NativeFactReference.Of(action.Stream, cancelled), cancelled?.Reason,
+            cancelled?.CancelledByMemberId);
         var factsReference = await FindingContent.WriteDeterministicAsync(Content, tenant, request.CommandId,
             FindingContent.ActionFactsSchema, facts, ct).ConfigureAwait(false);
         var requirement = new SourceUseRequirement(action.Stream, NativeFactReference.Of(action.Stream, pinned),

@@ -24,6 +24,7 @@ public static class FindingStates
     public const string Overdue = "overdue";
     public const string Unresolved = "unresolved";
     public const string Completed = "completed";
+    public const string Cancelled = "cancelled";
     public const string RiskAcceptance = "risk_acceptance";
     public const string Waiver = "waiver";
 

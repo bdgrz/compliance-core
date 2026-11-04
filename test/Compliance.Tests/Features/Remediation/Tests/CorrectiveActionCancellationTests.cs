@@ -1,3 +1,4 @@
+using System.Globalization;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -5,7 +6,6 @@ using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Remediation.Aggregates;
 using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Features.Remediation.Events;
-using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Tests.Testing;
 namespace Bdgrz.Compliance.Tests.Features.Remediation.Tests;
 
@@ -127,7 +127,7 @@ public sealed class CorrectiveActionCancellationTests
         var facts = new DomainEvent[] { seed.Added!, seed.Cancelled! };
 
         // Act
-        var owner = NativeFacts.Replay(new CorrectiveAction(Uuid.Parse(seed.Stream.Realm),
+        var owner = NativeFacts.Replay(new CorrectiveAction(Uuid.Parse(seed.Stream.Realm, CultureInfo.InvariantCulture),
             seed.Added!.ProgramId, seed.FindingId, seed.ActionId), facts);
         var second = Cancel(owner, "New reason.", 2);
         var complete = owner.PrepareComplete(2);
@@ -147,12 +147,12 @@ public sealed class CorrectiveActionCancellationTests
     {
         // Arrange
         var seed = Open();
-        var parent = new FindingAggregate(Uuid.Parse(seed.Stream.Realm), seed.Added!.ProgramId, seed.FindingId).Stream;
+        var parent = new FindingAggregate(Uuid.Parse(seed.Stream.Realm, CultureInfo.InvariantCulture), seed.Added!.ProgramId, seed.FindingId).Stream;
         var operation = new OperationProvenance(Uuid.CreateVersion4(), Uuid.CreateVersion4(), null, "Finding closure use",
             Lead, seed.Stream, "initial", 1, new string('a', 64), NativeFacts.Now, seed.Stream, seed.Stream, parent);
         var held = DomainEventSeed.Attach(new CorrectiveActionFindingClosureUseAuthorized(seed.Stream, 1, 1,
             NativeFacts.Ref(), null, operation, null, null), seed.Id, 2);
-        var owner = NativeFacts.Replay(new CorrectiveAction(Uuid.Parse(seed.Stream.Realm), seed.Added.ProgramId,
+        var owner = NativeFacts.Replay(new CorrectiveAction(Uuid.Parse(seed.Stream.Realm, CultureInfo.InvariantCulture), seed.Added.ProgramId,
             seed.FindingId, seed.ActionId), new DomainEvent[] { seed.Added, held });
 
         // Act
@@ -183,6 +183,45 @@ public sealed class CorrectiveActionCancellationTests
         Assert.Empty(new AggregateScenario<CorrectiveAction>(owner).PendingEvents);
     }
 
+    [Fact]
+    public void ShouldRefuseWithoutFactGivenCancellationHasNoExpectedRevision()
+    {
+        // Arrange
+        var owner = Open();
+        var operation = NativeFacts.Root(owner, Uuid.CreateVersion4(), nameof(CancelCorrectiveAction), null);
+
+        // Act
+        var result = owner.Cancel(operation, "Duplicate action.", MemberId(), Lead, NativeFacts.Now,
+            NativeFacts.Ref(), NativeFacts.Ref());
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Empty(new AggregateScenario<CorrectiveAction>(owner).PendingEvents);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ShouldRejectCancellationFactGivenWrongIdentityOrMissingReason(bool wrongIdentity)
+    {
+        // Arrange
+        var source = Open();
+        Assert.True(Cancel(source, "Duplicate action.").IsSuccess);
+        var cancelled = source.Cancelled! with
+        {
+            TenantId = wrongIdentity ? Uuid.CreateVersion4() : source.Cancelled!.TenantId,
+            Reason = wrongIdentity ? source.Cancelled!.Reason : " ",
+        };
+        var owner = new AggregateScenario<CorrectiveAction>(new CorrectiveAction(source.Added!.TenantId,
+            source.Added.ProgramId, source.FindingId, source.ActionId));
+
+        // Act
+        var failure = Record.Exception(() => owner.Given(source.Added, cancelled));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(failure);
+    }
+
     static CorrectiveAction NewAction() => new(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
         Uuid.CreateVersion4(), Uuid.CreateVersion4());
 
@@ -195,7 +234,7 @@ public sealed class CorrectiveActionCancellationTests
         return owner;
     }
 
-    static Uuid MemberId() => Uuid.Parse(Lead.Id);
+    static Uuid MemberId() => Uuid.Parse(Lead.Id, CultureInfo.InvariantCulture);
 
     static Result Cancel(CorrectiveAction owner, string reason, long revision = 1) => owner.Cancel(
         NativeFacts.Root(owner, Uuid.CreateVersion4(), nameof(CancelCorrectiveAction), revision, MemberId()),
