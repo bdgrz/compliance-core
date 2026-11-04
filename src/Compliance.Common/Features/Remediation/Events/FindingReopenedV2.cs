@@ -13,4 +13,5 @@ namespace Bdgrz.Compliance.Features.Remediation.Events;
 [Discriminator("bdgrz.finding.reopened", 3)]
 public sealed record FindingReopenedV2(Uuid RequestId, Uuid TenantId, Uuid ProgramId, Uuid FindingId,
     long Revision, string Reason, ActorReference ReopenedBy, DateTimeOffset ReopenedAt, OperationProvenance Operation,
-    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult, Uuid? PreviousClosureId = null,
+    long? PreviousProposalRevision = null) : DomainEvent, INativeOperationFact;

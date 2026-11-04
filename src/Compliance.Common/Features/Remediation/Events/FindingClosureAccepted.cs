@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.NativeOperations.Contracts;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Remediation.Models;
 namespace Bdgrz.Compliance.Features.Remediation.Events;
 
 /// <summary>
@@ -12,4 +13,5 @@ namespace Bdgrz.Compliance.Features.Remediation.Events;
 [Discriminator("bdgrz.finding-aggregate.finding-closure-accepted", 1)]
 public sealed record FindingClosureAccepted(EventStreamAddress Owner, long Revision, long Generation,
     ImmutableContentRef Intent, ImmutableContentRef? SourceProofs, OperationProvenance Operation,
-    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult, FindingClosureReviewBinding? Review = null)
+    : DomainEvent, INativeOperationFact;
