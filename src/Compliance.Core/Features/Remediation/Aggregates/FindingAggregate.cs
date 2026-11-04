@@ -155,6 +155,9 @@ public sealed class FindingAggregate : Aggregate
     /// <summary>The number of admitted actions across this finding's generations.</summary>
     public long AdmittedCount => _admittedCount;
 
+    /// <summary>The admitted actions whose terminal outcome has not been recorded in this finding.</summary>
+    public long UnresolvedActionCount => _admittedCount;
+
     /// <summary>The closure accepted and not yet closed or canceled, which seals action admission.</summary>
     public FindingClosureAccepted? PendingClosure => _pending;
 
@@ -300,6 +303,15 @@ public sealed class FindingAggregate : Aggregate
         RaiseEvent(new CorrectiveActionAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
             firstResponse, null));
         return Result.Success;
+    }
+
+    /// <summary>Records the exact terminal outcome of an action admitted by this finding.</summary>
+    public Result RecordActionOutcome(OperationProvenance operation, Uuid actionId, string outcome,
+        NativeFactReference source, ImmutableContentRef sourceProof)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+            $"Outcome reporting for finding {_findingId} is not implemented."));
     }
 
     /// <summary>Accepts a closure as the root native fact of its operation; it seals admission for the generation.</summary>
