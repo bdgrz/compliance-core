@@ -31,8 +31,9 @@ public sealed partial class ControlRetirementOccurrenceReactor(IProjectionCheckp
         var stream = new ControlDraft(retired.TenantId, retired.ControlId).Stream;
         if (context.Source.Stream != stream || retired.Operation.Owner != stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The retirement trigger has another owner."));
-        var (proof, _, _) = await SourceFactProofs.BuildAsync<ControlRetired>(sources, content, stream.Realm,
+        var (proof, actual, _) = await SourceFactProofs.BuildAsync<ControlRetired>(sources, content, stream.Realm,
             NativeFactReference.Of(stream, retired), context.Source.ResourceOffset, ct).ConfigureAwait(false);
+        retired = actual;
         var selected = new HashSet<Uuid>();
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(retired.TenantId.ToString(),
             ControlOccurrence.Area), EventCursor.Start, ct).ConfigureAwait(false))
@@ -51,6 +52,12 @@ public sealed partial class ControlRetirementOccurrenceReactor(IProjectionCheckp
     public async ValueTask<Result> HandleAsync(IReactorContext<ControlOccurrenceOpened> context, CancellationToken ct)
     {
         var opened = context.Trigger;
+        var occurrence = new ControlOccurrence(opened.TenantId, opened.ProgramId, opened.ControlId, opened.OccurrenceId).Stream;
+        if (context.Source.Stream != occurrence || opened.Operation.Owner != occurrence)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The opening trigger has another owner."));
+        var (_, actual, _) = await SourceFactProofs.BuildAsync<ControlOccurrenceOpened>(sources, content, occurrence.Realm,
+            NativeFactReference.Of(occurrence, opened), context.Source.ResourceOffset, ct).ConfigureAwait(false);
+        opened = actual;
         var stream = new ControlDraft(opened.TenantId, opened.ControlId).Stream;
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(stream.Realm, stream.Area,
             stream.Resource), EventCursor.Start, ct).ConfigureAwait(false))

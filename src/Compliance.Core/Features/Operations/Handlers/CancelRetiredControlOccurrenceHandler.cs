@@ -62,7 +62,7 @@ public sealed class CancelRetiredControlOccurrenceHandler(IAggregateExecutor exe
                 current.Latest is not ControlOccurrenceOpened &&
                 current.Latest is not ControlOccurrenceReviewed { Outcome: "returned" })
                 return Result.Success;
-            return current.Cancel(provenance, "Control retired: " + retirement.Rationale, null, null);
+            return current.Cancel(provenance, retirement.Rationale, null, null);
         }, context, ct).ConfigureAwait(false);
     }
 }
