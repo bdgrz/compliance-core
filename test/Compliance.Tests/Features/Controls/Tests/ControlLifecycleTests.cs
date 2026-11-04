@@ -323,6 +323,105 @@ public sealed class ControlLifecycleTests
         Assert.Equal(2, replayed.Revision);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldRefuseReviewGivenAnEarlierProposalAuthor(bool replay)
+    {
+        // Arrange
+        var id = ControlRules.IdFor(TenantId, ProgramId, "LC-AUTHOR-REVIEW");
+        var control = new ControlRules(TenantId, id);
+        Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "LC-AUTHOR-REVIEW", Content(),
+            AuthorId, "Original author", Now).IsSuccess);
+        Assert.Null(control.Revise(ProgramId, 1, Content() with { Title = "Another author's revision" },
+            ReviewerId, "Second author", Now.AddMinutes(1)));
+        if (replay)
+            control = await ControlNativeRuleReplay.ReadAsync(control);
+        var changes = control.AppliedChanges.Count;
+
+        // Act
+        var result = control.Review(ProgramId, 2, Uuid.CreateVersion4(), "accept", "Reviewed",
+            AuthorId, "Original author", Now.AddMinutes(2));
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(RequestErrorKind.Forbidden, result.ToRequestError().Kind);
+        Assert.Null(control.AcceptedReviewDecisionId);
+        Assert.Equal(changes, control.AppliedChanges.Count);
+    }
+
+    [Fact]
+    public void ShouldRefuseApprovalGivenAnEarlierProposalAuthor()
+    {
+        // Arrange
+        var id = ControlRules.IdFor(TenantId, ProgramId, "LC-AUTHOR-APPROVE");
+        var control = new ControlRules(TenantId, id);
+        Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "LC-AUTHOR-APPROVE", Content(),
+            AuthorId, "Original author", Now).IsSuccess);
+        Assert.Null(control.Revise(ProgramId, 1, Content() with { Title = "Another author's revision" },
+            Uuid.CreateVersion4(), "Second author", Now.AddMinutes(1)));
+        var reviewed = ReviewAndAssignOwner(control, Now.AddMinutes(2));
+        var changes = control.AppliedChanges.Count;
+
+        // Act
+        var result = control.Approve(ProgramId, 2, Uuid.CreateVersion4(), reviewed, EffectiveFrom,
+            "Approved", new HashSet<Uuid> { OwnerId }, AuthorId, "Original author", Now.AddMinutes(6));
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(RequestErrorKind.Forbidden, result.ToRequestError().Kind);
+        Assert.False(control.IsApproved);
+        Assert.Equal(changes, control.AppliedChanges.Count);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldRefuseSuccessorWithoutChangingProposalGivenPendingRetirement(bool replay)
+    {
+        // Arrange
+        var control = Approved("LC-RETIRE-FENCE");
+        var current = control.ApprovedVersion!.VersionId;
+        var ends = new DateOnly(2027, 1, 1);
+        Assert.Null(control.ProposeRetirement(ProgramId, current, ends, "No longer used",
+            AuthorId, "Lead", Now.AddHours(1)));
+        if (replay)
+            control = await ControlNativeRuleReplay.ReadAsync(control);
+        var retirement = control.PendingRetirementId;
+        var changes = control.AppliedChanges.Count;
+        var revision = control.Revision;
+
+        // Act
+        var result = control.ProposeSuccessor(ProgramId, current,
+            Content() with { Title = "Conflicting successor" }, ReviewerId, "Contributor", Now.AddHours(2));
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(RequestErrorKind.Conflict, result.ToRequestError().Kind);
+        Assert.Equal(retirement, control.PendingRetirementId);
+        Assert.Equal(ends, control.PendingRetirementEffectiveUntil);
+        Assert.Equal(revision, control.Revision);
+        Assert.False(control.HasOpenDraft);
+        Assert.Equal(changes, control.AppliedChanges.Count);
+    }
+
+    [Fact]
+    public void ShouldAllowReviewGivenOnlyAnEarlierVersionWasAuthoredByReviewer()
+    {
+        // Arrange
+        var control = Approved("LC-AUTHOR-RESET");
+        Assert.Null(control.ProposeSuccessor(ProgramId, control.ApprovedVersion!.VersionId,
+            Content() with { Title = "New proposal" }, ReviewerId, "New author", Now.AddHours(1)));
+
+        // Act
+        var result = control.Review(ProgramId, control.Revision, Uuid.CreateVersion4(), "accept",
+            "Independent of this proposal", AuthorId, "Prior version author", Now.AddHours(2));
+
+        // Assert
+        Assert.Null(result);
+        Assert.Equal(AuthorId, control.AcceptedReviewerMemberId);
+    }
+
     static (Uuid, string, DateOnly, DateOnly?, Uuid?) Key(ControlVersionView version) =>
         (version.VersionId, version.Status, version.EffectiveFrom, version.EffectiveUntil,
             version.PredecessorVersionId);
