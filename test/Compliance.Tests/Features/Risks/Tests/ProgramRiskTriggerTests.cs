@@ -67,7 +67,7 @@ public sealed class ProgramRiskTriggerTests
     }
 
     [Fact]
-    public async Task ShouldReplayTerminalTriageGivenCommittedHistory()
+    public void ShouldReplayTerminalTriageGivenCommittedHistory()
     {
         // Arrange
         var owner = new RiskReassessmentTrigger(Uuid.CreateVersion4(), Uuid.CreateVersion4());
@@ -76,13 +76,11 @@ public sealed class ProgramRiskTriggerTests
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
         Assert.Null(owner.Raise(new(owner.Id, tenant, program, owner.Id, "manual", "Annual change", null), actor, Now));
         Assert.Null(owner.Triage(new(Uuid.CreateVersion4(), tenant, program, owner.Id, 1, [Uuid.CreateVersion4()], null), actor, Now.AddMinutes(1)));
-        var events = new InMemoryEventStore();
-        await events.AppendAsync(owner.Stream, 0, owner.PendingEvents);
+        var facts = new AggregateScenario<RiskReassessmentTrigger>(owner).PendingEvents.ToArray();
         var replay = new RiskReassessmentTrigger(tenant, owner.Id);
 
         // Act
-        await foreach (var record in events.ReadAsync(owner.Stream, 0, CancellationToken.None))
-            replay.Replay(record.Event);
+        replay.Load(facts);
 
         // Assert
         Assert.Equal(owner.Raised, replay.Raised);
