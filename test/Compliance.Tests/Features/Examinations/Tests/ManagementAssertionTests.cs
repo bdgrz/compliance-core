@@ -210,6 +210,87 @@ public sealed class ManagementAssertionTests
         Assert.Equal(revision, assertion.Revision);
     }
 
+    [Fact]
+    public void ShouldFreezeAuthoredAssertionGivenNamedSignerAndExactValidatedPackage()
+    {
+        // Arrange
+        var content = Content();
+        var assertion = NewAssertion(content);
+        var signature = Signature(content, AuthorId);
+
+        // Act
+        var signed = assertion.Sign(1, signature);
+        var revision = assertion.Revise(assertion.Revision, content with { AssertionText = "Changed" },
+            "Changed wording", AuthorId, "CEO", Now.AddDays(2));
+
+        // Assert
+        Assert.Null(signed);
+        Assert.Equal("signed", assertion.Current!.Status);
+        Assert.NotNull(revision);
+        Assert.Equal(content.AssertionText, assertion.Current.CurrentVersion!.Content.AssertionText);
+        Assert.Equal(signature, assertion.Current.Signature);
+    }
+
+    [Fact]
+    public void ShouldRetainOriginalSignatureGivenExactRetryAtLaterTime()
+    {
+        // Arrange
+        var content = Content();
+        var assertion = NewAssertion(content);
+        var signature = Signature(content, ApproverId);
+        Assert.Null(assertion.Sign(1, signature));
+        var facts = new AggregateScenario<ManagementAssertionAggregate>(assertion).PendingEvents.Count;
+
+        // Act
+        var retry = assertion.Sign(1, signature with { SignedAt = Now.AddDays(2), SignerDisplay = "Changed display" });
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(signature, assertion.Current!.Signature);
+        Assert.Equal(facts, new AggregateScenario<ManagementAssertionAggregate>(assertion).PendingEvents.Count);
+    }
+
+    [Fact]
+    public void ShouldRefuseChangedPackageWithoutFactGivenSignedAssertion()
+    {
+        // Arrange
+        var content = Content();
+        var assertion = NewAssertion(content);
+        var signature = Signature(content, ApproverId);
+        Assert.Null(assertion.Sign(1, signature));
+
+        // Act
+        var changed = assertion.Sign(1, signature with { PackageVersion = 2 });
+
+        // Assert
+        Assert.NotNull(changed);
+        Assert.Equal(signature, assertion.Current!.Signature);
+        Assert.Equal(2, assertion.Revision);
+    }
+
+    [Fact]
+    public void ShouldRefuseUnboundSnapshotWithoutFactGivenValidAssertion()
+    {
+        // Arrange
+        var content = Content();
+        var assertion = NewAssertion(content);
+
+        // Act
+        var signed = assertion.Sign(1, Signature(content, ApproverId) with { SourceSnapshotId = Uuid.CreateVersion4() });
+
+        // Assert
+        Assert.NotNull(signed);
+        Assert.Null(assertion.Current!.Signature);
+        Assert.Equal("draft", assertion.Current.Status);
+        Assert.Equal(1, assertion.Revision);
+    }
+
+    static ManagementAssertionSignatureView Signature(ManagementAssertionContent content, Uuid signer) =>
+        new(1, content.PackageId, content.PackageVersion, content.PackageManifestId, content.PackageManifestSha256,
+            content.SourceSnapshotId, content.SourceSnapshotSha256, content.ScopeKind == "type_i"
+                ? "type_i_baseline" : "type_ii_close_snapshot", 1, signer,
+            signer == AuthorId ? "ceo" : "ciso", "Named signer", Now.AddDays(1));
+
     static ManagementAssertionAggregate NewAssertion(ManagementAssertionContent content)
     {
         var assertion = new ManagementAssertionAggregate(TenantId, ProgramId, AssertionId);
