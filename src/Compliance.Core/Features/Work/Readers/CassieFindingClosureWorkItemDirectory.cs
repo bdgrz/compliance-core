@@ -37,6 +37,7 @@ sealed class CassieFindingClosureWorkItemDirectory(CassieProjectionDatabase data
             throw new InvalidOperationException("Finding closure work must use its bound tenant projection batch.");
         var view = await findings.ReadViewAsync(tenantId, programId, findingId, clock.GetUtcNow(), ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("A finding fact cannot be projected before its raise is visible.");
+        await ValidatePreviousRowAsync(tenantId, programId, findingId, ct).ConfigureAwait(false);
         await using var command = CreateCommand("""
             INSERT INTO work_finding_closures (projection_key, tenant_id, program_id, finding_id, payload)
             VALUES (@projection, @tenant, @program, @finding, CAST(@payload AS JSONB))
@@ -109,6 +110,22 @@ sealed class CassieFindingClosureWorkItemDirectory(CassieProjectionDatabase data
     }
 
     string QueryKey(Uuid tenantId) => GetProjectionKey(new CheckpointIdentity(ProjectorName, SourcePattern(tenantId)));
+
+    async ValueTask ValidatePreviousRowAsync(Uuid tenantId, Uuid programId, Uuid findingId, CancellationToken ct)
+    {
+        await using var command = CreateCommand("""
+            SELECT CAST(payload AS TEXT) FROM work_finding_closures
+            WHERE projection_key = @projection AND program_id = @program AND finding_id = @finding
+            """);
+        _ = command.Parameters.Add(new CassieParameter { ParameterName = "projection", Value = CurrentProjectionKey });
+        _ = command.Parameters.Add(new CassieParameter { ParameterName = "program", Value = programId.ToString() });
+        _ = command.Parameters.Add(new CassieParameter { ParameterName = "finding", Value = findingId.ToString() });
+        var value = await command.ExecuteScalarAsync(ct).ConfigureAwait(false);
+        if (value is not null && (value is not string payload ||
+            JsonSerializer.Deserialize(payload, ComplianceCoreJsonContext.Default.FindingClosureWorkState) is not { } current ||
+            current.TenantId != tenantId || current.ProgramId != programId))
+            throw new InvalidOperationException("Finding closure work cannot change scope.");
+    }
 
     static RequestError InvalidScope() => new(RequestErrorKind.Conflict,
         "The finding closure work projection has invalid source scope.");

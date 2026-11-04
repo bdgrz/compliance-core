@@ -53,6 +53,7 @@ sealed class CassieCorrectiveActionWorkItemDirectory(CassieProjectionDatabase da
             throw new InvalidOperationException("Corrective-action work must use its bound tenant projection batch.");
         var view = await findings.ReadViewAsync(tenantId, programId, findingId, clock.GetUtcNow(), ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("A finding fact cannot be projected before its raise is visible.");
+        await ValidatePreviousRowsAsync(tenantId, programId, findingId, ct).ConfigureAwait(false);
         await using (var delete = CreateCommand("""
             DELETE FROM work_corrective_actions
             WHERE projection_key = @projection AND tenant_id = @tenant AND program_id = @program AND finding_id = @finding
@@ -135,6 +136,23 @@ sealed class CassieCorrectiveActionWorkItemDirectory(CassieProjectionDatabase da
     }
 
     string QueryKey(Uuid tenantId) => GetProjectionKey(new CheckpointIdentity(ProjectorName, SourcePattern(tenantId)));
+
+    async ValueTask ValidatePreviousRowsAsync(Uuid tenantId, Uuid programId, Uuid findingId, CancellationToken ct)
+    {
+        await using var command = CreateCommand("""
+            SELECT CAST(payload AS TEXT) FROM work_corrective_actions
+            WHERE projection_key = @projection AND tenant_id = @tenant AND program_id = @program AND finding_id = @finding
+            """);
+        Scope(command, tenantId, programId, findingId);
+        await using var rows = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await rows.ReadAsync(ct).ConfigureAwait(false))
+        {
+            var item = JsonSerializer.Deserialize(rows.GetString(0), ComplianceCoreJsonContext.Default.AccountableWorkItemView);
+            if (item is null || item.TenantId != tenantId || item.ProgramId != programId || item.FindingId != findingId ||
+                item.Kind != WorkSource.CorrectiveAction || item.WorkItemId != WorkCandidate.IdFor(item.SourceId, WorkSource.CorrectiveAction))
+                throw new InvalidOperationException("A corrective action work item cannot change tenant, program, or source scope.");
+        }
+    }
 
     void Scope(CassieCommand command, Uuid tenantId, Uuid programId, Uuid findingId)
     {
