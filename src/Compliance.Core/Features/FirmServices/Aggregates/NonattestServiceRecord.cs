@@ -11,17 +11,20 @@ public sealed class NonattestServiceRecord : Aggregate
     public const string Area = "firm-nonattest-service";
     readonly Uuid _tenantId;
     readonly Uuid _selectedCommandId;
+    readonly long? _selectedRevision;
     readonly HashSet<Uuid> _commands = [];
     FirmServiceReceipt? _selectedReceipt;
     NonattestServiceRecordView? _selectedView;
     public NonattestServiceRecordView? View { get; private set; }
     public long Revision => View?.Revision ?? 0;
+    public NonattestServiceRecordView? SelectedRevisionView { get; private set; }
 
-    public NonattestServiceRecord(Uuid tenantId, Uuid recordId, Uuid selectedCommandId = default)
+    public NonattestServiceRecord(Uuid tenantId, Uuid recordId, Uuid selectedCommandId = default, long? selectedRevision = null)
         : base(recordId, new EventStreamAddress(tenantId.ToString(), Area, recordId.ToString()))
     {
         _tenantId = tenantId;
         _selectedCommandId = selectedCommandId;
+        _selectedRevision = selectedRevision;
         On<NonattestServiceRecorded>(Apply);
         On<NonattestServiceRevised>(Apply);
         On<NonattestServiceVoided>(Apply);
@@ -157,6 +160,8 @@ public sealed class NonattestServiceRecord : Aggregate
 
     void Capture(FirmServiceReceipt receipt)
     {
+        if (_selectedRevision == Revision)
+            SelectedRevisionView = View;
         if (_selectedCommandId != Uuid.Empty && receipt.CommandId != _selectedCommandId)
             return;
         _selectedReceipt = receipt;

@@ -141,4 +141,27 @@ public sealed class NonattestServiceRecordTests
         Assert.Equal(2, owner.Revision);
         Assert.Equal(2, new AggregateScenario<NonattestServiceRecord>(owner).PendingEvents.Count);
     }
+    [Fact]
+    public void ShouldRetainExactOriginalRevisionGivenLaterCorrectionAndVoid()
+    {
+        // Arrange
+        var source = new NonattestServiceRecord(TenantId, RecordId);
+        Assert.True(source.Record(Record(), UserId, Now).IsSuccess);
+        Assert.True(source.Revise(new(Uuid.CreateVersion4(), TenantId, RecordId, 1,
+            Terms with { ServiceKind = "vciso" }, "Correction"), UserId, Now.AddDays(1)).IsSuccess);
+        Assert.True(source.Void(new(Uuid.CreateVersion4(), TenantId, RecordId, 2, "Wrong client"),
+            UserId, Now.AddDays(2)).IsSuccess);
+
+        // Act
+        var owner = NativeFacts.Replay(new NonattestServiceRecord(TenantId, RecordId, selectedRevision: 1),
+            NativeFacts.Raised(source));
+
+        // Assert
+        Assert.True(owner.View!.IsVoided);
+        Assert.Equal(1, owner.SelectedRevisionView!.Revision);
+        Assert.Equal(Terms, owner.SelectedRevisionView.Terms);
+        Assert.False(owner.SelectedRevisionView.IsVoided);
+        Assert.Equal(Now, owner.SelectedRevisionView.RecordedAt);
+    }
+
 }
