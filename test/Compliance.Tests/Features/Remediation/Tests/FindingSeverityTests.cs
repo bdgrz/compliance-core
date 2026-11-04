@@ -107,7 +107,7 @@ public sealed class FindingSeverityTests
     [Theory]
     [InlineData("medium")]
     [InlineData("critical")]
-    public void ShouldRejectUnsupportedSeverityGivenSerializedFindingFactReplay(string severity)
+    public void ShouldRejectUnsupportedSeverityGivenFindingFactReplay(string severity)
     {
         // Arrange
         var owner = NewFinding();

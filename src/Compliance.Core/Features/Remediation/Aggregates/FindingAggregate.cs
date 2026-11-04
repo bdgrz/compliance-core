@@ -243,6 +243,9 @@ public sealed class FindingAggregate : Aggregate
         var prepared = PrepareRaise();
         if (!prepared.IsSuccess)
             return prepared;
+        if (!FindingRules.IsSeverity(terms.Severity))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A finding severity must be low, moderate, or high."));
         RaiseEvent(new FindingRaisedV2(operation.LogicalId, _tenantId, _programId, _findingId, 1, terms.Source,
             terms.Title, terms.Description, terms.Severity, terms.AffectedScope, terms.OwnerMemberId, terms.DueOn,
             links, terms.RaisedBy, terms.RaisedAt, terms.CreationKind, terms.InitialActionSha256, operation,
@@ -261,6 +264,9 @@ public sealed class FindingAggregate : Aggregate
         var prepared = PrepareOwnWrite(operation);
         if (!prepared.IsSuccess)
             return prepared;
+        if (!FindingRules.IsSeverity(revision.Severity))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A finding severity must be low, moderate, or high."));
         RaiseEvent(new FindingRevisedV2(operation.LogicalId, _tenantId, _programId, _findingId, _revision + 1,
             revision.Severity, revision.OwnerMemberId, revision.DueOn, revision.AffectedScope, revision.RootCause,
             revision.Reason, revision.RevisedBy, revision.RevisedAt, operation, firstResponse, operationResult));
@@ -361,7 +367,7 @@ public sealed class FindingAggregate : Aggregate
         Acceptance.Observe(ev);
         if (_raised is not null || ev.TenantId != _tenantId || ev.ProgramId != _programId ||
             ev.FindingId != _findingId || ev.Revision != 1 || ev.Operation.Owner != Stream ||
-            ev.Operation.LogicalId != _findingId)
+            ev.Operation.LogicalId != _findingId || !FindingRules.IsSeverity(ev.Severity))
             throw new InvalidOperationException("A finding stream is raised once, at revision one, by its own operation.");
         _raised = ev;
         _revision = 1;
@@ -373,6 +379,8 @@ public sealed class FindingAggregate : Aggregate
     {
         Acceptance.Observe(ev);
         EnsureWritable(ev.TenantId, ev.ProgramId, ev.FindingId, ev.Revision, ev.Operation);
+        if (!FindingRules.IsSeverity(ev.Severity))
+            throw new InvalidOperationException("A finding revision must name low, moderate, or high severity.");
         _revised = ev;
         Advance(ev);
     }
