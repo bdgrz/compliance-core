@@ -37,7 +37,9 @@ static class FindingRules
         "examination_item"];
     static readonly string[] LinkKinds = ["control", "criterion", "evidence", "access_decision",
         "risk", "vendor", "readiness_gap", "control_occurrence", "control_evaluation"];
-    static readonly string[] Severities = ["low", "medium", "high", "critical"];
+    static readonly string[] Severities = ["low", "moderate", "high"];
+
+    public static bool IsSeverity(string? severity) => severity is not null && Severities.Contains(severity);
 
     /// <summary>The deterministic id of the default action a routed finding admits with its raise.</summary>
     public static Uuid RoutedActionId(Uuid findingId) => Uuid.CreateVersion5(findingId, "corrective-action");
@@ -67,9 +69,9 @@ static class FindingRules
     }
 
     public static CommandFailure? ValidateTriage(string? severity, Uuid ownerMemberId, DateOnly dueOn) =>
-        severity is null || !Severities.Contains(severity) || ownerMemberId == Uuid.Empty || dueOn == default
+        !IsSeverity(severity) || ownerMemberId == Uuid.Empty || dueOn == default
             ? CommandFailure.InvalidContent(
-                "A finding needs a severity of low, medium, high, or critical, an owner, and a due date.")
+                "A finding needs a severity of low, moderate, or high, an owner, and a due date.")
             : null;
 
     public static CommandFailure? ValidateRevision(string? severity, Uuid ownerMemberId, DateOnly dueOn,

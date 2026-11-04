@@ -30,8 +30,8 @@ public static class FindingStates
     /// <summary>The work-queue materiality of a finding severity.</summary>
     public static string Materiality(string severity) => severity switch
     {
-        "critical" or "high" => "high",
-        "medium" => "medium",
+        "high" => "high",
+        "moderate" => "medium",
         _ => "low",
     };
 }

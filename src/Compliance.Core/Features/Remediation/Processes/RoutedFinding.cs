@@ -52,7 +52,7 @@ namespace Bdgrz.Compliance.Features.Remediation.Processes;
 static class RoutedFinding
 {
     public const int DefaultDueDays = 30;
-    public const string DefaultSeverity = "medium";
+    public const string DefaultSeverity = "moderate";
 
     public static ValueTask<Result> RaiseAsync<TRequest>(NativeOperationExecutor operations,
         IAggregateReader reader, IImmutableContentStore content, IExecutionContext context, string commandKind,
