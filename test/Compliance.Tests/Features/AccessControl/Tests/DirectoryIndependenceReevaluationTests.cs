@@ -142,7 +142,7 @@ public sealed class DirectoryIndependenceReevaluationTests
 
         // Assert
         var pending = Assert.IsType<ReactionCommandFailedException>(failure.InnerException);
-        Assert.Null(failure.Error);
+        Assert.Same(pending.Error, failure.Error);
         Assert.True(pending.Error.IsTransient);
         Assert.Equal(before, heldBack);
         Assert.Empty(receiptsWhilePending);

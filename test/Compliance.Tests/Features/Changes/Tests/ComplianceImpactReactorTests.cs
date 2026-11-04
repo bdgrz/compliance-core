@@ -78,7 +78,7 @@ public sealed class ComplianceImpactReactorTests
         // Assert
         var refusal = Assert.IsType<ReactionCommandFailedException>(failure.InnerException);
         Assert.True(refusal.Error.IsTransient);
-        Assert.Null(failure.Error);
+        Assert.Same(refusal.Error, failure.Error);
         Assert.Equal(ProjectionCheckpoint.Start, before);
         Assert.NotEqual(ProjectionCheckpoint.Start, afterRecovery);
         Assert.Equal(2, TypedReactionBus.Sent(scenario).OfType<LinkImpactReviewWork>().Count());

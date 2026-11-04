@@ -312,7 +312,7 @@ public sealed class TenantRbacBootstrapReactorTests
 
         // Assert
         var error = Assert.IsType<ReactionCommandFailedException>(failure.InnerException);
-        Assert.Null(failure.Error);
+        Assert.Same(error.Error, failure.Error);
         Assert.Equal(RequestErrorKind.Validation, error.Error.Kind);
         Assert.Equal(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));

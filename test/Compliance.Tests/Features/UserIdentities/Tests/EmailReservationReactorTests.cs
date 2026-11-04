@@ -81,7 +81,7 @@ public sealed class EmailReservationReactorTests
         var failure = await Assert.ThrowsAsync<ProcessorFailureException>(async () => await run);
         var refusal = Assert.IsType<ReactionCommandFailedException>(failure.InnerException);
         Assert.Equal(RequestErrorKind.Validation, refusal.Error.Kind);
-        Assert.Null(failure.Error);
+        Assert.Same(refusal.Error, failure.Error);
     }
 
     static EmailReservationReactor Reactor(ReactorScenario scenario) =>
