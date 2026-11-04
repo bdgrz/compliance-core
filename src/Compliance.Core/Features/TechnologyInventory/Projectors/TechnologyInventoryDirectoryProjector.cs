@@ -11,6 +11,11 @@ public sealed partial class TechnologyInventoryDirectoryProjector(
             FitzTechnologyInventoryDirectory.ProjectorName),
         IProjectorHandler<TechnologyComponentRevisionRecorded>,
         IProjectorHandler<InformationAssetRevisionRecorded>,
+        IProjectorHandler<InformationAssetRecorded>,
+        IProjectorHandler<InformationAssetDetailsChanged>,
+        IProjectorHandler<InformationAssetClassified>,
+        IProjectorHandler<InformationAssetOwnerChanged>,
+        IProjectorHandler<InformationAssetRetired>,
         IProjectorHandler<DataFlowRevisionRecorded>
 {
     public async ValueTask<Result> HandleAsync(IProjectorContext<TechnologyComponentRevisionRecorded> context, CancellationToken ct)
@@ -25,6 +30,36 @@ public sealed partial class TechnologyInventoryDirectoryProjector(
     {
         var ev = context.Trigger;
         await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<InformationAssetRecorded> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<InformationAssetDetailsChanged> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<InformationAssetClassified> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<InformationAssetOwnerChanged> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<InformationAssetRetired> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
         return Result.Success;
     }
 

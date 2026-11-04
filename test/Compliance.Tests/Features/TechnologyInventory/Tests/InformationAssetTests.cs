@@ -1,4 +1,5 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.TechnologyInventory.Contracts;
 using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
@@ -33,7 +34,7 @@ public sealed class InformationAssetTests
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(id, result.Value!.InformationAssetId);
-        var recorded = Assert.IsType<InformationAssetRevisionRecorded>(Assert.Single(
+        var recorded = Assert.IsType<InformationAssetRecorded>(Assert.Single(
             new AggregateScenario<InformationAsset>(asset).PendingEvents));
         Assert.Equal(TenantId, recorded.TenantId);
         Assert.Equal(id, recorded.InformationAssetId);
@@ -147,7 +148,7 @@ public sealed class InformationAssetTests
         Assert.Equal("confidential", asset.Content!.Classification);
         Assert.Equal(TechnologyInventoryRules.Retired, asset.Content.Lifecycle);
         var revisions = new AggregateScenario<InformationAsset>(asset).PendingEvents
-            .OfType<InformationAssetRevisionRecorded>().Select(fact => fact.Revision).ToArray();
+            .OfType<IInformationAssetFact>().Select(fact => fact.Revision).ToArray();
         Assert.Equal(new long[] { 1, 2, 3 }, revisions);
     }
 

@@ -82,6 +82,11 @@ public sealed class DataFlow : Aggregate
         });
         On<TechnologyComponentRevisionRecorded>(_ => _foreign = true);
         On<InformationAssetRevisionRecorded>(_ => _foreign = true);
+        On<InformationAssetRecorded>(_ => _foreign = true);
+        On<InformationAssetDetailsChanged>(_ => _foreign = true);
+        On<InformationAssetClassified>(_ => _foreign = true);
+        On<InformationAssetOwnerChanged>(_ => _foreign = true);
+        On<InformationAssetRetired>(_ => _foreign = true);
     }
 
     /// <summary>Checks a creation against hydrated state without raising anything; returns the normalized content.</summary>
