@@ -155,3 +155,21 @@ zero failures/skips; whitespace verification; six Node cases and proposal/covera
 checks. The inspected inventory adds 12 facts (one explicit line-start producer
 gap), one owner and six registered requests. Counts describe source navigation,
 not whole-domain completion. Final-head hosted acceptance remains pending.
+
+## Next source batch (unvalidated)
+
+Human methodology draft commands/handlers are integrated with central registration,
+JSON and platform HTTP wiring. Revision/discard are exposed to MCP; personal review
+and approval are HTTP-only. Fourteen tests were authored before implementation but
+have not been executed. The legacy internal handler has no public route to cut over.
+
+Initial WorkRelationship provenance is integrated through the existing command,
+recorded fact, owner and primary read view. The stable worker identifier still
+determines identity; external IDs/revisions remain case-sensitive provenance.
+Nineteen tests were authored before implementation but have not been executed.
+Initial pending/active and sponsor admission changes are a separate source slice.
+
+Both slices received live Jev source review (`jev-1.14.0`). These source checkpoints
+are not compiled/tested acceptance. AW-09 finding-owned corrective outcomes and
+methodology line choreography are being prepared independently. No new local .NET
+run will start until sufficient source and central wiring are assembled.
