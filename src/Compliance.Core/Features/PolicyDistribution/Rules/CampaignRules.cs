@@ -111,7 +111,7 @@ static class CampaignRules
                 joiner ? "joiner" : "mover_in", match.WorkerType, match.Department,
                 joiner
                     ? match.StartDate.AddDays(PolicyDistributionCampaign.JoinerDays)
-                    : Max(launchDueOn, observedOn.AddDays(PolicyDistributionCampaign.JoinerDays))));
+                    : launchDueOn));
         }
 
         return amendments;
@@ -202,12 +202,14 @@ static class CampaignRules
             : null;
     }
 
-    public static CommandFailure? CheckClosure(CampaignState state, CloseCampaign request)
+    public static CommandFailure? CheckClosure(CampaignState state, CloseCampaign request, DateOnly asOf)
     {
         if (CheckOpen(state.Campaign) is { } failure)
             return failure;
-        return string.IsNullOrWhiteSpace(request.Rationale) || request.Rationale.Length > 4000
-            ? CommandFailure.InvalidContent("Closing a campaign requires a rationale of at most 4000 characters.")
+        if (string.IsNullOrWhiteSpace(request.Rationale) || request.Rationale.Length > 4000)
+            return CommandFailure.InvalidContent("Closing a campaign requires a rationale of at most 4000 characters.");
+        return state.Totals(asOf).Pending > 0
+            ? CommandFailure.StateConflict("A campaign cannot close while a participant is pending within their due date.")
             : null;
     }
 

@@ -98,7 +98,7 @@ sealed class CloseCampaignHandler(NativeOperationExecutor operations, CampaignSo
                 var source = await campaigns.StateOfAsync(owner, token).ConfigureAwait(false);
                 if (!source.IsSuccess)
                     return Result<FirstResponseDescriptor>.Failure(source.Error!);
-                if (CampaignRules.CheckClosure(source.Value, request) is { } failure)
+                if (CampaignRules.CheckClosure(source.Value, request, DateOnly.FromDateTime(now.UtcDateTime)) is { } failure)
                     return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
                 intent = await FreezeAsync(source.Value, request, provenance, now, token).ConfigureAwait(false);
                 var response = await PolicyCampaignContent.AcceptedResponseAsync(content, request.TenantId, request.CommandId,
