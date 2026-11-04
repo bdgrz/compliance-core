@@ -2725,4 +2725,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.Events.AuditPopulationAmendedV3))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.Events.AuditPopulationFrozenV3))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.Events.AuditPopulationExportGeneratedV3))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipStarted))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipLeaveStarted))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipLeaveEnded))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipEnded))]
 sealed partial class ComplianceCoreJsonContext : JsonSerializerContext;
