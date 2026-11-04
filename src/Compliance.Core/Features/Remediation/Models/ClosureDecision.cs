@@ -13,6 +13,7 @@ using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Models;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
@@ -39,4 +40,5 @@ namespace Bdgrz.Compliance.Features.Remediation.Models;
 /// </summary>
 public sealed record ClosureDecision(Uuid DecisionId, Uuid ProgramId, string VerificationRationale,
     IReadOnlyList<EvidenceReference> ResolutionEvidence, string Rationale, Uuid CloserMemberId, ActorReference ClosedBy,
-    DateTimeOffset DecidedAt, Uuid? SeparationOfDutiesWaiverId);
+    DateTimeOffset DecidedAt, Uuid? SeparationOfDutiesWaiverId, NativeFactReference? ProposalSource = null,
+    FindingClosureReviewBinding? Review = null);

@@ -294,11 +294,9 @@ public sealed class FindingAggregate : Aggregate
     }
 
     /// <summary>Returns a proposal or admits its exact independent review to the existing final proof path.</summary>
-    public Result ReviewClosure(OperationProvenance operation, Uuid closureId, long proposalRevision, bool approve,
-        string? comments, SeparationOfDutiesWaiverProof? waiver, ImmutableContentRef? intent,
-        ImmutableContentRef firstResponse, ImmutableContentRef? operationResult)
+    public Result PrepareReview(OperationProvenance operation, Uuid closureId, long proposalRevision, bool approve,
+        string? comments, SeparationOfDutiesWaiverProof? waiver)
     {
-        ArgumentNullException.ThrowIfNull(operation);
         var prepared = PrepareProposalDecision(operation, nameof(ReviewFindingClosure), closureId, proposalRevision);
         if (!prepared.IsSuccess)
             return prepared;
@@ -307,6 +305,22 @@ public sealed class FindingAggregate : Aggregate
         if (!CanReview(review, approve))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "A proposal author needs a waiver for this exact proposal revision, reviewer and review action."));
+        if (approve && UnresolvedActionCount != 0)
+            return Fail(CommandFailure.StateConflict("Approval requires every planned action outcome in this finding."));
+        return !approve && !FindingRules.IsBoundedText(comments, FindingRules.MaximumTextLength) ? InvalidProposal() : Result.Success;
+    }
+
+    /// <summary>Returns a proposal or admits its exact independent review to the existing final proof path.</summary>
+    public Result ReviewClosure(OperationProvenance operation, Uuid closureId, long proposalRevision, bool approve,
+        string? comments, SeparationOfDutiesWaiverProof? waiver, ImmutableContentRef? intent,
+        ImmutableContentRef firstResponse, ImmutableContentRef? operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        var prepared = PrepareReview(operation, closureId, proposalRevision, approve, comments, waiver);
+        if (!prepared.IsSuccess)
+            return prepared;
+        var review = new FindingClosureReviewBinding(closureId, proposalRevision, FindingClosureProposalRules.MemberId(operation.Actor),
+            operation.Actor, operation.AcceptedAt, waiver);
         if (approve)
         {
             if (UnresolvedActionCount != 0 || intent is not { Schema: ClosureIntent.Schema })

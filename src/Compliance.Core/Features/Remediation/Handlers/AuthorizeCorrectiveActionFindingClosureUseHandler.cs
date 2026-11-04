@@ -131,9 +131,9 @@ sealed class AuthorizeCorrectiveActionFindingClosureUseHandler(IAggregateReader 
         var waiverProven = intent.WaiverProof is not null;
         var refusal = terminal is FindingClosureCanceled ? "The closure was canceled."
             : completed is null && cancelled is null ? "The corrective action is not completed or cancelled."
-            : completed?.CompletedByMemberId == decision.CloserMemberId && !waiverProven ||
+            : decision.Review is null && (completed?.CompletedByMemberId == decision.CloserMemberId && !waiverProven ||
               cancelled?.CancelledByMemberId == decision.CloserMemberId && !waiverProven ||
-              actionOwner == decision.CloserMemberId && !waiverProven
+              actionOwner == decision.CloserMemberId && !waiverProven)
                 ? "A corrective action owner or resolution author cannot verify and close their own remediation without a separation-of-duties waiver."
                 : null;
         var facts = new ClosureActionFacts(request.SourceOwnerId, actionOwner, completed is not null,
