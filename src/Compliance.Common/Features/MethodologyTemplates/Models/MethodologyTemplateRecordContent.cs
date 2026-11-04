@@ -7,4 +7,7 @@ public sealed record MethodologyTemplateRecordContent(
     string Title,
     string Summary,
     IReadOnlyList<MethodologyTemplateCriterionReference> CriteriaReferences,
-    Cntryl.Portia.Uuid? ContributionApprovalId = null);
+    Cntryl.Portia.Uuid? ContributionApprovalId = null,
+    MethodologyTemplateControlContent? Control = null,
+    MethodologyTemplatePolicyContent? Policy = null,
+    MethodologyTemplateRiskContent? Risk = null);

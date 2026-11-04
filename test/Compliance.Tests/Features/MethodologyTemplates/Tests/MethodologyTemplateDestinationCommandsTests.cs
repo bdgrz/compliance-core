@@ -138,7 +138,7 @@ public sealed class MethodologyTemplateDestinationCommandsTests
         Assert.Equal(commandId, command.CommandId);
         Assert.Equal(recordId, command.ControlId);
         Assert.Equal(versionId, command.ExpectedApprovedVersionId);
-        Assert.Equal(entry.Control.Content.Title, command.Content.Title);
+        Assert.Equal(entry.Control!.Content.Title, command.Content.Title);
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public sealed class MethodologyTemplateDestinationCommandsTests
         Assert.Equal(commandId, command.CommandId);
         Assert.Equal(recordId, command.PolicyId);
         Assert.Equal(3, command.ExpectedVersion);
-        Assert.Equal(entry.Policy.Content, command.Content);
+        Assert.Equal(entry.Policy!.Content, command.Content);
     }
 
     [Fact]
@@ -230,7 +230,7 @@ public sealed class MethodologyTemplateDestinationCommandsTests
         var frozen = MethodologyTemplateDestinationCommands.Freeze(entry);
         evidence[0] = "Mutated evidence specification";
         var revised = frozen with { Control = frozen.Control! with
-        { Content = frozen.Control.Content with { Objective = "A different objective" } } };
+        { Content = frozen.Control!.Content with { Objective = "A different objective" } } };
 
         // Assert
         Assert.Equal("Evidence specification", Assert.Single(frozen.Control!.Content.ExpectedEvidenceDescriptions));
