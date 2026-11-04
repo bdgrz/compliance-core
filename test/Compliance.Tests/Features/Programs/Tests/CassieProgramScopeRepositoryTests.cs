@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using Cntryl.Portia;
 using Cntryl.Cassie.Commands;
 using Bdgrz.Compliance.Features.Content.Services;
@@ -224,6 +225,8 @@ public sealed class CassieProgramScopeRepositoryTests
         foreach (var kind in new[] { "program", "service", "boundary", "snapshot", "population" })
             foreach (var corruption in new[] { "row_id", "scope_id", "sort_key", "tenant", "identity" })
                 yield return [kind, corruption];
+        yield return ["boundary", "missing_header"];
+        yield return ["boundary", "historical_decoration"];
     }
 
     [Theory]
@@ -250,6 +253,8 @@ public sealed class CassieProgramScopeRepositoryTests
             "sort_key" => before with { Sort = "another-sort" },
             "tenant" => before with { Payload = before.Payload.Replace(tenant.ToString(), Uuid.CreateVersion4().ToString(), StringComparison.Ordinal) },
             "identity" => before with { Payload = before.Payload.Replace(scenario.Id.ToString(), Uuid.CreateVersion4().ToString(), StringComparison.Ordinal) },
+            "missing_header" => before with { Payload = ChangedBoundaryPayload(before.Payload, "header", null) },
+            "historical_decoration" => before with { Payload = ChangedBoundaryPayload(before.Payload, "version_id", Uuid.CreateVersion4().ToString()) },
             _ => throw new ArgumentOutOfRangeException(nameof(corruption)),
         };
         await ReplaceStoredRowAsync(database, table, after);
@@ -326,6 +331,13 @@ public sealed class CassieProgramScopeRepositoryTests
         Assert.IsType<ImmutableContentIntegrityException>(failure);
         Assert.IsType<ImmutableContentIntegrityException>(pageFailure);
         Assert.Equal(ProjectionCheckpoint.Start, await scenario.Store.LoadCheckpointAsync(scenario.Identity));
+    }
+
+    static string ChangedBoundaryPayload(string payload, string property, string? value)
+    {
+        var body = JsonNode.Parse(payload)!.AsObject();
+        body[property] = value;
+        return body.ToJsonString();
     }
 
     static string CurrentTable(string kind) => kind switch
