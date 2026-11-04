@@ -28,6 +28,16 @@ Support withdrawal and Access Cassie are preparing. Other agents review consumer
 shared wiring and held prerequisites. Only the isolated Program validation lane
 runs local .NET commands; no new full-gate result is claimed yet.
 
+The user then prioritized **code complete ASAP**, as a platform for iteration.
+Source implementation now fans out beyond the saved preparation queue while one
+serialized .NET lane continues independently. Current exclusive lanes are Support
+(Evidence, Advisor, Applications and the Examinations support contributor), Access,
+Program/scope, Methodology, Assurance, Workforce, Work, Controls/occurrences,
+FirmServices, Policies and Readiness. Workers deliver bounded source/test commits
+and exact shared wiring instructions. The coordinator owns shared integration.
+Authored tests remain unexecuted until the validation lane observes them; source
+preparation alone does not mark a context complete.
+
 ## Active batches and exclusive ownership
 
 The coordinator owns registrations, serialization contexts, composition roots,

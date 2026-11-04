@@ -82,9 +82,15 @@ fact-factory source-inventory limitations
 
 ## Working limits after this checkpoint
 
-1. Finish the current integration gate before accepting another implementation batch.
-2. Thereafter keep one business slice integrating and at most one preparing source.
-   Other parallel capacity reviews the exact integration source or maps requirements.
+The user's subsequent 2026-11-04 instruction prioritizes **code completion as the
+platform for iteration**. That supersedes the checkpoint's small source-preparation
+queue. Independent feature workers now implement concurrently; one local .NET lane
+continues qualification without blocking source preparation. Implemented,
+compiled/tested and delivered remain separate states.
+
+1. Keep feature ownership exclusive and shared integration with the coordinator.
+2. Finish concrete code paths across the locked contexts rather than allocating
+   most parallel capacity to repeated review of the current delivery candidate.
 3. Use one acceptance row per reviewed requirement: behavior, owning invariant,
    source/facts, public/internal wiring, executed evidence, and named remainder.
 4. Continue source-first tests/Jev, then coordinator compilation and native/unit
