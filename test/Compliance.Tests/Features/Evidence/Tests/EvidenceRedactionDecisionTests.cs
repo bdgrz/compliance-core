@@ -36,7 +36,7 @@ public sealed class EvidenceRedactionDecisionTests
     }
 
     [Fact]
-    public void ShouldClearCurrentApprovalGivenLaterPreparationInReplay()
+    public void ShouldRefuseLaterPreparationGivenTerminalApprovalInReplay()
     {
         // Arrange
         var id = Uuid.CreateVersion4();
@@ -50,13 +50,9 @@ public sealed class EvidenceRedactionDecisionTests
             PreparedAt = Now.AddMinutes(10)
         };
 
-        // Act
-        var owner = Replay(id, Prepared(id, 0, first), Approved(id, 1, approval), Prepared(id, 2, second));
-
-        // Assert
-        Assert.Equal(3, owner.Revision);
-        Assert.Equal(second, owner.CurrentPreparation);
-        Assert.Null(owner.CurrentApproval);
+        // Act / Assert
+        Assert.Throws<ImmutableContentIntegrityException>(() => Replay(id, Prepared(id, 0, first),
+            Approved(id, 1, approval), Prepared(id, 2, second)));
     }
 
     [Fact]
