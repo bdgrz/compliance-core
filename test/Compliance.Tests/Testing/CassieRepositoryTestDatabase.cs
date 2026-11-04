@@ -27,6 +27,19 @@ sealed class CassieRepositoryTestDatabase : IAsyncDisposable
     public CassieDataSource DataSource { get; }
     public CassieProjectionDatabase Database { get; }
 
+    public static async Task WithSchemaSetupAsync(Func<Task> setup, CancellationToken ct = default)
+    {
+        await SchemaSetup.WaitAsync(ct);
+        try
+        {
+            await setup();
+        }
+        finally
+        {
+            SchemaSetup.Release();
+        }
+    }
+
     public static async ValueTask<CassieRepositoryTestDatabase> OpenAsync(
         IEnumerable<string>? additionalStatements = null, string? poolName = null, CancellationToken ct = default)
     {
@@ -131,19 +144,22 @@ sealed class CassieRepositoryTestDatabase : IAsyncDisposable
 
     async Task<bool> ResetTablesAsync(bool reuse)
     {
+        if (!reuse)
+            return false;
         var tables = await ReadTablesAsync();
-        reuse = reuse && _available.StandardTables?.IsSubsetOf(
-            tables.Select(static table => Qualified(table.Schema, table.Table))) == true;
+        if (_available.StandardTables?.IsSubsetOf(
+                tables.Select(static table => Qualified(table.Schema, table.Table))) != true)
+            return false;
         await using var connection = await DataSource.OpenConnectionAsync();
         await using var command = connection.CreateCommand();
         foreach (var (schema, table) in tables)
         {
             var qualified = Qualified(schema, table);
-            var keepSchema = reuse && _available.StandardTables?.Contains(qualified) == true;
+            var keepSchema = _available.StandardTables.Contains(qualified);
             command.CommandText = (keepSchema ? "DELETE FROM " : "DROP TABLE ") + qualified;
             _ = await command.ExecuteNonQueryAsync();
         }
-        return reuse;
+        return true;
     }
 
     async Task<IReadOnlyList<(string Schema, string Table)>> ReadTablesAsync(CancellationToken ct = default)

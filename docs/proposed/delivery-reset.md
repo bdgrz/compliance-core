@@ -14,11 +14,26 @@ to those revisions and their Fitz-backed read stores.
 
 The current integration tree contains the next domain batch and nine Cassie
 repositories, twelve application tables, configuration/schema startup and native
-CI/test setup. Strict Release build passes with zero warnings/errors. The latest
-full native selection passed 69/72; subsequent targeted regressions passed 2/2
-for source paging and 12/12 for remediation Work, including cross-finding collision
-refusal. The assembled full backend suite is running; no final result is claimed.
-Nothing in this paragraph establishes complete domain/context coverage.
+CI/test setup. Strict Release build and whole-solution whitespace verification pass.
+The assembled backend unit suite passed **8,673/8,673** in 14m22s against a fresh
+pinned native service with ordinary collection parallelism. Compiler inputs stayed
+unchanged throughout that run. Final-head hosted CI and merge remain pending.
+This result does not establish complete domain/context coverage.
+
+The resumed gate repaired five production-composition fixtures, restoring real
+registered Portia projector execution and separate native replay databases. A
+72-case diagnostic run passed 70 and failed incomplete-database cleanup plus a
+mixed-source timing fixture. The first repair now discards incomplete databases
+without further DDL. The second backdates staged control/policy decisions and
+freezes query time after all seeding: a future responsibility activation previously
+changed a fallback work item identity mid-test. Production Work selection was not
+changed. Independent review also restored the former Person replacement identity
+check; its native regression was observed RED at the intended assertion, then
+GREEN in the complete run, preserving stored state and checkpoint on refusal.
+
+The [requirement coverage map](requirement-coverage.md) now records five contexts
+against actual owners/tests and named missing behavior. The other contexts still
+need that requirement-level mapping; source review itself is not execution proof.
 
 ## Preserved, unvalidated work
 

@@ -63,6 +63,24 @@ is claimed for batch 4 yet. Jev's contradictory broad-versus-specific service
 permission judgments remain advisory; the actual authorization cases passed in
 this checkpoint and no authorization rule was weakened on that model signal.
 
+The resumed assembled gate is now locally GREEN: strict Release build has zero
+warnings/errors; whole-solution whitespace verification and all six Node tooling
+cases pass; proposal and runtime-fixture validators pass. The full backend suite
+passed **8,673/8,673** with BrokerIntegration/WebIntegration excluded, using a fresh
+pinned native Cassie service and ordinary xUnit collection parallelism. Changed
+compiler inputs were hashed before the run and verified unchanged afterward.
+Local log: `/tmp/compliance-cassie-integration-full-unit.log`; TRX:
+`/tmp/compliance-cassie-integration-green-results/backend.trx`. Hosted final-head CI,
+merge and post-merge readback remain pending.
+
+Five old production-composition fixtures now lease native databases and run real
+registered projectors. Incomplete leases are discarded without further DDL.
+Mixed-source list/detail verification freezes query time after historical setup,
+preventing responsibility activation from legitimately changing a work identity
+mid-assertion. The bounded Person projection identity regression was observed RED
+before restoring the previous replacement guard and is GREEN in the full run.
+These repairs do not implement any of the separately mapped remaining domain rules.
+
 Source inventory caveat: the batch-4 export contains 568 facts, 136 aggregate types,
 819 requests and 777 Core handler registrations. It still reports 66 unwired producer
 operations. These are syntactic navigation counts. In particular, it misses the
@@ -259,12 +277,14 @@ new-line creation/retirement routes. Counts remain navigation evidence only.
 Batch 3 PR [#1182](https://github.com/bdgrz/compliance-core/pull/1182) passed exact-head
 Backend CI and adversarial/source/Jev review, then merged as `97cecc07`.
 
-## Batch 4 assembled source checkpoint (unvalidated)
+## Batch 4 assembled source checkpoint
 
 Prepared source includes 175 authored cases: generic WorkRelationship retirement
 (16), named ServiceIdentity behavior/authorization/legacy preservation (105),
 corrective-action changes (22), truthful V4 line queries (14), and named Person
-details (18). No compilation or test execution has occurred for this batch.
+details (18). These were authored before coordinator compilation; they were not
+observed RED at that source handoff. Subsequent build/test evidence and remaining
+validation are recorded above and in the read-model migration ledger.
 
 Central wiring adds explicit Lead/Contributor grants and typed routes/JSON/handlers.
 ReviewServiceIdentity is typed HTTP callable and invocation-guarded, with no MCP

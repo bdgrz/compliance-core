@@ -64,7 +64,7 @@ dotnet build Compliance.slnx --configuration Release --no-restore
 docker compose -f test/Compliance.Tests/Cassie/compose.yml up -d
 export COMPLIANCE_CASSIE_TEST_CONNECTION_STRING='Host=127.0.0.1;Port=55432;Database=postgres;Username=root;Password=compliance-cassie-test;SSL Mode=Disable;Timeout=15'
 export Cassie__ConnectionString="$COMPLIANCE_CASSIE_TEST_CONNECTION_STRING"
-dotnet test Compliance.slnx --configuration Release --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration" -- xUnit.ParallelizeTestCollections=false
+dotnet test Compliance.slnx --configuration Release --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
 ```
 
 This repository's feature CI checks formatting, build and backend units. Native

@@ -161,14 +161,15 @@ public sealed class WorkSourceCompositionTests
         await AdvisorSeed.FeedbackAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, handoffId, feedbackId,
             source, "change_request", "Clarify control ownership.", advisor, now.AddMinutes(2));
 
-        await using var provider = CreateProvider(fixture);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.LeadUserId));
         var list = new ListWork(fixture.TenantId, fixture.ProgramId, "all");
 
         // Act
         var lag = await Scenario().When(list).ExpectFailure(RequestErrorKind.Conflict);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var pending = await Scenario().When(list).ExpectSuccess();
         var feedbackWork = Assert.Single(pending.Value.Items,
             item => item.Kind == WorkSource.AdvisorFeedback);
@@ -187,7 +188,7 @@ public sealed class WorkSourceCompositionTests
                     new HttpInvocation("POST", "/synthetic/advisor-feedback/resolution",
                         "/synthetic/advisor-feedback/resolution", "synthetic")), CancellationToken.None);
         var resolutionLag = await Scenario().When(list).ExpectFailure(RequestErrorKind.Conflict);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var resolved = await Scenario().When(list).ExpectSuccess();
 
         // Assert
@@ -219,14 +220,15 @@ public sealed class WorkSourceCompositionTests
             fixture.TenantId, fixture.ProgramId, "Quarterly evidence", "Reviewed export", fixture.OwnerMemberId,
             fixture.Today));
         var (reviewCampaignId, reviewItemId, _) = await SeedReviewCampaignAsync(fixture);
-        await using var provider = CreateProvider(fixture);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
         var actor = ProgramManagementServices.Actor(fixture.ApproverUserId);
         RequestScenario Scenario() => RequestScenario.For(provider).GivenActor(actor);
         var list = new ListWork(fixture.TenantId, fixture.ProgramId, "all");
 
         // Act
         var lag = await Scenario().When(list with { Search = "no visible match" }).ExpectFailure(RequestErrorKind.Conflict);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var before = await Scenario().When(list).ExpectSuccess();
         foreach (var item in before.Value.Items)
         {
@@ -264,7 +266,7 @@ public sealed class WorkSourceCompositionTests
                 reviewItemId, 1, "keep", "The access is still required."));
         Assert.True(decision.IsSuccess, decision.Error?.Message);
         var campaignChanged = await Scenario().When(list).ExpectFailure(RequestErrorKind.Conflict);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var afterCampaignDecision = await Scenario().When(list).ExpectSuccess();
         await Scenario().When(new GetWorkItem(fixture.TenantId, fixture.ProgramId,
             reviewItem.WorkItemId)).ExpectFailure(RequestErrorKind.NotFound);
@@ -272,7 +274,7 @@ public sealed class WorkSourceCompositionTests
         await Scenario().When(new CancelEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             evidenceRequest.EvidenceRequestId, evidenceRequest.Revision, "No longer required")).ExpectSuccess();
         var changed = await Scenario().When(list).ExpectFailure(RequestErrorKind.Conflict);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var after = await Scenario().When(list).ExpectSuccess();
 
         var closureItem = Assert.Single(after.Value.Items, item => item.Kind == "finding_closure_review");
@@ -283,7 +285,7 @@ public sealed class WorkSourceCompositionTests
         await FindingProcesses.RunClosureAsync(provider, fixture.TenantId, fixture.ProgramId, verified.FindingId,
             closure.CommandId);
         await Scenario().When(list).ExpectFailure(RequestErrorKind.Conflict);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var final = await Scenario().When(list).ExpectSuccess();
         await Scenario().When(new GetWorkItem(fixture.TenantId, fixture.ProgramId, closureItem.WorkItemId))
             .ExpectFailure(RequestErrorKind.NotFound);
@@ -312,9 +314,10 @@ public sealed class WorkSourceCompositionTests
         var fixture = await OperationsFixture.CreateAsync();
         await using var ownedSource = fixture.Provider;
         var (campaignId, itemId, _) = await SeedReviewCampaignAsync(fixture);
-        await using var provider = CreateProvider(fixture,
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString,
             accessReviewPermissions: fixture.Permissions);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         RequestScenario Scenario(Uuid userId) => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(userId));
         var request = new ListWork(fixture.TenantId, fixture.ProgramId, "all");
@@ -329,7 +332,7 @@ public sealed class WorkSourceCompositionTests
         Assert.True(decision.IsSuccess, decision.Error?.Message);
         var decisionLag = await Scenario(fixture.ApproverUserId).When(request)
             .ExpectFailure(RequestErrorKind.Conflict);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var pending = await Scenario(fixture.ApproverUserId).When(request).ExpectSuccess();
         var remediation = Assert.Single(pending.Value.Items);
         var remediationDetail = await Scenario(fixture.ApproverUserId).When(new GetWorkItem(
@@ -346,7 +349,7 @@ public sealed class WorkSourceCompositionTests
         Assert.True(providerChange.IsSuccess, providerChange.Error?.Message);
         var providerChangeLag = await Scenario(fixture.ApproverUserId).When(request)
             .ExpectFailure(RequestErrorKind.Conflict);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var afterProviderChange = await Scenario(fixture.ApproverUserId).When(request)
             .ExpectSuccess();
         var verified = Assert.Single(afterProviderChange.Value.Items);
@@ -387,8 +390,9 @@ public sealed class WorkSourceCompositionTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         await using var ownedSource = fixture.Provider;
-        await using var provider = CreateProvider(fixture);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var campaignId = Uuid.CreateVersion4();
         var personId = fixture.PersonId;
         var launchedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
@@ -445,12 +449,13 @@ public sealed class WorkSourceCompositionTests
         var (campaignId, itemId, systemInstanceId) = await SeedReviewCampaignAsync(fixture,
             applicationRestricted: true);
         var permissions = new RestrictedReadPermissions(fixture.Permissions, fixture.LeadUserId);
-        await using var provider = CreateProvider(fixture, permissions, permissions);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString, permissions, permissions);
         var decision = await PersonalAccessReviewTransportTests.SendHttpAsync(provider,
             fixture.LeadUserId, new RecordAccessDecision(Uuid.CreateVersion4(), fixture.TenantId, campaignId,
                 itemId, 1, "revoke", "The access is no longer required."));
         Assert.True(decision.IsSuccess, decision.Error?.Message);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
 
         await using var scope = provider.CreateAsyncScope();
         var source = scope.ServiceProvider.GetServices<IAccountableWorkItemDirectoryReader>()
@@ -649,7 +654,8 @@ public sealed class WorkSourceCompositionTests
 
     static async Task SeedControlDecisionWorkAsync(OperationsFixture fixture)
     {
-        var now = DateTimeOffset.UtcNow.AddMinutes(-3);
+        // Every staged decision and responsibility must precede the frozen query clock.
+        var now = DateTimeOffset.UtcNow.AddHours(-1);
         await SeedControlAsync(fixture, "AC-MIXED-REVIEW", approve: false,
             retirement: false, acceptRetirementReview: false, now);
         await SeedControlAsync(fixture, "AC-MIXED-APPROVAL", approve: true,
@@ -762,7 +768,7 @@ public sealed class WorkSourceCompositionTests
 
     static async Task SeedPolicyDecisionWorkAsync(OperationsFixture fixture)
     {
-        var now = DateTimeOffset.UtcNow.AddMinutes(-4);
+        var now = DateTimeOffset.UtcNow.AddHours(-1);
         await SeedPolicyAsync(fixture, "POL-MIXED-DRAFT-REVIEW", false, false, false, false,
             fixture.Today, now);
         await SeedPolicyAsync(fixture, "POL-MIXED-DRAFT-APPROVAL", true, false, false, false,
@@ -901,13 +907,14 @@ public sealed class WorkSourceCompositionTests
         await using var ownedSource = fixture.Provider;
         var permitted = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today);
         var blocked = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today);
-        await using var provider = CreateProvider(fixture);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
         CompleteCorrectiveAction Complete(FindingView finding) => fixture.Complete(finding,
             Assert.Single(finding.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport);
         await Scenario().When(Complete(permitted)).ExpectSuccess();
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var before = await Scenario().When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine"))
             .ExpectSuccess();
         var item = Assert.Single(before.Value.Items);
@@ -917,7 +924,7 @@ public sealed class WorkSourceCompositionTests
         // Act
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId, fixture.OwnerUserId,
             revoked: true);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var denied = await Scenario().When(Complete(blocked)).ExpectFailure(RequestErrorKind.Forbidden);
         var after = await Scenario().When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine"))
             .ExpectSuccess();
@@ -938,8 +945,9 @@ public sealed class WorkSourceCompositionTests
         await using var ownedSource = fixture.Provider;
         fixture.Permissions.Managers.Add(fixture.OwnerMemberId);
         await fixture.ProposeAsync(0);
-        await using var provider = CreateProvider(fixture);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         RequestScenario Scenario(Uuid user) => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(user));
         var before = await Scenario(fixture.ApproverUserId)
@@ -947,7 +955,7 @@ public sealed class WorkSourceCompositionTests
         var item = Assert.Single(before.Value.Items);
         Assert.Equal("control_operating_plan_approval", item.Kind);
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId, fixture.ApproverUserId);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
 
         // Act
         var oversight = await Scenario(fixture.ApproverUserId)
@@ -972,8 +980,9 @@ public sealed class WorkSourceCompositionTests
         await using var ownedSource = fixture.Provider;
         fixture.Permissions.Managers.Add(fixture.OwnerMemberId);
         var plan = await fixture.ProposeAsync(0);
-        await using var provider = CreateProvider(fixture);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         RequestScenario Scenario(Uuid user) => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(user));
         var before = await Scenario(fixture.ApproverUserId)
@@ -983,7 +992,7 @@ public sealed class WorkSourceCompositionTests
             item.WorkItemId, 0, fixture.ApproverMemberId)).ExpectSuccess();
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId, fixture.ApproverUserId,
             revoked: revoked);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
 
         // Act
         await PersonalOperatingPlanApprovalTransportTests.HttpAsync(provider, fixture.ApproverUserId,
@@ -1006,7 +1015,7 @@ public sealed class WorkSourceCompositionTests
         await PersonalOperatingPlanApprovalTransportTests.HttpAsync(provider, fixture.OwnerUserId,
             new ApproveControlOperatingPlan(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 plan.Revision, plan.PlanVersionId, "Independent replacement approval."));
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var after = await Scenario(fixture.OwnerUserId)
             .When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine")).ExpectSuccess();
 
@@ -1029,11 +1038,12 @@ public sealed class WorkSourceCompositionTests
         var fixture = await OperationsFixture.CreateAsync();
         await using var ownedSource = fixture.Provider;
         var finding = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today);
-        await using var provider = CreateProvider(fixture);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         await AttestAssignmentHistoryFixture.SeedAsync(provider,
             otherTenant ? Uuid.CreateVersion4() : fixture.TenantId, fixture.OwnerUserId, practice: practice);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
 
@@ -1042,7 +1052,7 @@ public sealed class WorkSourceCompositionTests
             .ExpectSuccess();
         var completed = await Scenario().When(fixture.Complete(finding, Assert.Single(finding.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport))
             .ExpectSuccess();
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var after = await Scenario().When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine"))
             .ExpectSuccess();
 
@@ -1063,8 +1073,9 @@ public sealed class WorkSourceCompositionTests
         await fixture.AddToTeamAsync(fixture.OwnerUserId);
         await fixture.AddToTeamAsync(fixture.OutsiderUserId);
         await fixture.PlanAsync(new OperatingHolder(OperatingAuthority.TeamHolder, fixture.TeamId));
-        await using var provider = CreateProvider(fixture);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         RequestScenario Scenario(Uuid user) => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(user));
         var before = await Scenario(fixture.OwnerUserId)
@@ -1072,7 +1083,7 @@ public sealed class WorkSourceCompositionTests
         var item = before.Value.Items[0];
         Assert.Null(item.AssigneeMemberId);
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId, fixture.OwnerUserId);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
 
         // Act
         var team = await Scenario(fixture.OwnerUserId)
@@ -1109,8 +1120,9 @@ public sealed class WorkSourceCompositionTests
         await fixture.AddToTeamAsync(fixture.OwnerUserId);
         await fixture.PlanAsync(new OperatingHolder(OperatingAuthority.TeamHolder, fixture.TeamId));
         Assert.DoesNotContain(fixture.OwnerMemberId, fixture.Permissions.Managers);
-        await using var provider = CreateProvider(fixture);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
         var initial = await Scenario().When(new ListWork(fixture.TenantId,
@@ -1120,13 +1132,13 @@ public sealed class WorkSourceCompositionTests
             fixture.ProgramId, performedItem.ControlId!.Value, performedItem.SourceId)).ExpectSuccess();
         var performed = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, fixture.OwnerUserId, fixture.Attest(source.Value));
         Assert.Equal(ControlOperationStates.Submitted, performed.Value.State);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var before = await Scenario().When(new ListWork(fixture.TenantId,
             fixture.ProgramId, "team")).ExpectSuccess();
         var item = before.Value.Items[0];
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId,
             fixture.OwnerUserId, revoked);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
 
         // Act
         var readable = await Scenario().When(new GetControlOccurrence(fixture.TenantId,
@@ -1174,8 +1186,9 @@ public sealed class WorkSourceCompositionTests
         await using var ownedSource = fixture.Provider;
         await fixture.AddToTeamAsync(fixture.OwnerUserId);
         await fixture.PlanAsync(new OperatingHolder(OperatingAuthority.TeamHolder, fixture.TeamId));
-        await using var provider = CreateProvider(fixture);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
         var before = await Scenario().When(new ListWork(fixture.TenantId,
@@ -1189,7 +1202,7 @@ public sealed class WorkSourceCompositionTests
         else
             await ProgramManagementServices.SeedAsync(provider, new Member(fixture.TenantId, fixture.OwnerUserId),
                 member => member.Deprovision(fixture.LeadMemberId, "Lead", DateTimeOffset.UtcNow, "Left."));
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
 
         // Act
         var team = await Scenario().When(new ListWork(fixture.TenantId,
@@ -1215,8 +1228,9 @@ public sealed class WorkSourceCompositionTests
         await fixture.AddToTeamAsync(fixture.OwnerUserId);
         await fixture.PlanAsync(new OperatingHolder(OperatingAuthority.TeamHolder, fixture.TeamId));
         var permissions = new ReadTogglePermissions(fixture.Permissions);
-        await using var provider = CreateProvider(fixture, permissions);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString, permissions);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
         var before = await Scenario().When(new ListWork(fixture.TenantId,
@@ -1245,8 +1259,9 @@ public sealed class WorkSourceCompositionTests
         await using var ownedSource = fixture.Provider;
         await fixture.AddToTeamAsync(fixture.OwnerUserId);
         await fixture.PlanAsync(new OperatingHolder(OperatingAuthority.TeamHolder, fixture.TeamId));
-        await using var provider = CreateProvider(fixture);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
         var before = await Scenario().When(new ListWork(fixture.TenantId,
@@ -1266,7 +1281,7 @@ public sealed class WorkSourceCompositionTests
         await provider.GetRequiredService<IEventStore>().AppendAsync(new EventStreamAddress(
             fixture.TenantId.ToString(), "rbac-members", fixture.OwnerMemberId.ToString()),
             1, [malformed]);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
 
         // Act
         await Scenario().When(new GetControlOccurrence(fixture.TenantId, fixture.ProgramId,
@@ -1286,8 +1301,9 @@ public sealed class WorkSourceCompositionTests
         var fixture = await OperationsFixture.CreateAsync();
         await using var ownedSource = fixture.Provider;
         var finding = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today);
-        await using var provider = CreateProvider(fixture);
-        await CatchUpAsync(provider, fixture.TenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId, fixture.OwnerUserId);
         {
             var registrations = new List<DomainEvent>();
@@ -1305,7 +1321,7 @@ public sealed class WorkSourceCompositionTests
                 fixture.TenantId.ToString(), "rbac-members", fixture.OwnerMemberId.ToString()),
                 1, [malformed]);
         }
-        await CatchUpAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
 
@@ -1325,7 +1341,8 @@ public sealed class WorkSourceCompositionTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         await using var ownedSource = fixture.Provider;
-        await using var provider = CreateProvider(fixture);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString);
         await using var scope = provider.CreateAsyncScope();
         var projectedKinds = scope.ServiceProvider.GetServices<IAccountableWorkItemDirectoryReader>()
             .SelectMany(reader => reader.ProjectedKinds).ToArray();
@@ -1357,8 +1374,10 @@ public sealed class WorkSourceCompositionTests
             RbacPermissions.RiskAcceptComplianceLead));
         fixture.Permissions.RiskApprovers.Add((fixture.ApproverMemberId,
             RbacPermissions.RiskAcceptExecutive));
-        await using var provider = CreateProvider(fixture,
-            accessReviewPermissions: fixture.Permissions);
+        var clock = new ScenarioClock();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = CreateProvider(fixture, database.ConnectionString,
+            accessReviewPermissions: fixture.Permissions, clock: clock);
         var openEvidence = await SeedOperationsWorkAsync(fixture);
         await SeedAccessReviewWorkAsync(fixture, provider);
         await SeedControlMappingWorkAsync(fixture);
@@ -1383,6 +1402,7 @@ public sealed class WorkSourceCompositionTests
             ActorReference.ForMember(Uuid.CreateVersion4(), "Assigned Advisor"), advisorNow.AddMinutes(2));
         await SeedPolicyCampaignWorkAsync(fixture, "policy");
         await SeedPolicyCampaignWorkAsync(fixture, "training");
+        clock.Freeze();
         await CatchUpRiskDraftProjectionAsync(provider, fixture.TenantId);
         await CatchUpPolicyCampaignProjectionAsync(provider, fixture.TenantId);
         await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
@@ -1399,8 +1419,13 @@ public sealed class WorkSourceCompositionTests
                     item.SourceId == openEvidence.EvidenceRequestId);
         foreach (var item in initial.Value.Items)
         {
-            var detail = await Scenario().When(new GetWorkItem(fixture.TenantId,
-                fixture.ProgramId, item.WorkItemId)).ExpectSuccess();
+            await using var detailScope = provider.CreateAsyncScope();
+            var detail = await detailScope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
+                new GetWorkItem(fixture.TenantId, fixture.ProgramId, item.WorkItemId),
+                new RequestDispatchContext(ProgramManagementServices.Actor(fixture.ApproverUserId),
+                    new DirectInvocation()), CancellationToken.None);
+            Assert.True(detail.IsSuccess,
+                $"Queue item {item.Kind}/{item.WorkItemId} has no detail: {detail.Error}");
             var search = await Scenario().When(request with { Search = item.Summary }).ExpectSuccess();
             Assert.Equal(item, detail.Value.Item);
             Assert.Contains(item, search.Value.Items);
@@ -1445,9 +1470,10 @@ public sealed class WorkSourceCompositionTests
             view.Items.Count(static item => item.Escalated));
     }
 
-    static ServiceProvider CreateProvider(OperationsFixture fixture,
+    static ServiceProvider CreateProvider(OperationsFixture fixture, string cassieConnectionString,
         IPermissionAuthorizer? permissions = null,
-        IPermissionAuthorizer? accessReviewPermissions = null)
+        IPermissionAuthorizer? accessReviewPermissions = null,
+        TimeProvider? clock = null)
     {
         var events = fixture.Provider.GetRequiredService<IEventStore>();
         var services = new ServiceCollection();
@@ -1455,6 +1481,7 @@ public sealed class WorkSourceCompositionTests
         {
             ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
             ["Fitz:ApplicationName"] = "compliance",
+            ["Cassie:ConnectionString"] = cassieConnectionString,
             ["Compliance:Controls:ActivationEnabled"] = "true",
             ["Compliance:Controls:LifecycleEnabled"] = "true",
         }).Build();
@@ -1463,6 +1490,8 @@ public sealed class WorkSourceCompositionTests
         services.AddSingleton(fixture.Provider.GetRequiredService<IImmutableContentStore>());
         services.AddSingleton(events);
         services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
+        if (clock is not null)
+            services.AddSingleton(clock);
         if (accessReviewPermissions is not null)
             services.AddSingleton(accessReviewPermissions);
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(
@@ -1471,6 +1500,15 @@ public sealed class WorkSourceCompositionTests
         services.AddSingleton<ITenantActivity, ActiveTenant>();
         services.AddSingleton<ITenantMembershipDirectoryReader, AlwaysMemberDirectory>();
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+    }
+
+    sealed class ScenarioClock : TimeProvider
+    {
+        DateTimeOffset? _frozen;
+
+        public void Freeze() => _frozen = DateTimeOffset.UtcNow;
+
+        public override DateTimeOffset GetUtcNow() => _frozen ?? DateTimeOffset.UtcNow;
     }
 
     sealed class ReadTogglePermissions(IPermissionAuthorizer inner) : IPermissionAuthorizer
@@ -1491,36 +1529,6 @@ public sealed class WorkSourceCompositionTests
             permission == RbacPermissions.ApplicationRestrictedRead
                 ? ValueTask.FromResult(userId == allowedUserId)
                 : inner.IsAllowedAsync(tenantId, userId, memberId, permission, ct);
-    }
-
-    static async Task CatchUpAsync(IServiceProvider provider, Uuid tenantId)
-    {
-        await using var scope = provider.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        var events = services.GetRequiredService<IDomainEventReader>();
-        foreach (var reader in services.GetServices<IAccountableWorkItemDirectoryReader>())
-        {
-            var store = reader as FitzKvProjectionStore ?? services.GetRequiredService<FitzRiskEvaluationDirectory>();
-            var method = store.GetType().GetMethod("ApplyAsync", [typeof(DomainEvent), typeof(CancellationToken)]);
-            Assert.NotNull(method);
-            await ApplyAsync(reader, store, method.CreateDelegate<Func<DomainEvent, CancellationToken, ValueTask>>(store));
-        }
-
-        async Task ApplyAsync(IAccountableWorkItemDirectoryReader reader, FitzKvProjectionStore store,
-            Func<DomainEvent, CancellationToken, ValueTask> apply)
-        {
-            var pattern = reader.SourcePattern(tenantId);
-            var checkpoint = await reader.LoadCheckpointAsync(tenantId);
-            await using var batch = await ((IProjectionStore)store).BeginAsync(new ProjectionBatchContext(
-                new CheckpointIdentity(reader.ProjectorName, pattern), checkpoint));
-            var cursor = checkpoint.Cursor;
-            await foreach (var record in events.ReadAsync(pattern, cursor, CancellationToken.None))
-            {
-                await apply(record.Event, CancellationToken.None);
-                cursor = record.NextCursor;
-            }
-            await batch.CommitAsync(new ProjectionCheckpoint(cursor));
-        }
     }
 
     static async Task CatchUpPolicyCampaignProjectionAsync(IServiceProvider provider,

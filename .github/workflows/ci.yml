@@ -23,7 +23,7 @@ jobs:
   backend:
     name: Backend
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     env:
       Cassie__ConnectionString: Host=127.0.0.1;Port=55432;Database=postgres;Username=root;Password=compliance-cassie-test;SSL Mode=Disable;Timeout=15
       COMPLIANCE_CASSIE_TEST_CONNECTION_STRING: Host=127.0.0.1;Port=55432;Database=postgres;Username=root;Password=compliance-cassie-test;SSL Mode=Disable;Timeout=15
@@ -64,7 +64,7 @@ jobs:
           docker compose -f test/Compliance.Tests/Cassie/compose.yml up -d
           curl --fail --silent --show-error --retry 30 --retry-delay 1 \
             --retry-connrefused --max-time 2 --output /dev/null http://127.0.0.1:58080/readyz
-          dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration" -- xUnit.ParallelizeTestCollections=false
+          dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
 
       - name: Stop Cassie test service
         if: ${{ always() }}

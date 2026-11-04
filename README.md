@@ -33,7 +33,7 @@ dotnet build Compliance.slnx --configuration Release --no-restore
 docker compose -f test/Compliance.Tests/Cassie/compose.yml up -d
 export COMPLIANCE_CASSIE_TEST_CONNECTION_STRING='Host=127.0.0.1;Port=55432;Database=postgres;Username=root;Password=compliance-cassie-test;SSL Mode=Disable;Timeout=15'
 export Cassie__ConnectionString="$COMPLIANCE_CASSIE_TEST_CONNECTION_STRING"
-dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration" -- xUnit.ParallelizeTestCollections=false
+dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
 ```
 
 `Directory.Packages.props` centrally selects direct package versions and compatible transitive versions through NuGet transitive pinning. Microsoft.OpenApi stays on its compatible 2.x line because ASP.NET Core 10 requires a version below 3.0.0.
@@ -175,7 +175,7 @@ Backend feature development uses TDD with unit tests. The backend unit-test
 command is:
 
 ```console
-dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration" -- xUnit.ParallelizeTestCollections=false
+dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
 ```
 
 This repository's pull request CI runs formatting, build, and backend unit

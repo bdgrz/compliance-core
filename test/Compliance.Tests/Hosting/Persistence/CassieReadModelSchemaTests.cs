@@ -13,12 +13,13 @@ public sealed class CassieReadModelSchemaTests
         var poolName = Guid.NewGuid().ToString("N");
         var broken = await CassieRepositoryTestDatabase.OpenAsync(poolName: poolName);
         var previousConnection = broken.ConnectionString;
-        await using (var connection = await broken.DataSource.OpenConnectionAsync())
-        await using (var command = connection.CreateCommand())
+        await CassieRepositoryTestDatabase.WithSchemaSetupAsync(async () =>
         {
+            await using var connection = await broken.DataSource.OpenConnectionAsync();
+            await using var command = connection.CreateCommand();
             command.CommandText = "DROP TABLE workforce_people";
             _ = await command.ExecuteNonQueryAsync();
-        }
+        });
 
         // Act
         await broken.DisposeAsync();
@@ -94,17 +95,19 @@ public sealed class CassieReadModelSchemaTests
     public async Task ShouldPreserveReadModelDataGivenRepeatedSchemaStartup()
     {
         // Arrange
-        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            ["CREATE TABLE schema_startup_probe (id TEXT PRIMARY KEY, value TEXT NOT NULL)"]);
         await using var connection = await database.DataSource.OpenConnectionAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "CREATE TABLE schema_startup_probe (id TEXT PRIMARY KEY, value TEXT NOT NULL)";
-        _ = await command.ExecuteNonQueryAsync();
         command.CommandText = "INSERT INTO schema_startup_probe (id, value) VALUES ('kept', 'original')";
         _ = await command.ExecuteNonQueryAsync();
 
         // Act
-        await CassieReadModelSchema.InitializeAsync(database.DataSource);
-        await CassieReadModelSchema.InitializeAsync(database.DataSource);
+        await CassieRepositoryTestDatabase.WithSchemaSetupAsync(async () =>
+        {
+            await CassieReadModelSchema.InitializeAsync(database.DataSource);
+            await CassieReadModelSchema.InitializeAsync(database.DataSource);
+        });
         command.CommandText = "SELECT value FROM schema_startup_probe WHERE id = 'kept'";
         var value = await command.ExecuteScalarAsync();
 

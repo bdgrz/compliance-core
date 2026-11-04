@@ -405,23 +405,22 @@ public sealed class PolicyAcknowledgementIndependenceTests
     {
         await using var scope = provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var events = services.GetRequiredService<IDomainEventReader>();
+        var registrations = services.GetServices<WorkloadRegistration>().ToArray();
+        var runner = new ProjectorRunner(services.GetRequiredService<IDomainEventReader>());
         foreach (var directory in services.GetServices<IAccountableWorkItemDirectoryReader>())
         {
-            var store = directory as FitzKvProjectionStore ?? services.GetRequiredService<FitzRiskEvaluationDirectory>();
-            var apply = store.GetType().GetMethod("ApplyAsync", [typeof(DomainEvent), typeof(CancellationToken)])!
-                .CreateDelegate<Func<DomainEvent, CancellationToken, ValueTask>>(store);
-            var pattern = directory.SourcePattern(tenantId);
+            var registration = Assert.Single(registrations,
+                candidate => candidate.Name == directory.ProjectorName);
+            var projector = (Projector)services.GetRequiredService(registration.ComponentType);
+            await new ProjectorScenario(new TenantId(tenantId.ToString())).RunAsync(projector);
             var checkpoint = await directory.LoadCheckpointAsync(tenantId);
-            await using var batch = await store.BeginAsync(new ProjectionBatchContext(
-                new CheckpointIdentity(directory.ProjectorName, pattern), checkpoint));
-            var cursor = checkpoint.Cursor;
-            await foreach (var record in events.ReadAsync(pattern, cursor, CancellationToken.None))
+            while (true)
             {
-                await apply(record.Event, CancellationToken.None);
-                cursor = record.NextCursor;
+                var next = await runner.RunAsync(projector, checkpoint);
+                if (next == checkpoint)
+                    break;
+                checkpoint = next;
             }
-            await batch.CommitAsync(new ProjectionCheckpoint(cursor));
         }
     }
 
@@ -429,6 +428,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
     {
         public required PolicyCampaignHandlerTests.Fixture Source { get; init; }
         public required ServiceProvider Provider { get; init; }
+        public required CassieRepositoryTestDatabase Database { get; init; }
         public required PolicyVersionView Version { get; init; }
         public required Uuid CampaignId { get; init; }
 
@@ -436,32 +436,67 @@ public sealed class PolicyAcknowledgementIndependenceTests
         {
             // Retain real reviewed/approved policy, frozen roster and launched campaign before composing production dispatch.
             var source = await PolicyCampaignHandlerTests.Fixture.CreateAsync();
-            var version = await source.ApprovePolicyAsync();
-            var campaign = await source.LaunchAsync(version);
-            var services = new ServiceCollection();
-            services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            CassieRepositoryTestDatabase? database = null;
+            ServiceProvider? provider = null;
+            try
             {
-                ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
-                ["Fitz:ApplicationName"] = "compliance"
-            }).Build(), developerAuthentication: true);
-            var store = source.Provider.GetRequiredService<IEventStore>();
-            services.AddSingleton(store);
-            services.AddSingleton(source.Provider.GetRequiredService<IImmutableContentStore>());
-            services.AddSingleton<IDomainEventReader>((IDomainEventReader)store);
-            services.AddSingleton<IKvClient>(new InMemoryKvClient());
-            services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(
-                new Permissions(source.ManagerUserId)));
-            services.AddSingleton<ITenantActivity, ActiveTenant>();
-            services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships(source.TenantId,
-                source.ManagerUserId, source.MemberUserId, affiliation, membership));
-            var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
-            await ProgramManagementServices.SeedAsync(provider, new ProgramRules(source.TenantId, source.ProgramId), program =>
+                var version = await source.ApprovePolicyAsync();
+                var campaign = await source.LaunchAsync(version);
+                database = await CassieRepositoryTestDatabase.OpenAsync();
+                var services = new ServiceCollection();
+                services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
+                    ["Fitz:ApplicationName"] = "compliance",
+                    ["Cassie:ConnectionString"] = database.ConnectionString
+                }).Build(), developerAuthentication: true);
+                var store = source.Provider.GetRequiredService<IEventStore>();
+                services.AddSingleton(store);
+                services.AddSingleton(source.Provider.GetRequiredService<IImmutableContentStore>());
+                services.AddSingleton<IDomainEventReader>((IDomainEventReader)store);
+                services.AddSingleton<IKvClient>(new InMemoryKvClient());
+                services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(
+                    new Permissions(source.ManagerUserId)));
+                services.AddSingleton<ITenantActivity, ActiveTenant>();
+                services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships(source.TenantId,
+                    source.ManagerUserId, source.MemberUserId, affiliation, membership));
+                provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+                await ProgramManagementServices.SeedAsync(provider, new ProgramRules(source.TenantId, source.ProgramId), program =>
+                {
+                    Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null),
+                        RbacIds.Member(source.TenantId, source.ManagerUserId), "Client manager", DateTimeOffset.UtcNow));
+                    return Result.Success;
+                });
+                return new Fixture { Source = source, Provider = provider, Database = database, Version = version, CampaignId = campaign.CampaignId };
+            }
+            catch (Exception original)
             {
-                Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null),
-                    RbacIds.Member(source.TenantId, source.ManagerUserId), "Client manager", DateTimeOffset.UtcNow));
-                return Result.Success;
-            });
-            return new Fixture { Source = source, Provider = provider, Version = version, CampaignId = campaign.CampaignId };
+                try
+                {
+                    try
+                    {
+                        if (provider is not null)
+                            await provider.DisposeAsync();
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            if (database is not null)
+                                await database.DisposeAsync();
+                        }
+                        finally
+                        {
+                            await source.Provider.DisposeAsync();
+                        }
+                    }
+                }
+                catch (Exception cleanup)
+                {
+                    original.Data["Compliance.PolicyFixtureCleanupException"] = cleanup;
+                }
+                throw;
+            }
         }
 
         /// <summary>Dispatches the request; an admitted acknowledgement is applied to its participant at once.</summary>
@@ -494,6 +529,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
         public async ValueTask DisposeAsync()
         {
             await Provider.DisposeAsync();
+            await Database.DisposeAsync();
             await Source.Provider.DisposeAsync();
         }
     }
