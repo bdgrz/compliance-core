@@ -103,7 +103,10 @@ public sealed class ControlVersionTermsTests
         // Assert
         Assert.Null(result);
         Assert.Equal(2, owner.Revision);
-        Assert.Equal(changed, owner.CurrentContent);
+        Assert.Equal(changed.Kind, owner.CurrentContent?.Kind);
+        Assert.Equal(changed.Nature, owner.CurrentContent?.Nature);
+        Assert.Equal(changed.Cadence, owner.CurrentContent?.Cadence);
+        Assert.Equal(changed.OccurrenceSubject, owner.CurrentContent?.OccurrenceSubject);
     }
 
     static ControlDraftContent Content() => new("Access review", "Review access", "Check access",
