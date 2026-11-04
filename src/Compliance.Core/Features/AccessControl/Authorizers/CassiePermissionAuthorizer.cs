@@ -26,7 +26,7 @@ sealed class CassiePermissionAuthorizer(CassieProjectionDatabase database, ITena
         if (tenant is { } tenantId)
             CassieAccessControlSql.RequireScope(Identity, tenantId);
         PermissionProjectionState state;
-        await using (var load = CreateCommand("SELECT CAST(payload AS TEXT) FROM access_permission_states WHERE projection_key = @scope"))
+        await using (var load = CreateCommand("SELECT payload FROM access_permission_states WHERE projection_key = @scope"))
         {
             CassieAccessControlSql.Bind(load, ("scope", CurrentProjectionKey));
             var stored = await load.ExecuteScalarAsync(ct).ConfigureAwait(false);
@@ -52,7 +52,7 @@ sealed class CassiePermissionAuthorizer(CassieProjectionDatabase database, ITena
                 ("permission", Permissions.Normalize(grant.Permission)));
             _ = await insert.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
-        await using var save = CreateCommand("INSERT INTO access_permission_states (projection_key, payload) VALUES (@scope, CAST(@payload AS JSONB)) " +
+        await using var save = CreateCommand("INSERT INTO access_permission_states (projection_key, payload) VALUES (@scope, @payload) " +
             "ON CONFLICT (projection_key) DO UPDATE SET payload = EXCLUDED.payload");
         CassieAccessControlSql.Bind(save, ("scope", CurrentProjectionKey),
             ("payload", JsonSerializer.Serialize(state, ComplianceCoreJsonContext.Default.PermissionProjectionState)));
@@ -149,7 +149,7 @@ sealed class CassiePermissionAuthorizer(CassieProjectionDatabase database, ITena
     async ValueTask<PermissionProjectionState?> ReadStateAsync(CassieProjectionReadSession read,
         Uuid tenantId, CancellationToken ct)
     {
-        await using var command = read.CreateCommand("SELECT CAST(payload AS TEXT) FROM access_permission_states WHERE projection_key = @scope");
+        await using var command = read.CreateCommand("SELECT payload FROM access_permission_states WHERE projection_key = @scope");
         CassieAccessControlSql.Bind(command, ("scope", QueryKey(tenantId)));
         var stored = await command.ExecuteScalarAsync(ct).ConfigureAwait(false);
         if (stored is not string json)
