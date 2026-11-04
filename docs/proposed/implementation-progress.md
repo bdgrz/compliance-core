@@ -81,6 +81,25 @@ mid-assertion. The bounded Person projection identity regression was observed RE
 before restoring the previous replacement guard and is GREEN in the full run.
 These repairs do not implement any of the separately mapped remaining domain rules.
 
+Exact-head adversarial review of PR [#1186](https://github.com/bdgrz/compliance-core/pull/1186)
+then found two current-authorization gaps outside that test selection: a linked
+person-owner could review through stale projected membership, and native accepted
+corrective-action retries skipped the prepare-only permission check. New source
+membership and retry cases produced a clean **14 passed / 13 failed** RED selection.
+After the repairs, **58/58** relevant cases and the expanded full backend suite
+**8,700/8,700** passed (14m15s), with unchanged compiler inputs. The strict build
+and whole-solution whitespace verification pass. Service person/team owner paths
+now use authoritative current membership and UTC expiry; corrective changes check
+acting membership and current authority before receipt replay while retaining
+new-write checks. Privileged frozen retries do not require the current Finding body.
+
+Hosted CI at `cbaaba5f` passed spec/restore/format/build but stopped before unit
+execution on native readiness connection reset (curl56). Its idempotent readiness
+GET now retries all startup errors. A local restart also reproduced and recovered
+from an empty reply. Final-head hosted CI and merge evidence are tracked in PR1186;
+the earlier hosted failure is not counted as unit acceptance. The separate Person
+generic-writer source preparation remains held and unvalidated.
+
 Source inventory caveat: the batch-4 export contains 568 facts, 136 aggregate types,
 819 requests and 777 Core handler registrations. It still reports 66 unwired producer
 operations. These are syntactic navigation counts. In particular, it misses the

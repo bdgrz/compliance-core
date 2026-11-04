@@ -134,3 +134,27 @@ Live Jev fixture review adverse scores were 0.09–0.21; the Person guard/source
 regression review returned 0.89–0.96 on its principal positive judgments. A broad
 old-clock-cause score of 0.56 was inconclusive. These are advisory signals, not
 acceptance; exact source timing and executable RED/GREEN supplied the evidence.
+
+
+### Authorization refinement before PR1186 delivery
+
+The first local8,673 pass did not establish current authorization on every path.
+Exact-head review found linked-owner review could bypass committed Member changes,
+and accepted corrective-action retries skipped preparation-only change authority.
+The new27-case RED selection passed14 and failed13 at intended refusal assertions.
+Repairs passed58 relevant cases, then the complete **8,700/8,700** backend gate in
+14m15s with unchanged compiler inputs. Strict build and whitespace checks pass.
+
+Owner-fallback service reviews now source-check current canonical membership,
+UTC guest expiry and team episode. Their privileged grant branch retains the
+production permission authorizer's authoritative membership checks. Corrective
+changes source-check the actor and current owner/permission before native replay;
+new writes retain their preparation checks and authorized lead retries retain
+frozen-response independence from current Finding content. Live Jev review was
+advisory; narrower no-append judgments were0.98 after a broad0.54 question proved
+ambiguous, and actual version/fact assertions passed.
+
+The initial hosted run failed before test discovery on readiness connection reset,
+after a successful build. CI now retries all errors from the idempotent readiness
+GET. Exact final-head CI/merge status is tracked in
+[PR1186](https://github.com/bdgrz/compliance-core/pull/1186).

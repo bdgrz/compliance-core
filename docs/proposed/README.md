@@ -54,7 +54,7 @@ designed yet; it awaits the business-operations decisions.
 The [implementation progress ledger](implementation-progress.md) tracks assembled
 behavior, deferred wiring, remaining work and validation failures across contexts.
 The [requirement coverage map](requirement-coverage.md) records reviewed behavior
-and concrete remaining acceptance per requirement; its initial five contexts are
+and concrete remaining acceptance per requirement; its initial eight contexts are
 source-reviewed and still require execution at the acceptance head.
 
 ## Aggregate implementation evidence

@@ -62,7 +62,7 @@ jobs:
       - name: Test
         run: |
           docker compose -f test/Compliance.Tests/Cassie/compose.yml up -d
-          curl --fail --silent --show-error --retry 30 --retry-delay 1 \
+          curl --fail --silent --show-error --retry 30 --retry-delay 1 --retry-all-errors \
             --retry-connrefused --max-time 2 --output /dev/null http://127.0.0.1:58080/readyz
           dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
 

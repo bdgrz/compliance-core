@@ -2,7 +2,8 @@
 
 Tracking: [#1176](https://github.com/bdgrz/compliance-core/issues/1176).
 
-New implementation is frozen while the coordinator clears the integration backlog.
+The current integration gate is finishing before another batch is accepted. One
+Person writer cutover is prepared in isolation and held until this gate merges.
 The reviewed context documents remain the specification. This is a delivery reset,
 not a change to the domain scope or the user's Portia.Cassie direction.
 
@@ -31,9 +32,16 @@ changed. Independent review also restored the former Person replacement identity
 check; its native regression was observed RED at the intended assertion, then
 GREEN in the complete run, preserving stored state and checkpoint on refusal.
 
-The [requirement coverage map](requirement-coverage.md) now records five contexts
+The [requirement coverage map](requirement-coverage.md) now records eight contexts
 against actual owners/tests and named missing behavior. The other contexts still
 need that requirement-level mapping; source review itself is not execution proof.
+
+The exact-head review then found current-authorization gaps in service-owner review
+and accepted corrective-change retries. A clean27-case selection observed13
+behavioral failures; repairs passed58 focused cases and the expanded full unit
+gate **8,700/8,700** in14m15s. The first hosted run stopped before units on startup
+readiness connection reset; the GET probe now retries that error. Final-head hosted
+CI and delivery evidence live in [PR1186](https://github.com/bdgrz/compliance-core/pull/1186).
 
 ## Preserved, unvalidated work
 
