@@ -17,7 +17,7 @@ public sealed class RemoveRolePermissionRequestScenarioTests
 {
     static readonly Uuid TenantId = Uuid.CreateVersion4();
     static readonly Uuid RoleId = Uuid.CreateVersion4();
-    const string Permission = "controls.read";
+    const string Permission = RbacPermissions.ProgramManage;
 
     [Fact]
     public async Task ShouldRejectUserPermissionMutationGivenTheFixedRoleCatalog()
