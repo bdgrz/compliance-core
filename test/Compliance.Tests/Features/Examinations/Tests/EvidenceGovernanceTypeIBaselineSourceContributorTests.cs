@@ -332,6 +332,27 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
             difference.Contains("withdrawn", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public async Task ShouldBindWithdrawalReasonIntoCapturedHistoryGivenAnotherActiveSupportForSameArtifact()
+    {
+        // Arrange
+        var first = await Fixture(includeLaterLink: false, includeWithdrawal: true, secondActiveSupport: true);
+        var second = await Fixture(includeLaterLink: false, includeWithdrawal: true, secondActiveSupport: true,
+            withdrawalReason: "The artifact supports a different control.");
+
+        // Act
+        var firstResult = await first.Contributor.ReadAsync(Engagement(), first.Context, CancellationToken.None);
+        var secondResult = await second.Contributor.ReadAsync(Engagement(), second.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(firstResult.IsSuccess, firstResult.Error?.Message);
+        Assert.True(secondResult.IsSuccess, secondResult.Error?.Message);
+        Assert.NotEqual(Assert.Single(firstResult.Value.Sources, static source => source.Kind == "evidence_artifact")
+                .ContentSha256,
+            Assert.Single(secondResult.Value.Sources, static source => source.Kind == "evidence_artifact")
+                .ContentSha256);
+    }
+
     [Theory]
     [InlineData("missing_link")]
     [InlineData("duplicate_link")]
@@ -389,7 +410,8 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
         bool includeLaterDisclosure = false, bool includePriorHandlingPolicy = false,
         bool includeFutureHandlingPolicy = false, bool lateArtifactReceipt = false,
         bool includeWithdrawal = false, bool laterWithdrawal = false, bool secondActiveSupport = false,
-        int? withdrawalReceiptMilliseconds = null, string? supportHistoryFault = null)
+        int? withdrawalReceiptMilliseconds = null, string? supportHistoryFault = null,
+        string withdrawalReason = "The artifact was linked by mistake.")
     {
         var store = new InMemoryEventStore();
         var matching = Support(SupportId, ControlId, 2, BeforeTypeIDate);
@@ -412,7 +434,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
             var withdrawnAt = laterWithdrawal ? AfterTypeIDate : BeforeTypeIDate.AddMinutes(2);
             var withdrawal = new EvidenceSupportWithdrawn(TenantId, SupportId, 2, MemberId,
                 withdrawnAt, ProgramId, Uuid.CreateVersion5(SupportId, "withdrawal_command"), 1,
-                new string('c', 64), "The artifact was linked by mistake.", "Compliance Lead");
+                new string('c', 64), withdrawalReason, "Compliance Lead");
             await store.AppendAsync(new EventStreamAddress(TenantId.ToString(), "evidence-support",
                 SupportId.ToString()), 1, [DomainEventSeed.Attach(withdrawal, SupportId, 2,
                     eventId: Uuid.CreateVersion5(SupportId, "evidence_support_withdrawn_v1"),
