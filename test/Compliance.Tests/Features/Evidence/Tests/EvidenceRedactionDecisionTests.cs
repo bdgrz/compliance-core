@@ -56,6 +56,52 @@ public sealed class EvidenceRedactionDecisionTests
     }
 
     [Fact]
+    public void ShouldDecideReasonedRejectionGivenIndependentReviewOfExactPreparation()
+    {
+        // Arrange
+        var id = Uuid.CreateVersion4();
+        var preparation = Preparation(1);
+        var owner = Replay(id, Prepared(id, 0, preparation));
+
+        // Act
+        var decision = owner.DecideReject(Uuid.CreateVersion4(), 1, preparation.PreparationId,
+            preparation.Revision, 2, Lead, Now.AddMinutes(5), Now, "Sensitive details remain", null);
+
+        // Assert
+        Assert.True(decision.IsSuccess, decision.Error?.Message);
+        Assert.Equal("Sensitive details remain", decision.Value.Comments);
+        Assert.Equal(Lead, decision.Value.ReviewedBy);
+        Assert.Equal(2, decision.Value.Revision);
+        Assert.Empty(new AggregateScenario<EvidenceRedaction>(owner).PendingEvents);
+    }
+
+    [Theory]
+    [InlineData("preparer")]
+    [InlineData("comments")]
+    [InlineData("revision")]
+    [InlineData("preparation")]
+    public void ShouldRefuseRejectionWithoutFactGivenInvalidReview(string invalid)
+    {
+        // Arrange
+        var id = Uuid.CreateVersion4();
+        var preparation = Preparation(1);
+        var owner = Replay(id, Prepared(id, 0, preparation));
+
+        // Act
+        var decision = owner.DecideReject(Uuid.CreateVersion4(), invalid == "revision" ? 0 : 1,
+            invalid == "preparation" ? Uuid.CreateVersion4() : preparation.PreparationId,
+            preparation.Revision, 2, invalid == "preparer" ? Preparer : Lead, Now.AddMinutes(5), Now,
+            invalid == "comments" ? " " : "Sensitive details remain", null);
+
+        // Assert
+        Assert.False(decision.IsSuccess);
+        Assert.Equal(1, owner.Revision);
+        Assert.Null(owner.CurrentApproval);
+        Assert.Null(owner.CurrentRejection);
+        Assert.Empty(new AggregateScenario<EvidenceRedaction>(owner).PendingEvents);
+    }
+
+    [Fact]
     public void ShouldAcceptNextRevisionGivenSameSourcesAndChangedReason()
     {
         // Arrange
