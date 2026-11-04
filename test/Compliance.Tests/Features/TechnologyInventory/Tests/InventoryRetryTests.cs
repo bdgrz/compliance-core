@@ -58,6 +58,9 @@ using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
 using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 using Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
+using Bdgrz.Compliance.Features.TechnologyInventory.Services;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
 
@@ -69,6 +72,70 @@ namespace Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
 public sealed class InventoryRetryTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 23, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task ShouldShowCurrentEncryptionGapGivenRaisedAssetClassificationAndUnverifiedExceptionText()
+    {
+        // Arrange
+        await using var host = await Host.CreateAsync();
+        var asset = Uuid.CreateVersion4();
+        Assert.True((await host.RecordAssetAsync(new RecordInformationAsset(asset, host.TenantId,
+            "Customers", "internal", "RET-1", host.OwnerId))).IsSuccess);
+        var flow = new DataFlowView(host.TenantId, Uuid.CreateVersion4(), 1,
+            new DataFlowContent("system_instance", Uuid.CreateVersion4(), "external_party", null, "Payroll",
+                [asset], "Export", false, false, "unverified exception", new DateOnly(2026, 10, 23),
+                host.OwnerId, "active", "internal"), "manual", ActorReference.ForMember(host.OwnerId, "Owner"), Now);
+        Assert.True((await host.ClassifyAsync(new ClassifyInformationAsset(Uuid.CreateVersion4(), host.TenantId,
+            asset, 1, "restricted"))).IsSuccess);
+
+        // Act
+        var impact = await InformationAssetImpact.ReadCurrentAsync(host.Reader, flow, Now);
+
+        // Assert
+        Assert.Equal("restricted", impact.RecomputedClassification);
+        Assert.True(impact.ClassificationChanged);
+        Assert.True(impact.EncryptionViolation);
+        Assert.Equal("internal", flow.Content.Classification);
+    }
+
+    [Theory]
+    [InlineData(false, 1, false)]
+    [InlineData(false, 2, true)]
+    [InlineData(true, 1, true)]
+    public async Task ShouldRequireCurrentExactWaiverGivenUnencryptedFlowImpact(bool revoke, long scopeRevision,
+        bool violation)
+    {
+        // Arrange
+        await using var host = await Host.CreateAsync();
+        var asset = Uuid.CreateVersion4();
+        var flowId = Uuid.CreateVersion4();
+        Assert.True((await host.RecordAssetAsync(new RecordInformationAsset(asset, host.TenantId,
+            "Customers", "restricted", "RET-1", host.OwnerId))).IsSuccess);
+        var waiver = new Waiver(host.TenantId, Uuid.CreateVersion4());
+        var requester = ActorReference.ForMember(Uuid.CreateVersion4(), "Requester");
+        var approver = ActorReference.ForMember(Uuid.CreateVersion4(), "Approver");
+        Assert.True(waiver.Request(new RequestWaiver(waiver.Id, host.TenantId, "data_flow_encryption",
+            [new WaiverScopeRecord("data_flow", flowId, scopeRevision)], "Temporary exception", "Compensating control",
+            Now.AddDays(1)), requester, Now).IsSuccess);
+        Assert.True(waiver.Review(new ReviewWaiver(Uuid.CreateVersion4(), host.TenantId, waiver.Id, 1, true),
+            approver, Now).IsSuccess);
+        if (revoke)
+            Assert.True(waiver.Revoke(new RevokeWaiver(Uuid.CreateVersion4(), host.TenantId, waiver.Id, 2,
+                "No longer approved"), approver, Now).IsSuccess);
+        await host.SaveAsync(waiver);
+        var flow = new DataFlowView(host.TenantId, flowId, 1,
+            new DataFlowContent("system_instance", Uuid.CreateVersion4(), "external_party", null, "Payroll",
+                [asset], "Export", false, false, waiver.Id.ToString(), new DateOnly(2026, 10, 23),
+                host.OwnerId, "active", "internal"), "manual", requester, Now);
+
+        // Act
+        var impact = await InformationAssetImpact.ReadCurrentAsync(host.Reader, flow, Now);
+        var expired = await InformationAssetImpact.ReadCurrentAsync(host.Reader, flow, Now.AddDays(1));
+
+        // Assert
+        Assert.Equal(violation, impact.EncryptionViolation);
+        Assert.True(expired.EncryptionViolation);
+    }
 
     [Fact]
     public async Task ShouldReplayOriginalClassificationGivenLaterNamedDetailsChange()
@@ -233,6 +300,9 @@ public sealed class InventoryRetryTests
         public Uuid OwnerId { get; } = Uuid.CreateVersion4();
 
         public IAggregateReader Reader => _provider.GetRequiredService<IAggregateReader>();
+
+        public ValueTask SaveAsync(Aggregate owner) => _provider.GetRequiredService<IAggregateWriter>()
+            .SaveAsync(owner, new RequestDispatchContext(RequestActor.System));
 
         static readonly System.Security.Claims.ClaimsPrincipal Author =
             ProgramManagementServices.Actor(Uuid.CreateVersion4());
