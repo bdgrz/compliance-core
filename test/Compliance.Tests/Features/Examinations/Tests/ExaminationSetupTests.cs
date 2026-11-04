@@ -34,7 +34,7 @@ public sealed class ExaminationSetupTests
         Assert.Equal(kind, owner.Current.ExaminationType);
         Assert.Equal("unknown", owner.Current.Auditor.Kind);
         Assert.Null(owner.Current.ConfirmedDates);
-        Assert.Single(owner.PendingEvents);
+        Assert.Single(Pending(owner));
     }
 
     [Fact]
@@ -47,14 +47,14 @@ public sealed class ExaminationSetupTests
         Assert.Null(owner.SetTargetDates(new SetExaminationTargetDates(Uuid.CreateVersion4(), Tenant,
             Program, ExaminationId, 1, new ExaminationDates(new DateOnly(2027, 1, 1), null, null)),
             Actor, "Lead", Now.AddMinutes(1)));
-        var count = owner.PendingEvents.Count;
+        var count = Pending(owner).Count;
 
         // Act
         var failure = owner.Open(request, Actor, "Changed display", Now.AddHours(1));
 
         // Assert
         Assert.Null(failure);
-        Assert.Equal(count, owner.PendingEvents.Count);
+        Assert.Equal(count, Pending(owner).Count);
         Assert.Equal(2, owner.Revision);
     }
 
@@ -71,7 +71,7 @@ public sealed class ExaminationSetupTests
 
         // Assert
         Assert.NotNull(failure);
-        Assert.Single(owner.PendingEvents);
+        Assert.Single(Pending(owner));
         Assert.Equal("type_i", owner.Current!.ExaminationType);
     }
 
@@ -114,7 +114,7 @@ public sealed class ExaminationSetupTests
         // Assert
         Assert.NotNull(failure);
         Assert.Null(owner.Current!.ConfirmedDates);
-        Assert.Single(owner.PendingEvents);
+        Assert.Single(Pending(owner));
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public sealed class ExaminationSetupTests
         // Assert
         Assert.NotNull(failure);
         Assert.Equal(1, owner.Revision);
-        Assert.Single(owner.PendingEvents);
+        Assert.Single(Pending(owner));
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public sealed class ExaminationSetupTests
         var first = new ExaminationClosure(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
         Assert.Null(owner.Close(first, Actor, "Signer", Now));
         var firstFact = owner.Current!.Closure;
-        var count = owner.PendingEvents.Count;
+        var count = Pending(owner).Count;
 
         // Act
         Assert.Null(owner.Close(first, Actor, "Signer", Now.AddMinutes(1)));
@@ -158,7 +158,7 @@ public sealed class ExaminationSetupTests
         Assert.NotNull(mutation);
         Assert.Equal("closed", owner.Current.Status);
         Assert.Equal(firstFact, owner.Current.Closure);
-        Assert.Equal(count, owner.PendingEvents.Count);
+        Assert.Equal(count, Pending(owner).Count);
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public sealed class ExaminationSetupTests
         Assert.Null(owner.Open(Open("type_i"), Actor, "Lead", Now));
         Assert.Null(owner.NameSigners(new NameExaminationSigners(Uuid.CreateVersion4(), Tenant, Program,
             ExaminationId, 1, Actor, Uuid.CreateVersion4()), Actor, "Admin", Now));
-        var facts = owner.PendingEvents.ToArray();
+        var facts = Pending(owner).ToArray();
 
         // Act
         var replayed = new AggregateScenario<Examination>(New()).Given(facts).Aggregate;
@@ -180,6 +180,7 @@ public sealed class ExaminationSetupTests
         Assert.False(replayed.IsNamedSigner(Uuid.CreateVersion4()));
     }
 
+    static IReadOnlyList<DomainEvent> Pending(Examination owner) => new AggregateScenario<Examination>(owner).PendingEvents;
     static Examination New() => new(Tenant, ExaminationId);
     static OpenExamination Open(string kind) => new(Uuid.CreateVersion4(), Tenant, Program,
         ExaminationId, kind, new ExaminationAuditor("unknown", null, null));
