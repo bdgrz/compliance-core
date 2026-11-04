@@ -58,13 +58,17 @@ public sealed class RolePermission : Aggregate
         On<RolePermissionRemoved>(Apply);
     }
 
-    public Result Assign(Uuid commandId, ulong expectedRevision, ActorAttribution actor)
+    public Result Assign(Uuid commandId, ulong expectedRevision, ActorAttribution actor, bool builtInSetup = false)
     {
         if (Validate(commandId, actor) is { } error)
             return Result.Failure(error);
         if (_selectedFact is { } prior)
             return prior is RolePermissionAssigned assigned && assigned.ExpectedRevision == expectedRevision &&
                 assigned.Actor == actor ? Result.Success : ChangedIntent();
+        if (!ProductPermissionCatalog.Contains(_permission))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The permission is not defined by the product."));
+        if (BuiltInRbac.IsBuiltInRole(_tenantId, _roleId) && (!builtInSetup || Version != 0))
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "Built-in role permissions are immutable after setup."));
         if (Version != expectedRevision || IsAssigned)
             return Conflict("The role permission changed or is already assigned.");
         RaiseEvent(new RolePermissionAssigned(_tenantId, _roleId, _permission, commandId, expectedRevision, actor));
@@ -77,6 +81,8 @@ public sealed class RolePermission : Aggregate
             return Result.Failure(error);
         if (assignmentId == Uuid.Empty)
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "An assignment identity is required."));
+        if (BuiltInRbac.IsBuiltInRole(_tenantId, _roleId))
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "Built-in role permissions cannot be removed."));
         if (_selectedFact is { } prior)
             return prior is RolePermissionRemoved removed && removed.ExpectedRevision == expectedRevision &&
                 removed.AssignmentId == assignmentId && removed.Actor == actor ? Result.Success : ChangedIntent();

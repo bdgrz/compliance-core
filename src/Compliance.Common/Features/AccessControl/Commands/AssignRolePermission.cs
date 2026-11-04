@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 [Discriminator("bdgrz.rbac.role-permission.assign", 1)]
 public sealed record AssignRolePermission(Uuid TenantId, Uuid RoleId, string Permission,
     Uuid CommandId, ulong ExpectedRevision)
-    : IRequest, IRbacManagementRequest, ICallable, IIdentifiedRequest
+    : IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }
