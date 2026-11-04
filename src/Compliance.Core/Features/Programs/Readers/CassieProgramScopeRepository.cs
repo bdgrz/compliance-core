@@ -144,11 +144,14 @@ abstract class CassieProgramScopeRepository : CassieProjectionRepository
                 new(row.TenantId, row.ServiceId.ToString(), (row.ProgramId ?? Uuid.Empty).ToString(), row.Name.ToUpperInvariant()),
             ("client_service_revisions", ClientServiceRevisionView row) when row.Revision > 0 =>
                 new(null, RevisionKey(row.ServiceId, row.Revision), row.ServiceId.ToString(), Number(row.Revision)),
-            ("boundary_current_identities", BoundaryDirectoryIdentity row) =>
+            ("boundary_current_identities", BoundaryDirectoryIdentity row) when row.Header is not null &&
+                row.VersionId is null && row.EffectiveFrom is null && row.DecisionId is null && row.DecidedAt is null =>
                 new(row.Header.TenantId, row.Header.BoundaryId.ToString(), row.Header.ProgramId.ToString(), row.Header.BoundaryId.ToString()),
-            ("boundary_version_identities", BoundaryDirectoryIdentity row) when row.VersionId is { } version && row.EffectiveFrom is { } effective =>
+            ("boundary_version_identities", BoundaryDirectoryIdentity row) when row.Header is not null &&
+                row.VersionId is { } version && row.EffectiveFrom is { } effective && row.DecisionId is null && row.DecidedAt is null =>
                 new(row.Header.TenantId, $"{row.Header.BoundaryId}:{version}", row.Header.BoundaryId.ToString(), effective.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
-            ("boundary_decision_identities", BoundaryDirectoryIdentity row) when row.DecisionId is { } decision && row.DecidedAt is { } decided =>
+            ("boundary_decision_identities", BoundaryDirectoryIdentity row) when row.Header is not null &&
+                row.DecisionId is { } decision && row.DecidedAt is { } decided && row.VersionId is not null && row.EffectiveFrom is null =>
                 new(row.Header.TenantId, $"{row.Header.BoundaryId}:{decision}", row.Header.BoundaryId.ToString(), Number(decided.UtcTicks)),
             ("scope_snapshots", SnapshotView row) =>
                 new(row.TenantId, row.SnapshotId.ToString(), row.ProgramId.ToString(), Number(row.FrozenAt.UtcTicks)),
