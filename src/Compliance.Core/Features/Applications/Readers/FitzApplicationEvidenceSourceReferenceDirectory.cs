@@ -13,6 +13,7 @@ using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.Evidence.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -40,7 +41,7 @@ using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.Applications.Readers;
 
-sealed class FitzApplicationEvidenceSourceReferenceDirectory(IKvClient client)
+sealed class FitzApplicationEvidenceSourceReferenceDirectory(IKvClient client, IAggregateReader reader)
     : FitzKvProjectionStore(client,
             "kv://bdgrz/application-evidence-source-references-v1/projection", ProjectorName),
         IApplicationEvidenceSourceReferenceDirectory,
@@ -75,6 +76,11 @@ sealed class FitzApplicationEvidenceSourceReferenceDirectory(IKvClient client)
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
+        if (domainEvent is EvidenceSupportWithdrawn withdrawn)
+        {
+            await EnsureValidWithdrawalAsync(withdrawn, ct).ConfigureAwait(false);
+            return;
+        }
         if (domainEvent is not EvidenceSupportLinked linked)
             throw new InvalidOperationException(
                 "The domain event is not supported by the application evidence-source projection.");
@@ -91,6 +97,22 @@ sealed class FitzApplicationEvidenceSourceReferenceDirectory(IKvClient client)
         }
         await IncrementUnresolvedCoverageAsync(linked.TenantId, linked.ProgramId, ct)
             .ConfigureAwait(false);
+    }
+
+    async ValueTask EnsureValidWithdrawalAsync(EvidenceSupportWithdrawn withdrawn, CancellationToken ct)
+    {
+        if (_batchTenantId != withdrawn.TenantId)
+            throw new InvalidOperationException(
+                "An evidence-support withdrawal must belong to its tenant projection batch.");
+        var owner = await reader.HydrateAsync(EvidenceSupport.ForVerification(withdrawn.TenantId,
+            withdrawn.SubjectId), ct).ConfigureAwait(false);
+        if (owner.Current?.ProgramId != withdrawn.ProgramId || owner.Withdrawal is not { } recorded ||
+            recorded != withdrawn ||
+            withdrawn.Metadata.EventId == Uuid.Empty || withdrawn.Metadata.AggregateId != withdrawn.SubjectId ||
+            withdrawn.Metadata.AggregateVersion != 2 || withdrawn.Metadata.IsAudit ||
+            withdrawn.Metadata != recorded.Metadata)
+            throw new InvalidOperationException(
+                "The evidence support withdrawal does not match its authoritative lifecycle.");
     }
 
     void EnsureValid(EvidenceSupportLinked linked)

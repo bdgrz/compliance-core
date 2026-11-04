@@ -172,8 +172,6 @@ public sealed class ApplicationEvidenceSourceReferenceDirectoryTests
         var directory = new FitzApplicationEvidenceSourceReferenceDirectory(new InMemoryKvClient(), reader);
         var identity = Identity(linked.TenantId);
         var events = new InMemoryEventStore();
-        linked.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), linked.SubjectId, 1, linked.OccurredAt));
-        withdrawn.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), withdrawn.SubjectId, 2, withdrawn.OccurredAt));
         await events.AppendAsync(new EventStreamAddress(linked.TenantId.ToString(), "evidence-support",
             linked.SubjectId.ToString()), 0, [linked, withdrawn]);
         var projector = new ApplicationEvidenceSourceReferenceProjector(directory);
@@ -213,6 +211,7 @@ public sealed class ApplicationEvidenceSourceReferenceDirectoryTests
     [InlineData("reason")]
     [InlineData("revision")]
     [InlineData("actor")]
+    [InlineData("metadata")]
     public async Task ShouldRefuseWithdrawalGivenMissingOrDifferentAuthoritativeLifecycle(string mismatch)
     {
         // Arrange
@@ -230,6 +229,11 @@ public sealed class ApplicationEvidenceSourceReferenceDirectoryTests
             "actor" => withdrawal with { ActorMemberId = Uuid.CreateVersion4() },
             _ => withdrawal,
         };
+        if (mismatch == "metadata")
+        {
+            candidate = withdrawal with { };
+            candidate.AttachMetadata(withdrawal.Metadata with { EventId = Uuid.CreateVersion4() });
+        }
         var directory = new FitzApplicationEvidenceSourceReferenceDirectory(new InMemoryKvClient(),
             new SupportReader(mismatch == "missing" ? null : owner));
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(Identity(linked.TenantId),
@@ -241,6 +245,38 @@ public sealed class ApplicationEvidenceSourceReferenceDirectoryTests
 
         // Assert
         Assert.Contains("withdrawal", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("tenant")]
+    [InlineData("area")]
+    [InlineData("support")]
+    [InlineData("offset")]
+    public async Task ShouldRefuseWithdrawalGivenNoncanonicalSourceRecord(string mismatch)
+    {
+        // Arrange
+        var owner = LinkedOwner("control_version");
+        var linked = owner.Current!;
+        Assert.Null(owner.Withdraw(new WithdrawEvidenceSupport(Uuid.CreateVersion4(), linked.TenantId,
+            linked.ProgramId, linked.SubjectId, 1, "Wrong target version"),
+            ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), linked.OccurredAt.AddMinutes(1)));
+        var withdrawal = owner.Withdrawal!;
+        var directory = new FitzApplicationEvidenceSourceReferenceDirectory(new InMemoryKvClient(), new SupportReader(owner));
+        var projector = new ApplicationEvidenceSourceReferenceProjector(directory);
+        var handler = Assert.IsAssignableFrom<IProjectorHandler<EvidenceSupportWithdrawn>>(projector);
+        var stream = new EventStreamAddress(mismatch == "tenant" ? Uuid.CreateVersion4().ToString() : linked.TenantId.ToString(),
+            mismatch == "area" ? "other" : "evidence-support",
+            mismatch == "support" ? Uuid.CreateVersion4().ToString() : linked.SubjectId.ToString());
+        var source = new DomainEventRecord(stream, withdrawal, mismatch == "offset" ? 0UL : 1UL, EventCursor.Start);
+        var context = new ProjectorContext<EvidenceSupportWithdrawn>(withdrawal, source,
+            new ProjectionContext(Identity(linked.TenantId)));
+
+        // Act
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await handler.HandleAsync(context, CancellationToken.None));
+
+        // Assert
+        Assert.Contains("canonical source stream", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -288,7 +324,10 @@ public sealed class ApplicationEvidenceSourceReferenceDirectoryTests
                 ? (TAggregate)(Aggregate)current : aggregate);
     }
 
-    sealed record ProjectionContext(CheckpointIdentity Identity) : IProjectorContext;
+    sealed record ProjectionContext(CheckpointIdentity Identity) : IProjectorContext
+    {
+        public bool IsRebuild => Identity.RebuildId is not null;
+    }
 
     static EvidenceSupportLinked Support(Uuid tenantId, Uuid programId, Uuid controlId,
         string supportedType, long supportedRevision) => new(tenantId, Uuid.CreateVersion4(), 1,

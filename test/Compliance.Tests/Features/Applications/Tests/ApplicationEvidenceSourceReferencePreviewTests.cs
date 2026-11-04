@@ -211,6 +211,7 @@ public sealed class ApplicationEvidenceSourceReferencePreviewTests
     [Theory]
     [InlineData("missing")]
     [InlineData("program")]
+    [InlineData("tenant")]
     [InlineData("artifact")]
     [InlineData("target")]
     [InlineData("revision")]
@@ -223,6 +224,7 @@ public sealed class ApplicationEvidenceSourceReferencePreviewTests
         var authoritative = mismatch switch
         {
             "program" => scenario.Reference with { ProgramId = Uuid.CreateVersion4() },
+            "tenant" => scenario.Reference with { TenantId = Uuid.CreateVersion4() },
             "artifact" => scenario.Reference with { ArtifactId = Uuid.CreateVersion4() },
             "target" => scenario.Reference with { ControlId = Uuid.CreateVersion4() },
             "revision" => scenario.Reference with { SupportedRecordRevision = 2 },
@@ -250,11 +252,7 @@ public sealed class ApplicationEvidenceSourceReferencePreviewTests
         {
             scenario.Withdraw();
             var original = scenario.Support.Current!;
-            original.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
-                original.SubjectId, 1, original.OccurredAt));
             var withdrawal = scenario.Support.Withdrawal!;
-            withdrawal.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
-                withdrawal.SubjectId, 2, withdrawal.OccurredAt));
             await scenario.Events.AppendAsync(new EventStreamAddress(scenario.Reference.TenantId.ToString(),
                 "evidence-support", withdrawal.SubjectId.ToString()), 0, [original, withdrawal]);
         };

@@ -20,6 +20,7 @@ using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Readers;
 using Bdgrz.Compliance.Features.Evidence.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
@@ -105,6 +106,7 @@ public sealed class PreviewApplicationChangeHandler(
     const int MaximumApplicationAccessPopulationReferences = 200;
     const int MaximumApplicationReviewCampaignReferences = 200;
     const int MaximumApplicationVendorReferences = 200;
+    readonly EvidenceSupportReader _supportStatus = new(aggregates);
 
     public PreviewApplicationChangeHandler(IAggregateReader aggregates,
         IApplicationDirectoryReader applications,
@@ -721,7 +723,14 @@ public sealed class PreviewApplicationChangeHandler(
                             hasHiddenEvidenceSourceReferences = true;
                             continue;
                         }
-                        evidenceSourceReferenceItems.Add(reference);
+                        var current = await _supportStatus.ReadStatusAsync(request.TenantId,
+                            reference.ProgramId, reference.EvidenceSupportId, ct).ConfigureAwait(false);
+                        if (!current.IsSuccess || !MatchesOriginalSupport(reference, current.Value.Original))
+                            return Result<ApplicationChangePreview>.Failure(new RequestError(
+                                RequestErrorKind.Conflict,
+                                "The application evidence-source reference does not match its authoritative support.",
+                                isTransient: true));
+                        evidenceSourceReferenceItems.Add(reference with { SupportStatus = current.Value });
                     }
 
                     if (sourcePage.NextCursor is not null)
@@ -1151,6 +1160,17 @@ public sealed class PreviewApplicationChangeHandler(
             _ => false,
         };
     }
+
+    static bool MatchesOriginalSupport(ApplicationEvidenceSourceReferenceView reference,
+        EvidenceSupportView original) =>
+        reference.TenantId == original.TenantId && reference.ProgramId == original.ProgramId &&
+        reference.EvidenceSupportId == original.EvidenceSupportId &&
+        reference.ControlId == original.SupportedRecordId &&
+        reference.SupportedRecordType == original.SupportedRecordType &&
+        reference.SupportedRecordRevision == original.SupportedRecordRevision &&
+        reference.ArtifactId == original.ArtifactId && reference.ArtifactRevision == original.ArtifactRevision &&
+        reference.PeriodStart == original.PeriodStart && reference.PeriodEnd == original.PeriodEnd &&
+        reference.Purpose == original.Purpose;
 
     static bool IsValidEvidenceSourceReference(ApplicationEvidenceSourceReferenceView reference,
         Uuid tenantId, Uuid controlId, Uuid programId) =>
