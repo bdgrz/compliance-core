@@ -2,6 +2,12 @@ using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Authorizers;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 
@@ -188,6 +194,44 @@ public sealed class TemplateApplicationOrderingTests
         // Assert
         Assert.Equal(["added"], plan.Create);
         Assert.Equal(["changed"], plan.Propose);
+    }
+
+    [Theory]
+    [InlineData("client_personnel", false, false, true, true)]
+    [InlineData("client_personnel", false, false, false, false)]
+    [InlineData("firm_staff", false, false, true, false)]
+    [InlineData("guest", false, false, true, false)]
+    [InlineData("client_personnel", true, false, true, false)]
+    [InlineData("client_personnel", false, true, true, false)]
+    public async Task ShouldRequireCurrentClientLeadGivenApplicationActor(string affiliation, bool suspended,
+        bool ended, bool lead, bool allowed)
+    {
+        // Arrange
+        var request = new ApplyMethodologyTemplateV4(Uuid.CreateVersion4(), Tenant, Program, Template, 1);
+        var membership = new Membership(new TenantMembershipView(Actor, Tenant, affiliation, suspended, IsDeprovisioned: ended));
+        var authorizer = new ApplyMethodologyTemplateV4Authorizer(membership, new Permissions(lead), TimeProvider.System);
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(MethodologyTemplateScenario.Context(request, Actor), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(allowed, result.IsSuccess);
+    }
+
+    sealed class Membership(TenantMembershipView member) : ITenantMembershipDirectoryReader
+    {
+        public ValueTask<TenantMembershipView?> GetAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
+            ValueTask.FromResult<TenantMembershipView?>(member);
+        public ValueTask<bool> IsMemberAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
+            ValueTask.FromResult(true);
+        public ValueTask<Page<TenantMembershipView>> ListAsync(Uuid tenantId, int limit, string? cursor,
+            CancellationToken ct = default) => throw new NotSupportedException();
+    }
+
+    sealed class Permissions(bool lead) : IAccessGrantRolePermissionAuthorizer
+    {
+        public ValueTask<bool> IsAllowedAsRoleAsync(Uuid tenantId, Uuid userId, Uuid memberId, Uuid programId,
+            Uuid roleId, string permission, CancellationToken ct = default) => ValueTask.FromResult(lead);
     }
 
     static AggregateScenario<TemplateApplication> Scenario() => new(new TemplateApplication(Tenant, Program, Template, true));
