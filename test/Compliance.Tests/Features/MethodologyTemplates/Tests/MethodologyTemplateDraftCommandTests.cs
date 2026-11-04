@@ -7,6 +7,7 @@ using Bdgrz.Compliance.Features.Content.Persistence;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Authorizers;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Handlers;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
@@ -43,9 +44,9 @@ public sealed class MethodologyTemplateDraftCommandTests
         Assert.True(approved.IsSuccess);
         Assert.Equal("approved", owner.Status);
         Assert.Equal(Author, Assert.Single(owner.RevisionAuthors));
-        Assert.Equal(Author, Assert.Single(facts.OfType<Features.MethodologyTemplates.Events.MethodologyTemplateDraftRevisedV4>()).RevisedBy);
-        Assert.Equal(Reviewer, Assert.Single(facts.OfType<Features.MethodologyTemplates.Events.MethodologyTemplateDraftAccepted>()).ReviewedBy);
-        Assert.Equal(Approver, Assert.Single(facts.OfType<Features.MethodologyTemplates.Events.MethodologyTemplateDraftApproved>()).ApprovedBy);
+        Assert.Equal(Author, Assert.Single(facts.OfType<MethodologyTemplateDraftRevisedV4>()).RevisedBy);
+        Assert.Equal(Reviewer, Assert.Single(facts.OfType<MethodologyTemplateDraftAccepted>()).ReviewedBy);
+        Assert.Equal(Approver, Assert.Single(facts.OfType<MethodologyTemplateDraftApproved>()).ApprovedBy);
     }
 
     [Theory]
@@ -122,6 +123,33 @@ public sealed class MethodologyTemplateDraftCommandTests
     }
 
     [Fact]
+    public async Task ShouldKeepOriginalRevisionFactFreeGivenExactRetryOrChangedContentAtSameCommand()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        var request = fixture.Revision([Entry()]);
+
+        // Act
+        var revised = await fixture.Bus.SendAsync(request, Context(Author, true));
+        var repeated = await fixture.Bus.SendAsync(request, Context(Author, true));
+        var changed = await fixture.Bus.SendAsync(request with { Entries = [Entry() with { Title = "Changed intent" }] },
+            Context(Author, true));
+        var owner = await fixture.OwnerAsync();
+        var facts = await fixture.FactsAsync();
+
+        // Assert
+        Assert.True(revised.IsSuccess);
+        Assert.True(repeated.IsSuccess);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error.Kind);
+        Assert.Equal(1, owner.Revision);
+        Assert.Single(facts.OfType<MethodologyTemplateDraftRevisedV4>());
+        var entries = await fixture.Content.ReadJsonAsync<IReadOnlyList<MethodologyTemplateRecordContent>>(
+            MethodologyTemplate.Realm, owner.EntriesContent!, CancellationToken.None);
+        Assert.Equal("Review access", Assert.Single(entries).Title);
+    }
+
+    [Fact]
     public async Task ShouldRecordReasonedDiscardAndKeepRetryFactFreeGivenOperatorAuthoring()
     {
         // Arrange
@@ -140,7 +168,7 @@ public sealed class MethodologyTemplateDraftCommandTests
         Assert.True(repeated.IsSuccess);
         Assert.False(changed.IsSuccess);
         Assert.Equal("discarded", owner.Status);
-        Assert.Single(facts.OfType<Features.MethodologyTemplates.Events.MethodologyTemplateDraftDiscarded>());
+        Assert.Single(facts.OfType<MethodologyTemplateDraftDiscarded>());
     }
 
     static IRequest Request(Fixture fixture, string command) => command switch

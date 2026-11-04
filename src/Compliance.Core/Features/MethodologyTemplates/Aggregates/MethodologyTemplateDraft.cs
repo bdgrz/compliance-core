@@ -216,19 +216,21 @@ public sealed class MethodologyTemplateDraft : Aggregate
 
     static bool ValidManifest(IReadOnlyList<MethodologyTemplateRecordContent>? entries, ImmutableContentRef? content)
     {
-        if (entries is not { Count: <= 100 } || content is null || !ValidReference(content) ||
-            entries.Any(entry => entry is null || !Key(entry.EntryKey) ||
-                entry.RecordKind is not ("control" or "policy" or "risk") || !Text(entry.Title, 200) ||
-                !Text(entry.Summary, 2000) || entry.ContributionApprovalId is not null ||
-                entry.CriteriaReferences is not { Count: <= 50 } || entry.CriteriaReferences.Any(reference =>
-                    reference is null || reference.EditionId == Uuid.Empty || !Key(reference.Identifier))) ||
-            entries.Select(entry => entry.EntryKey).Distinct(StringComparer.Ordinal).Count() != entries.Count)
+        if (!ValidEntries(entries) || content is null || !ValidReference(content))
             return false;
         var info = ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(IReadOnlyList<MethodologyTemplateRecordContent>))
             ?? throw new InvalidOperationException("Methodology entry serialization metadata is missing.");
         var bytes = JsonSerializer.SerializeToUtf8Bytes(entries, info);
         return content.Bytes == bytes.LongLength && content.Sha256 == ContentDigest.Sha256(bytes);
     }
+
+    internal static bool ValidEntries(IReadOnlyList<MethodologyTemplateRecordContent>? entries) =>
+        entries is { Count: <= 100 } && entries.All(entry => entry is not null && Key(entry.EntryKey) &&
+            (entry.RecordKind is "control" or "policy" or "risk") && Text(entry.Title, 200) &&
+            Text(entry.Summary, 2000) && entry.ContributionApprovalId is null &&
+            entry.CriteriaReferences is { Count: <= 50 } references && references.All(reference =>
+                reference is not null && reference.EditionId != Uuid.Empty && Key(reference.Identifier))) &&
+        entries.Select(entry => entry.EntryKey).Distinct(StringComparer.Ordinal).Count() == entries.Count;
 
     static bool ValidReference(ImmutableContentRef? content) => content is not null && content.ContentId != Uuid.Empty &&
         content.Schema == EntriesSchema && content.MediaType == "application/json" && content.Bytes > 0 &&
