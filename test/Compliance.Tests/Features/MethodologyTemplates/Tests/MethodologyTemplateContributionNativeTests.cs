@@ -82,6 +82,7 @@ using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Handlers;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Services;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
@@ -121,7 +122,7 @@ public sealed class MethodologyTemplateContributionNativeTests
     }
 
     [Fact]
-    public async Task ShouldReplayOriginalResultsWithoutCurrentContentGivenLaterAcceptedContribution()
+    public async Task ShouldDecodeHistoricalOriginalResultsWithoutCurrentContentGivenLaterAcceptedContribution()
     {
         // Arrange
         await using var scenario = new MethodologyTemplateContributionScenario(Now);
@@ -144,13 +145,13 @@ public sealed class MethodologyTemplateContributionNativeTests
         var operations = scenario.Operations(missing);
 
         // Act
-        var proposalReplay = await new ProposeDeidentifiedTemplateContributionHandler(operations).HandleAsync(
+        var proposalReplay = await HistoricalProposeAsync(operations, 
             MethodologyTemplateContributionScenario.Context(proposal, author), CancellationToken.None);
-        var reviewReplay = await new ReviewTemplateContributionHandler(operations).HandleAsync(
+        var reviewReplay = await HistoricalReviewAsync(operations, 
             MethodologyTemplateContributionScenario.Context(review, reviewer), CancellationToken.None);
-        var acceptReplay = await new AcceptTemplateContributionHandler(operations).HandleAsync(
+        var acceptReplay = await HistoricalAcceptAsync(operations, 
             MethodologyTemplateContributionScenario.Context(accept, acceptor), CancellationToken.None);
-        var changed = await new ReviewTemplateContributionHandler(operations).HandleAsync(
+        var changed = await HistoricalReviewAsync(operations, 
             MethodologyTemplateContributionScenario.Context(review with { ReviewNotes = "Changed" }, reviewer), CancellationToken.None);
         var after = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant, proposal.ContributionId));
 
@@ -221,7 +222,7 @@ public sealed class MethodologyTemplateContributionNativeTests
     [InlineData("response", false)]
     [InlineData("result", true)]
     [InlineData("result", false)]
-    public async Task ShouldRetainAcceptedContributionAndRecoverGivenUnavailableOrCorruptContent(string stage,
+    public async Task ShouldRetainHistoricalContributionAndRecoverGivenUnavailableOrCorruptContent(string stage,
         bool unavailable)
     {
         // Arrange
@@ -244,9 +245,9 @@ public sealed class MethodologyTemplateContributionNativeTests
 
         // Act
         var result = stage == "current"
-            ? await new ReviewTemplateContributionHandler(operations).HandleAsync(
+            ? await HistoricalReviewAsync(operations, 
                 MethodologyTemplateContributionScenario.Context(review, reviewer), CancellationToken.None)
-            : await new ProposeDeidentifiedTemplateContributionHandler(operations).HandleAsync(
+            : await HistoricalProposeAsync(operations, 
                 MethodologyTemplateContributionScenario.Context(proposal, author), CancellationToken.None);
         var afterFailure = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
             proposal.ContributionId));
@@ -259,6 +260,85 @@ public sealed class MethodologyTemplateContributionNativeTests
         Assert.Equal(unavailable, result.Error!.IsTransient);
         Assert.Equal(before.CommittedStreamPosition, afterFailure.CommittedStreamPosition);
         Assert.True(recovered.IsSuccess, recovered.Error?.Message);
+    }
+
+    [Fact]
+    public async Task ShouldRefuseRetiredWritersWithoutReadGivenHistoricallyAcceptedContribution()
+    {
+        // Arrange
+        await using var scenario = new MethodologyTemplateContributionScenario(Now);
+        var tenant = Uuid.CreateVersion4();
+        var author = Uuid.CreateVersion4();
+        var reviewer = Uuid.CreateVersion4();
+        var approver = Uuid.CreateVersion4();
+        var proposal = Proposal(tenant);
+        var review = new ReviewTemplateContribution(Uuid.CreateVersion4(), tenant, proposal.ContributionId,
+            "approved", "Reviewed");
+        var acceptance = new AcceptTemplateContribution(Uuid.CreateVersion4(), tenant, proposal.ContributionId,
+            "Accepted");
+        Assert.True((await scenario.ProposeAsync(proposal, author)).IsSuccess);
+        Assert.True((await scenario.ReviewAsync(review, reviewer)).IsSuccess);
+        Assert.True((await scenario.AcceptAsync(acceptance, approver)).IsSuccess);
+        var before = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
+            proposal.ContributionId));
+        var unavailable = new MissingCurrentContent(scenario.Content);
+        var operations = scenario.Operations(unavailable);
+
+        // Act
+        var proposed = await new ProposeDeidentifiedTemplateContributionHandler(operations).HandleAsync(
+            MethodologyTemplateContributionScenario.Context(proposal, author), CancellationToken.None);
+        var reviewed = await new ReviewTemplateContributionHandler(operations).HandleAsync(
+            MethodologyTemplateContributionScenario.Context(review, reviewer), CancellationToken.None);
+        var accepted = await new AcceptTemplateContributionHandler(operations).HandleAsync(
+            MethodologyTemplateContributionScenario.Context(acceptance, approver), CancellationToken.None);
+        var after = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
+            proposal.ContributionId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, proposed.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, reviewed.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, accepted.Error?.Kind);
+        Assert.Equal(0, unavailable.CurrentReads);
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal("accepted", after.Status);
+    }
+
+    // These direct operation calls exercise retained historical fact/receipt decoding.
+    // The live command handlers are retired and never invoke these services.
+    static ValueTask<Result> HistoricalProposeAsync(MethodologyTemplateContributionOperations operations,
+        IRequestContext<ProposeDeidentifiedTemplateContribution> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        return operations.ExecuteAsync(context, request.TenantId, request.ContributionId, request.ContributionId,
+            nameof(ProposeDeidentifiedTemplateContribution), false, (owner, _) => owner.PreparePropose(),
+            (rules, member, display, at) => rules.Propose(request.SourceRecordId, request.SourceVersion,
+                request.ProposedContent, request.DeidentificationRationale, member, display, at),
+            (owner, operation, member, user, change, response, result) =>
+                owner.Propose(operation, member, user, change, response, result), ct);
+    }
+
+    static ValueTask<Result> HistoricalReviewAsync(MethodologyTemplateContributionOperations operations,
+        IRequestContext<ReviewTemplateContribution> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        return operations.ExecuteAsync(context, request.TenantId, request.ContributionId, request.CommandId,
+            nameof(ReviewTemplateContribution), true, (owner, user) => owner.PrepareReview(user),
+            (rules, member, display, at) => rules.Review(rules.Revision, request.Outcome, request.ReviewNotes,
+                member, display, at),
+            (owner, operation, member, user, change, response, result) =>
+                owner.Review(operation, member, user, request.Outcome.Trim().ToLowerInvariant(), change, response, result), ct);
+    }
+
+    static ValueTask<Result> HistoricalAcceptAsync(MethodologyTemplateContributionOperations operations,
+        IRequestContext<AcceptTemplateContribution> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        return operations.ExecuteAsync(context, request.TenantId, request.ContributionId, request.CommandId,
+            nameof(AcceptTemplateContribution), true, (owner, user) => owner.PrepareAccept(user),
+            (rules, member, display, at) => rules.Accept(rules.Revision, request.AcceptanceRationale,
+                member, display, at),
+            (owner, operation, member, user, change, response, result) =>
+                owner.Accept(operation, member, user, change, response, result), ct);
     }
 
     static ProposeDeidentifiedTemplateContribution Proposal(Uuid tenant) => new(tenant, Uuid.CreateVersion4(),
