@@ -87,6 +87,67 @@ namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 public sealed class RecordWorkRelationshipHandlerTests
 {
     [Theory]
+    [InlineData("unchanged")]
+    [InlineData("worker_type")]
+    [InlineData("lifecycle")]
+    [InlineData("manager")]
+    [InlineData("department")]
+    [InlineData("sponsor")]
+    [InlineData("dates")]
+    [InlineData("restricted_reason")]
+    public async Task ShouldRefuseWithoutFactGivenLegacyGenericMutation(string change)
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var initial = scenario.Request(null, null);
+        Assert.True((await scenario.RecordAsync(initial, new GrantedPermissions())).IsSuccess);
+        var generic = new ReviseWorkRelationship(scenario.TenantId,
+            WorkRelationship.IdFor(scenario.TenantId, initial.SourceWorkerId), 1,
+            initial.WorkerType, initial.LifecycleStatus, initial.StartDate,
+            Department: initial.Department);
+        generic = change switch
+        {
+            "unchanged" => generic,
+            "worker_type" => generic with { WorkerType = "contractor" },
+            "lifecycle" => generic with { LifecycleStatus = "on_leave" },
+            "manager" => generic with { ManagerPersonId = scenario.ManagerId },
+            "department" => generic with { Department = "Finance" },
+            "sponsor" => generic with { SponsorPersonId = scenario.ManagerId },
+            "dates" => generic with { StartDate = initial.StartDate.AddDays(1) },
+            "restricted_reason" => generic with { EmploymentStatusReason = "A new restricted reason" },
+            _ => throw new ArgumentOutOfRangeException(nameof(change)),
+        };
+        var before = await scenario.RelationshipEventsAsync();
+
+        // Act
+        var result = await scenario.SendLegacyRevisionAsync(generic);
+
+        // Assert
+        var error = Assert.IsType<RequestError>(result.Error);
+        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
+        Assert.Contains("named", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(before, await scenario.RelationshipEventsAsync());
+    }
+
+    [Fact]
+    public async Task ShouldRefuseWithoutLoadingRelationshipGivenLegacyRevisionForMissingRecord()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var request = new ReviseWorkRelationship(scenario.TenantId,
+            WorkRelationship.IdFor(scenario.TenantId, "E-100"), 0, "employee", "active", new DateOnly(2025, 1, 6));
+
+        // Act
+        var result = await scenario.SendLegacyRevisionAsync(request);
+
+        // Assert
+        var error = Assert.IsType<RequestError>(result.Error);
+        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
+        Assert.Contains("named", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(await scenario.RelationshipEventsAsync());
+    }
+
+    [Theory]
     [InlineData("active", "employee", true)]
     [InlineData("active", "contractor", true)]
     [InlineData("active", "external_collaborator", false)]
@@ -524,6 +585,14 @@ public sealed class RecordWorkRelationshipHandlerTests
                 new WorkRelationshipTerms("employee", "active", new DateOnly(2025, 1, 6), null, null, null, null),
                 ActorReference.ForMember(ManagerId, "Sponsor"), DateTimeOffset.UtcNow), id, 1);
             await Events.AppendAsync(new WorkRelationship(TenantId, id).Stream, 0, [fact]);
+        }
+
+        public ValueTask<Result> SendLegacyRevisionAsync(ReviseWorkRelationship request)
+        {
+            IRequestHandler<ReviseWorkRelationship> handler = new ReviseWorkRelationshipHandler(Executor, Reader, TimeProvider.System);
+            var actor = new ClaimsPrincipal(new ClaimsIdentity(
+                [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())], "BdgrzSession"));
+            return handler.HandleAsync(new RequestContext<ReviseWorkRelationship>(request, actor), CancellationToken.None);
         }
 
         public async Task ReviseAsync(RecordWorkRelationship terms)
