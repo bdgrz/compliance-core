@@ -20,9 +20,10 @@ public sealed class CassieRemediationWorkRepositoryTests
         await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
         var finding = await CorrectiveActionChangeWorkflowTests.OpenAsync(fixture);
-        var reader = provider.GetRequiredService<FindingReader>();
-        var events = provider.GetRequiredService<IDomainEventReader>();
+        var reader = scope.ServiceProvider.GetRequiredService<FindingReader>();
+        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
         await using (var writer = new CassieCorrectiveActionWorkItemDirectory(database.Database, reader, TimeProvider.System))
             await ProjectAsync(writer, CassieCorrectiveActionWorkItemDirectory.ProjectorName, writer.SourcePattern(fixture.TenantId),
                 ProjectionCheckpoint.Start, events, writer.ApplyAsync);
@@ -49,15 +50,16 @@ public sealed class CassieRemediationWorkRepositoryTests
         await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
         await CorrectiveActionChangeWorkflowTests.OpenAsync(fixture);
         await using var repository = new CassieCorrectiveActionWorkItemDirectory(database.Database,
-            provider.GetRequiredService<FindingReader>(), TimeProvider.System);
+            scope.ServiceProvider.GetRequiredService<FindingReader>(), TimeProvider.System);
         var pattern = repository.SourcePattern(fixture.TenantId);
 
         // Act
         await using (var batch = await repository.BeginAsync(new ProjectionBatchContext(new CheckpointIdentity(
             CassieCorrectiveActionWorkItemDirectory.ProjectorName, pattern), ProjectionCheckpoint.Start)))
-            await ApplySourceAsync(provider.GetRequiredService<IDomainEventReader>(), pattern, ProjectionCheckpoint.Start, repository.ApplyAsync);
+            await ApplySourceAsync(scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), pattern, ProjectionCheckpoint.Start, repository.ApplyAsync);
 
         // Assert
         Assert.Empty((await repository.LoadProjectedProgramAsync(fixture.TenantId, fixture.ProgramId)).Value);
@@ -72,12 +74,13 @@ public sealed class CassieRemediationWorkRepositoryTests
         await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
         await CorrectiveActionChangeWorkflowTests.OpenAsync(fixture);
         await using var repository = new CassieCorrectiveActionWorkItemDirectory(database.Database,
-            provider.GetRequiredService<FindingReader>(), TimeProvider.System);
+            scope.ServiceProvider.GetRequiredService<FindingReader>(), TimeProvider.System);
         var pattern = repository.SourcePattern(fixture.TenantId);
         var candidate = new CheckpointIdentity(CassieCorrectiveActionWorkItemDirectory.ProjectorName, pattern, "candidate");
-        var events = provider.GetRequiredService<IDomainEventReader>();
+        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
 
         // Act
         await using (var batch = await repository.BeginAsync(new ProjectionBatchContext(candidate, ProjectionCheckpoint.Start)))
@@ -105,10 +108,11 @@ public sealed class CassieRemediationWorkRepositoryTests
         await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
         var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
         var owner = await fixture.FindingStreamAsync(finding.FindingId);
         await using var repository = new CassieFindingClosureWorkItemDirectory(database.Database,
-            provider.GetRequiredService<FindingReader>(), TimeProvider.System);
+            scope.ServiceProvider.GetRequiredService<FindingReader>(), TimeProvider.System);
         var otherTenant = Uuid.CreateVersion4();
 
         // Act
@@ -128,10 +132,11 @@ public sealed class CassieRemediationWorkRepositoryTests
         await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
         var finding = await CorrectiveActionChangeWorkflowTests.OpenAsync(fixture);
         await using var repository = new CassieCorrectiveActionWorkItemDirectory(database.Database,
-            provider.GetRequiredService<FindingReader>(), TimeProvider.System);
-        var events = provider.GetRequiredService<IDomainEventReader>();
+            scope.ServiceProvider.GetRequiredService<FindingReader>(), TimeProvider.System);
+        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
         var pattern = repository.SourcePattern(fixture.TenantId);
         await ProjectAsync(repository, CassieCorrectiveActionWorkItemDirectory.ProjectorName, pattern,
             ProjectionCheckpoint.Start, events, repository.ApplyAsync);
@@ -161,9 +166,10 @@ public sealed class CassieRemediationWorkRepositoryTests
         await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
         var finding = await CorrectiveActionChangeWorkflowTests.OpenAsync(fixture);
-        var reader = provider.GetRequiredService<FindingReader>();
-        var events = provider.GetRequiredService<IDomainEventReader>();
+        var reader = scope.ServiceProvider.GetRequiredService<FindingReader>();
+        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
         await using var work = new CassieCorrectiveActionWorkItemDirectory(database.Database, reader, TimeProvider.System);
         await using var closures = new CassieFindingClosureWorkItemDirectory(database.Database, reader, TimeProvider.System);
         var pattern = work.SourcePattern(fixture.TenantId);
@@ -197,12 +203,13 @@ public sealed class CassieRemediationWorkRepositoryTests
         await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
         await CorrectiveActionChangeWorkflowTests.OpenAsync(fixture);
         await using var repository = new CassieCorrectiveActionWorkItemDirectory(database.Database,
-            provider.GetRequiredService<FindingReader>(), TimeProvider.System);
+            scope.ServiceProvider.GetRequiredService<FindingReader>(), TimeProvider.System);
         await ProjectAsync(repository, CassieCorrectiveActionWorkItemDirectory.ProjectorName,
             repository.SourcePattern(fixture.TenantId), ProjectionCheckpoint.Start,
-            provider.GetRequiredService<IDomainEventReader>(), repository.ApplyAsync);
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), repository.ApplyAsync);
         await using var connection = await database.DataSource.OpenConnectionAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT CAST(payload AS TEXT) FROM work_corrective_actions";
@@ -231,9 +238,10 @@ public sealed class CassieRemediationWorkRepositoryTests
         await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
         var finding = await CorrectiveActionChangeWorkflowTests.OpenAsync(fixture);
-        var reader = provider.GetRequiredService<FindingReader>();
-        var events = provider.GetRequiredService<IDomainEventReader>();
+        var reader = scope.ServiceProvider.GetRequiredService<FindingReader>();
+        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
         await using var work = new CassieCorrectiveActionWorkItemDirectory(database.Database, reader, TimeProvider.System);
         await using var closures = new CassieFindingClosureWorkItemDirectory(database.Database, reader, TimeProvider.System);
         IProjectionStore repository = closure ? closures : work;
