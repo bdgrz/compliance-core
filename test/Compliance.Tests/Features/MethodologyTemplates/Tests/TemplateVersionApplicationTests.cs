@@ -124,7 +124,7 @@ public sealed class TemplateVersionApplicationTests
         var refused = new TemplateEntryOutcome("risk", "refused", null, "identifier_in_use");
         Assert.True(scenario.Aggregate.Record(refused).IsSuccess);
         var replay = new AggregateScenario<TemplateVersionApplication>(new TemplateVersionApplication(
-            scenario.Aggregate.Stream.Realm is { } realm ? Uuid.Parse(realm) : Uuid.Empty,
+            Uuid.Parse(scenario.Aggregate.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture),
             ProgramId, TemplateId, 1)).Given(scenario.PendingEvents.ToArray());
 
         // Act
