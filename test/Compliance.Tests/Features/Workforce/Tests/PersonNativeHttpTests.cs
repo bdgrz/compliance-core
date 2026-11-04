@@ -90,7 +90,7 @@ public sealed class PersonNativeHttpTests
     }
 
     [Theory]
-    [InlineData("revision")]
+    [InlineData("details")]
     [InlineData("correlation")]
     public async Task ShouldReturnOriginalTypedUnit200GivenConsumedRevisionAndLaterPersonChange(string kind)
     {
@@ -99,19 +99,19 @@ public sealed class PersonNativeHttpTests
         var person = Uuid.CreateVersion4();
         using var created = await fixture.PutAsync(fixture.Route(person), "{\"display_name\":\"Grace\"}");
         Assert.True(created.StatusCode == HttpStatusCode.OK, await created.Content.ReadAsStringAsync());
-        var route = kind == "revision" ? fixture.Route(person) + $"/revisions/{Uuid.CreateVersion4()}" :
+        var route = kind == "details" ? fixture.Route(person) + $"/detail-changes/{Uuid.CreateVersion4()}" :
             fixture.Route(person) + $"/membership-correlations/{Uuid.CreateVersion4()}";
-        var json = kind == "revision" ? "{\"expected_revision\":1,\"display_name\":\"Grace Hopper\"}" :
+        var json = kind == "details" ? "{\"expected_revision\":1,\"display_name\":\"Grace Hopper\"}" :
             $$"""{"expected_revision":1,"user_id":"{{fixture.UserId}}"}""";
-        using var first = await fixture.PutAsync(route, json);
+        using var first = await fixture.MutateAsync(kind, route, json);
         var original = await first.Content.ReadAsStringAsync();
         Assert.True(first.StatusCode == HttpStatusCode.OK, original);
-        using var later = await fixture.PutAsync(fixture.Route(person) + $"/revisions/{Uuid.CreateVersion4()}",
+        using var later = await fixture.MutateAsync("details", fixture.Route(person) + $"/detail-changes/{Uuid.CreateVersion4()}",
             "{\"expected_revision\":2,\"display_name\":\"Rear Admiral Grace Hopper\"}");
         Assert.True(later.StatusCode == HttpStatusCode.OK, await later.Content.ReadAsStringAsync());
 
         // Act
-        using var retry = await fixture.PutAsync(route, json);
+        using var retry = await fixture.MutateAsync(kind, route, json);
         var replay = await retry.Content.ReadAsStringAsync();
 
         // Assert
@@ -122,6 +122,62 @@ public sealed class PersonNativeHttpTests
         Assert.Empty(body.RootElement.EnumerateObject());
         Assert.Equal(3, (await fixture.OwnerAsync(person)).Revision);
         Assert.Equal(3UL, (await fixture.OwnerAsync(person)).Version);
+    }
+
+    [Fact]
+    public async Task ShouldLeavePersonUnchangedGivenRemovedGenericRevisionRoute()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        var person = Uuid.CreateVersion4();
+        using var created = await fixture.PutAsync(fixture.Route(person), "{\"display_name\":\"Grace\"}");
+        Assert.True(created.StatusCode == HttpStatusCode.OK, await created.Content.ReadAsStringAsync());
+
+        // Act
+        using var result = await fixture.PutAsync(fixture.Route(person) + $"/revisions/{Uuid.CreateVersion4()}",
+            "{\"expected_revision\":1,\"display_name\":\"Grace Hopper\"}");
+
+        // Assert
+        Assert.True(result.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed,
+            await result.Content.ReadAsStringAsync());
+        var owner = await fixture.OwnerAsync(person);
+        Assert.Equal(1, owner.Revision);
+        Assert.Equal(1UL, owner.Version);
+    }
+
+    [Fact]
+    public async Task ShouldExposeOnlyNamedDetailsWriterGivenPublicMcpPersonCommands()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        var person = Uuid.CreateVersion4();
+        using var created = await fixture.PutAsync(fixture.Route(person), "{\"display_name\":\"Grace\"}");
+        Assert.True(created.StatusCode == HttpStatusCode.OK, await created.Content.ReadAsStringAsync());
+        await using var mcp = await McpScenario.ConnectAsync(fixture.Client, new Uri(fixture.Client.BaseAddress!, "/mcp"));
+        var arguments = new Dictionary<string, object?>
+        {
+            ["command_id"] = Uuid.CreateVersion4().ToString(),
+            ["tenant_id"] = fixture.TenantId.ToString(),
+            ["person_id"] = person.ToString(),
+            ["expected_revision"] = 1L,
+            ["display_name"] = "Grace Hopper",
+        };
+
+        // Act
+        var tools = await mcp.ListTools();
+        var changed = await mcp.When("bdgrz.workforce.person.details.change", arguments).ExpectSuccess();
+        var retry = await mcp.When("bdgrz.workforce.person.details.change", arguments).ExpectSuccess();
+
+        // Assert
+        Assert.DoesNotContain(tools, tool => tool.Name == "bdgrz.workforce.person.revise");
+        Assert.True(Assert.Single(tools, tool => tool.Name == "bdgrz.workforce.person.details.change").Idempotent);
+        var original = Assert.IsType<JsonElement>(changed.StructuredJson).GetProperty("result");
+        var replay = Assert.IsType<JsonElement>(retry.StructuredJson).GetProperty("result");
+        Assert.Equal(original.GetRawText(), replay.GetRawText());
+        Assert.Empty(original.EnumerateObject());
+        var owner = await fixture.OwnerAsync(person);
+        Assert.Equal(2, owner.Revision);
+        Assert.Equal(2UL, owner.Version);
     }
 
     [Fact]
@@ -179,6 +235,9 @@ public sealed class PersonNativeHttpTests
         }
         public string Route(Uuid person) => $"/api/v1/tenants/{TenantId}/people/{person}";
         public Task<HttpResponseMessage> PutAsync(string route, string json) => Client.PutAsync(route, new StringContent(json, Encoding.UTF8, "application/json"));
+        public Task<HttpResponseMessage> MutateAsync(string kind, string route, string json) => kind == "details"
+            ? Client.PostAsync(route, new StringContent(json, Encoding.UTF8, "application/json"))
+            : PutAsync(route, json);
         public async Task<Person> OwnerAsync(Uuid id)
         {
             await using var scope = Factory.Services.CreateAsyncScope();

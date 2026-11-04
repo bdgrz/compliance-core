@@ -316,7 +316,8 @@ V4 public methodology query DTOs replace the old authored-version shape without
 fabricated attribution. The directory uses MethodologyPublicationDirectoryV2 and
 projection-v2 storage to replay both event families. Ordered applications and new
 line creation/name admission remain pending, alongside Person member cardinality
-and source reconciliation. Legacy RevisePerson remains an explicitly partial path.
+and source reconciliation. At the batch-4 checkpoint, legacy RevisePerson still
+wrote generic changes; its later retirement is tracked below.
 
 Live Jev shared-wiring first review flagged an uncertain broad-grant question0.51.
 Narrow followup returned contradictory judgments (broad-only allowed0.92, specific
@@ -325,3 +326,43 @@ differs from the broad key; the authored authorization regression explicitly den
 the broad-only grant. This advisory candidate remains for the assembled runtime
 check; no implementation change is justified without a failing source-backed test.
 Other assembled adverse signals ranged0.03–0.23.
+
+
+## PR #1186 delivery and Person writer continuation
+
+Batch 4 and the first nine Cassie repositories merged through
+[PR #1186](https://github.com/bdgrz/compliance-core/pull/1186) as `baffd1ba` after
+final-head Backend CI passed **8,700/8,700** units. The merged tree matches the
+reviewed head. Independent post-merge Backend CI also passed on `baffd1ba`. This result applies to
+the delivered slices, not completion of the approved domain.
+
+The sole current integration is Person generic-writer retirement. Before the
+production change, seven focused checks failed at the intended retired-command
+Conflict/no-I/O assertions; the old public revision route also failed its removal
+check by returning 200. Historical V2 continuation reached its privacy,
+correlation, attribution and frozen-receipt assertions in that RED run. The
+assembled source removes the generic Operations method, HTTP route/binder/body,
+App-only JSON root, MCP registration and native-response advertisement. The
+registered typed request now refuses without owner/content execution. Named
+changes and historical Core contracts/readers remain; member-link cardinality
+and accepted HRIS application remain unimplemented.
+
+Source review added actual MCP discovery/named retry checks and retained V2
+payload/metadata saved-prefix rejection. It also found a stale exact MCP catalog
+fixture from earlier batches; its explicit expected tool set was refreshed without
+removing authorization or metadata assertions. Live Jev-1.14.0 adverse signals
+for a remaining generic writer/public exposure/auth regression were .06/.05/.11;
+historical-fixture signals were uncertain (.40/.69), so source and executable
+checks remain the acceptance authority. Local assembled acceptance passed as
+recorded below; final-head delivery is tracked separately on #1176.
+
+The first frozen full gate then failed an existing RBAC administration-read fixture
+on a missing `workforce_people` table. Its in-memory membership/event composition
+left native Person display-name enrichment uncontrolled. This fixture boundary
+was corrected with a fixture-local null roster-name reader, retaining every
+authorization/readability assertion. All 13 RBAC wall cases then passed with Cassie
+configured to an unreachable port. The first full run finished 8,706/8,707 with
+unchanged inputs. The next fresh native run passed **8,707/8,707**, zero
+failures/skips, in 12m47s. All 14 compiler/runtime-fixture input hashes remained
+unchanged. This second run supplies current local acceptance; final committed-head
+review, hosted CI and merge remain separate delivery gates.

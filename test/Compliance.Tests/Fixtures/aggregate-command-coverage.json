@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-11-04",
-  "sourceCommit": "adcc13484f4a4583d8d9945ec8a1d3c70ec7f587",
+  "sourceCommit": "65fdd65e674a1329c02d4c0719836a2f22601420",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -5790,6 +5790,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/DeprovisionMemberHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/MemberLifecycleTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityReviewMembershipTests.cs",
         "test/Compliance.Tests/MemberFacts.cs"
       ],
       "disposition": "aggregate_fact",
@@ -5814,6 +5815,7 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/DeprovisionMemberHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/MemberLifecycleTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityReviewMembershipTests.cs",
         "test/Compliance.Tests/MemberFacts.cs"
       ],
       "disposition": "aggregate_fact",
@@ -5861,6 +5863,7 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/AdministratorTransitionProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/MemberLifecycleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityReviewMembershipTests.cs",
         "test/Compliance.Tests/MemberFacts.cs"
       ],
       "disposition": "aggregate_fact",
@@ -6583,7 +6586,10 @@
       "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/Tests/AttestWorkforceManagementWallTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/PersonNamedDetailsNativeTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/CassiePersonDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonLegacyMutationTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonNamedDetailsNativeTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeHistoryTests.cs"
       ],
       "disposition": "legacy_replay",
       "note": "Known syntactic inventory limitation (#1185): Person.Append raises the native fact returned by PersonContent.Fact, but this scanner does not follow that external factory. Reducer-only classification here is not a runtime publisher gap. Registered handlers and behavioral native tests provide separate evidence; membership-link work remains partial."
@@ -6600,10 +6606,10 @@
       "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/Tests/AttestWorkforceManagementWallTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeHistoryTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonLegacyMutationTests.cs"
       ],
       "disposition": "legacy_replay",
-      "note": "Known syntactic inventory limitation (#1185): Person.Append raises the native fact returned by PersonContent.Fact, but this scanner does not follow that external factory. Reducer-only classification here is not a runtime publisher gap. Registered handlers and behavioral native tests provide separate evidence; membership-link work remains partial.",
+      "note": "Historical V2 person revision fact retained for exact replay, provenance and receipt decoding. Registered RevisePerson now uniformly refuses and has no HTTP/MCP publication. Ordinary seeds and current named writes produce PersonDetailsChanged; the historical factory/codec remains for recorded facts. This is intentional replay support, separate from the still-live native-factory inventory limitation (#1185).",
       "discriminator": "bdgrz.workforce.person.revised",
       "schemaVersion": 2
     },
@@ -6625,7 +6631,7 @@
         "test/Compliance.Tests/Features/Workforce/Tests/PersonTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityAuthorizationTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityNamedHandlerTests.cs",
-        "test/Compliance.Tests/Testing/PersonSeeds.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityReviewMembershipTests.cs"
       ],
       "disposition": "legacy_replay",
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -8956,7 +8962,8 @@
         "test/Compliance.Tests/Features/Workforce/Tests/AttestWorkforceManagementWallTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityNamedHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityNamedOperationsTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityNamedProjectionTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityNamedProjectionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityReviewMembershipTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -14245,7 +14252,7 @@
         "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityLegacyReplayTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityNamedHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityNamedOperationsTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityReviewMembershipTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -18069,7 +18076,11 @@
       "aggregateTargets": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/Tests/AttestWorkforceManagementWallTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/PersonNamedDetailsNativeTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonLegacyMutationTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonNamedDetailsNativeTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeIdentityTests.cs",
+        "test/Compliance.Tests/Testing/PersonSeeds.cs"
       ],
       "note": ""
     },
@@ -19609,6 +19620,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/Tests/AttestWorkforceManagementWallTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonLegacyMutationTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeIdentityTests.cs",
         "test/Compliance.Tests/Testing/PersonSeeds.cs"
@@ -26071,6 +26083,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonLegacyMutationTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkforceAuthorizerTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -30229,6 +30242,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/Tests/AttestWorkforceManagementWallTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonLegacyMutationTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeIdentityTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkforceAuthorizerTests.cs",
@@ -32632,7 +32646,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityAuthorizationTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityNamedHandlerTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityNamedHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityReviewMembershipTests.cs"
       ],
       "note": "Personal HTTP-only owner/Lead review. Callable marker supports native HTTP metadata; MCP selection excludes this request. Handler and authorizer require the human HTTP invocation."
     },
@@ -33284,15 +33299,11 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [
-        "PersonOperations"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeHistoryTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeIdentityTests.cs",
-        "test/Compliance.Tests/Testing/PersonSeeds.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/PersonLegacyMutationTests.cs"
       ],
-      "note": ""
+      "note": "Retired generic mutation contract retained only for explicit nontransient refusal. HTTP/MCP exposure removed; registered handler invokes no owner/content writer. ChangePersonDetails owns current detail changes."
     },
     {
       "request": "RevisePolicyDraft",

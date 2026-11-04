@@ -116,7 +116,7 @@ Named command paths below have source/test evidence, not whole-context acceptanc
 | WF-06 | Sponsor naming checks active internal relationship; later departure produces unsponsored read/work gap | Naming eligibility currently relies on a caught-up projection. Sponsor-ending versus naming authoritative admission remains unproved; retain later-departure gap behavior. |
 | WF-07 | Immutable observation identity/revision and one attributed accepted/dismissed decision; source-observation tests | Consolidate separately live derived observation-resolution workflow; preserve bounded notes, retry and restricted-field handling. |
 | WF-08 | Source classification/preview and manual canonical correction exist | Accepted HRIS application reactor, authoritative newer-accepted revision fence, stable new Person/relationship IDs, unmatched observation/matching and authorized system producer. Current tests require manual correction first and do not prove target application. |
-| Body: Person writer | Named ChangePersonDetails emits only actual changes; native immutable content tests | Generic RevisePerson still writes unconditional revisions. Retire generic writer while retaining required historical readability/receipts. |
+| Body: Person writer | Named ChangePersonDetails emits only actual changes; generic writer/public HTTP/MCP removal is assembled, with uniform typed refusal and historical V1/V2 decoding retained | Retirement observed RED (7 unit cases plus removed-route check); assembled full gate passed 8,707 units. Exact-head CI/merge are separate delivery gates. Member links/source application are separate gaps. |
 | Body: provenance | Worker identifier owns relationship; external IDs are immutable provenance | Qualify source application without replacing worker identity with an external source ID. |
 | Body: ServiceIdentity lifecycle | Supported kinds, accountable owner, purpose, annual review, shared-account Person/justification, disable/enable/terminal retire; named handler/owner tests | Keep full invariant/actor/replay qualification explicit; lifecycle names alone do not complete context. |
 | Body: owner/review gaps | ServiceIdentityOwnership/Accountability and native directory derive unowned work | Qualify receiving surfaces and keep disabled/retired account behavior distinct from owner/review gaps. |
@@ -124,7 +124,7 @@ Named command paths below have source/test evidence, not whole-context acceptanc
 | Body: receiving reactions | Named joiner/mover/leaver facts are produced | Policies and External access named-event consumers were not found; implement receiving effects in those contexts. |
 | Body: import | Legacy roster snapshots exist | Import/snapshot replacement remains explicitly deferred under #347; snapshots are not import completion. |
 
-Person generic-writer retirement is small and independent. Member links require
+Person generic-writer retirement is the current bounded integration. Member links require
 one coherent uniqueness capability; source application requires revision ordering,
 matching and authoritative application outcomes together.
 

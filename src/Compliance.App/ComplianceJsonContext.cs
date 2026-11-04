@@ -90,7 +90,6 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.DelegateBody))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.EscalateBody))]
 [JsonSerializable(typeof(PersonHttp.RecordBody))]
-[JsonSerializable(typeof(PersonHttp.ReviseBody))]
 [JsonSerializable(typeof(PersonHttp.CorrelateBody))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.StartWorkRelationship))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.StartLeave))]

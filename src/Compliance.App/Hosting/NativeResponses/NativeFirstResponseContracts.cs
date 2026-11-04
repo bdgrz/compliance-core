@@ -237,7 +237,6 @@ static class NativeFirstResponseContracts
         or "ApproveMethodologyTemplateDraft"
         or "DiscardMethodologyTemplateDraft"
         or "StartMethodologyTemplateDraft"
-        or "RevisePerson"
         or "ReviseProgram"
         or "ReviseRiskDraft"
         or "ReviseRiskTreatmentAction"
