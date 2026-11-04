@@ -53,6 +53,8 @@ static class FindingWorkScope
                 return (ev.TenantId, ev.ProgramId, ev.FindingId);
             case CorrectiveActionCancelled ev:
                 return (ev.TenantId, ev.ProgramId, ev.FindingId);
+            case CorrectiveActionChanged ev:
+                return (ev.TenantId, ev.ProgramId, ev.FindingId);
             case FindingCorrectiveActionResolved ev:
                 return (ev.TenantId, ev.ProgramId, ev.FindingId);
             case CorrectiveActionAdmitted ev:

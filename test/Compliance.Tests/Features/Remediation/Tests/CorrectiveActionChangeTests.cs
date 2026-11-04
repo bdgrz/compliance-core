@@ -1,6 +1,7 @@
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Remediation.Aggregates;
 using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Features.Remediation.Events;
@@ -145,6 +146,29 @@ public sealed class CorrectiveActionChangeTests
         Assert.Equal(Due.AddDays(2), replayed.Changed.DueOn);
     }
 
+    [Fact]
+    public void ShouldRefuseChangeGivenActiveFindingClosureUse()
+    {
+        // Arrange
+        var seed = Open();
+        var parent = new FindingAggregate(seed.Added!.TenantId, seed.Added.ProgramId, seed.FindingId).Stream;
+        var operation = new OperationProvenance(Uuid.CreateVersion4(), Uuid.CreateVersion4(), null, "Finding closure use",
+            Actor, seed.Stream, "initial", 1, new string('a', 64), NativeFacts.Now, seed.Stream, seed.Stream, parent);
+        var held = DomainEventSeed.Attach(new CorrectiveActionFindingClosureUseAuthorized(seed.Stream, 1, 1,
+            NativeFacts.Ref(), null, operation, null, null), seed.Id, 2);
+        var owner = NativeFacts.Replay(new CorrectiveAction(seed.Added.TenantId, seed.Added.ProgramId,
+            seed.FindingId, seed.ActionId), new DomainEvent[] { seed.Added, held });
+
+        // Act
+        var result = Change(owner, "Changed while held.", Member, Due);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.True(result.Error!.IsTransient);
+        Assert.True(owner.Uses.HasActiveUse);
+        Assert.Empty(new AggregateScenario<CorrectiveAction>(owner).PendingEvents);
+    }
+
     static CorrectiveAction NewAction() => new(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
 
     static CorrectiveAction Open()
@@ -157,6 +181,6 @@ public sealed class CorrectiveActionChangeTests
     }
 
     static Result Change(CorrectiveAction owner, string description, Uuid member, DateOnly due, long revision = 1) =>
-        owner.Change(NativeFacts.Root(owner, Uuid.CreateVersion4(), nameof(ChangeCorrectiveAction), revision, Member),
+        owner.Change(NativeFacts.Root(owner, Uuid.CreateVersion4(), nameof(ChangeCorrectiveAction), revision, Member) with { Actor = Actor },
             description, member, due, Actor, NativeFacts.Now, NativeFacts.Ref(), NativeFacts.Ref());
 }
