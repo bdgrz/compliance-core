@@ -25,10 +25,10 @@ using Bdgrz.Compliance.Features.MethodologyTemplates.Projections;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
 
 sealed class FitzMethodologyTemplateDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/methodology-publication-directory/projection-v1", ProjectorName),
+    : FitzKvProjectionStore(client, "kv://bdgrz/methodology-publication-directory/projection-v2", ProjectorName),
         IMethodologyTemplateDirectoryReader, IMethodologyTemplateDirectoryProjection
 {
-    public const string ProjectorName = "MethodologyPublicationDirectoryV1";
+    public const string ProjectorName = "MethodologyPublicationDirectoryV2";
     internal static EventStreamPattern Pattern => EventStreamPattern.ForPattern(MethodologyTemplate.Realm,
         MethodologyTemplate.Area);
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(CancellationToken ct = default) =>
@@ -55,10 +55,27 @@ sealed class FitzMethodologyTemplateDirectory(IKvClient client)
                 new MethodologyTemplateCatalogIdentity(fact.SubjectId, fact.OccurredAt), ct).ConfigureAwait(false);
     }
 
-    public ValueTask ApplyAsync(MethodologyTemplateVersionPublishedV4 fact, CancellationToken ct = default)
+    public async ValueTask ApplyAsync(MethodologyTemplateVersionPublishedV4 fact, CancellationToken ct = default)
     {
-        ArgumentNullException.ThrowIfNull(fact);
-        return ValueTask.CompletedTask;
+        if (fact.TemplateId == Uuid.Empty || fact.Version < 1 || fact.DraftId == Uuid.Empty || fact.DraftRevision < 0 ||
+            fact.ApprovalEventId == Uuid.Empty || fact.ApprovedBy == Uuid.Empty || fact.Metadata.IsAudit ||
+            fact.Metadata.AggregateId != fact.TemplateId || fact.Metadata.OccurredOn == default ||
+            !MethodologyTemplateDraft.ValidReference(fact.EntriesContent))
+            throw new InvalidOperationException("A separate-draft publication identity requires its exact native platform source.");
+        var versionId = MethodologyTemplate.PublishedVersionIdentity(fact.TemplateId, fact.Version);
+        var version = new MethodologyTemplatePublishedIdentity(versionId, fact.TemplateId, fact.Version,
+            fact.Metadata.OccurredOn, SeparateDraftLine: true);
+        var existing = await MethodologyTemplateDirectorySchema.Versions.GetAsync(Transaction, versionId, ct).ConfigureAwait(false);
+        if (existing is not null && existing != version)
+            throw new InvalidOperationException("A published version identity cannot change its template or immutable source.");
+        if (existing is null)
+            await MethodologyTemplateDirectorySchema.Versions.InsertAsync(Transaction, version, ct).ConfigureAwait(false);
+        var catalog = await MethodologyTemplateDirectorySchema.Templates.GetAsync(Transaction, fact.TemplateId, ct).ConfigureAwait(false);
+        if (catalog is null)
+            await MethodologyTemplateDirectorySchema.Templates.InsertAsync(Transaction,
+                new MethodologyTemplateCatalogIdentity(fact.TemplateId, fact.Metadata.OccurredOn, SeparateDraftLine: true), ct).ConfigureAwait(false);
+        else if (!catalog.SeparateDraftLine)
+            throw new InvalidOperationException("A template identity cannot mix legacy and separate-draft publication sources.");
     }
 
     public async ValueTask<MethodologyTemplatePublishedIdentity?> FindVersionAsync(Uuid versionId,

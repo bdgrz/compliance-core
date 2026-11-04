@@ -1,4 +1,5 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
@@ -18,8 +19,12 @@ public sealed partial class MethodologyTemplateDirectoryProjector(IMethodologyTe
     }
     public async ValueTask<Result> HandleAsync(IProjectorContext<MethodologyTemplateVersionPublishedV4> context, CancellationToken ct)
     {
-        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        var fact = context.Trigger;
+        if (fact.TemplateId == Uuid.Empty || context.Source.Stream !=
+            new MethodologyTemplate(fact.TemplateId).Stream ||
+            fact.Metadata.IsAudit || !ReferenceEquals(fact, context.Source.Event))
+            throw new InvalidOperationException("A publication directory update requires its exact committed platform line source.");
+        await projection.ApplyAsync(fact, ct).ConfigureAwait(false);
         return Result.Success;
     }
 }
-
