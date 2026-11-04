@@ -23,7 +23,7 @@ canceller exclusion remains (0.19), and the existing Work projector receives the
 new fact and recomputes open work (0.18).
 
 Assembled Release build: zero warnings/errors. Affected business suites: 797 passed.
-Full units and whitespace validation: pending.
+All 8,327 backend units passed with zero failures/skips; whitespace validation passed.
 
 Remaining: AW-09 finding-owned action-outcome reporting and proposed closure
 lifecycle, ChangeCorrectiveAction and the rest of the approved domain. Coordinated

@@ -20,7 +20,7 @@ serializer source resolves known discriminator/schema pairs directly, so retaini
 known V3 alongside the new V4 does not force an upcast.
 
 Assembled Release build: zero warnings/errors. Affected business suites: 797 passed.
-Full units and whitespace validation: pending. Inventory explicitly retains the
+All 8,327 backend units passed with zero failures/skips; whitespace validation passed. Inventory explicitly retains the
 line-start producer gap and five missing human-operation routes.
 
 Remaining: human commands/handlers; line start, publish and discard choreography;

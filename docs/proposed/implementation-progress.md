@@ -107,8 +107,7 @@ CI and adversarial/Jev review, then merged as `8dc0f40e`. Post-merge CI also pas
 ### Batch 2 source-first checkpoint
 
 The batch contains these integrated source slices. Release compilation passed with
-zero warnings/errors and all 797 affected business tests passed. Full-suite and
-format acceptance remain pending; the table distinguishes earlier RED evidence
+zero warnings/errors and all 797 affected business tests passed. All 8,327 full backend units and whitespace validation passed; the table distinguishes earlier RED evidence
 from test-first cases first executed at the assembled checkpoint.
 
 | Slice | Prepared behavior | Observed evidence / remaining work |
@@ -133,7 +132,8 @@ adverse probabilities ranged 0.05–0.18; direct source inspection found no bloc
   `medium` severity; the remaining failure was five catalog rows using an issue
   URL where the existing schema requires a numeric issue ID. Both source seeds and
   the metadata were corrected. The 51-case affected rerun passed; the complete
-  rerun is pending. No production guard or assertion was weakened.
+  rerun passed all 8,327 cases with zero failures/skips. No production guard or
+  assertion was weakened.
 
 - Approved Finding source vocabulary requires coordinated authoritative producers;
   legacy AuditObservation binds `examination_item`, which cannot simply be renamed
@@ -148,3 +148,10 @@ adverse probabilities ranged 0.05–0.18; direct source inspection found no bloc
 No context is marked complete. The next accepted batch must retain requirement
 mapping, actual RED/GREEN evidence, deferred wiring, remaining work and validation
 failures rather than replacing them with name or test-count assertions.
+
+Batch 2 final local acceptance: Release build with zero warnings/errors; 797 affected
+business cases; 51 fixture/catalog correction cases; all 8,327 backend units with
+zero failures/skips; whitespace verification; six Node cases and proposal/coverage
+checks. The inspected inventory adds 12 facts (one explicit line-start producer
+gap), one owner and six registered requests. Counts describe source navigation,
+not whole-domain completion. Final-head hosted acceptance remains pending.
