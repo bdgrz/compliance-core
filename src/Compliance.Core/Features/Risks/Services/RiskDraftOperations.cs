@@ -110,7 +110,8 @@ public sealed class RiskDraftOperations(NativeOperationExecutor operations, Risk
                             rules = current.Rules;
                             var revision = (ReviseRiskDraft)request;
                             var failure = rules.Revise(program, revision.ExpectedRevision,
-                                new RiskDraftContent(revision.Title, revision.Scenario, revision.PotentialEffect, revision.SourceNote),
+                                new RiskDraftContent(revision.Title, revision.Scenario, revision.PotentialEffect, revision.SourceNote)
+                                { TemplateOrigin = current.Current!.Content.TemplateOrigin },
                                 RbacIds.Member(tenant, user), operation.Actor.Display, operation.AcceptedAt);
                             if (failure is not null)
                                 return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
