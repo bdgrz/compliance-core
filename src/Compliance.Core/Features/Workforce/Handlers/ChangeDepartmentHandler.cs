@@ -1,6 +1,7 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Versioning.Services;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Commands;
-using Bdgrz.Compliance.Features.Workforce.Readers;
 using Bdgrz.Compliance.Features.Workforce.Services;
 
 namespace Bdgrz.Compliance.Features.Workforce.Handlers;
@@ -10,9 +11,10 @@ public sealed class ChangeDepartmentHandler(IAggregateExecutor executor, TimePro
 {
     public ValueTask<Result> HandleAsync(IRequestContext<ChangeDepartment> context, CancellationToken ct)
     {
-        _ = executor;
-        _ = clock;
-        return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Conflict,
-            $"Named changes for work relationship {context.Request.RelationshipId} are not implemented.")));
+        var request = context.Request;
+        var actor = WorkforceActor.From(context);
+        return executor.ExecuteAsync(new WorkRelationship(request.TenantId, request.RelationshipId),
+            relationship => CommandFailureRequestAdapter.ToOutcome(relationship.ChangeDepartment(
+                request.ExpectedRevision, request.Department, actor, clock.GetUtcNow())), context, ct);
     }
 }

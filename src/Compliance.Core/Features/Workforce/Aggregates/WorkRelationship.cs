@@ -104,6 +104,26 @@ public sealed class WorkRelationship : Aggregate
                 EmploymentStatusReason = ev.Reason,
             };
         });
+        On<WorkRelationshipManagerChanged>(ev =>
+        {
+            _revision = ev.Revision;
+            _terms = _terms! with { ManagerPersonId = ev.ManagerPersonId };
+        });
+        On<WorkRelationshipDepartmentChanged>(ev =>
+        {
+            _revision = ev.Revision;
+            _terms = _terms! with { Department = ev.Department };
+        });
+        On<WorkRelationshipSponsorChanged>(ev =>
+        {
+            _revision = ev.Revision;
+            _terms = _terms! with { SponsorPersonId = ev.SponsorPersonId };
+        });
+        On<WorkRelationshipDatesCorrected>(ev =>
+        {
+            _revision = ev.Revision;
+            _terms = _terms! with { StartDate = ev.StartDate, EndDate = ev.EndDate };
+        });
     }
 
     public static string NormalizeWorkerId(string? sourceWorkerId) =>
@@ -221,20 +241,75 @@ public sealed class WorkRelationship : Aggregate
     }
 
     public CommandFailure? ChangeManager(long expectedRevision, Uuid? managerPersonId,
-        ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict($"Named changes for work relationship {Id} are not implemented.");
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireRevision(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (_hasEnded)
+            return CommandFailure.StateConflict("An ended work relationship cannot change its manager.");
+        if (managerPersonId == _personId || managerPersonId == Uuid.Empty)
+            return CommandFailure.InvalidContent("The manager must be another recorded person or absent.");
+        if (_terms!.ManagerPersonId == managerPersonId)
+            return null;
+        RaiseEvent(new WorkRelationshipManagerChanged(_tenantId, Id, _sourceWorkerId!, _revision + 1,
+            managerPersonId, actor, changedAt));
+        return null;
+    }
 
     public CommandFailure? ChangeDepartment(long expectedRevision, string? department,
-        ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict($"Named changes for work relationship {Id} are not implemented.");
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireRevision(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (_hasEnded)
+            return CommandFailure.StateConflict("An ended work relationship cannot change its department.");
+        var clean = string.IsNullOrWhiteSpace(department) ? null : department.Trim();
+        if (clean is { Length: > 200 })
+            return CommandFailure.InvalidContent("The department must be at most 200 characters.");
+        if (_terms!.Department == clean)
+            return null;
+        RaiseEvent(new WorkRelationshipDepartmentChanged(_tenantId, Id, _sourceWorkerId!, _revision + 1,
+            clean, actor, changedAt));
+        return null;
+    }
 
     public CommandFailure? ChangeSponsor(long expectedRevision, Uuid sponsorPersonId,
-        ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict($"Named changes for work relationship {Id} are not implemented.");
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireRevision(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (_terms!.WorkerType != "external_collaborator")
+            return CommandFailure.StateConflict("Only an external collaborator has an internal sponsor.");
+        if (sponsorPersonId == _personId || sponsorPersonId == Uuid.Empty)
+            return CommandFailure.InvalidContent("The sponsor must be another recorded person.");
+        if (_terms!.SponsorPersonId == sponsorPersonId)
+            return null;
+        RaiseEvent(new WorkRelationshipSponsorChanged(_tenantId, Id, _sourceWorkerId!, _revision + 1,
+            sponsorPersonId, actor, changedAt));
+        return null;
+    }
 
     public CommandFailure? CorrectDates(long expectedRevision, DateOnly startDate, DateOnly? endDate,
-        string reason, ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict($"Named changes for work relationship {Id} are not implemented.");
+        string reason, ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireRevision(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (string.IsNullOrWhiteSpace(reason))
+            return CommandFailure.InvalidContent("A date correction requires a reason.");
+        if (_terms!.LifecycleStatus == "ended" && endDate is null)
+            return CommandFailure.InvalidContent("An ended work relationship requires an end date.");
+        if (endDate is { } end && end < startDate)
+            return CommandFailure.InvalidContent("The end date cannot be before the start date.");
+        if (_terms!.StartDate == startDate && _terms!.EndDate == endDate)
+            return null;
+        RaiseEvent(new WorkRelationshipDatesCorrected(_tenantId, Id, _sourceWorkerId!, _revision + 1,
+            startDate, endDate, reason.Trim(), actor, changedAt));
+        return null;
+    }
 
     static RequestError? Validate(Uuid personId, WorkRelationshipTerms terms)
     {
