@@ -67,6 +67,8 @@ public sealed class ServiceIdentity : Aggregate
 
     public bool IsCreated => _created;
     public long Revision => _revision;
+    public string? OwnerKind => _terms?.OwnerKind;
+    public Uuid OwnerId => _terms?.OwnerId ?? Uuid.Empty;
 
     public ServiceIdentity(Uuid tenantId, Uuid serviceIdentityId)
         : base(serviceIdentityId, new EventStreamAddress(tenantId.ToString(), "service-identities",
@@ -114,6 +116,24 @@ public sealed class ServiceIdentity : Aggregate
             changedAt));
         return null;
     }
+
+    public CommandFailure? ChangeOwner(long expectedRevision, string ownerKind, Uuid ownerId, ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+
+    public CommandFailure? ChangePurpose(long expectedRevision, string purpose, ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+
+    public CommandFailure? Review(long expectedRevision, DateOnly nextReviewDate, string? notes, ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+
+    public CommandFailure? Disable(long expectedRevision, string? reason, ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+
+    public CommandFailure? Enable(long expectedRevision, DateOnly today, ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+
+    public CommandFailure? Retire(long expectedRevision, string? reason, ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
 
     static RequestError? Validate(ServiceIdentityTerms terms, DateOnly today)
     {

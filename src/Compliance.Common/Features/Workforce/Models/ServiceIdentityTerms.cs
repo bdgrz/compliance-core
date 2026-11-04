@@ -9,4 +9,4 @@ namespace Bdgrz.Compliance.Features.Workforce.Models;
 /// </summary>
 public sealed record ServiceIdentityTerms(string DisplayName, string IdentityKind, string Purpose,
     string? Environment, string LifecycleStatus, string OwnerKind, Uuid OwnerId, DateOnly ReviewBy,
-    DateOnly? ExpiresOn = null);
+    DateOnly? ExpiresOn = null, string? SharedJustification = null);

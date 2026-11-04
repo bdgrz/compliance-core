@@ -28,13 +28,14 @@ using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.Workforce.Authorizers;
 
 sealed class WorkforceAuthorizer(ITenantMembershipDirectoryReader memberships,
-    ITenantActivity tenants, IPermissionAuthorizer permissions)
+    ITenantActivity tenants, IPermissionAuthorizer permissions, IAggregateReader? reader = null)
     : IRequestAuthorizer<IWorkforceRequest>
 {
     // Field restriction (M0-D06) applies once restricted workforce fields exist.
     public async ValueTask<Result> AuthorizeAsync(IRequestContext<IWorkforceRequest> context,
         CancellationToken ct)
     {
+        _ = reader;
         if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
             return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
                 "The workforce roster requires a Bdgrz user identity."));
