@@ -919,6 +919,13 @@ public sealed class ControlRules
                 string.IsNullOrWhiteSpace(value) || value.Length > 2000))
             return new RequestError(RequestErrorKind.Validation,
                 "The control draft exceeds its content limits or has an empty expected evidence description.");
+        if (NormalizeTerm(content.Kind) is not ("preventive" or "detective" or "corrective") ||
+            NormalizeTerm(content.Nature) is not ("manual" or "automated" or "hybrid") ||
+            NormalizeTerm(content.Cadence) is not ("continuous" or "daily" or "weekly" or "monthly" or
+                "quarterly" or "semiannual" or "annual" or "event_driven") ||
+            NormalizeTerm(content.OccurrenceSubject) is not ("none" or "policy" or "material_provider"))
+            return new RequestError(RequestErrorKind.Validation,
+                "A control version requires a supported kind, nature, cadence, and occurrence subject.");
         if (content.OwnerReference is { Length: > 500 })
             return new RequestError(RequestErrorKind.Validation,
                 "A control owner reference must be at most 500 characters.");
@@ -966,6 +973,8 @@ public sealed class ControlRules
         };
     }
 
+    static string NormalizeTerm(string? value) => value?.Trim().ToLowerInvariant() ?? string.Empty;
+
     static ControlDraftContent Clean(ControlDraftContent content) => new(
         content.Title.Trim(), content.Objective.Trim(), content.Description.Trim(),
         content.ImplementationNarrative.Trim(),
@@ -974,7 +983,8 @@ public sealed class ControlRules
         (content.Applicability ?? []).Select(static reference => new ControlApplicabilityReference(
             reference.EntryId, reference.SubjectType, reference.Subject.Trim(),
             reference.GovernedRecordId, reference.Rationale.Trim(), reference.Unresolved)).ToArray(),
-        CleanProvenance(content.Provenance));
+        CleanProvenance(content.Provenance), NormalizeTerm(content.Kind), NormalizeTerm(content.Nature),
+        NormalizeTerm(content.Cadence), NormalizeTerm(content.OccurrenceSubject));
 
     static bool Equal(ControlDraftContent left, ControlDraftContent right) =>
         StringComparer.Ordinal.Equals(left.Title, right.Title) &&
@@ -985,7 +995,11 @@ public sealed class ControlRules
             StringComparer.Ordinal) &&
         StringComparer.Ordinal.Equals(left.OwnerReference, right.OwnerReference) &&
         (left.Applicability ?? []).SequenceEqual(right.Applicability ?? []) &&
-        Equals(left.Provenance, right.Provenance);
+        Equals(left.Provenance, right.Provenance) &&
+        StringComparer.Ordinal.Equals(left.Kind, right.Kind) &&
+        StringComparer.Ordinal.Equals(left.Nature, right.Nature) &&
+        StringComparer.Ordinal.Equals(left.Cadence, right.Cadence) &&
+        StringComparer.Ordinal.Equals(left.OccurrenceSubject, right.OccurrenceSubject);
     internal string Identifier => _identifier ?? string.Empty;
     internal bool EverReviewed => _everReviewed;
     internal bool ResponsibilityEverAssigned => _responsibilityEverAssigned;
