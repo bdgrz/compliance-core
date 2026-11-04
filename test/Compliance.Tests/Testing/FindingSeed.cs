@@ -86,6 +86,7 @@ using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Remediation.Aggregates;
 using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Events;
 using Bdgrz.Compliance.Features.SourceUse.Models;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Authorizers;
@@ -200,6 +201,7 @@ static class FindingSeed
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         var finding = await reader.HydrateAsync(new FindingAggregate(tenantId, programId, findingId, closureId));
+        await ReportTerminalOutcomesAsync(scope.ServiceProvider, finding, tenantId, programId, findingId, at);
         var closer = ActorReference.ForMember(closerMemberId, "Reviewer");
         var operation = FindingContent.Provenance(closureId, "CloseFinding", finding.Stream, closer,
             (ulong)finding.Revision, new string('d', 64), at);
@@ -243,6 +245,53 @@ static class FindingSeed
         }
 
         await writer.SaveAsync(finding, new RequestDispatchContext(RequestActor.System));
+    }
+
+    static async Task ReportTerminalOutcomesAsync(IServiceProvider services, FindingAggregate finding,
+        Uuid tenantId, Uuid programId, Uuid findingId, DateTimeOffset at)
+    {
+        var events = services.GetRequiredService<IDomainEventReader>();
+        var content = services.GetRequiredService<IImmutableContentStore>();
+        var writer = services.GetRequiredService<IAggregateWriter>();
+        var resolver = new EventStoreSourceFactResolver(events);
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(),
+                           CorrectiveAction.Area), EventCursor.Start, CancellationToken.None))
+        {
+            var terminal = record.Event switch
+            {
+                CorrectiveActionCompletedV2 completed when completed.ProgramId == programId && completed.FindingId == findingId =>
+                    (completed.ActionId, Outcome: "completed"),
+                CorrectiveActionCancelled cancelled when cancelled.ProgramId == programId && cancelled.FindingId == findingId =>
+                    (cancelled.ActionId, Outcome: "cancelled"),
+                _ => (ActionId: Uuid.Empty, Outcome: string.Empty),
+            };
+            if (terminal.ActionId == Uuid.Empty)
+                continue;
+            var source = NativeFactReference.Of(record.Stream, record.Event);
+            ImmutableContentRef required;
+            if (terminal.Outcome == "completed")
+            {
+                var (proof, _, _) = await SourceFactProofs.BuildAsync<CorrectiveActionCompletedV2>(resolver, content,
+                    tenantId.ToString(), source, record.ResourceOffset);
+                required = proof.RequiredFacts;
+            }
+            else
+            {
+                var (proof, _, _) = await SourceFactProofs.BuildAsync<CorrectiveActionCancelled>(resolver, content,
+                    tenantId.ToString(), source, record.ResourceOffset);
+                required = proof.RequiredFacts;
+            }
+            var command = new RecordCorrectiveActionOutcome(Uuid.CreateVersion5(source.EventId,
+                nameof(RecordCorrectiveActionOutcome)), tenantId, programId, findingId, terminal.ActionId,
+                terminal.Outcome, source, record.ResourceOffset);
+            var operation = FindingContent.Provenance(command.CommandId, nameof(RecordCorrectiveActionOutcome),
+                finding.Stream, ActorReference.ForSystemProcess("report_corrective_action_outcome", "Report corrective action outcome"),
+                null, FindingCommands.Digest(command), at) with
+            { FirstOwner = finding.Stream, CausationEventId = source.EventId };
+            var reported = finding.RecordActionOutcome(operation, terminal.ActionId, terminal.Outcome, source, required);
+            Assert.True(reported.IsSuccess, reported.Error?.Message);
+            await writer.SaveAsync(finding, new RequestDispatchContext(RequestActor.System));
+        }
     }
 
     static class Provenances

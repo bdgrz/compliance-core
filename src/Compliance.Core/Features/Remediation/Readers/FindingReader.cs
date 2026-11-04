@@ -109,6 +109,10 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
                         $"{acceptance.Kind} {acceptance.RecordId} until {acceptance.ExpiresAt:O}", acceptance.LinkedBy,
                         acceptance.LinkedAt), order));
                     break;
+                case FindingCorrectiveActionResolved ev:
+                    history.Add((new FindingHistoryEntryView(ev.Revision, "corrective_action_resolved",
+                        $"Action {ev.ActionId}: {ev.Outcome}", ev.Operation.Actor, ev.Operation.AcceptedAt), order));
+                    break;
                 case FindingClosedV2 ev:
                     closure = await FindingContent.ReadAsync<FindingClosureView>(content, tenant, ev.ClosureContent, ct)
                         .ConfigureAwait(false);

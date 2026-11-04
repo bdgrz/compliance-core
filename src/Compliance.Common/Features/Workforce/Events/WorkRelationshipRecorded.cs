@@ -7,4 +7,4 @@ namespace Bdgrz.Compliance.Features.Workforce.Events;
 [Discriminator("bdgrz.workforce.work-relationship.recorded", 1)]
 public sealed record WorkRelationshipRecorded(Uuid TenantId, Uuid RelationshipId, Uuid PersonId,
     string SourceWorkerId, WorkRelationshipTerms Terms, ActorReference Actor,
-    DateTimeOffset ChangedAt) : DomainEvent;
+    DateTimeOffset ChangedAt, WorkforceSourceIdentity? Source = null) : DomainEvent;

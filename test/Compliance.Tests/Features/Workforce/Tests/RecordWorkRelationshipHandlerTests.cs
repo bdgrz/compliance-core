@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -78,11 +79,155 @@ using Bdgrz.Compliance.Features.Workforce.Commands;
 using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce.Handlers;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Readers;
+using Bdgrz.Compliance.Features.Workforce.Services;
 using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
 public sealed class RecordWorkRelationshipHandlerTests
 {
+    [Theory]
+    [InlineData("active", "employee", true)]
+    [InlineData("active", "contractor", true)]
+    [InlineData("active", "external_collaborator", false)]
+    [InlineData("pending", "employee", false)]
+    [InlineData("on_leave", "employee", false)]
+    [InlineData("ended", "employee", false)]
+    [InlineData(null, "employee", false)]
+    public async Task ShouldRequireActiveInternalSponsorGivenInitialCollaboratorRecord(
+        string? sponsorStatus, string sponsorType, bool accepted)
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        if (sponsorStatus is not null)
+            await scenario.ProjectSponsorAsync(sponsorStatus, sponsorType);
+        var request = scenario.Request(null, null) with
+        {
+            WorkerType = "external_collaborator",
+            SponsorPersonId = scenario.ManagerId,
+        };
+
+        // Act
+        var result = await scenario.RecordAsync(request, new GrantedPermissions());
+
+        // Assert
+        Assert.Equal(accepted, result.IsSuccess);
+        var facts = await scenario.RelationshipEventsAsync();
+        if (accepted)
+            Assert.Equal(scenario.ManagerId, Assert.IsType<WorkRelationshipRecorded>(Assert.Single(facts)).Terms.SponsorPersonId);
+        else
+        {
+            Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(result.Error).Kind);
+            Assert.Empty(facts);
+        }
+    }
+
+    [Fact]
+    public async Task ShouldRefuseWithoutFactGivenInitialSponsorOnlyActiveInAnotherTenant()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        await scenario.ProjectSponsorAsync("active", tenantId: Uuid.CreateVersion4());
+        var request = scenario.Request(null, null) with
+        {
+            WorkerType = "external_collaborator",
+            SponsorPersonId = scenario.ManagerId,
+        };
+
+        // Act
+        var result = await scenario.RecordAsync(request, new GrantedPermissions());
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Empty(await scenario.RelationshipEventsAsync());
+    }
+
+    [Fact]
+    public async Task ShouldRefuseTransientlyWithoutFactGivenInitialSponsorProjectionBehindSource()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        await scenario.ProjectSponsorAsync("active");
+        await scenario.AppendUnprojectedSponsorAsync();
+        var request = scenario.Request(null, null) with
+        {
+            WorkerType = "external_collaborator",
+            SponsorPersonId = scenario.ManagerId,
+        };
+
+        // Act
+        var result = await scenario.RecordAsync(request, new GrantedPermissions());
+
+        // Assert
+        var error = Assert.IsType<RequestError>(result.Error);
+        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
+        Assert.True(error.IsTransient);
+        Assert.Empty(await scenario.RelationshipEventsAsync());
+    }
+
+    [Fact]
+    public async Task ShouldPreserveExactRetryGivenInitialSponsorLaterDeparts()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        await scenario.ProjectSponsorAsync("active");
+        var initial = scenario.Request(null, null) with
+        {
+            WorkerType = "external_collaborator",
+            SponsorPersonId = scenario.ManagerId,
+        };
+        Assert.True((await scenario.RecordAsync(initial, new GrantedPermissions())).IsSuccess);
+        await scenario.ProjectSponsorAsync("ended");
+
+        // Act
+        var result = await scenario.RecordAsync(initial, new GrantedPermissions(true, true));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Single(await scenario.RelationshipEventsAsync());
+    }
+
+    [Fact]
+    public async Task ShouldPreserveRestrictedRetryRefusalGivenInitialSponsorLaterDeparts()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        await scenario.ProjectSponsorAsync("active");
+        var initial = scenario.Request(null, null) with
+        {
+            WorkerType = "external_collaborator",
+            SponsorPersonId = scenario.ManagerId,
+        };
+        Assert.True((await scenario.RecordAsync(initial, new GrantedPermissions())).IsSuccess);
+        await scenario.ProjectSponsorAsync("ended");
+
+        // Act
+        var result = await scenario.RecordAsync(initial, new GrantedPermissions());
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Single(await scenario.RelationshipEventsAsync());
+    }
+
+    [Fact]
+    public async Task ShouldPassExternalProvenanceToOwnerGivenInitialRecordRequest()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var source = new WorkforceSourceIdentity("hris", "PeopleSystem", "External-record-99", "Revision-7");
+        var request = scenario.Request(null, null) with { Source = source };
+
+        // Act
+        var result = await scenario.RecordAsync(request, new GrantedPermissions());
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var fact = Assert.IsType<WorkRelationshipRecorded>(Assert.Single(await scenario.RelationshipEventsAsync()));
+        Assert.Equal(source, fact.Source);
+        Assert.Equal(WorkRelationship.IdFor(scenario.TenantId, "E-100"), fact.RelationshipId);
+        Assert.Equal("E-100", fact.SourceWorkerId);
+    }
+
     [Theory]
     [InlineData(false, true, false)]
     [InlineData(true, false, false)]
@@ -295,6 +440,7 @@ public sealed class RecordWorkRelationshipHandlerTests
     {
         readonly ServiceProvider _provider;
         readonly AsyncServiceScope _scope;
+        bool _sponsorProjected;
 
         Scenario(ServiceProvider provider)
         {
@@ -302,6 +448,7 @@ public sealed class RecordWorkRelationshipHandlerTests
             _scope = provider.CreateAsyncScope();
         }
 
+        public FitzWorkforceObservationDirectory Roster { get; } = new(new InMemoryKvClient());
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid PersonId { get; } = Uuid.CreateVersion4();
         public Uuid ManagerId { get; } = Uuid.CreateVersion4();
@@ -351,9 +498,37 @@ public sealed class RecordWorkRelationshipHandlerTests
             if (!authorized.IsSuccess)
                 return Result<WorkRelationshipRegistration>.Failure(authorized.Error);
             return await new RecordWorkRelationshipHandler(executor ?? Executor, Reader,
-                    permissions, TimeProvider.System)
+                    permissions, Roster, new WorkforceObservationReadConsistency(Roster,
+                        _scope.ServiceProvider.GetRequiredService<IDomainEventReader>()), TimeProvider.System)
                 .HandleAsync(new RequestContext<RecordWorkRelationship>(request, actor),
                     CancellationToken.None);
+        }
+
+        public async Task ProjectSponsorAsync(string status, string workerType = "employee", Uuid? tenantId = null)
+        {
+            var tenant = tenantId ?? TenantId;
+            await using var batch = await Roster.BeginAsync(new ProjectionBatchContext(
+                new CheckpointIdentity("WorkforceObservationsV1",
+                    EventStreamPattern.ForPattern(tenant.ToString(), "work-relationships")), ProjectionCheckpoint.Start));
+            if (status == "ended" && _sponsorProjected)
+                await Roster.ApplyAsync(new WorkRelationshipEnded(tenant, WorkRelationship.IdFor(tenant, "SP-100"),
+                    "SP-100", 2, new DateOnly(2026, 9, 1), "Left", ActorReference.ForMember(ManagerId, "Sponsor"), DateTimeOffset.UtcNow));
+            else
+                await Roster.ApplyAsync(new WorkRelationshipRecorded(tenant, WorkRelationship.IdFor(tenant, "SP-100"),
+                    ManagerId, "SP-100", new WorkRelationshipTerms(workerType, status, new DateOnly(2025, 1, 6),
+                        status == "ended" ? new DateOnly(2026, 9, 1) : null, null, null, workerType == "external_collaborator" ? OtherManagerId : null),
+                    ActorReference.ForMember(ManagerId, "Sponsor"), DateTimeOffset.UtcNow));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+            _sponsorProjected = true;
+        }
+
+        public async Task AppendUnprojectedSponsorAsync()
+        {
+            var id = WorkRelationship.IdFor(TenantId, "UNPROJECTED");
+            var fact = DomainEventSeed.Attach(new WorkRelationshipRecorded(TenantId, id, ManagerId, "UNPROJECTED",
+                new WorkRelationshipTerms("employee", "active", new DateOnly(2025, 1, 6), null, null, null, null),
+                ActorReference.ForMember(ManagerId, "Sponsor"), DateTimeOffset.UtcNow), id, 1);
+            await Events.AppendAsync(new WorkRelationship(TenantId, id).Stream, 0, [fact]);
         }
 
         public async Task ReviseAsync(RecordWorkRelationship terms)

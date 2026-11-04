@@ -192,6 +192,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
         CorrectiveActionAddedV2 ev => ev.Revision,
         CorrectiveActionCompletedV2 ev => ev.Revision,
         CorrectiveActionCancelled ev => ev.Revision,
+        FindingCorrectiveActionResolved ev => ev.Revision,
         _ => throw new InvalidOperationException($"{fact.GetType().Name} is not a remediation fact."),
     };
 
@@ -226,6 +227,9 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 Add(value.EvidenceManifest);
                 break;
             case CorrectiveActionCancelled:
+                break;
+            case FindingCorrectiveActionResolved value:
+                Add(value.SourceProof);
                 break;
             case FindingAcceptanceLinkedV2 value:
                 Add(value.AcceptanceContent);
@@ -293,6 +297,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
         CorrectiveActionAddedV2 => "corrective_action_added",
         CorrectiveActionCompletedV2 => "corrective_action_completed",
         CorrectiveActionCancelled => "corrective_action_cancelled",
+        FindingCorrectiveActionResolved => "finding_corrective_action_resolved",
         _ => throw new JsonException("The remediation stream contains an unknown event."),
     };
 

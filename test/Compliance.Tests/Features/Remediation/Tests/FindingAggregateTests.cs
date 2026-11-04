@@ -253,7 +253,8 @@ public sealed class FindingAggregateTests
         var owner = Raised(out _, action);
         Assert.True(owner.AdmitAction(Op(owner, action, nameof(AddCorrectiveAction), 1),
             NativeFacts.Ref(ChildAdmissionIntent.Schema), NativeFacts.Ref()).IsSuccess);
-        Assert.True(owner.AcceptClosure(Op(owner, Uuid.CreateVersion4(), nameof(CloseFinding), 2),
+        Resolve(owner, action);
+        Assert.True(owner.AcceptClosure(Op(owner, Uuid.CreateVersion4(), nameof(CloseFinding), owner.Revision),
             NativeFacts.Ref(ClosureIntent.Schema), NativeFacts.Ref()).IsSuccess);
 
         // Act
@@ -266,7 +267,7 @@ public sealed class FindingAggregateTests
         Assert.Equal(RequestErrorKind.Conflict, revise.Error?.Kind);
         Assert.Equal(RequestErrorKind.Conflict, secondClosure.Error?.Kind);
         Assert.NotNull(owner.PendingClosure);
-        Assert.Equal(3, Pending(owner));
+        Assert.Equal(4, Pending(owner));
     }
 
     [Fact]
@@ -283,7 +284,7 @@ public sealed class FindingAggregateTests
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.NotNull(owner.PendingClosure);
         Assert.Null(owner.Closed);
-        Assert.Equal(3, Pending(owner));
+        Assert.Equal(4, Pending(owner));
     }
 
     [Fact]
@@ -304,7 +305,7 @@ public sealed class FindingAggregateTests
         Assert.Null(owner.PendingClosure);
         Assert.Equal(1, owner.Closed!.FindingGeneration);
         Assert.Equal(RequestErrorKind.Conflict, revise.Error?.Kind);
-        Assert.Equal(4, Pending(owner));
+        Assert.Equal(5, Pending(owner));
     }
 
     [Fact]
@@ -371,7 +372,7 @@ public sealed class FindingAggregateTests
         Assert.NotNull(closed.Closed);
         Assert.Equal(1, closed.Generation);
         Assert.Equal(1, Pending(open));
-        Assert.Equal(4, Pending(closed));
+        Assert.Equal(5, Pending(closed));
     }
 
     [Fact]
@@ -385,7 +386,8 @@ public sealed class FindingAggregateTests
             NativeFacts.Ref(ChildAdmissionIntent.Schema), NativeFacts.Ref()).IsSuccess);
         Assert.True(source.Revise(Op(source, Uuid.CreateVersion4(), nameof(ReviseFinding), 2), Revision("moderate"),
             NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
-        var closeOp = Op(source, closureRoot, nameof(CloseFinding), 3);
+        Resolve(source, action);
+        var closeOp = Op(source, closureRoot, nameof(CloseFinding), source.Revision);
         var intent = NativeFacts.Ref(ClosureIntent.Schema);
         Assert.True(source.AcceptClosure(closeOp, intent, NativeFacts.Ref()).IsSuccess);
         Assert.True(source.CompleteClosure(Child(closeOp, "CompleteFindingClosure"), NativeFacts.Ref(),
@@ -404,7 +406,7 @@ public sealed class FindingAggregateTests
             NativeFacts.Ref(ChildAdmissionIntent.Schema), NativeFacts.Ref());
 
         // Assert
-        Assert.Equal(6, owner.Revision);
+        Assert.Equal(7, owner.Revision);
         Assert.Equal(2, owner.Generation);
         Assert.Equal("moderate", owner.Severity);
         Assert.Null(owner.Closed);
@@ -446,7 +448,8 @@ public sealed class FindingAggregateTests
             NativeFacts.Ref(ChildAdmissionIntent.Schema));
         Assert.True(owner.Raise(Op(owner, id, nameof(RaiseFinding), null), Terms(), NativeFacts.Ref(),
             NativeFacts.Ref(), NativeFacts.Ref(), initial).IsSuccess);
-        closeOp = Op(owner, Uuid.CreateVersion4(), nameof(CloseFinding), 2);
+        Resolve(owner, initial.Operation.LogicalId);
+        closeOp = Op(owner, Uuid.CreateVersion4(), nameof(CloseFinding), owner.Revision);
         intent = NativeFacts.Ref(ClosureIntent.Schema);
         Assert.True(owner.AcceptClosure(closeOp, intent, NativeFacts.Ref()).IsSuccess);
         return owner;
@@ -462,6 +465,18 @@ public sealed class FindingAggregateTests
         LogicalId = Uuid.CreateVersion4(),
         CommandKind = kind,
     };
+
+    static void Resolve(FindingAggregate owner, Uuid action)
+    {
+        var source = new NativeFactReference(new CorrectiveAction(owner.TenantId, owner.ProgramId, owner.FindingId, action).Stream,
+            Uuid.CreateVersion4(), 2);
+        var operation = FindingContent.Provenance(Uuid.CreateVersion5(source.EventId, nameof(RecordCorrectiveActionOutcome)),
+            nameof(RecordCorrectiveActionOutcome), owner.Stream, ActorReference.ForSystemProcess("report_action_outcome", "Report outcome"),
+            null, new string('b', 64), NativeFacts.Now) with
+        { FirstOwner = owner.Stream, CausationEventId = source.EventId };
+        Assert.True(owner.RecordActionOutcome(operation, action, "completed", source,
+            NativeFacts.Ref("source-fact-locator.v1")).IsSuccess);
+    }
 
     static FindingRaiseTerms Terms() => new(new FindingSource("manual", null, null, "Original source text."),
         "Retained access", "Access survived offboarding.", "high", "VPN", Uuid.CreateVersion4(),

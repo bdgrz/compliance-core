@@ -15,5 +15,5 @@ namespace Bdgrz.Compliance.Features.Workforce.Commands;
 public sealed record RecordWorkRelationship(Uuid TenantId, Uuid PersonId, string SourceWorkerId,
     string WorkerType, string LifecycleStatus, DateOnly StartDate, DateOnly? EndDate = null,
     string? Department = null, Uuid? ManagerPersonId = null, Uuid? SponsorPersonId = null,
-    string? EmploymentStatusReason = null)
+    string? EmploymentStatusReason = null, WorkforceSourceIdentity? Source = null)
     : IRequest<WorkRelationshipRegistration>, IWorkforceRequest, IClientManagementMutationRequest, ICallable;

@@ -29,9 +29,9 @@ wiring requirements and edit only their assigned business slice.
 
 | Worker worktree | Exclusive business paths | First bounded batch | State |
 | --- | --- | --- | --- |
-| `workforce` | `Features/Workforce/**` in Common, Core, App and feature tests | Start, leave, return and end WorkRelationship lifecycle | Batch 1 merged; batch 2 source prepared |
-| `assurance` | `Features/Remediation/**` in Common, Core, App and feature tests | Product Waiver request, independent review and revocation | Batch 1 merged; batch 2 source prepared |
-| `methodology` | `Features/MethodologyTemplates/**` in Common, Core, App and feature tests | TemplateVersionApplication per-version entry outcomes | Batch 1 merged; batch 2 source prepared |
+| `workforce` | `Features/Workforce/**` in Common, Core, App and feature tests | Start, leave, return and end WorkRelationship lifecycle | Batch 2 merged; next source batch prepared |
+| `assurance` | `Features/Remediation/**` in Common, Core, App and feature tests | Product Waiver request, independent review and revocation | Batch 2 merged; next source batch prepared |
+| `methodology` | `Features/MethodologyTemplates/**` in Common, Core, App and feature tests | TemplateVersionApplication per-version entry outcomes | Batch 2 merged; next source batch prepared |
 
 Workers submit test-first and implementation commits. Following the user's updated
 instruction, they now use source review and live Jev before any compilation or test
@@ -50,7 +50,7 @@ against executable behavior and tests. It does not mean that the context has no 
 | [Platform access](contexts/platform-access.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Firm services](contexts/firm-services.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Program and scope](contexts/program-and-scope.md) | Not mapped | Full requirement mapping and workflow validation pending |
-| [Workforce assurance](contexts/workforce-assurance.md) | Partial: named WorkRelationship lifecycle/changes and computed unsponsored gap; retired service identities are terminal | Full requirement mapping and workflow validation pending |
+| [Workforce assurance](contexts/workforce-assurance.md), [requirement map](workforce-implementation.md) | Partial: named WorkRelationship lifecycle/changes and computed unsponsored gap; retired service identities are terminal | Full requirement mapping and workflow validation pending |
 | [Application inventory](contexts/application-inventory.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Technology and information inventory](contexts/technology-and-information-inventory.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Examinations](contexts/examinations.md) | Not mapped | Full requirement mapping and workflow validation pending |
@@ -154,4 +154,73 @@ business cases; 51 fixture/catalog correction cases; all 8,327 backend units wit
 zero failures/skips; whitespace verification; six Node cases and proposal/coverage
 checks. The inspected inventory adds 12 facts (one explicit line-start producer
 gap), one owner and six registered requests. Counts describe source navigation,
-not whole-domain completion. Final-head hosted acceptance remains pending.
+not whole-domain completion. PR [#1181](https://github.com/bdgrz/compliance-core/pull/1181) passed exact-head
+Backend CI and merged to main as `7df499fd`. The integration merge preserved the
+next source batch byte-for-byte; post-merge main CI also passed.
+
+## Next source batch (unvalidated)
+
+Human methodology draft commands/handlers are integrated with central registration,
+JSON and platform HTTP wiring. Revision/discard are exposed to MCP; personal review
+and approval are HTTP-only. Fourteen tests were authored before implementation but
+have not been executed. The legacy internal handler has no public route to cut over.
+
+Initial WorkRelationship provenance is integrated through the existing command,
+recorded fact, owner and primary read view. The stable worker identifier still
+determines identity; external IDs/revisions remain case-sensitive provenance.
+Nineteen tests were authored before implementation but have not been executed.
+Initial pending/active and sponsor admission changes are a separate source slice.
+
+Both slices received live Jev source review (`jev-1.14.0`). These source checkpoints
+are not compiled/tested acceptance. AW-09 finding-owned corrective outcomes and
+methodology line choreography are being prepared independently. No new local .NET
+run will start until sufficient source and central wiring are assembled.
+
+### Batch 3 assembled source checkpoint
+
+Prepared source now includes 104 authored cases across human draft commands (14),
+line start/publish/discard choreography (21), initial workforce provenance (19),
+initial lifecycle/sponsor admission (22), and finding-owned action outcomes (28).
+No pre-implementation execution or RED is claimed for this batch. All source slices
+received live Jev review before assembly. Central handlers, authorizers, JSON,
+reactors, HTTP/MCP and native response wiring are assembled.
+
+The Operations fixture now delivers original committed action records through the
+real outcome reactor; direct Complete/Cancel still leave a reporting-lag window.
+Close convenience accounts only for revisions appended by its own delivery,
+preserving prior staleness: expected-after minus actual-after equals supplied-before
+minus actual-before. This direct source/algebra check resolved Jev's uncertain
+0.34 staleness candidate; runtime qualification is pending. Other assembled adverse
+questions ranged 0.04–0.22. Personal draft review/approval have no MCP registration.
+
+New-line public creation/name admission, retirement transport, truthful V4 reads
+and ordered application support remain explicit; legacy DTO attribution is not
+fabricated. New line producers are present in this source batch. Generic workforce
+revision retirement is a separate next slice. Full compiled/behavioral acceptance
+will be recorded after the combined checkpoint.
+
+Batch 3 compilation failures before behavioral execution: IDE0007 required an
+inferred local type in publication comparison; then the shared App composition
+missed the methodology command namespace import. Both were corrected without
+changing analyzer enforcement. These are assembly failures, not behavioral RED.
+
+Batch 3 local runtime acceptance passed: zero-warning/error Release compilation;
+69 affected regression cases after the initial 2,186-case run found eight fixture
+failures; all 8,431 backend units with zero failures/skips; Node/proposal/coverage
+checks passed. Full whitespace verification also passed. The eight
+initial failures were corrected by real external DispatchAsync contexts, explicit
+expected business refusals, delivery of committed outcomes in seeds, and a valid
+bound cancellation-proof setup; no production guard or assertion was weakened.
+
+This is a breaking Finding history change: replayed closure admission/finalization
+requires prior finding-owned action-resolution facts. Legacy closed histories that
+lack them need a separate stream conversion or fresh data; backward compatibility
+and rollback were explicitly not required. No deployment/data conversion is claimed.
+
+Additional compilation-only corrections included test naming/assertion conventions,
+whitespace, the reporting fixture's nullable result switch and a seed helper's
+resolver qualification. Existing rules stayed enforced. The final compiled source
+and all 8,431 units passed after those corrections; these failures were not counted
+as observed behavioral RED. The inspected inventory has five additional facts,
+eight additional registered requests (three internal-only), and explicit missing
+new-line creation/retirement routes. Counts remain navigation evidence only.

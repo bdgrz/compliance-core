@@ -214,6 +214,7 @@ public sealed class WorkSourceCompositionTests
         await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today.AddDays(-7));
         var remediated = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today);
         var verified = await fixture.AsAsync(fixture.OwnerUserId, fixture.Complete(remediated, Assert.Single(remediated.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport));
+        verified = await fixture.ReportCorrectiveActionOutcomesAsync(verified.FindingId);
         var evidenceRequest = await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, "Quarterly evidence", "Reviewed export", fixture.OwnerMemberId,
             fixture.Today));

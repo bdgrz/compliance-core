@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -331,10 +332,18 @@ public sealed class WorkRelationshipTests
     {
         var relationship = New();
         var ended = Employee("ended", new DateOnly(2026, 9, 1));
-        Assert.True(relationship.Record(PersonId, "E-100", initiallyEnded ? ended : Employee(), Author,
-            Now).IsSuccess);
-        if (!initiallyEnded)
-            Assert.Null(relationship.Revise(1, ended, Author, Now.AddMinutes(1)));
+        if (initiallyEnded)
+        {
+            var historical = new WorkRelationshipRecorded(TenantId, relationship.Id, PersonId,
+                "E-100", ended, Author, Now);
+            if (replayed)
+                historical = (WorkRelationshipRecorded)JsonSerializer.Deserialize(
+                    JsonSerializer.Serialize(historical, typeof(WorkRelationshipRecorded), ComplianceCoreJsonContext.Default),
+                    typeof(WorkRelationshipRecorded), ComplianceCoreJsonContext.Default)!;
+            return NativeFacts.Replay(relationship, [DomainEventSeed.Attach(historical, relationship.Id, 1)]);
+        }
+        Assert.True(relationship.Record(PersonId, "E-100", Employee(), Author, Now).IsSuccess);
+        Assert.Null(relationship.Revise(1, ended, Author, Now.AddMinutes(1)));
         return replayed ? NativeFacts.Replay(New(), NativeFacts.Raised(relationship)) : relationship;
     }
 }

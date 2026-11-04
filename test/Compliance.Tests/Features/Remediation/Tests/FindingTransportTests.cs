@@ -36,6 +36,8 @@ using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Events;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
@@ -187,12 +189,21 @@ public sealed class FindingTransportTests
         Assert.Equal(HttpStatusCode.Accepted, admittedAgain.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, changedAction.StatusCode);
         Assert.Equal(actionId.ToString(), JsonDocument.Parse(admittedText).RootElement.GetProperty("operation_id").GetString());
-        // The admitted action is open until completed, so the closure is accepted and then waits on the action.
-        Assert.Equal(HttpStatusCode.Accepted, closeBeforeWork.StatusCode);
+        // The finding has no recorded action outcome, so closure is refused before admission.
+        Assert.Equal(HttpStatusCode.Conflict, closeBeforeWork.StatusCode);
         using var view = JsonDocument.Parse(await read.Content.ReadAsStringAsync());
         Assert.Single(view.RootElement.GetProperty("corrective_actions").EnumerateArray());
         Assert.Equal(0, view.RootElement.GetProperty("corrective_actions")[0].GetProperty("revision").GetInt32());
         Assert.Equal(1, JsonDocument.Parse(await list.Content.ReadAsStringAsync()).RootElement.GetProperty("items").GetArrayLength());
+        await using var services = factory.Services.CreateAsyncScope();
+        var owner = await services.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new FindingAggregate(
+            Uuid.Parse(view.RootElement.GetProperty("tenant_id").GetString()!, CultureInfo.InvariantCulture),
+            Uuid.Parse(view.RootElement.GetProperty("program_id").GetString()!, CultureInfo.InvariantCulture),
+            Uuid.Parse(findingId.ToString(), CultureInfo.InvariantCulture)));
+        Assert.Equal(2, owner.Revision);
+        Assert.Null(owner.PendingClosure);
+        await foreach (var fact in services.ServiceProvider.GetRequiredService<IDomainEventReader>().ReadAsync(owner.Stream, 0))
+            Assert.IsNotType<FindingClosureAccepted>(fact.Event);
     }
 
     static async Task<Scope> ArrangeAsync(WebApplicationFactory<Program> factory, HttpClient lead, HttpClient reviewer)

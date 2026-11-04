@@ -50,6 +50,7 @@ public static class FindingHistory
             throw Invalid("The finding history differs from its exact hydrated cut.");
         var operations = new HashSet<Uuid>();
         var actions = new HashSet<Uuid>();
+        var resolvedActions = new HashSet<Uuid>();
         var closures = new HashSet<Uuid>();
         long generation = 0;
         FindingClosureAccepted? pending = null;
@@ -96,8 +97,21 @@ public static class FindingHistory
                         linked.Revision == revision &&
                         NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(LinkFindingAcceptance), (ulong)index);
                     break;
+                case FindingCorrectiveActionResolved resolved:
+                    valid = writable && Scope(resolved.TenantId, resolved.ProgramId, resolved.FindingId) &&
+                        resolved.Revision == revision && resolved.RequestId == operation.LogicalId &&
+                        resolved.Outcome is "completed" or "cancelled" && actions.Contains(resolved.ActionId) &&
+                        resolvedActions.Add(resolved.ActionId) && resolved.Source.EventId != Uuid.Empty &&
+                        resolved.Source.AggregateVersion > 0 && resolved.Source.Stream ==
+                        new CorrectiveAction(owner.TenantId, owner.ProgramId, owner.FindingId, resolved.ActionId).Stream &&
+                        resolved.SourceProof.Schema == SourceFactProofs.RequiredFactsSchema &&
+                        operation.LogicalId == Uuid.CreateVersion5(resolved.Source.EventId, nameof(RecordCorrectiveActionOutcome)) &&
+                        operation.CausationEventId == resolved.Source.EventId && operation.Actor.Kind == "system_process" &&
+                        NativeOwnerHistory.IsOwnRoot(owner, operation with { CausationEventId = null },
+                            nameof(RecordCorrectiveActionOutcome), null);
+                    break;
                 case FindingClosureAccepted accepted:
-                    valid = writable && actions.Count > 0 && accepted.Owner == owner.Stream &&
+                    valid = writable && actions.Count > 0 && resolvedActions.Count == actions.Count && accepted.Owner == owner.Stream &&
                         accepted.Revision == revision && accepted.Generation == generation &&
                         NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(CloseFinding), (ulong)index) &&
                         closures.Add(operation.RootOperationId);
@@ -129,6 +143,7 @@ public static class FindingHistory
                 throw Invalid("The finding history contains another scope, predecessor, action identity or closure generation.");
         }
         if (generation != owner.Generation || actions.Count != owner.AdmittedCount ||
+            actions.Count - resolvedActions.Count != owner.UnresolvedActionCount ||
             pending?.Metadata.EventId != owner.PendingClosure?.Metadata.EventId ||
             closed?.Metadata.EventId != owner.Closed?.Metadata.EventId)
             throw Invalid("The finding history does not reproduce current compact authority.");

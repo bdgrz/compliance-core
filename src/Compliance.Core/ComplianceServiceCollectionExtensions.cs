@@ -1718,6 +1718,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<AddCorrectiveActionHandler>()
             .AddRequestHandler<CompleteCorrectiveActionHandler>()
             .AddRequestHandler<CancelCorrectiveActionHandler>()
+            .AddRequestHandler<RecordCorrectiveActionOutcomeHandler>()
             .AddRequestHandler<LinkFindingAcceptanceHandler>()
             .AddRequestHandler<CloseFindingHandler>()
             .AddRequestHandler<ReopenFindingHandler>()
@@ -1910,6 +1911,15 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListMethodologyTemplatesHandler>()
             .AddRequestHandler<CreateMethodologyTemplateHandler>()
             .AddRequestHandler<ReviseMethodologyTemplateDraftHandler>()
+            .AddRequestHandler<ReviseMethodologyTemplateDraftV3Handler>()
+            .AddRequestHandler<ReviewMethodologyTemplateDraftHandler>()
+            .AddRequestHandler<ApproveMethodologyTemplateDraftHandler>()
+            .AddRequestHandler<DiscardMethodologyTemplateDraftHandler>()
+            .AddRequestHandler<StartMethodologyTemplateDraftHandler>()
+            .AddRequestHandler<PublishMethodologyTemplateVersionHandler>()
+            .AddRequestHandler<CloseMethodologyTemplateDraftHandler>()
+            .AddRequestAuthorizer<Bdgrz.Compliance.Features.MethodologyTemplates.Authorizers.MethodologyTemplateLineReactionAuthorizer>()
+            .AddRequestAuthorizer<Bdgrz.Compliance.Features.MethodologyTemplates.Authorizers.MethodologyTemplateDraftCommandAuthorizer>()
             .AddRequestHandler<ReviewMethodologyTemplateHandler>()
             .AddRequestHandler<ApproveMethodologyTemplateVersionHandler>()
             .AddRequestHandler<RetireMethodologyTemplateHandler>()
@@ -2051,6 +2061,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<MethodologyTemplateDirectoryProjector>(FitzMethodologyTemplateDirectory.ProjectorName, WorkloadScope.Global)
             .AddReactor<Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.MethodologyTemplateDraftOpeningReactor>(
                 Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.MethodologyTemplateDraftOpeningReactor.WorkloadName, WorkloadScope.Global)
+            .AddReactor<Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.MethodologyTemplateDraftConclusionReactor>(
+                Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.MethodologyTemplateDraftConclusionReactor.WorkloadName, WorkloadScope.Global)
+            .AddReactor<Bdgrz.Compliance.Features.Remediation.Reactors.CorrectiveActionOutcomeReactor>(
+                Bdgrz.Compliance.Features.Remediation.Reactors.CorrectiveActionOutcomeReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddReactor<Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.TemplateVersionApplicationOpeningReactor>(
                 Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.TemplateVersionApplicationOpeningReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddProjector<ObservationPeriodDirectoryProjector>(FitzObservationPeriodDirectory.ProjectorName, WorkloadScope.PerTenant)

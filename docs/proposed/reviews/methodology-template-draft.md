@@ -27,3 +27,27 @@ Remaining: human commands/handlers; line start, publish and discard choreography
 entry materialization, parent application completion and superseded contribution
 migration; explicit competing-append and complete workflow qualification. No
 complete owner or context claim.
+
+## Batch 3 human commands and line lifecycle
+
+Human revisions/discards and HTTP-only review/approval are wired with server-derived
+operator identity. Existing authoritative platform super-administrator membership
+provides methodology author/approve capabilities. Client contribution content is
+rejected before writing a platform immutable entry blob.
+
+The line starts one draft from its exact latest published snapshot (or empty first
+draft), publishes only from an exact committed approval, and closes only from an
+exact committed discard. Stable source command IDs and recorded prior bindings
+support delayed retries. The conclusion reactor propagates failure to its checkpoint
+runner. Legacy mutation methods refuse new-line state.
+
+Thirty-five cases were authored first and initially executed at the combined gate.
+Two positive HTTP fixture cases initially used internal SendAsync, which intentionally
+drops external transport; external DispatchAsync fixed the fixture. Production
+HTTP-only guards stayed in place. Local final suite: 8,431 passed, no failures/skips.
+
+Current remaining scope supersedes the earlier batch list: public line creation with
+authoritative unused-name admission, public retirement, truthful V4 reads, ordered
+application/materialization/completion and removal of superseded contribution paths.
+The five earlier human route gaps and line-start producer gap are now implemented.
+No complete context claim.

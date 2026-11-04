@@ -29,3 +29,20 @@ Remaining: initial-record/source provenance and reconciliation conformance, init
 pending/active and sponsor admission requirements, generic revision migration,
 and explicit competing-append/whole-workflow qualification. No complete owner or
 context claim.
+
+## Batch 3 initial record conformance
+
+Initial source provenance is retained through command, event, owner and primary
+read model; stable worker identity is unchanged. New records admit only pending or
+active, and naming a sponsor checks existing active internal eligibility. Exact
+permitted retries retain their original source/terms even after sponsor departure
+or observation lag. The hydrated restricted-field gate runs before retry decisions.
+Legacy facts still replay; old test setup shortcuts now seed historical facts.
+
+Forty-one cases were authored first and first executed in the assembled checkpoint;
+no earlier behavioral RED is claimed. Live Jev source checks were advisory; an
+uncertain restricted-oracle candidate was checked against the hydrated gate and
+permission/no-permission retry cases. Final local suite: 8,431 passed, zero failures
+or skips. Generic mutation retirement remains a separately prepared next slice;
+Person link cardinality, ServiceIdentity conformance, source authority/reconciliation
+and command-specific roles remain mapped in workforce-implementation.md.

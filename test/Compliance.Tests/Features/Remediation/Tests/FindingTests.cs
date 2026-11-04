@@ -128,7 +128,7 @@ public sealed class FindingTests
         Assert.All(closed.Closure.ResolutionEvidence, item => Assert.Equal("unresolved", item.Resolution));
         Assert.Equal("remediated", reopened.Status);
         Assert.Null(reopened.Closure);
-        Assert.Equal(["raised", "corrective_action_added", "corrective_action_completed", "closed", "reopened"],
+        Assert.Equal(["raised", "corrective_action_added", "corrective_action_completed", "corrective_action_resolved", "closed", "reopened"],
             reopened.History.Select(entry => entry.Change));
     }
 
