@@ -66,7 +66,7 @@ public sealed class OccurrenceFindingTests
         new PersistenceKvClient(new InMemoryKvClient()));
 
     [Fact]
-    public async Task ShouldRaiseDeterministicFindingGivenFailedAttestation()
+    public async Task ShouldLeaveFindingDecisionToReviewerGivenFailedAttestation()
     {
         // Arrange
         var attestation = Attestation("failed", "Export tool was down.");
@@ -78,15 +78,11 @@ public sealed class OccurrenceFindingTests
             new InMemoryProjectionCheckpointStore(), scenario.Requests, Content, await SourcesAsync(scenario, attested)));
 
         // Assert
-        var request = Assert.IsType<RaiseOccurrenceFinding>(Assert.Single(scenario.SentRequests));
-        Assert.Equal(Uuid.CreateVersion5(attestation.AttestationId, "finding"), request.FindingId);
-        Assert.Equal("control_occurrence", request.SourceKind);
-        Assert.Equal("failed: Export tool was down.", request.SourceText);
-        Assert.Equal(attestation.AttestationId.ToString(), request.SourceVersion);
+        Assert.Empty(scenario.SentRequests);
     }
 
     [Fact]
-    public async Task ShouldRaiseSameFindingIdForSameOccurrenceGivenReplayedAttestedFact()
+    public async Task ShouldKeepNoFindingGivenReplayedSkippedAttestation()
     {
         // Arrange
         var attestation = Attestation("skipped", "Not performed this month.");
@@ -101,11 +97,8 @@ public sealed class OccurrenceFindingTests
             replay.Requests, Content, await SourcesAsync(replay, attested)));
 
         // Assert
-        var original = Assert.IsType<RaiseOccurrenceFinding>(Assert.Single(first.SentRequests));
-        var repeated = Assert.IsType<RaiseOccurrenceFinding>(Assert.Single(replay.SentRequests));
-        Assert.Equal(original, repeated);
-        Assert.Equal(Uuid.CreateVersion5(attestation.AttestationId, "finding"), repeated.FindingId);
-        Assert.Equal(OccurrenceId, repeated.OccurrenceId);
+        Assert.Empty(first.SentRequests);
+        Assert.Empty(replay.SentRequests);
     }
 
     [Fact]
@@ -133,7 +126,7 @@ public sealed class OccurrenceFindingTests
             ControlOperatingContent.ReviewSchema, new ControlOccurrenceReviewView(decisionId,
                 Uuid.CreateVersion4(), 1, "action_requested", "Two follow-ups.",
                 ["Automate removal.", "Train managers."], Uuid.CreateVersion4(),
-                ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer"), DateTimeOffset.UtcNow),
+                ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer"), DateTimeOffset.UtcNow, "raise", "Explicit follow-ups."),
             CancellationToken.None);
         var reviewed = DomainEventSeed.Attach(new ControlOccurrenceReviewed(TenantId, ProgramId, ControlId,
             OccurrenceId, 3, review, Provenance(), review, null), OccurrenceId, 3);
@@ -148,6 +141,42 @@ public sealed class OccurrenceFindingTests
         Assert.Equal(["Automate removal.", "Train managers."], requests.Select(r => r.SourceText));
         Assert.All(requests, request => Assert.Equal("occurrence_review", request.SourceKind));
         Assert.Equal(2, requests.Select(request => request.FindingId).Distinct().Count());
+    }
+
+    [Theory]
+    [InlineData("raise", true)]
+    [InlineData("none", false)]
+    public async Task ShouldUseCommittedReviewerDecisionGivenNoRequestedActions(string decision, bool raises)
+    {
+        // Arrange
+        var decisionId = Uuid.CreateVersion4();
+        var reference = await ControlOperatingContent.WriteAsync(Content, TenantId,
+            ControlOperatingContent.ReviewSchema, new ControlOccurrenceReviewView(decisionId,
+                Uuid.CreateVersion4(), 1, "accepted", "Reviewed the failure.", [], Uuid.CreateVersion4(),
+                ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer"), DateTimeOffset.UtcNow,
+                decision, "The recurring failure requires investigation."), CancellationToken.None);
+        var reviewed = DomainEventSeed.Attach(new ControlOccurrenceReviewed(TenantId, ProgramId, ControlId,
+            OccurrenceId, 3, reference, Provenance(), reference, null), OccurrenceId, 3);
+        var first = new ReactorScenario(new TenantId(TenantId.ToString()));
+        var replay = new ReactorScenario(new TenantId(TenantId.ToString()));
+
+        // Act
+        await first.RunAsync(new ControlOccurrenceFindingReactor(new InMemoryProjectionCheckpointStore(),
+            first.Requests, Content, await SourcesAsync(first, reviewed)));
+        await replay.RunAsync(new ControlOccurrenceFindingReactor(new InMemoryProjectionCheckpointStore(),
+            replay.Requests, Content, await SourcesAsync(replay, reviewed)));
+
+        // Assert
+        Assert.Equal(raises ? 1 : 0, first.SentRequests.Count);
+        Assert.Equal(first.SentRequests, replay.SentRequests);
+        if (raises)
+        {
+            var request = Assert.IsType<RaiseOccurrenceFinding>(Assert.Single(first.SentRequests));
+            Assert.Equal(Uuid.CreateVersion5(decisionId, "finding"), request.FindingId);
+            Assert.Equal("occurrence_review", request.SourceKind);
+            Assert.Equal(decisionId.ToString(), request.SourceVersion);
+            Assert.Equal("The recurring failure requires investigation.", request.SourceText);
+        }
     }
 
     [Fact]
