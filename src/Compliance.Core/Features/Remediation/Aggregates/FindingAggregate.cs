@@ -277,23 +277,34 @@ public sealed class FindingAggregate : Aggregate
         return Result.Success;
     }
 
+    /// <summary>Checks the exact current proposer and any committed review source before withdrawal.</summary>
+    public Result PrepareWithdrawal(OperationProvenance operation, Uuid closureId, long proposalRevision)
+    {
+        var prepared = PrepareProposalDecision(operation, nameof(WithdrawFindingClosure), closureId, proposalRevision, true);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (FindingClosureProposalRules.MemberId(operation.Actor) != FindingClosureProposalRules.MemberId(_proposal!.ProposedBy))
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "Only this proposal revision's proposer may withdraw it."));
+        return _pending is not null && (_pending.Metadata.EventId == Uuid.Empty || _pending.Metadata.AggregateVersion == 0)
+            ? Fail(CommandFailure.StateConflict("The accepted review must be committed before withdrawal can bind its source."))
+            : Result.Success;
+    }
+
     /// <summary>The proposer withdraws the exact current proposal.</summary>
     public Result WithdrawClosure(OperationProvenance operation, Uuid closureId, long proposalRevision,
         ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        var prepared = PrepareProposalDecision(operation, nameof(WithdrawFindingClosure), closureId, proposalRevision);
+        var prepared = PrepareWithdrawal(operation, closureId, proposalRevision);
         if (!prepared.IsSuccess)
             return prepared;
-        if (FindingClosureProposalRules.MemberId(operation.Actor) != FindingClosureProposalRules.MemberId(_proposal!.ProposedBy))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "Only this proposal revision's proposer may withdraw it."));
         RaiseEvent(new FindingClosureWithdrawn(operation.LogicalId, _tenantId, _programId, _findingId,
             _revision + 1, closureId, proposalRevision, operation.Actor, operation.AcceptedAt,
-            operation, firstResponse, operationResult));
+            operation, firstResponse, operationResult, _pending is { } pending ? CancellationOf(pending) : null));
         return Result.Success;
     }
 
-    /// <summary>Returns a proposal or admits its exact independent review to the existing final proof path.</summary>
+    /// <summary>Checks the current proposal, reviewer and exact waiver without recording a review.</summary>
     public Result PrepareReview(OperationProvenance operation, Uuid closureId, long proposalRevision, bool approve,
         string? comments, SeparationOfDutiesWaiverProof? waiver)
     {
@@ -582,13 +593,17 @@ public sealed class FindingAggregate : Aggregate
     void Apply(FindingClosureWithdrawn ev)
     {
         Acceptance.Observe(ev);
-        if (_closed is not null || _pending is not null || !CurrentProposal(ev.ClosureId, ev.ProposalRevision) ||
+        if (_closed is not null || !CurrentProposal(ev.ClosureId, ev.ProposalRevision) ||
             ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.FindingId != _findingId ||
             ev.Revision != _revision + 1 || ev.RequestId != ev.Operation.LogicalId ||
             !NativeOwnerHistory.IsOwnRoot(this, ev.Operation, nameof(WithdrawFindingClosure), (ulong)_revision) ||
             ev.WithdrawnBy != ev.Operation.Actor || ev.WithdrawnAt != ev.Operation.AcceptedAt ||
-            FindingClosureProposalRules.MemberId(ev.WithdrawnBy) != FindingClosureProposalRules.MemberId(_proposal!.ProposedBy))
-            throw new InvalidOperationException("Only the proposer withdraws the exact current proposal revision before acceptance.");
+            FindingClosureProposalRules.MemberId(ev.WithdrawnBy) != FindingClosureProposalRules.MemberId(_proposal!.ProposedBy) ||
+            !MatchesPendingCancellation(ev.CanceledReview))
+            throw new InvalidOperationException("Only the proposer withdraws the exact current proposal and fences its exact accepted review.");
+        if (ev.CanceledReview?.RootOperationId == _selectedClosureRoot)
+            _selectedTerminal = ev;
+        _pending = null;
         _proposal = null;
         Advance(ev);
     }
@@ -715,7 +730,8 @@ public sealed class FindingAggregate : Aggregate
             NativeOwnerHistory.IsOwnRoot(this, operation, commandKind, (ulong)expected);
     }
 
-    Result PrepareProposalDecision(OperationProvenance operation, string commandKind, Uuid closureId, long proposalRevision)
+    Result PrepareProposalDecision(OperationProvenance operation, string commandKind, Uuid closureId, long proposalRevision,
+        bool allowAcceptedReview = false)
     {
         if (!OwnProposalOperation(operation, commandKind, out var expected))
             return InvalidProposal();
@@ -723,7 +739,7 @@ public sealed class FindingAggregate : Aggregate
             return Fail(CommandFailure.MissingRecord("The finding was not found."));
         if (expected != _revision)
             return Fail(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("finding", _revision)));
-        if (_pending is not null)
+        if (_pending is not null && !allowAcceptedReview)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The accepted review must settle before another proposal decision.", true));
         return _closed is not null || !CurrentProposal(closureId, proposalRevision)
@@ -737,6 +753,13 @@ public sealed class FindingAggregate : Aggregate
     bool CanReview(FindingClosureReviewBinding review, bool approve) => _proposal is not null &&
         FindingClosureProposalRules.CanReview(_tenantId, _findingId, _proposal,
             _proposalAuthors[_proposal.ClosureId], review, approve);
+
+    bool MatchesPendingCancellation(FindingClosureReviewCancellation? canceled) => _pending is null ? canceled is null :
+        _pending.Review is not null && canceled is not null && canceled.Admission.EventId != Uuid.Empty &&
+        canceled.Admission.AggregateVersion > 0 && canceled == CancellationOf(_pending);
+
+    static FindingClosureReviewCancellation CancellationOf(FindingClosureAccepted accepted) => new(
+        NativeFactReference.Of(accepted.Owner, accepted), accepted.Intent, accepted.Operation.RootOperationId, accepted.Generation);
 
     static Result InvalidProposal() => Fail(CommandFailure.InvalidContent(
         "A closure proposal requires its exact native member operation, immutable artifact versions and resolution rationales."));
