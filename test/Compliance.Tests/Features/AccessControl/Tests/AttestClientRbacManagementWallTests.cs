@@ -43,6 +43,7 @@ using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.Workforce.Readers;
 namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
 public sealed class AttestClientRbacManagementWallTests
@@ -220,10 +221,18 @@ public sealed class AttestClientRbacManagementWallTests
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<ITenantActivity>(new ActiveTenant());
         services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships(identity));
+        services.AddSingleton<IPersonMemberDisplayReader>(new NoRosterName());
         services.AddSingleton<IPermissionAuthorizer>(new RecordingPermissionAuthorizer(allowed));
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(
             new RecordingPermissionAuthorizer(allowed)));
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+    }
+
+    // This fixture controls member authorization; it does not seed a Person projection.
+    sealed class NoRosterName : IPersonMemberDisplayReader
+    {
+        public ValueTask<string?> ReadAsync(Uuid tenantId, Uuid userId, CancellationToken ct = default) =>
+            ValueTask.FromResult<string?>(null);
     }
 
     sealed class Memberships(string identity) : ITenantMembershipDirectoryReader
