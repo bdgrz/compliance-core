@@ -257,6 +257,9 @@ public sealed class MethodologyTemplate : Aggregate
         return Result.Success;
     }
 
+    public Result CreateLineFromClaim(string name, string purpose, Uuid createdBy,
+        SourceFactProof<MethodologyTemplateNameClaimed> proof) => Missing();
+
     public Result StartDraft(Uuid draftId, long basedOnVersion, IReadOnlyList<MethodologyTemplateRecordContent> entries,
         ImmutableContentRef content, Uuid startedBy)
     {

@@ -88,6 +88,11 @@ public sealed class MethodologyTemplateNameClaim : NameClaim
         return Result.Success;
     }
 
+    public Result RefuseLegacyCreation(OperationProvenance operation, MethodologyTemplateNameClaimed claim,
+        MethodologyTemplateCreationIntent intent, MethodologyTemplateCreated existing,
+        MethodologyTemplateLegacyCreationConflictProofs proofs, ImmutableContentRef proofContent) =>
+        Invalid($"Name {NormalizedName} legacy identity refusal is not implemented.");
+
     // The generic tenant-family signatures do not carry the original response or the two exact conflict proofs.
     public override Result Claim(OperationProvenance operation, EventStreamAddress holder, long expectedRevision,
         long generation, ImmutableContentRef intent) => Invalid($"Name {NormalizedName} admission requires its frozen first response.");
