@@ -238,6 +238,6 @@ public sealed class TemplateApplicationOrderingTests
 
     static Result Apply(TemplateApplication owner, Uuid command, long version) => owner.ApplyVersion(command,
         version, Actor, new NativeFactReference(new MethodologyTemplate(Template).Stream,
-            Uuid.CreateVersion5(Template, "publication:" + version), (ulong)version), 0,
+            Uuid.CreateVersion5(Template, "publication:" + version), (ulong)version), (ulong)version - 1,
         Manifest, ["control"], []);
 }
