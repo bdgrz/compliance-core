@@ -353,6 +353,23 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
                 .ContentSha256);
     }
 
+    [Fact]
+    public async Task ShouldRetainChronologicalHistoryGivenLinkAndWithdrawalAtSameInstant()
+    {
+        // Arrange
+        var fixture = await Fixture(includeLaterLink: false, includeWithdrawal: true,
+            secondActiveSupport: true, sameTimeWithdrawal: true);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Single(result.Value.Sources, static source => source.Kind == "evidence_artifact");
+        Assert.Contains(result.Value.ScopeDifferences, static difference =>
+            difference.Contains("withdrawn", StringComparison.OrdinalIgnoreCase));
+    }
+
     [Theory]
     [InlineData("missing_link")]
     [InlineData("duplicate_link")]
@@ -373,6 +390,9 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
     [InlineData("wrong_physical_offset")]
     [InlineData("wrong_metadata_version")]
     [InlineData("wrong_metadata_time")]
+    [InlineData("wrong_metadata_identity")]
+    [InlineData("duplicate_metadata_event")]
+    [InlineData("audit_metadata")]
     [InlineData("unknown_event")]
     public async Task ShouldRefuseFullSupportHistoryGivenMalformedPostCutWithdrawalSuffix(string fault)
     {
@@ -410,6 +430,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
         bool includeLaterDisclosure = false, bool includePriorHandlingPolicy = false,
         bool includeFutureHandlingPolicy = false, bool lateArtifactReceipt = false,
         bool includeWithdrawal = false, bool laterWithdrawal = false, bool secondActiveSupport = false,
+        bool sameTimeWithdrawal = false,
         int? withdrawalReceiptMilliseconds = null, string? supportHistoryFault = null,
         string withdrawalReason = "The artifact was linked by mistake.")
     {
@@ -431,7 +452,8 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
 
         if (includeWithdrawal)
         {
-            var withdrawnAt = laterWithdrawal ? AfterTypeIDate : BeforeTypeIDate.AddMinutes(2);
+            var withdrawnAt = laterWithdrawal ? AfterTypeIDate : sameTimeWithdrawal
+                ? BeforeTypeIDate : BeforeTypeIDate.AddMinutes(2);
             var withdrawal = new EvidenceSupportWithdrawn(TenantId, SupportId, 2, MemberId,
                 withdrawnAt, ProgramId, Uuid.CreateVersion5(SupportId, "withdrawal_command"), 1,
                 new string('c', 64), withdrawalReason, "Compliance Lead");
@@ -722,6 +744,12 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
                 {
                     "wrong_metadata_version" => metadata with { AggregateVersion = 3 },
                     "wrong_metadata_time" => metadata with { OccurredOn = metadata.OccurredOn.AddMinutes(1) },
+                    "wrong_metadata_identity" => metadata with { AggregateId = UnmatchedSupportId },
+                    "duplicate_metadata_event" => metadata with
+                    {
+                        EventId = Uuid.CreateVersion5(SupportId, "evidence_support_linked_v1"),
+                    },
+                    "audit_metadata" => metadata with { IsAudit = true },
                     "earlier_occurrence" => metadata with { OccurredOn = BeforeTypeIDate.AddMinutes(-1) },
                     _ => metadata,
                 });
