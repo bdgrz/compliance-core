@@ -18,7 +18,6 @@ namespace Bdgrz.Compliance.Features.Workforce;
 static class PersonHttp
 {
     public sealed record RecordBody(string DisplayName, string? WorkEmail = null, PersonalContactDetails? PersonalContact = null);
-    public sealed record ReviseBody(long ExpectedRevision, string DisplayName, string? WorkEmail = null, PersonalContactDetails? PersonalContact = null);
     public sealed record ChangeDetailsBody(long ExpectedRevision, string DisplayName, string? WorkEmail = null, PersonalContactDetails? PersonalContact = null);
     public sealed record CorrelateBody(long ExpectedRevision, Uuid? UserId = null);
     public static async ValueTask<RecordPerson> BindRecordAsync(HttpContext context, CancellationToken ct)
@@ -32,20 +31,6 @@ static class PersonHttp
             PortiaHttpBinding.ReadBody<RecordPerson, string>(body, options, 2, "DisplayName", "display_name", false, false, default!),
             PortiaHttpBinding.ReadBody<RecordPerson, string?>(body, options, 3, "WorkEmail", "work_email", true, true, default),
             PortiaHttpBinding.ReadBody<RecordPerson, PersonalContactDetails?>(body, options, 4, "PersonalContact", "personal_contact", true, true, default));
-    }
-    public static async ValueTask<RevisePerson> BindReviseAsync(HttpContext context, CancellationToken ct)
-    {
-        using var document = await PortiaHttpBinding.ReadJsonBodyAsync(context, true, ct).ConfigureAwait(false);
-        var body = document.RootElement;
-        var tenant = Identity(context, body, "tenant_id");
-        var person = Identity(context, body, "person_id");
-        var command = Identity(context, body, "command_id");
-        var options = PortiaHttpBinding.GetJsonOptions(context);
-        return new RevisePerson(command, tenant, person,
-            PortiaHttpBinding.ReadBody<RevisePerson, long>(body, options, 3, "ExpectedRevision", "expected_revision", false, false, default),
-            PortiaHttpBinding.ReadBody<RevisePerson, string>(body, options, 4, "DisplayName", "display_name", false, false, default!),
-            PortiaHttpBinding.ReadBody<RevisePerson, string?>(body, options, 5, "WorkEmail", "work_email", true, true, default),
-            PortiaHttpBinding.ReadBody<RevisePerson, PersonalContactDetails?>(body, options, 6, "PersonalContact", "personal_contact", true, true, default));
     }
     public static async ValueTask<ChangePersonDetails> BindChangeDetailsAsync(HttpContext context, CancellationToken ct)
     {

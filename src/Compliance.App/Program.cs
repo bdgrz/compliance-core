@@ -270,7 +270,6 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetApplicationImportProgress>(tool => tool.ReadOnly())
         .AddMcpTool<GetApplicationImportRejectedReport>(tool => tool.ReadOnly())
         .AddMcpTool<RecordPerson>(tool => tool.Idempotent())
-        .AddMcpTool<RevisePerson>(tool => tool.Idempotent())
         .AddMcpTool<ChangePersonDetails>(tool => tool.Idempotent())
         .AddMcpTool<CorrelatePersonMembership>(tool => tool.Idempotent())
         .AddMcpTool<GetPerson>(tool => tool.ReadOnly())
@@ -2024,16 +2023,6 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
                 .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
                 .Parameter<Uuid>("person_id", PortiaHttpParameterLocation.Route, required: true)
                 .OnNativeResult()).WithNativeFirstResponse<RecordPerson>()
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Workforce");
-    app.MapPortiaPut<RevisePerson, UnitResult>(
-            "/api/v1/tenants/{tenant_id}/people/{person_id}/revisions/{command_id}", config => config
-                .OnBind(PersonHttp.BindReviseAsync)
-                .Accepts<PersonHttp.ReviseBody>("application/json", isOptional: false)
-                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
-                .Parameter<Uuid>("person_id", PortiaHttpParameterLocation.Route, required: true)
-                .Parameter<Uuid>("command_id", PortiaHttpParameterLocation.Route, required: true)
-                .OnNativeResult()).WithNativeFirstResponse<RevisePerson>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
     app.MapPortiaPost<ChangePersonDetails, UnitResult>(
