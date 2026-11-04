@@ -125,6 +125,9 @@ public sealed class InformationAsset : Aggregate
         if (expectedRevision != _revision)
             return Failure(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("information asset",
                 _revision)));
+        if (_content!.Lifecycle == TechnologyInventoryRules.Retired)
+            return Result<InformationAssetContent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A retired information asset cannot change; record a new identity."));
         var content = TechnologyInventoryRules.Normalize(change(_content!));
         return TechnologyInventoryRules.Validate(content) is { } error
             ? Failure(CommandFailure.InvalidContent(error))
