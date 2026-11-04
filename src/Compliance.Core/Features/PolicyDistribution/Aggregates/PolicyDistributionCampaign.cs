@@ -279,13 +279,17 @@ public sealed class PolicyDistributionCampaign : Aggregate
         string audienceKind, ImmutableContentRef audienceTeams, Uuid rosterSnapshotId, string rosterContentSha256,
         DateOnly launchedOn, DateOnly dueOn, string? instructions, int audienceCount, ActorReference actor,
         Uuid actorMemberId, DateTimeOffset launchedAt, ImmutableContentRef entries, ImmutableContentRef firstResponse,
-        ImmutableContentRef operationResult)
+        ImmutableContentRef operationResult, string? acknowledgementText = null)
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(subject);
         if (operation.Owner != Stream || operation.LogicalId != Id)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A launch is the root operation of its own campaign."));
+        if (subject.Kind == "policy" && acknowledgementText is not null &&
+            (string.IsNullOrWhiteSpace(acknowledgementText) || acknowledgementText.Length > 4000))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A policy campaign requires its exact acknowledgement wording of 1 to 4000 characters."));
         var prepared = PrepareLaunch();
         if (!prepared.IsSuccess)
             return prepared;
@@ -294,7 +298,7 @@ public sealed class PolicyDistributionCampaign : Aggregate
             return append;
         RaiseEvent(new PolicyCampaignLaunched(_tenantId, programId, Id, subject, audienceKind, audienceTeams,
             rosterSnapshotId, rosterContentSha256, launchedOn, dueOn, instructions,
-            subject.Kind == "policy" ? DefaultAcknowledgementText : null, audienceCount, actor, actorMemberId,
+            subject.Kind == "policy" ? acknowledgementText ?? DefaultAcknowledgementText : null, audienceCount, actor, actorMemberId,
             launchedAt, operation, firstResponse, operationResult));
         // The frozen audience is part of the launch: its own logical id keeps one root fact per logical id.
         RaiseEvent(new PolicyCampaignAudienceFrozen(_tenantId, Id, 1, entries,
