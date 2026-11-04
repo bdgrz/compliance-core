@@ -73,12 +73,15 @@ public sealed class MethodologyTemplateDirectoryCursorTests
     public void ShouldRefuseGivenCursorTicksOutsideDateRange(long ticks)
     {
         // Arrange
-        var cursor = Convert.ToBase64String(Encoding.UTF8.GetBytes($"cassie-methodology-directory.v1\nlive\n{ticks.ToString(CultureInfo.InvariantCulture)}\n{Uuid.CreateVersion4()}"));
+        var valid = MethodologyTemplateDirectoryCursor.Encode("live", DateTimeOffset.UtcNow.UtcTicks, Uuid.CreateVersion4());
+        var parts = Encoding.UTF8.GetString(Convert.FromBase64String(valid)).Split('\n');
+        parts[2] = ticks.ToString(CultureInfo.InvariantCulture);
+        var cursor = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Join('\n', parts)));
 
         // Act
-        var valid = MethodologyTemplateDirectoryCursor.TryDecode("live", cursor, out _, out _);
+        var accepted = MethodologyTemplateDirectoryCursor.TryDecode("live", cursor, out _, out _);
 
         // Assert
-        Assert.False(valid);
+        Assert.False(accepted);
     }
 }

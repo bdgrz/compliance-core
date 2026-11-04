@@ -1,4 +1,4 @@
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Projections;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Content.Persistence;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
@@ -117,7 +117,13 @@ public sealed class MethodologyTemplateLineQueryTests
     sealed class Fixture : IAsyncDisposable
     {
         public MethodologyTemplateScenario Source { get; } = new(new DateTimeOffset(2026, 11, 4, 12, 0, 0, TimeSpan.Zero));
-        public FitzMethodologyTemplateDirectory Directory { get; } = new(new InMemoryKvClient());
+        readonly CassieRepositoryTestDatabase _database;
+        public CassieMethodologyTemplateDirectory Directory { get; }
+        Fixture(CassieRepositoryTestDatabase database)
+        {
+            _database = database;
+            Directory = new CassieMethodologyTemplateDirectory(database.Database);
+        }
         public Uuid Template { get; } = Uuid.CreateVersion4();
         public Uuid Operator { get; } = Uuid.CreateVersion4();
         public Uuid Tenant { get; } = Uuid.CreateVersion4();
@@ -127,7 +133,7 @@ public sealed class MethodologyTemplateLineQueryTests
         public MethodologyTemplateDirectoryReadConsistency Consistency => new(Directory, Source.Events);
         public static async Task<Fixture> CreateAsync()
         {
-            var fixture = new Fixture();
+            var fixture = new Fixture(await CassieRepositoryTestDatabase.OpenAsync(CassieMethodologyTemplateSchema.Statements));
             var owner = new MethodologyTemplate(fixture.Template);
             Assert.True(owner.CreateLine("Firm methodology", "Original firm entries", fixture.Operator).IsSuccess);
             IReadOnlyList<MethodologyTemplateRecordContent> empty = [];
@@ -152,9 +158,9 @@ public sealed class MethodologyTemplateLineQueryTests
         {
             var checkpoint = await Directory.LoadCheckpointAsync();
             await using var batch = await Directory.BeginAsync(new ProjectionBatchContext(new CheckpointIdentity(
-                FitzMethodologyTemplateDirectory.ProjectorName, FitzMethodologyTemplateDirectory.Pattern), checkpoint));
+                CassieMethodologyTemplateDirectory.ProjectorName, CassieMethodologyTemplateDirectory.Pattern), checkpoint));
             var cursor = checkpoint.Cursor;
-            await foreach (var record in Source.Events.ReadAsync(FitzMethodologyTemplateDirectory.Pattern, cursor, CancellationToken.None))
+            await foreach (var record in Source.Events.ReadAsync(CassieMethodologyTemplateDirectory.Pattern, cursor, CancellationToken.None))
             {
                 if (record.Event is MethodologyTemplateVersionPublishedV4 current)
                     await Directory.ApplyAsync(current);
@@ -164,6 +170,11 @@ public sealed class MethodologyTemplateLineQueryTests
             }
             await batch.CommitAsync(new ProjectionCheckpoint(cursor));
         }
-        public ValueTask DisposeAsync() => Source.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            await Directory.DisposeAsync();
+            await _database.DisposeAsync();
+            await Source.DisposeAsync();
+        }
     }
 }

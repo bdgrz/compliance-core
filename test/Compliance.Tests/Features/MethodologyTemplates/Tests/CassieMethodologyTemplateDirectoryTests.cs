@@ -151,7 +151,7 @@ public sealed class CassieMethodologyTemplateDirectoryTests
         string? rebuild = null)
     {
         var identity = Identity(rebuild);
-        var checkpoint = await directory.LoadCheckpointAsync(identity);
+        var checkpoint = await ((IProjectionStore)directory).LoadCheckpointAsync(identity);
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity, checkpoint));
         await directory.ApplyAsync(fact);
         await batch.CommitAsync(new ProjectionCheckpoint(new EventCursor(Uuid.CreateVersion4().ToString())));

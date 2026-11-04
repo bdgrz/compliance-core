@@ -32,7 +32,7 @@ public sealed class MethodologyTemplateDirectoryReadConsistency(IMethodologyTemp
 
     async ValueTask<bool> HasPendingAsync(ProjectionCheckpoint checkpoint, CancellationToken ct)
     {
-        await using var pending = events.ReadAsync(FitzMethodologyTemplateDirectory.Pattern, checkpoint.Cursor, ct)
+        await using var pending = events.ReadAsync(CassieMethodologyTemplateDirectory.Pattern, checkpoint.Cursor, ct)
             .GetAsyncEnumerator(ct);
         return await pending.MoveNextAsync().ConfigureAwait(false);
     }

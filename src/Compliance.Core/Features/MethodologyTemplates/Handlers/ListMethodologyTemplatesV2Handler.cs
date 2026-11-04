@@ -42,7 +42,7 @@ public sealed class ListMethodologyTemplatesV2Handler(IMethodologyTemplateDirect
                 MethodologyTemplateCatalogCursor.Wrap(request.TenantId, request.ProgramId, identities.NextCursor)))
                 : Result<Page<MethodologyTemplateSummaryView>>.Failure(confirmed.Error!);
         }
-        catch (KvDirectoryQueryException)
+        catch (MethodologyTemplateDirectoryQueryException)
         {
             return Result<Page<MethodologyTemplateSummaryView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The methodology page cursor is invalid."));
