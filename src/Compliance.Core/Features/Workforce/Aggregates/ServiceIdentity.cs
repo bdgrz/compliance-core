@@ -80,11 +80,12 @@ public sealed class ServiceIdentity : Aggregate
         On<ServiceIdentityOwnerChanged>(fact =>
         {
             RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
-            if (fact.PreviousOwnerKind != _terms!.OwnerKind || fact.PreviousOwnerId != _terms.OwnerId ||
+            var current = _terms!;
+            if (fact.PreviousOwnerKind != current.OwnerKind || fact.PreviousOwnerId != current.OwnerId ||
                 !OwnerKinds.Contains(fact.OwnerKind) || fact.OwnerId == Uuid.Empty ||
-                _terms.IdentityKind == "shared_account" && fact.OwnerKind != "person")
+                current.IdentityKind == "shared_account" && fact.OwnerKind != "person")
                 throw new InvalidOperationException("The named owner change must preserve its exact predecessor and accountable owner.");
-            _terms = _terms with { OwnerKind = fact.OwnerKind, OwnerId = fact.OwnerId };
+            _terms = current with { OwnerKind = fact.OwnerKind, OwnerId = fact.OwnerId };
             _revision = fact.Revision;
         });
         On<ServiceIdentityPurposeChanged>(fact =>
@@ -107,18 +108,20 @@ public sealed class ServiceIdentity : Aggregate
         On<ServiceIdentityDisabled>(fact =>
         {
             RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
-            if (_terms!.LifecycleStatus != "active")
+            var current = _terms!;
+            if (current.LifecycleStatus != "active")
                 throw new InvalidOperationException("Only an active service identity can be disabled.");
-            _terms = _terms with { LifecycleStatus = "disabled" };
+            _terms = current with { LifecycleStatus = "disabled" };
             _revision = fact.Revision;
         });
         On<ServiceIdentityEnabled>(fact =>
         {
             RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
-            if (_terms!.LifecycleStatus != "disabled" || _terms.ExpiresOn is { } expiry &&
+            var current = _terms!;
+            if (current.LifecycleStatus != "disabled" || current.ExpiresOn is { } expiry &&
                 expiry <= DateOnly.FromDateTime(fact.ChangedAt.UtcDateTime))
                 throw new InvalidOperationException("Only a disabled unexpired service identity can be enabled.");
-            _terms = _terms with { LifecycleStatus = "active" };
+            _terms = current with { LifecycleStatus = "active" };
             _revision = fact.Revision;
         });
         On<ServiceIdentityRetired>(fact =>
@@ -174,13 +177,14 @@ public sealed class ServiceIdentity : Aggregate
         var refusal = RequireNamedChange(expectedRevision);
         if (refusal is not null)
             return refusal;
+        var current = _terms!;
         if (!OwnerKinds.Contains(ownerKind) || ownerId == Uuid.Empty ||
-            _terms!.IdentityKind == "shared_account" && ownerKind != "person")
+            current.IdentityKind == "shared_account" && ownerKind != "person")
             return CommandFailure.InvalidContent("A service identity requires one accountable owner; a shared account requires a person.");
-        if (_terms!.OwnerKind == ownerKind && _terms.OwnerId == ownerId)
+        if (current.OwnerKind == ownerKind && current.OwnerId == ownerId)
             return null;
         RaiseEvent(new ServiceIdentityOwnerChanged(_tenantId, Id, _revision + 1,
-            _terms.OwnerKind, _terms.OwnerId, ownerKind, ownerId, actor, changedAt));
+            current.OwnerKind, current.OwnerId, ownerKind, ownerId, actor, changedAt));
         return null;
     }
 
@@ -231,9 +235,10 @@ public sealed class ServiceIdentity : Aggregate
         var refusal = RequireNamedChange(expectedRevision);
         if (refusal is not null)
             return refusal;
-        if (_terms!.LifecycleStatus != "disabled")
+        var current = _terms!;
+        if (current.LifecycleStatus != "disabled")
             return CommandFailure.StateConflict("Only a disabled service identity can be enabled.");
-        if (_terms.ExpiresOn is { } expiry && expiry <= DateOnly.FromDateTime(changedAt.UtcDateTime))
+        if (current.ExpiresOn is { } expiry && expiry <= DateOnly.FromDateTime(changedAt.UtcDateTime))
             return CommandFailure.InvalidContent("An expired service identity cannot be enabled.");
         RaiseEvent(new ServiceIdentityEnabled(_tenantId, Id, _revision + 1, actor, changedAt));
         return null;
