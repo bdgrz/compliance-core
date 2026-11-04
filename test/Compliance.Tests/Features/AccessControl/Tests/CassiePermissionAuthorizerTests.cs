@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
 using System.Runtime.CompilerServices;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
@@ -93,6 +95,95 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 [Trait("Category", "CassieIntegration")]
 public sealed class CassiePermissionAuthorizerTests
 {
+    [Fact]
+    public async Task ShouldDenyGraphExplanationAndPermissionGivenForeignStoredGraphTenant()
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        var tenant = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
+        var member = RbacIds.Member(tenant, user);
+        await using var permissions = new CassiePermissionAuthorizer(database.Database,
+            new FixedMembershipDirectory(true), new InMemoryEventStore(), new FixedMemberAccessEligibility(true));
+        await SeedActiveTeamGrantAsync(permissions, tenant, user, BuiltInRbac.AdministratorsTeamId(tenant),
+            BuiltInRbac.TenantAdministrationRoleId(tenant));
+        Assert.True(await permissions.IsAllowedAsync(tenant, user, member, RbacPermissions.TenantAccess));
+        await ReplaceStoredGraphTenantAsync(database);
+
+        // Act
+        var explanation = await permissions.ReadAsync(tenant, member);
+        var allowed = await permissions.IsAllowedAsync(tenant, user, member, RbacPermissions.TenantAccess);
+
+        // Assert
+        Assert.Empty(explanation);
+        Assert.False(allowed);
+        await using var connection = await database.DataSource.OpenConnectionAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT member_id FROM access_permission_grants";
+        Assert.Equal(member.ToString(), await command.ExecuteScalarAsync());
+    }
+
+    [Fact]
+    public async Task ShouldPreserveRowsAndCheckpointGivenForeignStoredGraphTenantDuringApply()
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        var tenant = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
+        var member = RbacIds.Member(tenant, user);
+        await using var permissions = new CassiePermissionAuthorizer(database.Database,
+            new FixedMembershipDirectory(true), new InMemoryEventStore(), new FixedMemberAccessEligibility(true));
+        await SeedActiveTeamGrantAsync(permissions, tenant, user, BuiltInRbac.AdministratorsTeamId(tenant),
+            BuiltInRbac.TenantAdministrationRoleId(tenant));
+        var identity = new CheckpointIdentity("PermissionProjection", EventStreamPattern.ForPattern(tenant.ToString()));
+        var originalCheckpoint = new ProjectionCheckpoint(new EventCursor("stored-graph-before-refusal"));
+        await using (var batch = await permissions.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
+            await batch.CommitAsync(originalCheckpoint);
+        var corruptedPayload = await ReplaceStoredGraphTenantAsync(database);
+
+        // Act
+        Exception? failure;
+        await using (await permissions.BeginAsync(new ProjectionBatchContext(identity, originalCheckpoint)))
+            failure = await Record.ExceptionAsync(async () =>
+                await permissions.ApplyAsync(RbacFacts.TeamDefinedFact(tenant, Uuid.CreateVersion4(), "Another team")));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(failure);
+        Assert.Equal(originalCheckpoint, await permissions.LoadCheckpointAsync(identity));
+        await using var connection = await database.DataSource.OpenConnectionAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT payload FROM access_permission_states";
+        Assert.Equal(corruptedPayload, await command.ExecuteScalarAsync());
+        command.CommandText = "SELECT member_id FROM access_permission_grants";
+        Assert.Equal(member.ToString(), await command.ExecuteScalarAsync());
+    }
+
+    static async Task<string> ReplaceStoredGraphTenantAsync(CassieRepositoryTestDatabase database)
+    {
+        await using var connection = await database.DataSource.OpenConnectionAsync();
+        string projection;
+        string payload;
+        await using (var read = connection.CreateCommand())
+        {
+            read.CommandText = "SELECT projection_key, payload FROM access_permission_states";
+            await using var rows = await read.ExecuteReaderAsync();
+            Assert.True(await rows.ReadAsync());
+            projection = rows.GetString(0);
+            var state = JsonSerializer.Deserialize(rows.GetString(1), ComplianceCoreJsonContext.Default.PermissionProjectionState)!;
+            state.TenantId = Uuid.CreateVersion4();
+            payload = JsonSerializer.Serialize(state, ComplianceCoreJsonContext.Default.PermissionProjectionState);
+            Assert.False(await rows.ReadAsync());
+        }
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM access_permission_states WHERE projection_key = @scope";
+        CassieAccessControlSql.Bind(command, ("scope", projection));
+        Assert.Equal(1, await command.ExecuteNonQueryAsync());
+        command.CommandText = "INSERT INTO access_permission_states (projection_key, payload) VALUES (@scope, @payload)";
+        CassieAccessControlSql.Bind(command, ("payload", payload));
+        Assert.Equal(1, await command.ExecuteNonQueryAsync());
+        return payload;
+    }
+
     [Fact]
     public async Task ShouldDenyGivenRevocationProjectsBetweenExplanationAndPendingScan()
     {
