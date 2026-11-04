@@ -157,10 +157,10 @@ public sealed class ServiceIdentityNamedHandlerTests
             Executor = new OwnerExecutor(Identity);
         }
 
-        public RequestContext<T> Context<T>(T request, RequestInvocation? invocation = null) where T : IRequestBase =>
-            new(request, new ClaimsPrincipal(new ClaimsIdentity([new Claim("iss", "bdgrz"),
+        public Cntryl.Portia.RequestContext<T> Context<T>(T request, RequestInvocation? invocation = null) where T : IRequestBase =>
+            new(request, new RequestDispatchContext(new ClaimsPrincipal(new ClaimsIdentity([new Claim("iss", "bdgrz"),
                 new Claim("sub", User.ToString())], "BdgrzSession")), invocation ??
-                new HttpInvocation("POST", "/synthetic/review", "/synthetic/review", "synthetic"));
+                new HttpInvocation("POST", "/synthetic/review", "/synthetic/review", "synthetic")));
 
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate, CancellationToken ct = default)
             where TAggregate : Aggregate => ValueTask.FromResult(aggregate switch

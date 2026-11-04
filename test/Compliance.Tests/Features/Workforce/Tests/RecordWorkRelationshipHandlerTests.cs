@@ -120,7 +120,7 @@ public sealed class RecordWorkRelationshipHandlerTests
         var before = await scenario.RelationshipEventsAsync();
 
         // Act
-        var result = await scenario.SendLegacyRevisionAsync(generic);
+        var result = await Scenario.SendLegacyRevisionAsync(generic);
 
         // Assert
         var error = Assert.IsType<RequestError>(result.Error);
@@ -138,7 +138,7 @@ public sealed class RecordWorkRelationshipHandlerTests
             WorkRelationship.IdFor(scenario.TenantId, "E-100"), 0, "employee", "active", new DateOnly(2025, 1, 6));
 
         // Act
-        var result = await scenario.SendLegacyRevisionAsync(request);
+        var result = await Scenario.SendLegacyRevisionAsync(request);
 
         // Assert
         var error = Assert.IsType<RequestError>(result.Error);
@@ -592,7 +592,7 @@ public sealed class RecordWorkRelationshipHandlerTests
             await Events.AppendAsync(new WorkRelationship(TenantId, id).Stream, 0, [fact]);
         }
 
-        public ValueTask<Result> SendLegacyRevisionAsync(ReviseWorkRelationship request)
+        public static ValueTask<Result> SendLegacyRevisionAsync(ReviseWorkRelationship request)
         {
             IRequestHandler<ReviseWorkRelationship> handler = new ReviseWorkRelationshipHandler();
             var actor = new ClaimsPrincipal(new ClaimsIdentity(

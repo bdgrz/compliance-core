@@ -241,19 +241,25 @@ public sealed class MethodologyTemplateLineReadTests
             if (fault == "incomplete")
                 return read with { IsComplete = false };
             if (fault == "physical")
-                return read with { Facts = read.Facts.Select(fact => fact with
+                return read with
                 {
-                    Locator = fact.Locator with { ResourcePosition = fact.Locator.ResourcePosition + 7 },
-                }).ToArray() };
+                    Facts = read.Facts.Select(fact => fact with
+                    {
+                        Locator = fact.Locator with { ResourcePosition = fact.Locator.ResourcePosition + 7 },
+                    }).ToArray()
+                };
             if (fault is not ("realm" or "payload"))
                 return read;
-            return read with { Facts = read.Facts.Select((fact, index) => index == 0 ? fact with
+            return read with
             {
-                Locator = fault == "realm" ? fact.Locator with
+                Facts = read.Facts.Select((fact, index) => index == 0 ? fact with
                 {
-                    Source = new EventStreamAddress("other-realm", fact.Locator.Source.Area, fact.Locator.Source.Resource),
-                } : fact.Locator with { PayloadSha256 = new string('0', 64) },
-            } : fact).ToArray() };
+                    Locator = fault == "realm" ? fact.Locator with
+                    {
+                        Source = new EventStreamAddress("other-realm", fact.Locator.Source.Area, fact.Locator.Source.Resource),
+                    } : fact.Locator with { PayloadSha256 = new string('0', 64) },
+                } : fact).ToArray()
+            };
         }
     }
     sealed class UnavailableContent(IImmutableContentStore inner) : IImmutableContentStore

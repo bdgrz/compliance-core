@@ -22,8 +22,11 @@ public sealed class CorrectiveActionChangeBaselineTests
         await fixture.AsAsync(fixture.LeadUserId, first);
         await fixture.AsAsync(fixture.LeadUserId, first with
         {
-            CommandId = Uuid.CreateVersion4(), ExpectedRevision = 2, Description = "Second correction.",
-            OwnerMemberId = fixture.BackupMemberId, DueOn = fixture.Today.AddDays(6),
+            CommandId = Uuid.CreateVersion4(),
+            ExpectedRevision = 2,
+            Description = "Second correction.",
+            OwnerMemberId = fixture.BackupMemberId,
+            DueOn = fixture.Today.AddDays(6),
         });
         await using var scope = provider.CreateAsyncScope();
         var contributor = new FindingTypeIBaselineSourceContributor(scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
