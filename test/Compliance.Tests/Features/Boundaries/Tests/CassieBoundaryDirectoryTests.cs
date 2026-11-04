@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Boundaries.Projections;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -85,7 +86,7 @@ using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 
-public sealed class FitzBoundaryDirectoryTests
+public sealed class CassieBoundaryDirectoryTests
 {
     [Fact]
     public async Task ShouldProjectWaiverEvidenceGivenBoundaryReview()
@@ -114,10 +115,11 @@ public sealed class FitzBoundaryDirectoryTests
         Assert.Null(rules.Review(draftId, 1, Uuid.CreateVersion4(), "accept", "Self-reviewed under approved waiver.",
             reviewer, "Reviewer", now.AddMinutes(1), proof.Value));
         var facts = await native.PublishAsync(rules);
-        var directory = new FitzBoundaryDirectory(native.Kv, native.Boundaries);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieBoundarySchema.Statements);
+        await using var directory = new CassieBoundaryDirectory(database.Database, native.Boundaries);
 
         // Act
-        await native.ProjectAsync(directory, directory.ApplyAsync, FitzBoundaryDirectory.ProjectorName, tenantId, facts);
+        await native.ProjectAsync(directory, directory.ApplyAsync, CassieBoundaryDirectory.ProjectorName, tenantId, facts);
 
         // Assert
         var decision = await directory.GetDecisionAsync(tenantId, boundaryId,
@@ -138,10 +140,11 @@ public sealed class FitzBoundaryDirectoryTests
         var authorId = Uuid.CreateVersion4();
         var now = new DateTimeOffset(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
         var content = new BoundaryContent("Initial", "readiness", ["security"], []);
-        var directory = new FitzBoundaryDirectory(native.Kv, native.Boundaries);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieBoundarySchema.Statements);
+        await using var directory = new CassieBoundaryDirectory(database.Database, native.Boundaries);
         var impact = new BoundaryImpactService(directory, native.Boundaries,
             [new ProgramBoundaryImpactContributor()]);
-        var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName,
+        var identity = new CheckpointIdentity(CassieBoundaryDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString()));
 
         await using (var batch = await directory.BeginAsync(
@@ -189,10 +192,11 @@ public sealed class FitzBoundaryDirectoryTests
         var authorId = Uuid.CreateVersion4();
         var now = new DateTimeOffset(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
         var content = new BoundaryContent("Original", "readiness", ["security"], []);
-        var directory = new FitzBoundaryDirectory(native.Kv, native.Boundaries);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieBoundarySchema.Statements);
+        await using var directory = new CassieBoundaryDirectory(database.Database, native.Boundaries);
 
         // Act
-        var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName,
+        var identity = new CheckpointIdentity(CassieBoundaryDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString()));
 
 
@@ -239,8 +243,9 @@ public sealed class FitzBoundaryDirectoryTests
         var authorId = Uuid.CreateVersion4();
         var now = new DateTimeOffset(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
         var content = new BoundaryContent("Unused", "readiness", ["security"], []);
-        var directory = new FitzBoundaryDirectory(native.Kv, native.Boundaries);
-        var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName,
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieBoundarySchema.Statements);
+        await using var directory = new CassieBoundaryDirectory(database.Database, native.Boundaries);
+        var identity = new CheckpointIdentity(CassieBoundaryDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString()));
 
         // Act
@@ -280,8 +285,9 @@ public sealed class FitzBoundaryDirectoryTests
             [new BoundaryScopeEntry(Uuid.CreateVersion4(), "inclusion", "service",
                 "Service A", null, "Compliance lead", "Core service", true)]);
         var successor = original with { Statement = "Scope with provider B" };
-        var directory = new FitzBoundaryDirectory(native.Kv, native.Boundaries);
-        var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName,
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieBoundarySchema.Statements);
+        await using var directory = new CassieBoundaryDirectory(database.Database, native.Boundaries);
+        var identity = new CheckpointIdentity(CassieBoundaryDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString()));
 
 
@@ -363,8 +369,9 @@ public sealed class FitzBoundaryDirectoryTests
         var now = new DateTimeOffset(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
         var content = new BoundaryContent("Original scope", "readiness", ["security"], []);
         var effectiveFrom = new DateOnly(2027, 1, 1);
-        var directory = new FitzBoundaryDirectory(native.Kv, native.Boundaries);
-        var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName,
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieBoundarySchema.Statements);
+        await using var directory = new CassieBoundaryDirectory(database.Database, native.Boundaries);
+        var identity = new CheckpointIdentity(CassieBoundaryDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString()));
         var originalCheckpoint = new ProjectionCheckpoint(new EventCursor("original-approved"));
         await using (var first = await directory.BeginAsync(
@@ -424,8 +431,9 @@ public sealed class FitzBoundaryDirectoryTests
         var firstDate = new DateOnly(2027, 1, 1);
         var now = new DateTimeOffset(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
         var content = new BoundaryContent("Scope", "readiness", ["security"], []);
-        var directory = new FitzBoundaryDirectory(native.Kv, native.Boundaries);
-        var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName,
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieBoundarySchema.Statements);
+        await using var directory = new CassieBoundaryDirectory(database.Database, native.Boundaries);
+        var identity = new CheckpointIdentity(CassieBoundaryDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString()));
         var versionIds = new List<Uuid>();
 
@@ -498,7 +506,7 @@ public sealed class FitzBoundaryDirectoryTests
         return await BoundarySeeds.FreezeAsync(native.Content, rules, [change], operation, sequence);
     }
 
-    static async Task PublishAndProjectAsync(BoundaryProjectionScenario native, FitzBoundaryDirectory directory,
+    static async Task PublishAndProjectAsync(BoundaryProjectionScenario native, CassieBoundaryDirectory directory,
         IBoundaryMutationContent change)
     {
         var data = Metadata(change);

@@ -313,7 +313,7 @@ public sealed class ProgramAndClientServicePagedReadContractTests
             RequestedLimits.Add(limit);
             RequestedCursors.Add(cursor);
             if (RejectCursor)
-                return ValueTask.FromException<Page<ProgramView>>(new KvDirectoryQueryException());
+                return ValueTask.FromException<Page<ProgramView>>(new ProgramScopeDirectoryQueryException());
             return ValueTask.FromResult(ProgramPages is null
                 ? ProgramPage
                 : ProgramPages[cursor ?? string.Empty]);
@@ -321,7 +321,7 @@ public sealed class ProgramAndClientServicePagedReadContractTests
 
         public ValueTask<Page<ProgramRevisionView>?> ListRevisionsAsync(Uuid tenantId,
             Uuid programId, int limit, string? cursor, CancellationToken ct = default) => RejectCursor
-            ? ValueTask.FromException<Page<ProgramRevisionView>?>(new KvDirectoryQueryException())
+            ? ValueTask.FromException<Page<ProgramRevisionView>?>(new ProgramScopeDirectoryQueryException())
             : ValueTask.FromResult(RevisionPage);
 
         public ValueTask<ProgramRevisionView?> GetRevisionAsync(Uuid tenantId, Uuid programId,
@@ -351,7 +351,7 @@ public sealed class ProgramAndClientServicePagedReadContractTests
             RequestedLimits.Add(limit);
             RequestedCursors.Add(cursor);
             if (RejectCursor)
-                return ValueTask.FromException<Page<ClientServiceView>>(new KvDirectoryQueryException());
+                return ValueTask.FromException<Page<ClientServiceView>>(new ProgramScopeDirectoryQueryException());
             return ValueTask.FromResult(ServicePages is null
                 ? ServicePage
                 : ServicePages[cursor ?? string.Empty]);
@@ -359,12 +359,12 @@ public sealed class ProgramAndClientServicePagedReadContractTests
 
         public ValueTask<Page<ClientServiceView>> ListProgramAsync(Uuid tenantId,
             Uuid programId, int limit, string? cursor, CancellationToken ct = default) => RejectCursor
-            ? ValueTask.FromException<Page<ClientServiceView>>(new KvDirectoryQueryException())
+            ? ValueTask.FromException<Page<ClientServiceView>>(new ProgramScopeDirectoryQueryException())
             : ValueTask.FromResult(ProgramServicePage);
 
         public ValueTask<Page<ClientServiceRevisionView>?> ListRevisionsAsync(Uuid tenantId,
             Uuid serviceId, int limit, string? cursor, CancellationToken ct = default) => RejectCursor
-            ? ValueTask.FromException<Page<ClientServiceRevisionView>?>(new KvDirectoryQueryException())
+            ? ValueTask.FromException<Page<ClientServiceRevisionView>?>(new ProgramScopeDirectoryQueryException())
             : ValueTask.FromResult(RevisionPage);
 
         public ValueTask<ClientServiceRevisionView?> GetRevisionAsync(Uuid tenantId,

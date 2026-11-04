@@ -129,7 +129,7 @@ public sealed class ProgramSetupWorkPagedReadContractTests
         public ValueTask<Page<BoundaryView>> ListProgramAsync(Uuid tenantId, Uuid programId,
             int limit, string? cursor, CancellationToken ct = default) =>
             RejectCursor
-                ? ValueTask.FromException<Page<BoundaryView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<BoundaryView>>(new ProgramScopeDirectoryQueryException())
                 : ValueTask.FromResult(Page);
 
         public ValueTask<BoundaryVersionView?> GetVersionAsync(Uuid tenantId, Uuid boundaryId,

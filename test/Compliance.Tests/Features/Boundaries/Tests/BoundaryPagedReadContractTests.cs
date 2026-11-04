@@ -144,7 +144,7 @@ public sealed class BoundaryPagedReadContractTests
         public ValueTask<Page<BoundaryView>> ListProgramAsync(Uuid tenantId, Uuid programId,
             int limit, string? cursor, CancellationToken ct = default) =>
             RejectCursor
-                ? ValueTask.FromException<Page<BoundaryView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<BoundaryView>>(new ProgramScopeDirectoryQueryException())
                 : ValueTask.FromResult(new Page<BoundaryView>([], null));
 
         public ValueTask<BoundaryVersionView?> GetVersionAsync(Uuid tenantId, Uuid boundaryId,
@@ -154,7 +154,7 @@ public sealed class BoundaryPagedReadContractTests
         public ValueTask<Page<BoundaryVersionView>?> ListVersionsAsync(Uuid tenantId,
             Uuid boundaryId, int limit, string? cursor, CancellationToken ct = default) =>
             RejectCursor
-                ? ValueTask.FromException<Page<BoundaryVersionView>?>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<BoundaryVersionView>?>(new ProgramScopeDirectoryQueryException())
                 : ValueTask.FromResult<Page<BoundaryVersionView>?>(new Page<BoundaryVersionView>([], null));
 
         public ValueTask<BoundaryVersionView?> GetEffectiveVersionAsync(Uuid tenantId,
@@ -168,7 +168,7 @@ public sealed class BoundaryPagedReadContractTests
         public ValueTask<Page<BoundaryDecisionView>?> ListDecisionsAsync(Uuid tenantId,
             Uuid boundaryId, int limit, string? cursor, CancellationToken ct = default) =>
             RejectCursor
-                ? ValueTask.FromException<Page<BoundaryDecisionView>?>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<BoundaryDecisionView>?>(new ProgramScopeDirectoryQueryException())
                 : ValueTask.FromResult<Page<BoundaryDecisionView>?>(new Page<BoundaryDecisionView>([], null));
 
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,

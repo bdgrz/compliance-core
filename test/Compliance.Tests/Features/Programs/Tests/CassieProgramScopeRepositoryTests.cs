@@ -135,54 +135,153 @@ public sealed class CassieProgramScopeRepositoryTests
         Assert.Equal(ProjectionCheckpoint.Start, await repository.LoadCheckpointAsync(alien));
     }
 
-    static async Task<Scenario> CreateAsync(string kind, CassieProjectionDatabase database, BoundaryProjectionScenario source, Uuid tenant)
+    [Theory]
+    [InlineData("program")]
+    [InlineData("service")]
+    [InlineData("boundary")]
+    [InlineData("snapshot")]
+    [InlineData("population")]
+    public async Task ShouldPageEachIdentityOnceGivenTiedSortValuesAndAdjacentSnapshotTicks(string kind)
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(Schema);
+        await using var source = new BoundaryProjectionScenario();
+        var tenant = Uuid.CreateVersion4();
+        var program = Uuid.CreateVersion4();
+        await using var first = await CreateAsync(kind, database.Database, source, tenant, program, Now);
+        await using var second = await CreateAsync(kind, database.Database, source, tenant, program, Now);
+        await using var third = await CreateAsync(kind, database.Database, source, tenant, program, Now.AddTicks(1));
+        Scenario[] scenarios = [first, second, third];
+        foreach (var scenario in scenarios)
+        {
+            var progress = await scenario.Store.LoadCheckpointAsync(scenario.Identity);
+            await using var batch = await scenario.Store.BeginAsync(new ProjectionBatchContext(scenario.Identity, progress));
+            await scenario.Apply();
+            await batch.CommitAsync(new ProjectionCheckpoint(new EventCursor(scenario.Id.ToString())));
+        }
+        var tied = new[] { first.Id, second.Id }.OrderBy(id => id.ToString(), StringComparer.Ordinal).ToArray();
+        var expected = kind switch
+        {
+            "snapshot" => tied.Append(third.Id).ToArray(),
+            "population" => new[] { third.Id }.Concat(tied).ToArray(),
+            _ => scenarios.Select(item => item.Id).OrderBy(id => id.ToString(), StringComparer.Ordinal).ToArray()
+        };
+
+        // Act
+        var actual = new List<Uuid>();
+        string? cursor = null;
+        for (var index = 0; index <= scenarios.Length; index++)
+        {
+            var page = await first.ListAsync(tenant, 1, cursor);
+            actual.AddRange(page.Items);
+            cursor = page.NextCursor;
+            if (cursor is null)
+                break;
+        }
+
+        // Assert
+        Assert.Equal(expected, actual);
+        Assert.Equal(expected.Length, actual.Distinct().Count());
+        Assert.Null(cursor);
+    }
+
+    [Theory]
+    [InlineData("program")]
+    [InlineData("service")]
+    [InlineData("boundary")]
+    [InlineData("snapshot")]
+    [InlineData("population")]
+    public async Task ShouldRejectContinuationGivenCursorFromAnotherTenant(string kind)
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(Schema);
+        await using var source = new BoundaryProjectionScenario();
+        var tenant = Uuid.CreateVersion4();
+        var program = Uuid.CreateVersion4();
+        await using var first = await CreateAsync(kind, database.Database, source, tenant, program);
+        await using var second = await CreateAsync(kind, database.Database, source, tenant, program);
+        foreach (var scenario in new[] { first, second })
+        {
+            var progress = await scenario.Store.LoadCheckpointAsync(scenario.Identity);
+            await using var batch = await scenario.Store.BeginAsync(new ProjectionBatchContext(scenario.Identity, progress));
+            await scenario.Apply();
+            await batch.CommitAsync(new ProjectionCheckpoint(new EventCursor(scenario.Id.ToString())));
+        }
+        var page = await first.ListAsync(tenant, 1, null);
+        Assert.NotNull(page.NextCursor);
+
+        // Act
+        var failure = await Record.ExceptionAsync(() => first.ListAsync(Uuid.CreateVersion4(), 1, page.NextCursor));
+
+        // Assert
+        Assert.IsType<ProgramScopeDirectoryQueryException>(failure);
+    }
+
+    static async Task<Scenario> CreateAsync(string kind, CassieProjectionDatabase database, BoundaryProjectionScenario source, Uuid tenant,
+        Uuid? selectedProgram = null, DateTimeOffset? frozenAt = null)
     {
         var id = Uuid.CreateVersion4();
-        var program = Uuid.CreateVersion4();
+        var program = selectedProgram ?? Uuid.CreateVersion4();
+        var at = frozenAt ?? Now;
         var actor = Uuid.CreateVersion4();
         switch (kind)
         {
             case "program":
-                var created = await ProgramSeeds.CreatedAsync(source.Content, tenant, id, "Readiness", new ProgramPlan(null, null, null, null, null, null), actor, "Author", Now);
+                var created = await ProgramSeeds.CreatedAsync(source.Content, tenant, id, "Readiness", new ProgramPlan(null, null, null, null, null, null), actor, "Author", at);
                 var programs = new CassieProgramDirectory(database, source.Content);
                 return new(programs, Identity("ProgramDirectory", tenant), async () => await programs.ApplyAsync(created),
-                    async scope => await programs.GetAsync(scope, id) is not null);
+                    async scope => await programs.GetAsync(scope, id) is not null, id, program);
             case "service":
                 var service = new ProductClientServiceRules(tenant, id);
-                Assert.True(service.Create(program, "Service", "Purpose", "Owner", actor, "Author", Now).IsSuccess);
+                Assert.True(service.Create(program, "Service", "Purpose", "Owner", actor, "Author", at).IsSuccess);
                 var serviceFacts = await ProductClientServiceSeeds.FactsAsync(source.Content, service);
                 var services = new CassieClientServiceDirectory(database, source.Content);
                 return new(services, Identity("ClientServiceDirectory", tenant), async () =>
                 {
                     foreach (var fact in serviceFacts)
                         await services.ApplyAsync(fact);
-                }, async scope => await services.GetAsync(scope, id) is not null);
+                }, async scope => await services.GetAsync(scope, id) is not null, id, program);
             case "boundary":
                 var boundary = new BoundaryRules(tenant, id);
-                Assert.True(boundary.Create(program, Uuid.CreateVersion5(id, "draft-1"), new BoundaryContent("Scope", "readiness", ["security"], []), actor, "Author", Now).IsSuccess);
+                Assert.True(boundary.Create(program, Uuid.CreateVersion5(id, "draft-1"), new BoundaryContent("Scope", "readiness", ["security"], []), actor, "Author", at).IsSuccess);
                 var boundaryFacts = await source.PublishAsync(boundary);
                 var boundaries = new CassieBoundaryDirectory(database, source.Boundaries);
                 return new(boundaries, Identity(CassieBoundaryDirectory.ProjectorName, tenant), async () =>
                 {
                     foreach (var fact in boundaryFacts)
                         await boundaries.ApplyAsync(fact);
-                }, async scope => await boundaries.GetAsync(scope, id) is not null);
+                }, async scope => await boundaries.GetAsync(scope, id) is not null, id, program);
             case "snapshot":
                 var manifest = new ProgramScopeManifest(1, tenant, program, 1, new string('a', 64), Uuid.CreateVersion4(), Uuid.CreateVersion4(), new string('b', 64));
-                var frozen = new SnapshotFrozen(tenant, id, id, null, program, "scope", manifest, "exact canonical bytes", new string('c', 64), null, actor, "Author", Now);
+                var (canonical, digest) = SnapshotContentIdentity.Manifest(manifest);
+                var frozen = new SnapshotFrozen(tenant, id, id, null, program, "scope", manifest, canonical, digest, null, actor, "Author", at);
                 var snapshots = new CassieSnapshotDirectory(database);
                 return new(snapshots, Identity("SnapshotDirectory", tenant, "snapshots"), async () => await snapshots.ApplyAsync(frozen),
-                    async scope => await snapshots.GetAsync(scope, id) is not null);
+                    async scope => await snapshots.GetAsync(scope, id) is not null, id, program);
             case "population":
-                var population = new PopulationSnapshotFrozen(tenant, id, id, null, "workforce", [], 0, 0, new string('d', 64), null, ActorReference.ForMember(actor, "Author"), Now);
+                var population = new PopulationSnapshotFrozen(tenant, id, id, null, "workforce", [], 0, 0, new string('d', 64), null, ActorReference.ForMember(actor, "Author"), at);
                 var populations = new CassiePopulationSnapshotDirectory(database);
                 return new(populations, Identity("PopulationSnapshotDirectoryV2", tenant, "population-snapshots"), async () => await populations.ApplyAsync(population),
-                    async scope => (await populations.ListAsync(scope, "workforce", 10, null)).Items.Count == 1);
+                    async scope => (await populations.ListAsync(scope, "workforce", 10, null)).Items.Count == 1, id, program);
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind));
         }
     }
 
     static CheckpointIdentity Identity(string name, Uuid tenant, string? area = null) => new(name, EventStreamPattern.ForPattern(tenant.ToString(), area));
-    sealed record Scenario(CassieProjectionRepository Store, CheckpointIdentity Identity, Func<Task> Apply, Func<Uuid, Task<bool>> Exists);
+    sealed record Scenario(CassieProjectionRepository Store, CheckpointIdentity Identity, Func<Task> Apply, Func<Uuid, Task<bool>> Exists,
+        Uuid Id, Uuid ProgramId) : IAsyncDisposable
+    {
+        public async Task<Page<Uuid>> ListAsync(Uuid tenant, int limit, string? cursor) => Store switch
+        {
+            CassieProgramDirectory programs => Map(await programs.ListAsync(tenant, limit, cursor), row => row.ProgramId),
+            CassieClientServiceDirectory services => Map(await services.ListProgramAsync(tenant, ProgramId, limit, cursor), row => row.ServiceId),
+            CassieBoundaryDirectory boundaries => Map(await boundaries.ListProgramAsync(tenant, ProgramId, limit, cursor), row => row.BoundaryId),
+            CassieSnapshotDirectory snapshots => Map(await snapshots.ListProgramAsync(tenant, ProgramId, limit, cursor), row => row.SnapshotId),
+            CassiePopulationSnapshotDirectory populations => Map(await populations.ListAsync(tenant, "workforce", limit, cursor), row => row.SnapshotId),
+            _ => throw new InvalidOperationException("Unknown scope directory.")
+        };
+        static Page<Uuid> Map<T>(Page<T> page, Func<T, Uuid> identity) => new(page.Items.Select(identity).ToArray(), page.NextCursor);
+        public ValueTask DisposeAsync() => Store.DisposeAsync();
+    }
 }
