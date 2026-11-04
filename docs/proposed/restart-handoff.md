@@ -1,3 +1,31 @@
+# Usage-boundary stop — latest checkpoint
+
+The user instructed: “stop when we hit our usage limit, do not consume credits.”
+The included-usage balance and automatic credit boundary are not visible to this
+session. All parallel agents were therefore stopped conservatively. Do not resume
+automatically. Source completion remains partial; preserve every worktree,
+including uncommitted files. The user's latest implementation priority remains
+code complete across the reviewed domain, with qualification tracked separately.
+
+Current recovery inventory: [usage-stop manifest](restart-artifacts/2026-11-04/usage-stop-manifest.json).
+The integration branch contains prepared Access, Support, Program/scope, Controls,
+Policies, Risk/provider and Assurance changes, with shared wiring partly assembled.
+Other context workers have additional isolated commits and uncommitted source in
+the inventoried worktrees. Never sweep their broad ancestry. No whole-domain
+compilation, test, PR or merge acceptance is claimed.
+
+Program date repair independently passed strict build/whitespace and 8,742 units
+at `5feb9922`, on the prior Cassie digest. It remains local, not delivered.
+The newly pinned Cassie digest is `14c99b2e…`; fresh native initialization then
+failed with “transactional DDL cannot access multiple databases” while rebuilding
+cardinality statistics. That failure is not observed behavioral RED. The combined
+validation worktree holds a one-line Page namespace compile correction; inspect
+its next build log before deciding any further fix. No engine workaround applied.
+
+The older checkpoint and resumed plan below are historical.
+
+---
+
 # Paused implementation and agent plan
 
 **Resumed 2026-11-04 by explicit user instruction:** “Read

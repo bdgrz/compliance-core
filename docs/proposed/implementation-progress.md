@@ -1,5 +1,11 @@
 # Proposed domain implementation progress
 
+**Stopped at the user's no-credit boundary instruction.** Remaining included usage
+is not visible, so all agents were stopped conservatively. Preserve current source
+and see the latest [restart handoff](restart-handoff.md) and inventory. Program
+local acceptance passed 8,742 units on the prior Cassie image; the broader source
+platform remains unqualified, with a fresh-native initialization blocker on latest.
+
 The locked context documents are the specification. This ledger records implemented
 behavior and validation; a matching type name or a passing focused test does not
 establish completion of an owner, workflow, or context.
