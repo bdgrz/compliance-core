@@ -299,6 +299,56 @@ public sealed class WaiverAggregateTests
         Assert.Empty(Pending(replayed));
     }
 
+    [Fact]
+    public void ShouldRefuseSelfReviewGivenEquivalentMemberUuidSpelling()
+    {
+        // Arrange
+        var (owner, request) = Requested();
+        var reviewer = Requester with { Id = Requester.Id.ToUpperInvariant() };
+
+        // Act
+        var result = owner.Review(new ReviewWaiver(Uuid.CreateVersion4(), Tenant, request.WaiverId, 1, true),
+            reviewer, Now.AddMinutes(1));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Empty(Pending(owner));
+    }
+
+    [Fact]
+    public void ShouldRefuseStaleReviewWithoutFactGivenCurrentRequestRevision()
+    {
+        // Arrange
+        var (owner, request) = Requested();
+
+        // Act
+        var result = owner.Review(new ReviewWaiver(Uuid.CreateVersion4(), Tenant, request.WaiverId, 0, true),
+            Reviewer, Now.AddMinutes(1));
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Empty(Pending(owner));
+        Assert.Equal(1, owner.Revision);
+    }
+
+    [Fact]
+    public void ShouldRejectForeignTenantFactGivenReplayIntoAnotherOwner()
+    {
+        // Arrange
+        var request = Request();
+        var owner = new Waiver(Tenant, request.WaiverId);
+        Assert.True(owner.Request(request, Requester, Now).IsSuccess);
+        var fact = Assert.IsType<WaiverRequested>(Assert.Single(Pending(owner)));
+        var foreign = fact with { TenantId = Uuid.CreateVersion4() };
+        var replay = new AggregateScenario<Waiver>(new Waiver(Tenant, request.WaiverId));
+
+        // Act
+        var failure = Record.Exception(() => replay.Given(foreign));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(failure);
+    }
+
     static RequestWaiver Request() => new(Uuid.CreateVersion4(), Tenant, "data_flow_encryption",
         [new WaiverScopeRecord("data_flow", Uuid.CreateVersion4(), 1)], "Temporary approved exception.",
         "An isolated network provides compensating protection.", Now.AddDays(1));
