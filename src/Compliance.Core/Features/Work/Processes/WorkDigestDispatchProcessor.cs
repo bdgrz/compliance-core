@@ -90,6 +90,11 @@ sealed class WorkDigestDispatchProcessor(IAggregateReader reader, IAggregateExec
                         aggregate => aggregate.RecordInterruptedAttempt(pending.WeekOf, now), ct)
                         .ConfigureAwait(false);
                 return;
+            case WorkDigestDispatch.Unknown:
+                await MutateAsync(tenantId, pending.MemberId, pending.WeekOf,
+                    aggregate => aggregate.RetryUnknownAutomatically(pending.WeekOf, now,
+                        settings.MaximumAttempts, settings.RetryDelay), ct).ConfigureAwait(false);
+                return;
             case WorkDigestDispatch.Scheduled:
                 if (!WorkDigestSchedule.IsCurrentWeek(pending.WeekOf, pending.TimeZoneId, now))
                 {

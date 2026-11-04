@@ -114,10 +114,10 @@ public static class WorkDigestDispatchHistory
     }
     static bool AllowedOutcome(string before, string after) => after switch
     {
-        WorkDigestDispatch.Sent or WorkDigestDispatch.PermanentFailure or WorkDigestDispatch.Unknown or
-            WorkDigestDispatch.RetryPending => before == WorkDigestDispatch.InFlight,
+        WorkDigestDispatch.Sent or WorkDigestDispatch.PermanentFailure or WorkDigestDispatch.Unknown => before == WorkDigestDispatch.InFlight,
+        WorkDigestDispatch.RetryPending => before is WorkDigestDispatch.InFlight or WorkDigestDispatch.Unknown,
         WorkDigestDispatch.Skipped => before is WorkDigestDispatch.Scheduled or WorkDigestDispatch.RetryPending,
-        WorkDigestDispatch.RetryExhausted => before is WorkDigestDispatch.InFlight or WorkDigestDispatch.Scheduled or WorkDigestDispatch.RetryPending,
+        WorkDigestDispatch.RetryExhausted => before is WorkDigestDispatch.InFlight or WorkDigestDispatch.Scheduled or WorkDigestDispatch.RetryPending or WorkDigestDispatch.Unknown,
         _ => false
     };
     static bool AuditValue(string value, int maximum) => !string.IsNullOrWhiteSpace(value) && value.Length <= maximum &&
