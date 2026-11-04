@@ -126,7 +126,7 @@ public sealed class OccurrenceFindingTests
             ControlOperatingContent.ReviewSchema, new ControlOccurrenceReviewView(decisionId,
                 Uuid.CreateVersion4(), 1, "action_requested", "Two follow-ups.",
                 ["Automate removal.", "Train managers."], Uuid.CreateVersion4(),
-                ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer"), DateTimeOffset.UtcNow, "raise", "Explicit follow-ups."),
+                ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer"), DateTimeOffset.UtcNow, null, "raise", "Explicit follow-ups."),
             CancellationToken.None);
         var reviewed = DomainEventSeed.Attach(new ControlOccurrenceReviewed(TenantId, ProgramId, ControlId,
             OccurrenceId, 3, review, Provenance(), review, null), OccurrenceId, 3);
@@ -153,7 +153,7 @@ public sealed class OccurrenceFindingTests
         var reference = await ControlOperatingContent.WriteAsync(Content, TenantId,
             ControlOperatingContent.ReviewSchema, new ControlOccurrenceReviewView(decisionId,
                 Uuid.CreateVersion4(), 1, "accepted", "Reviewed the failure.", [], Uuid.CreateVersion4(),
-                ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer"), DateTimeOffset.UtcNow,
+                ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer"), DateTimeOffset.UtcNow, null,
                 decision, "The recurring failure requires investigation."), CancellationToken.None);
         var reviewed = DomainEventSeed.Attach(new ControlOccurrenceReviewed(TenantId, ProgramId, ControlId,
             OccurrenceId, 3, reference, Provenance(), reference, null), OccurrenceId, 3);
