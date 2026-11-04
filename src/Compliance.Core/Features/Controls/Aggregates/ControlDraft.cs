@@ -82,6 +82,7 @@ public sealed class ControlDraft : Aggregate, ISourceUseOwner
     public const int MaximumDraftEventPayloadBytes = 48 * 1024;
     readonly Uuid _tenantId;
     ControlAuthorityHeader? _header;
+    readonly HashSet<Uuid> _proposalAuthors = [];
 
     public ControlDraft(Uuid tenantId, Uuid controlId, Uuid selectedCommandId = default)
         : base(controlId, new EventStreamAddress(tenantId.ToString(), Area, controlId.ToString()))
@@ -179,6 +180,13 @@ public sealed class ControlDraft : Aggregate, ISourceUseOwner
     {
         var fact = (IControlFact)value;
         Validate(value, fact);
+        if (fact.ChangeCount > 0)
+        {
+            if (value is ControlDraftCreated or ControlSuccessorProposed or ControlRetirementProposed)
+                _proposalAuthors.Clear();
+            if (value is ControlDraftCreated or ControlDraftRevised or ControlSuccessorProposed or ControlRetirementProposed)
+                _proposalAuthors.Add(Uuid.Parse(fact.Operation.Actor.Id, System.Globalization.CultureInfo.InvariantCulture));
+        }
         _header = fact.Header;
         CurrentAuthority = fact.Authority;
         NativeSequence = fact.NativeSequence;
@@ -330,7 +338,8 @@ public sealed class ControlDraft : Aggregate, ISourceUseOwner
             case ControlReviewed review:
                 Require(before.PendingTargetId == review.VersionId && review.Revision == before.Revision &&
                     review.Outcome is "accept" or "request_changes" && Rationale(review.Rationale) &&
-                    review.SupersedesDecisionId == before.LatestReviewDecisionId,
+                    review.SupersedesDecisionId == before.LatestReviewDecisionId &&
+                    (!_proposalAuthors.Contains(actor) || review.SeparationOfDutiesWaiverId is not null),
                     "Review must answer the current exact pending revision and latest decision.");
                 expected = before with
                 {
@@ -365,7 +374,8 @@ public sealed class ControlDraft : Aggregate, ISourceUseOwner
                 };
                 break;
             case ControlSuccessorProposed successor:
-                Require(before.IsApproved && !before.HasOpenDraft && successor.Revision == before.Revision + 1 &&
+                Require(before.IsApproved && !before.HasOpenDraft && before.PendingRetirementId is null &&
+                    successor.Revision == before.Revision + 1 &&
                     successor.PredecessorVersionId == before.ApprovedVersionId &&
                     successor.VersionId == ControlVersionIds.Sequence(Id, before.ApprovedVersionCount + 1),
                     "A successor requires its exact approved predecessor and deterministic next version.");
@@ -636,7 +646,7 @@ public sealed class ControlDraft : Aggregate, ISourceUseOwner
         if (waiverId is not null && waiver is null || proofs.Count != (waiver is null ? 0 : 1))
             return false;
         var scope = new ResponsibilityScope(SeparationOfDutiesRecordTypes.Control, Id, PendingTargetId!.Value, Revision);
-        var author = PendingAuthorMemberId == actor;
+        var author = _proposalAuthors.Contains(actor);
         if (waiver is not null && (!LocatorValid(waiver) || !ControlWaiverProof.Allows(waiver, TenantId,
             new SeparationOfDutiesWaiverScope(scope.RecordType, Id, scope.VersionId, Revision, action), actor, at)))
             return false;
