@@ -16,6 +16,8 @@ public static class BuiltInRbac
     public const string ComplianceManagementRoleName = "Compliance Lead";
     public const string ComplianceParticipationRoleName = "Contributor";
     public const string ViewerRoleName = "Viewer";
+    public const string AdvisorRoleName = "Advisor";
+    public const string AttestRoleName = "Attest";
     public const string TenantAdministrationRole = "tenant_administration";
     public const string ComplianceManagementRole = "compliance_management";
     public const string ComplianceParticipationRole = "compliance_participation";
@@ -32,6 +34,8 @@ public static class BuiltInRbac
     public static Uuid ComplianceManagementRoleId(Uuid tenantId) => Id(tenantId, "role:compliance-management");
     public static Uuid ComplianceParticipationRoleId(Uuid tenantId) => Id(tenantId, "role:compliance-participation");
     public static Uuid ViewerRoleId(Uuid tenantId) => Id(tenantId, "role:viewer");
+    public static Uuid AdvisorRoleId(Uuid tenantId) => Id(tenantId, "role:advisor");
+    public static Uuid AttestRoleId(Uuid tenantId) => Id(tenantId, "role:attest");
 
     public static bool IsBuiltInTeam(Uuid tenantId, Uuid teamId) =>
         teamId == AdministratorsTeamId(tenantId) || teamId == PowerUsersTeamId(tenantId) ||
@@ -39,7 +43,8 @@ public static class BuiltInRbac
 
     public static bool IsBuiltInRole(Uuid tenantId, Uuid roleId) =>
         roleId == TenantAdministrationRoleId(tenantId) || roleId == ComplianceManagementRoleId(tenantId) ||
-        roleId == ComplianceParticipationRoleId(tenantId) || roleId == ViewerRoleId(tenantId);
+        roleId == ComplianceParticipationRoleId(tenantId) || roleId == ViewerRoleId(tenantId) ||
+        roleId == AdvisorRoleId(tenantId) || roleId == AttestRoleId(tenantId);
 
     public static Uuid? TeamIdForRole(Uuid tenantId, string role) => role switch
     {

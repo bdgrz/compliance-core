@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Text.Json;
+using Bdgrz.Compliance.Features.AccessControl.Services;
 using Cntryl.Portia;
 using Cntryl.Fitz.Extensions;
 using Bdgrz.Compliance.Features.AccessControl.Events;
@@ -23,20 +25,26 @@ sealed class CassieTeamRoleDirectoryReader(CassieProjectionDatabase database)
         {
             case TeamRoleAssigned assigned:
                 CassieAccessControlSql.RequireScope(Identity, assigned.TenantId);
-                await using (var insert = CreateCommand("INSERT INTO access_team_roles (row_key, projection_key, team_id, role_id, assignment_id, revision) VALUES (@key, @scope, @parent, @id, @assignment, @revision)"))
+                var scope = TeamRoleScopes.Normalize(assigned.TenantId, assigned.Scope);
+                var scopeKey = TeamRoleScopes.Key(scope);
+                await using (var insert = CreateCommand("INSERT INTO access_team_roles (row_key, projection_key, team_id, role_id, assignment_id, revision, scope_payload, sort_key) VALUES (@key, @scope, @parent, @id, @assignment, @revision, @payload, @sort)"))
                 {
-                    CassieAccessControlSql.Bind(insert, ("key", CassieAccessControlSql.RowKey(CurrentProjectionKey, assigned.TeamId.ToString(), assigned.RoleId.ToString())),
+                    CassieAccessControlSql.Bind(insert, ("key", CassieAccessControlSql.RowKey(CurrentProjectionKey, assigned.TeamId.ToString(), assigned.RoleId.ToString(), scopeKey)),
                         ("scope", CurrentProjectionKey), ("parent", assigned.TeamId.ToString()), ("id", assigned.RoleId.ToString()));
                     CassieAccessControlSql.Bind(insert, ("assignment", assigned.CommandId.ToString()),
                         ("revision", (assigned.ExpectedRevision + 1).ToString(CultureInfo.InvariantCulture)));
+                    CassieAccessControlSql.Bind(insert, ("payload", JsonSerializer.Serialize(scope, ComplianceCoreJsonContext.Default.AccessGrantScope)),
+                        ("sort", assigned.RoleId.ToString() + ":" + scopeKey));
                     _ = await insert.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
                 }
                 break;
             case TeamRoleRemoved removed:
                 CassieAccessControlSql.RequireScope(Identity, removed.TenantId);
-                await using (var delete = CreateCommand("DELETE FROM access_team_roles WHERE projection_key = @scope AND team_id = @parent AND role_id = @id"))
+                await using (var delete = CreateCommand("DELETE FROM access_team_roles WHERE row_key = @key AND projection_key = @scope AND team_id = @parent AND role_id = @id"))
                 {
-                    CassieAccessControlSql.Bind(delete, ("scope", CurrentProjectionKey), ("parent", removed.TeamId.ToString()), ("id", removed.RoleId.ToString()));
+                    CassieAccessControlSql.Bind(delete, ("key", CassieAccessControlSql.RowKey(CurrentProjectionKey, removed.TeamId.ToString(),
+                            removed.RoleId.ToString(), TeamRoleScopes.Key(TeamRoleScopes.Normalize(removed.TenantId, removed.Scope)))),
+                        ("scope", CurrentProjectionKey), ("parent", removed.TeamId.ToString()), ("id", removed.RoleId.ToString()));
                     _ = await delete.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
                 }
                 break;
@@ -54,10 +62,10 @@ sealed class CassieTeamRoleDirectoryReader(CassieProjectionDatabase database)
         var direction = descending ? "DESC" : "ASC";
         var comparison = descending ? "<" : ">";
         await using var read = await OpenReadAsync(ct).ConfigureAwait(false);
-        await using var command = read.CreateCommand("SELECT team_id, role_id, assignment_id, revision FROM access_team_roles WHERE projection_key = @scope" +
+        await using var command = read.CreateCommand("SELECT team_id, role_id, assignment_id, revision, scope_payload, sort_key FROM access_team_roles WHERE projection_key = @scope" +
             " AND team_id = @parent" +
-            (after is null ? "" : $" AND role_id {comparison} @after") +
-            $" ORDER BY role_id {direction}" + (search is null ? " LIMIT " + fetchLimit : ""));
+            (after is null ? "" : $" AND sort_key {comparison} @after") +
+            $" ORDER BY sort_key {direction}" + (search is null ? " LIMIT " + fetchLimit : ""));
         CassieAccessControlSql.Bind(command, ("scope", projectionKey));
         CassieAccessControlSql.Bind(command, ("parent", teamId.ToString()));
         if (after is { } position)
@@ -69,7 +77,8 @@ sealed class CassieTeamRoleDirectoryReader(CassieProjectionDatabase database)
         await using var rows = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
         while (await rows.ReadAsync(ct).ConfigureAwait(false))
         {
-            var item = new TeamRoleView(CassieAccessControlSql.Id(rows.GetString(0)), CassieAccessControlSql.Id(rows.GetString(1)), CassieAccessControlSql.Id(rows.GetString(2)), ulong.Parse(rows.GetString(3), CultureInfo.InvariantCulture));
+            var item = new TeamRoleView(CassieAccessControlSql.Id(rows.GetString(0)), CassieAccessControlSql.Id(rows.GetString(1)), CassieAccessControlSql.Id(rows.GetString(2)), ulong.Parse(rows.GetString(3), CultureInfo.InvariantCulture),
+                JsonSerializer.Deserialize(rows.GetString(4), ComplianceCoreJsonContext.Default.AccessGrantScope));
             if (search is not null && !item.RoleId.ToString().Contains(search, StringComparison.OrdinalIgnoreCase))
                 continue;
             if (matches.Count == take)
@@ -78,8 +87,8 @@ sealed class CassieTeamRoleDirectoryReader(CassieProjectionDatabase database)
                 break;
             }
             matches.Add(item);
-            lastSort = rows.GetString(1);
-            lastId = rows.GetString(1);
+            lastSort = rows.GetString(5);
+            lastId = rows.GetString(5);
         }
         return new Page<TeamRoleView>(matches, more ? AccessControlDirectoryCursor.Encode(cursorScope, lastSort!, lastId!) : null);
     }

@@ -26,8 +26,8 @@ static class RbacTeamRoleEffects
         if (sourceEventId == Uuid.Empty || tenantId == Uuid.Empty || roleId == Uuid.Empty || team.RoleId != roleId ||
             team.TeamId == Uuid.Empty || team.AssignmentId == Uuid.Empty || team.Revision == 0)
             throw new InvalidOperationException("Team role cleanup requires the exact owner, assignment episode and source revision.");
-        var owner = RbacIds.TeamRole(tenantId, team.TeamId, roleId);
+        var owner = RbacIds.TeamRole(tenantId, team.TeamId, roleId, team.Scope);
         var commandId = Uuid.CreateVersion5(sourceEventId, $"team-role:remove:{owner}:{team.AssignmentId}");
-        return new RemoveTeamRole(tenantId, team.TeamId, roleId, commandId, team.Revision, team.AssignmentId);
+        return new RemoveTeamRole(tenantId, team.TeamId, roleId, commandId, team.Revision, team.AssignmentId, team.Scope);
     }
 }
