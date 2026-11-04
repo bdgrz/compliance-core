@@ -62,7 +62,10 @@ using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Commands;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Handlers;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Queries;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 using Bdgrz.Compliance.Features.Boundaries.Models;
 using Bdgrz.Compliance.Features.Boundaries.Readers;
@@ -399,6 +402,133 @@ public sealed class AdvisorRecordVersionResolverTests
     }
 
     [Fact]
+    public async Task ShouldRejectNewRelianceGivenWithdrawnExistingEvidenceSupport()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (support, selected) = await fixture.SeedSupportAsync();
+        await fixture.WithdrawAsync(support);
+
+        // Act
+        var result = await fixture.Resolver().RequireCurrentAsync(fixture.TenantId,
+            fixture.ProgramId, [selected]);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        var retained = await fixture.Reader.HydrateAsync(EvidenceSupport.ForVerification(
+            fixture.TenantId, support.Id));
+        Assert.NotNull(retained.Current);
+        Assert.NotNull(retained.Withdrawal);
+        Assert.Equal(2, retained.Revision);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldHideActualExistingSupportGivenDifferentProgramOrTenant(bool foreignTenant)
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (support, selected) = await fixture.SeedSupportAsync(
+            foreignTenant ? Uuid.CreateVersion4() : fixture.TenantId,
+            foreignTenant ? fixture.ProgramId : Uuid.CreateVersion4());
+        Assert.NotNull((await fixture.Reader.HydrateAsync(EvidenceSupport.ForVerification(
+            support.Current!.TenantId, support.Id))).Current);
+
+        // Act
+        var result = await fixture.Resolver().RequireCurrentAsync(fixture.TenantId,
+            fixture.ProgramId, [selected]);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+    }
+
+    [Fact]
+    public async Task ShouldRefuseNewHandoffChangesAndRetainAcceptedCreateGivenWithdrawnSupport()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (support, selected) = await fixture.SeedSupportAsync();
+        var handoffId = Uuid.CreateVersion4();
+        var original = new CreateAdvisorHandoff(fixture.TenantId, fixture.ProgramId,
+            handoffId, [selected], "Exact evidence", AdvisorHost.Expiry);
+        Assert.True((await fixture.CreateHandler.HandleAsync(fixture.Http(original),
+            CancellationToken.None)).IsSuccess);
+        var prior = await fixture.Handoffs.ReadAsync(fixture.TenantId, fixture.ProgramId, handoffId);
+        var newHandoffId = Uuid.CreateVersion4();
+        await fixture.WithdrawAsync(support);
+
+        // Act
+        var create = await fixture.CreateHandler.HandleAsync(fixture.Http(original with
+            { HandoffId = newHandoffId }), CancellationToken.None);
+        var revise = await fixture.ReviseHandler.HandleAsync(fixture.Http(new ReviseAdvisorHandoffSelection(
+            Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, handoffId, 1,
+            [selected], "Reconsider the evidence")), CancellationToken.None);
+        var ready = await fixture.ReadyHandler.HandleAsync(fixture.Http(new MarkAdvisorHandoffReadyForReview(
+            Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, handoffId, 1)), CancellationToken.None);
+        var preview = await new PreviewAdvisorHandoffHandler(fixture.Handoffs, fixture.Resolver(),
+            fixture.SharedSources, fixture.Clock).HandleAsync(fixture.Http(new PreviewAdvisorHandoff(
+            fixture.TenantId, fixture.ProgramId, handoffId)), CancellationToken.None);
+        var retry = await fixture.CreateHandler.HandleAsync(fixture.Http(original), CancellationToken.None);
+        var after = await fixture.Handoffs.ReadAsync(fixture.TenantId, fixture.ProgramId, handoffId);
+        var absent = await fixture.Handoffs.ReadAsync(fixture.TenantId, fixture.ProgramId, newHandoffId);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, create.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, revise.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, ready.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, preview.Error?.Kind);
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.False(absent.IsCreated);
+        Assert.Equal(prior.Revision, after.Revision);
+        Assert.Equal(prior.SelectionManifest, after.SelectionManifest);
+        Assert.Equal(prior.Selection, after.Selection);
+        Assert.Equal("draft", after.Status);
+        Assert.Single(after.Facts);
+    }
+
+    [Fact]
+    public async Task ShouldRetainExactSharedEvidenceGivenSupportWithdrawnAfterHandoffWasReady()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (support, selected) = await fixture.SeedSupportAsync();
+        var handoffId = Uuid.CreateVersion4();
+        var create = new CreateAdvisorHandoff(fixture.TenantId, fixture.ProgramId, handoffId,
+            [selected], "Exact evidence", AdvisorHost.Expiry);
+        Assert.True((await fixture.CreateHandler.HandleAsync(fixture.Http(create), CancellationToken.None)).IsSuccess);
+        Assert.True((await fixture.ReadyHandler.HandleAsync(fixture.Http(new MarkAdvisorHandoffReadyForReview(
+            Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, handoffId, 1)), CancellationToken.None)).IsSuccess);
+        var handler = new GetAdvisorSharedSourceHandler(fixture.Handoffs, fixture.SharedSources, fixture.Clock);
+        var query = new GetAdvisorSharedSource(fixture.TenantId, fixture.ProgramId, handoffId,
+            selected.SourceFamily, selected.RecordId);
+        var before = await handler.HandleAsync(fixture.Http(query), CancellationToken.None);
+        Assert.True(before.IsSuccess, before.Error?.Message);
+        var handoffBefore = await fixture.Handoffs.ReadAsync(fixture.TenantId, fixture.ProgramId, handoffId);
+        await fixture.WithdrawAsync(support);
+
+        // Act
+        var retained = await handler.HandleAsync(fixture.Http(query), CancellationToken.None);
+        var newReliance = await fixture.Resolver().RequireCurrentAsync(fixture.TenantId,
+            fixture.ProgramId, [selected]);
+        var handoffAfter = await fixture.Handoffs.ReadAsync(fixture.TenantId, fixture.ProgramId, handoffId);
+
+        // Assert
+        Assert.True(retained.IsSuccess, retained.Error?.Message);
+        Assert.Equal(System.Text.Json.JsonSerializer.Serialize(before.Value),
+            System.Text.Json.JsonSerializer.Serialize(retained.Value));
+        Assert.Equal(selected, retained.Value.SelectedSource);
+        Assert.Equal(handoffBefore.SelectionManifest, handoffAfter.SelectionManifest);
+        Assert.Equal(handoffBefore.Revision, handoffAfter.Revision);
+        Assert.Equal(RequestErrorKind.Conflict, newReliance.Error?.Kind);
+
+        // An old selection never bypasses the handoff's existing expiry authority.
+        fixture.Clock.Advance(TimeSpan.FromDays(400));
+        var expired = await handler.HandleAsync(fixture.Http(query), CancellationToken.None);
+        Assert.Equal(RequestErrorKind.NotFound, expired.Error?.Kind);
+    }
+
+    [Fact]
     public async Task ShouldRejectLegacyUuidPairGivenUnresolvedSourceFamily()
     {
         // Arrange
@@ -446,6 +576,48 @@ public sealed class AdvisorRecordVersionResolverTests
         public PolicyReader PolicySources => new(Reader, Events, Content);
         public RequestDispatchContext SystemDispatch { get; } =
             new(RequestActor.System);
+        public AdvisorHost.HostClock Clock { get; } = new(Now);
+        public AdvisorHandoffReader Handoffs => new(Reader, Content, Events);
+        AdvisorUnitOperation Unit => new(new NativeOperationExecutor(Reader,
+            _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), Content), Content);
+        public CreateAdvisorHandoffHandler CreateHandler => new(Unit, Handoffs, Resolver(), Content, Clock);
+        public ReviseAdvisorHandoffSelectionHandler ReviseHandler => new(Unit, Handoffs, Resolver(), Content, Clock);
+        public MarkAdvisorHandoffReadyForReviewHandler ReadyHandler => new(Unit, Handoffs, Resolver(), Clock);
+        public AdvisorSharedSourceReader SharedSources => new(Controls, PolicySources, Resolver(),
+            Metadata, new BoundaryReader(null), Readiness);
+
+        public Cntryl.Portia.RequestContext<T> Http<T>(T request) where T : IRequestBase => new(request,
+            new RequestDispatchContext(AdvisorHost.Personal(MemberId), new HttpInvocation("PUT",
+                "/api/v1/advisor-handoffs/test", "/api/v1/advisor-handoffs/test", "advisor-source-test")));
+
+        public async Task<(EvidenceSupport Support, AdvisorRecordVersion Selected)> SeedSupportAsync(
+            Uuid? tenantId = null, Uuid? programId = null)
+        {
+            var control = await SeedControlAsync();
+            var artifact = await SeedArtifactAsync();
+            var tenant = tenantId ?? TenantId;
+            var program = programId ?? ProgramId;
+            var request = new LinkEvidenceSupport(Uuid.CreateVersion4(), tenant, program, artifact.Id,
+                "control", control.Id, control.Revision, new DateOnly(2026, 1, 1),
+                new DateOnly(2026, 12, 31), "Design review", "Supports the control design.", 0);
+            var support = new EvidenceSupport(tenant, program, EvidenceSupport.IdFor(request));
+            Assert.Null(support.Link(request, artifact.Revision, artifact.ContentSha256!,
+                ActorReference.ForMember(MemberId, "Lead"), Now));
+            await Writer.SaveAsync(support, SystemDispatch);
+            return (support, AdvisorRecordVersion.EvidenceArtifact(artifact.Id, artifact.Revision,
+                (ulong)artifact.Revision, artifact.ContentSha256, support.Id));
+        }
+
+        public async Task WithdrawAsync(EvidenceSupport support)
+        {
+            var owner = await Reader.HydrateAsync(EvidenceSupport.ForVerification(
+                support.Current!.TenantId, support.Id));
+            var request = new WithdrawEvidenceSupport(Uuid.CreateVersion4(), owner.Current!.TenantId,
+                owner.Current.ProgramId, owner.Id, 1, "The assertion was mistaken.");
+            Assert.Null(owner.Withdraw(request, ActorReference.ForMember(MemberId, "Lead"), Now.AddMinutes(1)));
+            await Writer.SaveAsync(owner, SystemDispatch);
+        }
+
 
         public Fixture()
         {
