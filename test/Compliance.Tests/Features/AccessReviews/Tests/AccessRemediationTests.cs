@@ -138,6 +138,36 @@ public sealed class AccessRemediationTests
     }
 
     [Fact]
+    public async Task ShouldRefuseDecisionRevisionGivenVerifiedItemInLaunchedCampaign()
+    {
+        // Arrange
+        await using var fixture = await AccessReviewFixture.CreateAsync();
+        var (population, _) = await fixture.AcceptAsync(AccessReviewFixture.StandardFacts());
+        await fixture.ClassifyStandardAsync(population);
+        var launched = await fixture.LaunchAsync(population, fixture.ManagerMemberId, "Owner away.",
+            fixture.ApproverMemberId);
+        var campaign = await fixture.CampaignAsync(launched.CampaignId);
+        var itemId = AccessReviewCampaignTests.ItemId(campaign, "rae", "admin");
+        await fixture.SendAsync(fixture.ManagerUserId,
+            fixture.Decision(launched.CampaignId, itemId, 1, "revoke", "No longer needed."));
+        var (later, _) = await fixture.AcceptAsync(AccessReviewFixture.StandardFacts(raeHasAdmin: false),
+            DateTimeOffset.UtcNow);
+        await fixture.SendAsync(fixture.ManagerUserId, fixture.Verification(launched.CampaignId, itemId, 2, later));
+        var before = await fixture.CampaignAsync(launched.CampaignId);
+
+        // Act
+        var refused = await fixture.FailAsync(fixture.ManagerUserId,
+            fixture.Decision(launched.CampaignId, itemId, 3, "keep", "Changed my mind."), RequestErrorKind.Conflict);
+        var after = await fixture.CampaignAsync(launched.CampaignId);
+
+        // Assert
+        Assert.Contains("verified", refused.Message, StringComparison.Ordinal);
+        Assert.Equal("launched", after.Status);
+        Assert.Equal(before.Items.Single(item => item.Item.ItemId == itemId),
+            after.Items.Single(item => item.Item.ItemId == itemId));
+    }
+
+    [Fact]
     public async Task ShouldCompleteWithApprovedExceptionGivenUnverifiedModifyDecision()
     {
         // Arrange
