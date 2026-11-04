@@ -137,6 +137,9 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     /// <summary>The cancellation fact, once recorded.</summary>
     public CorrectiveActionCancelled? Cancelled => _cancelled;
 
+    /// <summary>The latest change of the action's editable terms.</summary>
+    public CorrectiveActionChanged? Changed => Latest as CorrectiveActionChanged;
+
     /// <summary>The terminal completion or cancellation, once the action is resolved.</summary>
     public DomainEvent? Resolution => (DomainEvent?)_completed ?? _cancelled;
 
@@ -233,6 +236,16 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
             _revision + 1, _actionId, reason.Trim(), cancelledByMemberId, cancelledBy, cancelledAt,
             operation, firstResponse, operationResult));
         return Result.Success;
+    }
+
+    /// <summary>Changes the editable terms of an open action on its own owner.</summary>
+    public Result Change(OperationProvenance operation, string description, Uuid ownerMemberId, DateOnly dueOn,
+        ActorReference changedBy, DateTimeOffset changedAt, ImmutableContentRef firstResponse,
+        ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+            $"Changing corrective action {_actionId} is not implemented."));
     }
 
     /// <summary>Holds this exact completed action for a finding closure; the revision does not advance.</summary>
