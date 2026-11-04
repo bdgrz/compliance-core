@@ -132,3 +132,78 @@ clearance. Coordinator compilation and focused execution remain required.
 The smallest ready delivery boundary is this owner/handler/authoritative-reader
 slice. Public withdrawal remains unaccepted until the listed required consumers,
 shared wiring, JSON round trips and focused/full executable gates are qualified.
+
+## Resumed current-status and retained-download source — 2026-11-04
+
+The user resumed implementation and then prioritized whole-domain source completion
+as an iteration platform. The following remains **authored, uncompiled and unexecuted**;
+no observed RED/GREEN, runtime acceptance or public enablement is claimed.
+
+`254c49c1` adds six source-member eligibility regression cases (suspended,
+deprovisioned and effective expiry, first attempt and accepted retry). It uses
+actual Member facts and a controllable clock, and checks that refusal does not
+consult permissions or change support history. The existing handler already
+performs this source-authority check.
+
+`731ed2a2` and `41cf99aa` preserve current-status query contracts, behavior tests
+and a compile-ready behavior stub before `053398eb` implements them. A namespace
+import correction is in the implementation commit; the test checkpoint has not
+been compiled. `cf9c7a33` extends source-movement and frozen-original regressions.
+These commits are reproducible test-first preparation, not observed behavioral RED.
+
+The immutable EvidenceSupportView remains the link receipt. A separate
+EvidenceSupportStatusView contains Original, owner revision, active status and
+optional withdrawal attribution. EvidenceSupportReader.ReadStatusAsync is scoped
+internal authority; it does not grant public discovery. GetEvidenceSupport and
+ListEvidenceSupports carry IProgramReadRequest for existing pipeline authorization.
+Their feature-local read service separately requires current membership and an
+exact artifact-read grant before revealing assertion or withdrawal metadata. Get
+confirms the owner position; list bounds its authoritative tenant-area scan to
+20,000 non-audit facts, validates the recognized two-fact physical lifecycle,
+hydrates each owner, confirms the area again, and refuses incomplete scans.
+
+List includes active and withdrawn links by default; `active` and `withdrawn` are
+optional filters. Ordering uses original link time and stable support identity.
+The existing repository scoped base64-cursor pattern is applied with tenant,
+program, user, filter, page size, source/visible-set fingerprint and offset. A
+changed source or visible set conflicts and requires a restarted list. Hidden
+artifacts contribute no returned rows/counts; selected rows receive another
+current discovery check before return. This is a bounded read surface, not a new
+persistence, projection, transaction or retry framework. It does not establish
+atomically coordinated cross-owner selection versus concurrent withdrawal.
+
+`69a64290` adds the selected Advisor download admission test; `081ee8f6` switches
+EvidenceArtifactDownloadAccess to RequireRetainedAsync only after the existing
+current frozen-handoff authorization succeeds. The strict test resolver refuses
+new use while allowing retained exact source and proves an unauthorized handoff
+never reaches retained-source verification. Advisor's real-source retained-history
+and new-use tests are owned by the Advisor worker. No artifact availability,
+content hash, source revision or handoff expiry checks were relaxed.
+
+Live bounded Jev source review requested `jev-latest` and resolved to `jev-1.14.0`.
+Adverse probabilities were .10 for withdrawal bypassing final status confirmation,
+.12 for hidden-artifact status disclosure, .10 for returned-cursor scope/source
+confusion and .17 for rejecting retained Advisor download solely due to withdrawal.
+Source/request hashes and request/response are in
+`/tmp/compliance-support-status-jev.{hashes,request,response}.json`. The key was
+loaded only in the process environment. These are advisory review signals;
+no compilation or executable confidence follows from them.
+
+Coordinator shared wiring remains: Core/App JSON metadata for new queries,
+status/withdrawal models and Page<EvidenceSupportStatusView>; DI for
+EvidenceSupportStatusRead, GetEvidenceSupportHandler and ListEvidenceSupportsHandler;
+intended HTTP/MCP registrations; current Lead-only mutation grant and permission
+catalog; transport/catalog/schema/coverage fixtures. Get's identity property is
+EvidenceSupportId, so its route binds `{evidence_support_id}`. List is scoped to
+one program and exposes the documented status filter. Withdrawal remains the
+existing immediate Unit response path; its metadata must not claim a persisted
+native first-response descriptor. All consumer/shared wiring and final validation
+remain coordinator-owned.
+
+Focused additions: EvidenceSupportStatusTests, WithdrawEvidenceSupportHandlerTests,
+IssueArtifactDownloadHandlerTests. Required source/transport acceptance includes
+current program/Lead and client-management composition, actual foreign source
+isolation, list continuation/source changes, restricted artifact redaction,
+withdrawal JSON round trips, intended HTTP/MCP discovery, Examinations fixed cuts,
+Applications current enrichment/freshness and Advisor retained history. The full
+backend and final-head delivery gates remain separate.
