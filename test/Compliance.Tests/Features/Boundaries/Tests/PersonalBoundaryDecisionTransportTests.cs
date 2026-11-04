@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Tests.Testing;
+using Bdgrz.Compliance.Features.Boundaries.Projections;
+using Bdgrz.Compliance.Features.Programs.Projections;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -178,6 +180,7 @@ public sealed class PersonalBoundaryDecisionTransportTests
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
+        readonly CassieRepositoryTestDatabase _database;
         readonly Uuid _tenant = Uuid.CreateVersion4();
         readonly Uuid _program = Uuid.CreateVersion4();
         readonly Uuid _author = Uuid.CreateVersion4();
@@ -189,14 +192,16 @@ public sealed class PersonalBoundaryDecisionTransportTests
         readonly Uuid _approval = Uuid.CreateVersion4();
         string _digest = string.Empty;
 
-        Fixture()
+        Fixture(CassieRepositoryTestDatabase database)
         {
+            _database = database;
             _version = Uuid.CreateVersion5(_boundary, "draft-1");
             var services = new ServiceCollection();
             services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
-                ["Fitz:ApplicationName"] = "compliance"
+                ["Fitz:ApplicationName"] = "compliance",
+                ["Cassie:ConnectionString"] = database.ConnectionString
             }).Build(), developerAuthentication: true);
             var events = new InMemoryEventStore();
             services.AddSingleton<IEventStore>(events);
@@ -210,34 +215,53 @@ public sealed class PersonalBoundaryDecisionTransportTests
 
         public static async Task<Fixture> CreateAsync(string action)
         {
-            var fixture = new Fixture();
-            var now = DateTimeOffset.UtcNow;
-            var author = RbacIds.Member(fixture._tenant, fixture._author);
-            await ProgramManagementServices.SeedAsync(fixture._provider, new ProgramRules(fixture._tenant, fixture._program), program =>
+            var database = await CassieRepositoryTestDatabase.OpenAsync(
+                [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+            Fixture fixture;
+            try
             {
-                Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), author, "Author", now));
-                return Result.Success;
-            });
-            await ProgramManagementServices.SeedAsync(fixture._provider, new BoundaryRules(fixture._tenant, fixture._boundary), boundary =>
-                boundary.Create(fixture._program, fixture._version, new BoundaryContent("Service scope", "readiness", ["security"], []), author, "Author", now));
-            if (action == "approval")
-            {
-                Assert.True((await fixture.DecideAsync("review", "http")).IsSuccess);
-                await using var scope = fixture._provider.CreateAsyncScope();
-                var directory = (FitzBoundaryDirectory)scope.ServiceProvider.GetRequiredService<IBoundaryDirectoryProjection>();
-                var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName, EventStreamPattern.ForPattern(fixture._tenant.ToString()));
-                await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
-                {
-                    await foreach (var record in fixture._provider.GetRequiredService<IDomainEventReader>().ReadAsync(EventStreamPattern.ForPattern(fixture._tenant.ToString()), EventCursor.Start, CancellationToken.None))
-                        await directory.ApplyAsync(record.Event);
-                    await batch.CommitAsync(ProjectionCheckpoint.Start);
-                }
-                var preview = await scope.ServiceProvider.GetRequiredService<BoundaryImpactService>().PreviewAsync(new PreviewBoundaryImpact(fixture._tenant, fixture._boundary, fixture._version, 1), CancellationToken.None);
-                Assert.True(preview.IsSuccess, preview.Error?.Message);
-                Assert.True(preview.Value.Complete);
-                fixture._digest = preview.Value.Digest;
+                fixture = new Fixture(database);
             }
-            return fixture;
+            catch
+            {
+                await database.DisposeAsync();
+                throw;
+            }
+            try
+            {
+                var now = DateTimeOffset.UtcNow;
+                var author = RbacIds.Member(fixture._tenant, fixture._author);
+                await ProgramManagementServices.SeedAsync(fixture._provider, new ProgramRules(fixture._tenant, fixture._program), program =>
+                {
+                    Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), author, "Author", now));
+                    return Result.Success;
+                });
+                await ProgramManagementServices.SeedAsync(fixture._provider, new BoundaryRules(fixture._tenant, fixture._boundary), boundary =>
+                    boundary.Create(fixture._program, fixture._version, new BoundaryContent("Service scope", "readiness", ["security"], []), author, "Author", now));
+                if (action == "approval")
+                {
+                    Assert.True((await fixture.DecideAsync("review", "http")).IsSuccess);
+                    await using var scope = fixture._provider.CreateAsyncScope();
+                    var directory = (CassieBoundaryDirectory)scope.ServiceProvider.GetRequiredService<IBoundaryDirectoryProjection>();
+                    var identity = new CheckpointIdentity(CassieBoundaryDirectory.ProjectorName, EventStreamPattern.ForPattern(fixture._tenant.ToString()));
+                    await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
+                    {
+                        await foreach (var record in fixture._provider.GetRequiredService<IDomainEventReader>().ReadAsync(EventStreamPattern.ForPattern(fixture._tenant.ToString()), EventCursor.Start, CancellationToken.None))
+                            await directory.ApplyAsync(record.Event);
+                        await batch.CommitAsync(ProjectionCheckpoint.Start);
+                    }
+                    var preview = await scope.ServiceProvider.GetRequiredService<BoundaryImpactService>().PreviewAsync(new PreviewBoundaryImpact(fixture._tenant, fixture._boundary, fixture._version, 1), CancellationToken.None);
+                    Assert.True(preview.IsSuccess, preview.Error?.Message);
+                    Assert.True(preview.Value.Complete);
+                    fixture._digest = preview.Value.Digest;
+                }
+                return fixture;
+            }
+            catch
+            {
+                await fixture.DisposeAsync();
+                throw;
+            }
         }
 
         public async Task<Result> DecideAsync(string action, string transport, bool author = false, bool stale = false, bool wrongReview = false, bool wrongDigest = false)
@@ -280,6 +304,16 @@ public sealed class PersonalBoundaryDecisionTransportTests
         }
 
         public Task<BoundaryRules> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new BoundaryRules(_tenant, _boundary));
-        public ValueTask DisposeAsync() => _provider.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            try
+            {
+                await _provider.DisposeAsync();
+            }
+            finally
+            {
+                await _database.DisposeAsync();
+            }
+        }
     }
 }

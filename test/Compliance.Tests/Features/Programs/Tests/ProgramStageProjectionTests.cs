@@ -97,7 +97,8 @@ public sealed class ProgramStageProjectionTests
         await DeferAsync(fixture, content, tenantId, deferredProgram);
         var approvedDecision = await ApproveWithExceptionsAsync(fixture, content, tenantId,
             approvedProgram);
-        using var replay = BuildReplayWorker(fixture.Store, content, tenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieProgramSchema.Statements);
+        using var replay = BuildReplayWorker(fixture.Store, content, database.Database, tenantId);
 
         // Act
         await replay.StartAsync();
@@ -184,22 +185,24 @@ public sealed class ProgramStageProjectionTests
             "Acknowledged.", Decider, DateTimeOffset.UtcNow, unresolved);
     }
 
-    static IHost BuildReplayWorker(IDomainEventReader reader, IImmutableContentStore content, Uuid tenant)
+    static IHost BuildReplayWorker(IDomainEventReader reader, IImmutableContentStore content,
+        CassieProjectionDatabase database, Uuid tenant)
     {
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {
             EnvironmentName = "Development",
         });
         builder.Services.AddSingleton(reader);
+        builder.Services.AddSingleton(database);
         builder.Services.AddSingleton(content);
         builder.Services.AddSingleton<IKvClient, InMemoryKvClient>();
         builder.Services.AddSingleton<ITenantDirectory>(new StaticTenantDirectory(
             new TenantId(tenant.ToString())));
-        builder.Services.AddScoped<FitzProgramDirectory>();
+        builder.Services.AddScoped<CassieProgramDirectory>();
         builder.Services.AddScoped<IProgramDirectoryProjection>(provider =>
-            provider.GetRequiredService<FitzProgramDirectory>());
+            provider.GetRequiredService<CassieProgramDirectory>());
         builder.Services.AddScoped<IProgramDirectoryReader>(provider =>
-            provider.GetRequiredService<FitzProgramDirectory>());
+            provider.GetRequiredService<CassieProgramDirectory>());
         builder.Services.AddPortiaEvent<ProgramCreated>(2, "bdgrz.program.created");
         builder.Services.AddPortiaEvent<ProgramRevised>(2, "bdgrz.program.revised");
         builder.Services.AddPortiaEvent<ProgramCriteriaEditionSelected>(2,
@@ -207,7 +210,7 @@ public sealed class ProgramStageProjectionTests
         builder.Services.AddPortiaEvent<TypeIEntryDecisionRecorded>(1,
             "bdgrz.readiness.type_i_entry.decided");
         builder.Services.AddPortia()
-            .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant,
+            .AddCassieProjection<ProgramDirectoryProjector, CassieProgramDirectory>("ProgramDirectory", WorkloadScope.PerTenant,
                 options => options.PollInterval = TimeSpan.FromMilliseconds(10))
             .UseSingleProcessWorkloads()
             .AddWorkers();

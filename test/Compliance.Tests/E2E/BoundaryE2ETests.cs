@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Boundaries.Projections;
+using Bdgrz.Compliance.Features.Programs.Projections;
+using Microsoft.AspNetCore.Hosting;
 using Bdgrz.Compliance.Tests.Testing;
 using System.Globalization;
 using System.Net;
@@ -1156,12 +1159,15 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
     }
 
     [Fact]
-    public async Task ShouldRecoverApprovedHistoryReadGivenFitzProjectionLag()
+    public async Task ShouldRecoverApprovedHistoryReadGivenCassieProjectionLag()
     {
         // Arrange
-        await using var factory = E2EAppFactory.Create(broker);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+        await using var factory = E2EAppFactory.Create(broker).WithWebHostBuilder(builder =>
+            builder.UseSetting("Cassie:ConnectionString", database.ConnectionString));
         using var scope = factory.Services.CreateScope();
-        var directory = Assert.IsType<FitzBoundaryDirectory>(scope.ServiceProvider
+        var directory = Assert.IsType<CassieBoundaryDirectory>(scope.ServiceProvider
             .GetRequiredService<IBoundaryDirectoryReader>());
         var tenantId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
