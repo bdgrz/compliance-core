@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Boundaries.Projections;
+using Bdgrz.Compliance.Features.Programs.Projections;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
@@ -119,7 +121,9 @@ public sealed class AttestProgramManagementWriteWallTests
     public async Task ShouldDenyClientManagementRecordGivenActualAttestHistoryAndOrdinaryProgramGrant(string operation)
     {
         // Arrange
-        await using var provider = Compose();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+        await using var provider = Compose(database);
         await ProgramManagementServices.SeedAsync(provider, new ProgramRules(Tenant, Program), source =>
         {
             Assert.Null(source.Create("Security", new ProgramPlan(null, null, null, null, null, null),
@@ -170,7 +174,9 @@ public sealed class AttestProgramManagementWriteWallTests
     public async Task ShouldPreserveOwnPersonalPolicyAcknowledgementGivenActualAttestHistoryAndOnlyOrdinaryReadGrant()
     {
         // Arrange
-        await using var provider = Compose(readOnly: true);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+        await using var provider = Compose(database, readOnly: true);
         await SeedProgramAsync(provider);
         var personId = Uuid.CreateVersion4();
         var campaignId = Uuid.CreateVersion4();
@@ -220,7 +226,9 @@ public sealed class AttestProgramManagementWriteWallTests
         bool sameClient)
     {
         // Arrange
-        await using var provider = Compose();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+        await using var provider = Compose(database);
         await AttestAssignmentHistoryFixture.SeedAsync(provider, sameClient ? Tenant : Uuid.CreateVersion4(),
             User, revoked: true, practice: practice);
         await using var scope = provider.CreateAsyncScope();
@@ -238,7 +246,9 @@ public sealed class AttestProgramManagementWriteWallTests
     public async Task ShouldPreserveSharedBoundaryReadGivenActualAttestHistoryAndOrdinaryProgramGrant()
     {
         // Arrange
-        await using var provider = Compose();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+        await using var provider = Compose(database);
         await SeedProgramAsync(provider);
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
@@ -269,7 +279,7 @@ public sealed class AttestProgramManagementWriteWallTests
     {
         var events = services.GetRequiredService<IDomainEventReader>();
         var projection = services.GetRequiredService<IBoundaryDirectoryProjection>();
-        var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName, EventStreamPattern.ForPattern(Tenant.ToString()));
+        var identity = new CheckpointIdentity(CassieBoundaryDirectory.ProjectorName, EventStreamPattern.ForPattern(Tenant.ToString()));
         await using var batch = await projection.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
         var cursor = ProjectionCheckpoint.Start.Cursor;
         await foreach (var record in events.ReadAsync(identity.Pattern, cursor, CancellationToken.None))
@@ -280,13 +290,14 @@ public sealed class AttestProgramManagementWriteWallTests
         await batch.CommitAsync(new ProjectionCheckpoint(cursor));
     }
 
-    static ServiceProvider Compose(bool readOnly = false)
+    static ServiceProvider Compose(CassieRepositoryTestDatabase database, bool readOnly = false)
     {
         var services = new ServiceCollection();
         services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
             ["Fitz:ApplicationName"] = "compliance",
+            ["Cassie:ConnectionString"] = database.ConnectionString,
         }).Build(), developerAuthentication: true);
         var events = new InMemoryEventStore();
         services.AddSingleton<IEventStore>(events);

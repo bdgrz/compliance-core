@@ -322,7 +322,8 @@ public sealed class WorkforceRosterSnapshotTests
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
-        var directory = new FitzPopulationSnapshotDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieSnapshotSchema.Statements);
+        await using var directory = new CassiePopulationSnapshotDirectory(database.Database);
         var person = Person(tenantId, "Wes");
         var rows = WorkforceRosterSnapshotContent.Rows([person], []);
         var digest = PopulationContentIdentity.Compute(WorkforceRosterSnapshotContent.Kind, rows).Value;

@@ -256,12 +256,20 @@ public sealed class CassieProgramScopeRepositoryTests
 
         // Act
         var pointFailure = await Record.ExceptionAsync(() => scenario.Exists(tenant));
-        var listFailure = await Record.ExceptionAsync(() => scenario.ListAsync(tenant, 10, null));
+        Page<Uuid>? visible = null;
+        var listFailure = await Record.ExceptionAsync(async () => visible = await scenario.ListAsync(tenant, 10, null));
         await ReplaceStoredRowAsync(database, table, before);
 
         // Assert
         Assert.IsType<ImmutableContentIntegrityException>(pointFailure);
-        Assert.IsType<ImmutableContentIntegrityException>(listFailure);
+        if (corruption == "scope_id" && kind != "program")
+        {
+            Assert.Null(listFailure);
+            Assert.NotNull(visible);
+            Assert.Empty(visible.Items);
+        }
+        else
+            Assert.IsType<ImmutableContentIntegrityException>(listFailure);
         Assert.True(await scenario.Exists(tenant));
         Assert.Single((await scenario.ListAsync(tenant, 10, null)).Items);
         Assert.Equal(progress, await scenario.Store.LoadCheckpointAsync(scenario.Identity));
@@ -287,7 +295,7 @@ public sealed class CassieProgramScopeRepositoryTests
         var table = kind == "program" ? "program_revisions" : "client_service_revisions";
         var before = await StoredRowAsync(database, table);
         var after = changeRevision
-            ? before with { Id = scenario.Id + ":00000000000000000002" }
+            ? before with { Id = $"{scenario.Id}:00000000000000000002" }
             : before with { Payload = before.Payload.Replace(scenario.Id.ToString(), Uuid.CreateVersion4().ToString(), StringComparison.Ordinal) };
         await ReplaceStoredRowAsync(database, table, after);
 
