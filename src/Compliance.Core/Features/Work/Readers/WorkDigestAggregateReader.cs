@@ -21,7 +21,7 @@ public sealed class WorkDigestAggregateReader(IAggregateReader inner, IDomainEve
         var hydrated = await inner.HydrateAsync(aggregate, ct).ConfigureAwait(false);
         if (hydrated is WorkDigestDispatch dispatch)
             _ = await WorkDigestDispatchHistory.ReadAsync(events, dispatch, ct).ConfigureAwait(false);
-        else if (hydrated is WeeklyWorkDigest weekly)
+        else if (hydrated is WeeklyWorkDigest { DeliveryMode: false } weekly)
             _ = await WeeklyWorkDigestHistory.ReadAsync(events, sources, weekly, ct).ConfigureAwait(false);
         return hydrated;
     }

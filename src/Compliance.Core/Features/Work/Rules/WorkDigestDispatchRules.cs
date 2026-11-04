@@ -154,6 +154,8 @@ public sealed class WorkDigestDispatchRules
             state.Attempts >= maximumAttempts)
             return RecordOutcome(weekOf, RetryExhausted, now, null, "unknown_retry_window_ended");
         var retryAt = state.LastUpdatedAt + retryDelay;
+        if (retryAt < now)
+            retryAt = now;
         if (retryAt >= state.RetryDeadline)
             return RecordOutcome(weekOf, RetryExhausted, now, null, "unknown_retry_window_ended");
         return RecordOutcome(weekOf, RetryPending, now, retryAt, "automatic_unknown_retry");

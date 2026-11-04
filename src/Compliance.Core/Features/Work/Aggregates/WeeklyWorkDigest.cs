@@ -40,7 +40,7 @@ using Bdgrz.Compliance.Features.Work.Events;
 namespace Bdgrz.Compliance.Features.Work.Aggregates;
 
 /// <summary>Bounded current and explicit selected attempt authority; full attempts remain external immutable history.</summary>
-public sealed class WeeklyWorkDigest : Aggregate
+public sealed partial class WeeklyWorkDigest : Aggregate
 {
     public const string SchedulerProcessId = WeeklyWorkDigestRules.SchedulerProcessId;
     public const string DeliveryProcessId = WeeklyWorkDigestRules.DeliveryProcessId;
@@ -50,23 +50,30 @@ public sealed class WeeklyWorkDigest : Aggregate
     WorkDigestDeliveryAttemptView? _latest;
     WorkDigestDeliveryAttemptView? _selected;
     public WeeklyWorkDigest(Uuid tenantId, Uuid digestId, int selectedAttempt = 0,
-        Uuid selectedCommandId = default, string? selectedCommandKind = null)
+        Uuid selectedCommandId = default, string? selectedCommandKind = null,
+        Uuid deliveryMember = default, DateOnly deliveryWeek = default)
         : base(digestId, new EventStreamAddress(tenantId.ToString(), Area, digestId.ToString()))
     {
         (_tenant, _selectedAttempt) = (tenantId, selectedAttempt);
+        (_deliveryMember, _deliveryWeek) = (deliveryMember, deliveryWeek);
         Acceptance = new NativeAcceptance(selectedCommandId, selectedCommandKind);
         On<WeeklyWorkDigestScheduled>(ApplyFact);
         On<WeeklyWorkDigestDeliveryRequested>(ApplyFact);
         On<WeeklyWorkDigestDeliveryRecorded>(ApplyFact);
         On<WeeklyWorkDigestDeliverySuppressed>(ApplyFact);
+        On<WorkDigestDispatchScheduled>(ApplyDeliveryTechnical);
+        On<WorkDigestDispatchAttemptStarted>(ApplyDeliveryTechnical);
+        On<WorkDigestDispatchOutcomeRecorded>(ApplyDeliveryTechnical);
+        On<WeeklyWorkDigestSent>(ApplyWeeklySent);
+        On<WeeklyWorkDigestSkipped>(ApplyWeeklySkipped);
     }
     public Uuid TenantId => _tenant;
     public NativeAcceptance Acceptance { get; }
     public WeeklyWorkDigestHeader? Header { get; private set; }
-    public long Revision => Header?.Revision ?? 0;
-    public string Status => Header?.Status ?? "missing";
-    public Uuid MemberId => Header?.MemberId ?? Uuid.Empty;
-    public DateOnly WeekStarting => Header?.WeekStarting ?? default;
+    public long Revision => DeliveryMode ? checked((long)Version) : Header?.Revision ?? 0;
+    public string Status => _deliveryState?.Status ?? Header?.Status ?? "missing";
+    public Uuid MemberId => DeliveryMode ? _deliveryMember : Header?.MemberId ?? Uuid.Empty;
+    public DateOnly WeekStarting => DeliveryMode ? _deliveryWeek : Header?.WeekStarting ?? default;
     public WorkDigestDeliveryAttemptView? LatestAttempt => _latest;
     public WorkDigestDeliveryAttemptView? SelectedAttempt => _selectedAttempt == _latest?.Number ? _latest : _selected;
     public int SelectedAttemptNumber => _selectedAttempt;
