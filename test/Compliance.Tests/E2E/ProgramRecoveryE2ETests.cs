@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Tests.Testing;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
@@ -473,8 +475,10 @@ public sealed class ProgramRecoveryE2ETests(RestartableBrokerStackFixture broker
     {
         var tenant = Uuid.Parse(tenantId, CultureInfo.InvariantCulture);
         var program = Uuid.Parse(programId, CultureInfo.InvariantCulture);
-        using var replay = BuildReplayWorker(
-            sourceServices.GetRequiredService<IEventStore>(), tenant);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+        await using var sourceScope = sourceServices.CreateAsyncScope();
+        using var replay = BuildReplayWorker(sourceScope.ServiceProvider, database.Database, tenant);
         await replay.StartAsync();
         try
         {
@@ -499,26 +503,29 @@ public sealed class ProgramRecoveryE2ETests(RestartableBrokerStackFixture broker
         }
     }
 
-    static IHost BuildReplayWorker(IDomainEventReader reader, Uuid tenant)
+    static IHost BuildReplayWorker(IServiceProvider sourceServices, CassieProjectionDatabase database, Uuid tenant)
     {
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {
             EnvironmentName = "Development",
         });
-        builder.Services.AddSingleton(reader);
+        builder.Services.AddSingleton(sourceServices.GetRequiredService<IDomainEventReader>());
+        builder.Services.AddSingleton(sourceServices.GetRequiredService<IImmutableContentStore>());
+        builder.Services.AddSingleton(sourceServices.GetRequiredService<BoundaryReader>());
+        builder.Services.AddSingleton(database);
         builder.Services.AddSingleton<IKvClient, InMemoryKvClient>();
         builder.Services.AddSingleton<ITenantDirectory>(new StaticTenantDirectory(
             new TenantId(tenant.ToString())));
-        builder.Services.AddScoped<FitzProgramDirectory>();
+        builder.Services.AddScoped<CassieProgramDirectory>();
         builder.Services.AddScoped<IProgramDirectoryProjection>(provider =>
-            provider.GetRequiredService<FitzProgramDirectory>());
+            provider.GetRequiredService<CassieProgramDirectory>());
         builder.Services.AddScoped<IProgramDirectoryReader>(provider =>
-            provider.GetRequiredService<FitzProgramDirectory>());
-        builder.Services.AddScoped<FitzBoundaryDirectory>();
+            provider.GetRequiredService<CassieProgramDirectory>());
+        builder.Services.AddScoped<CassieBoundaryDirectory>();
         builder.Services.AddScoped<IBoundaryDirectoryProjection>(provider =>
-            provider.GetRequiredService<FitzBoundaryDirectory>());
+            provider.GetRequiredService<CassieBoundaryDirectory>());
         builder.Services.AddScoped<IBoundaryDirectoryReader>(provider =>
-            provider.GetRequiredService<FitzBoundaryDirectory>());
+            provider.GetRequiredService<CassieBoundaryDirectory>());
         builder.Services.AddPortiaEvent<ProgramCreated>(2, "bdgrz.program.created");
         builder.Services.AddPortiaEvent<ProgramRevised>(2, "bdgrz.program.revised");
         builder.Services.AddPortiaEvent<BoundaryDraftCreated>(1, "bdgrz.boundary.draft.created");
@@ -530,9 +537,9 @@ public sealed class ProgramRecoveryE2ETests(RestartableBrokerStackFixture broker
         builder.Services.AddPortiaEvent<BoundarySuccessorProposed>(1,
             "bdgrz.boundary.successor.proposed");
         builder.Services.AddPortia()
-            .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant,
+            .AddCassieProjection<ProgramDirectoryProjector, CassieProgramDirectory>("ProgramDirectory", WorkloadScope.PerTenant,
                 options => options.PollInterval = TimeSpan.FromMilliseconds(10))
-            .AddProjector<BoundaryDirectoryProjector>("BoundaryDirectoryV3",
+            .AddCassieProjection<BoundaryDirectoryProjector, CassieBoundaryDirectory>("BoundaryDirectoryV3",
                 WorkloadScope.PerTenant, options => options.PollInterval = TimeSpan.FromMilliseconds(10))
             .UseSingleProcessWorkloads()
             .AddWorkers();
