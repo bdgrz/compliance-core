@@ -115,6 +115,7 @@ public sealed class ControlRules
     ControlDraftContent? _currentContent;
     bool _discarded;
     Uuid _draftAuthorMemberId;
+    readonly HashSet<Uuid> _proposalAuthors = [];
     bool _everReviewed;
     bool _responsibilityEverAssigned;
     Uuid _acceptedReviewDecisionId;
@@ -198,6 +199,7 @@ public sealed class ControlRules
             _lastContentMemberId = ev.ActorMemberId;
             _lastContentChangedAt = ev.ChangedAt;
             _draftAuthorMemberId = ev.ActorMemberId;
+            _proposalAuthors.Add(ev.ActorMemberId);
             _draftVersionId = ControlVersionIds.Initial(Id);
             _pendingDecisionChangedAt = ev.ChangedAt;
         });
@@ -206,6 +208,8 @@ public sealed class ControlRules
             _draftVersionId = ev.VersionId;
             _draftPredecessorVersionId = ev.PredecessorVersionId;
             _draftAuthorMemberId = ev.ActorMemberId;
+            _proposalAuthors.Clear();
+            _proposalAuthors.Add(ev.ActorMemberId);
             _pendingRetirement = null;
             _acceptedReviewDecisionId = Uuid.Empty;
             _acceptedReviewerMemberId = null;
@@ -220,6 +224,7 @@ public sealed class ControlRules
             _lastContentMemberId = ev.ActorMemberId;
             _lastContentChangedAt = ev.ChangedAt;
             _draftAuthorMemberId = ev.ActorMemberId;
+            _proposalAuthors.Add(ev.ActorMemberId);
             _acceptedReviewDecisionId = Uuid.Empty;
             _acceptedReviewerMemberId = null;
             _latestReviewDecisionId = null;
@@ -278,6 +283,8 @@ public sealed class ControlRules
             _pendingRetirement = new PendingRetirement(ev.RetirementId, ev.VersionId,
                 ev.EffectiveUntil);
             _draftAuthorMemberId = ev.ActorMemberId;
+            _proposalAuthors.Clear();
+            _proposalAuthors.Add(ev.ActorMemberId);
             _acceptedReviewDecisionId = Uuid.Empty;
             _acceptedReviewerMemberId = null;
             _latestReviewDecisionId = null;
@@ -521,6 +528,8 @@ public sealed class ControlRules
                 current.VersionId.ToGuid()));
         if (HasOpenDraft)
             return CommandFailure.StateConflict("The control already has an open successor draft.");
+        if (_pendingRetirement is not null)
+            return CommandFailure.StateConflict("The control already has a pending retirement proposal.");
         var error = Validate(_identifier!, content);
         if (error is not null)
             return CommandFailure.InvalidContent(error.Message!);
@@ -725,7 +734,7 @@ public sealed class ControlRules
         ResponsibilityType decisionType, string action, DateTimeOffset at,
         SeparationOfDutiesWaiverProof? waiver, Uuid? currentOwnerMemberId = null)
     {
-        var isAuthor = memberId == _draftAuthorMemberId;
+        var isAuthor = _proposalAuthors.Contains(memberId);
         var failure = ResponsibilityDecisionGuard.ValidateAuthorized(GetResponsibilitySet(scope), scope,
             memberId, decisionType, at, isAuthor, waiver);
         if (failure is not null)
