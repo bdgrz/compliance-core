@@ -285,6 +285,22 @@ public sealed class MethodologyTemplateDraftTests
         Assert.Throws<InvalidOperationException>(replay);
     }
 
+    [Fact]
+    public void ShouldRefuseOpeningWithEntriesGivenNoPublishedBaseVersion()
+    {
+        // Arrange
+        var scenario = new AggregateScenario<MethodologyTemplateDraft>(new MethodologyTemplateDraft(TemplateId, DraftId));
+        IReadOnlyList<MethodologyTemplateRecordContent> entries = [Entry("A new authored entry")];
+
+        // Act
+        var result = scenario.Aggregate.Open(Uuid.CreateVersion4(), 0, entries, Content(entries));
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Empty(scenario.PendingEvents);
+        Assert.Equal("unopened", scenario.Aggregate.Status);
+    }
+
     static AggregateScenario<MethodologyTemplateDraft> Opened()
     {
         var scenario = new AggregateScenario<MethodologyTemplateDraft>(new MethodologyTemplateDraft(TemplateId, DraftId));
