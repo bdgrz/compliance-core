@@ -68,6 +68,63 @@ public sealed class MethodologyTemplateLineWorkflowTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldPublishOnlyActualChangedKeysGivenNextApprovedVersion(bool changeOriginal)
+    {
+        // Arrange
+        await using var fixture = await Fixture.ApprovedAsync();
+        Assert.True((await fixture.Publish.HandleAsync(System(await fixture.PublicationAsync()), CancellationToken.None)).IsSuccess);
+        var next = Uuid.CreateVersion4();
+        var start = new StartMethodologyTemplateDraft(Uuid.CreateVersion4(), fixture.Template, next);
+        Assert.True((await fixture.Start.HandleAsync(MethodologyTemplateScenario.Context(start, fixture.Author), CancellationToken.None)).IsSuccess);
+        MethodologyTemplateDraftStarted? started = null;
+        ulong startPosition = 0;
+        await foreach (var record in fixture.Scenario.Events.ReadAsync(new MethodologyTemplate(fixture.Template).Stream, 0))
+            if (record.Event is MethodologyTemplateDraftStarted fact && fact.DraftId == next)
+                (started, startPosition) = (fact, record.ResourceOffset);
+        Assert.NotNull(started);
+        var open = new OpenMethodologyTemplateDraft(fixture.Template, next,
+            NativeFactReference.Of(new MethodologyTemplate(fixture.Template).Stream, started), startPosition,
+            Uuid.CreateVersion5(started.Metadata.EventId, nameof(OpenMethodologyTemplateDraft)));
+        Assert.True((await new OpenMethodologyTemplateDraftHandler(fixture.Scenario.Executor,
+            new EventStoreSourceFactResolver(fixture.Scenario.Events), fixture.Scenario.Content)
+            .HandleAsync(System(open), CancellationToken.None)).IsSuccess);
+        var draft = await fixture.Scenario.Reader.HydrateAsync(new MethodologyTemplateDraft(fixture.Template, next));
+        IReadOnlyList<MethodologyTemplateRecordContent> entries =
+        [
+            new("access-review", "control", changeOriginal ? "Monthly access review" : "Quarterly access review", "Review access quarterly.", []),
+            new("security-policy", "policy", "Security policy", "Protect firm information.", []),
+        ];
+        var content = await fixture.Scenario.Content.WriteJsonAsync(MethodologyTemplate.Realm, Uuid.CreateVersion4(),
+            MethodologyTemplateDraft.EntriesSchema, entries, CancellationToken.None);
+        Assert.True(draft.Revise(0, entries, content, fixture.Author).IsSuccess);
+        Assert.True(draft.Review(1, fixture.Reviewer, true, "Reviewed").IsSuccess);
+        Assert.True(draft.Approve(1, fixture.Approver).IsSuccess);
+        await fixture.Scenario.Writer.SaveAsync(draft, new RequestDispatchContext(RequestActor.System));
+        MethodologyTemplateDraftApproved? approved = null;
+        ulong approvalPosition = 0;
+        await foreach (var record in fixture.Scenario.Events.ReadAsync(draft.Stream, 0))
+            if (record.Event is MethodologyTemplateDraftApproved fact)
+                (approved, approvalPosition) = (fact, record.ResourceOffset);
+        Assert.NotNull(approved);
+        var request = new PublishMethodologyTemplateVersion(fixture.Template, next,
+            NativeFactReference.Of(draft.Stream, approved), approvalPosition,
+            Uuid.CreateVersion5(approved.Metadata.EventId, nameof(PublishMethodologyTemplateVersion)));
+
+        // Act
+        var published = await fixture.Publish.HandleAsync(System(request), CancellationToken.None);
+        var facts = await fixture.LineFactsAsync();
+
+        // Assert
+        Assert.True(published.IsSuccess);
+        var publication = Assert.Single(facts.OfType<MethodologyTemplateVersionPublishedV4>().Where(fact => fact.Version == 2));
+        Assert.Equal(changeOriginal ? ["access-review", "security-policy"] : ["security-policy"], publication.ChangedEntryKeys);
+        Assert.Equal(["access-review", "security-policy"], publication.EntryKeys);
+        Assert.Equal(content, publication.EntriesContent);
+    }
+
+    [Theory]
     [InlineData("template")]
     [InlineData("draft")]
     [InlineData("stream")]
@@ -137,9 +194,9 @@ public sealed class MethodologyTemplateLineWorkflowTests
         public Uuid Reviewer { get; } = Uuid.CreateVersion4();
         public Uuid Approver { get; } = Uuid.CreateVersion4();
         EventStoreSourceFactResolver Sources => new(Scenario.Events);
-        public StartMethodologyTemplateDraftHandler Start => new(Scenario.Executor, Scenario.Reader, Sources, Scenario.Content);
+        public StartMethodologyTemplateDraftHandler Start => new(Scenario.Executor, Scenario.Reader, Scenario.Content);
         public PublishMethodologyTemplateVersionHandler Publish => new(Scenario.Executor, Scenario.Reader, Sources, Scenario.Content);
-        public CloseMethodologyTemplateDraftHandler Close => new(Scenario.Executor, Scenario.Reader, Sources, Scenario.Content);
+        public CloseMethodologyTemplateDraftHandler Close => new(Scenario.Executor, Sources, Scenario.Content);
 
         public static async Task<Fixture> StartedAsync()
         {

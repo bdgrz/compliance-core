@@ -214,7 +214,7 @@ public sealed class MethodologyTemplateDraft : Aggregate
             throw new InvalidOperationException("The draft fact belongs to another template or draft identity.");
     }
 
-    static bool ValidManifest(IReadOnlyList<MethodologyTemplateRecordContent>? entries, ImmutableContentRef? content)
+    internal static bool ValidManifest(IReadOnlyList<MethodologyTemplateRecordContent>? entries, ImmutableContentRef? content)
     {
         if (!ValidEntries(entries) || content is null || !ValidReference(content))
             return false;
@@ -232,7 +232,7 @@ public sealed class MethodologyTemplateDraft : Aggregate
                 reference is not null && reference.EditionId != Uuid.Empty && Key(reference.Identifier))) &&
         entries.Select(entry => entry.EntryKey).Distinct(StringComparer.Ordinal).Count() == entries.Count;
 
-    static bool ValidReference(ImmutableContentRef? content) => content is not null && content.ContentId != Uuid.Empty &&
+    internal static bool ValidReference(ImmutableContentRef? content) => content is not null && content.ContentId != Uuid.Empty &&
         content.Schema == EntriesSchema && content.MediaType == "application/json" && content.Bytes > 0 &&
         content.Sha256 is { Length: 64 } hash && hash.All(Uri.IsHexDigit);
     static bool ValidKeys(IReadOnlyList<string>? keys) => keys is { Count: <= 100 } &&

@@ -54,6 +54,24 @@ public sealed class MethodologyTemplateLineTests
     }
 
     [Fact]
+    public void ShouldRefuseNonemptyOpeningWithoutFactGivenNoPublishedVersion()
+    {
+        // Arrange
+        var scenario = Created();
+        IReadOnlyList<MethodologyTemplateRecordContent> entries = [Entry()];
+        var count = scenario.PendingEvents.Count;
+
+        // Act
+        var refused = scenario.Aggregate.StartDraft(Uuid.CreateVersion4(), 0, entries, Content(entries), Operator);
+
+        // Assert
+        Assert.False(refused.IsSuccess);
+        Assert.Equal(count, scenario.PendingEvents.Count);
+        Assert.Null(scenario.Aggregate.OpenDraftId);
+        Assert.Equal("idle", scenario.Aggregate.LineStatus);
+    }
+
+    [Fact]
     public void ShouldPublishOnlyOpenDraftAndKeepExactRetryFactFreeGivenApprovedSnapshot()
     {
         // Arrange
