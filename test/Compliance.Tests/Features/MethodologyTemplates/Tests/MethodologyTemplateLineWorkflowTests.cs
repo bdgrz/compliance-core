@@ -62,7 +62,7 @@ public sealed class MethodologyTemplateLineWorkflowTests
         Assert.True(started.IsSuccess);
         Assert.True(repeated.IsSuccess);
         Assert.Equal(next, owner.OpenDraftId);
-        var fact = Assert.Single(facts.OfType<MethodologyTemplateDraftStarted>().Where(value => value.DraftId == next));
+        var fact = Assert.Single(facts.OfType<MethodologyTemplateDraftStarted>(), value => value.DraftId == next);
         Assert.Equal(1, fact.BasedOnVersion);
         Assert.Equal(original, fact.EntriesContent);
     }
@@ -118,7 +118,7 @@ public sealed class MethodologyTemplateLineWorkflowTests
 
         // Assert
         Assert.True(published.IsSuccess);
-        var publication = Assert.Single(facts.OfType<MethodologyTemplateVersionPublishedV4>().Where(fact => fact.Version == 2));
+        var publication = Assert.Single(facts.OfType<MethodologyTemplateVersionPublishedV4>(), fact => fact.Version == 2);
         Assert.Equal(changeOriginal ? ["access-review", "security-policy"] : ["security-policy"], publication.ChangedEntryKeys);
         Assert.Equal(["access-review", "security-policy"], publication.EntryKeys);
         Assert.Equal(content, publication.EntriesContent);
