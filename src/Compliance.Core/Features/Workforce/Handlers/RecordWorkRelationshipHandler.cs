@@ -61,7 +61,7 @@ public sealed class RecordWorkRelationshipHandler(IAggregateExecutor executor,
                         new RequestError(RequestErrorKind.Forbidden,
                             "Retrying a work relationship requires both restricted workforce field grants.")));
                 return AggregateOutcome.CommitOnSuccess(relationship.Record(request.PersonId,
-                    request.SourceWorkerId ?? "", terms, actor, clock.GetUtcNow()));
+                    request.SourceWorkerId ?? "", terms, actor, clock.GetUtcNow(), request.Source));
             }, context, ct)
             .ConfigureAwait(false);
     }

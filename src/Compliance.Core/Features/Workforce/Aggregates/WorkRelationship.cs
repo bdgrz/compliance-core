@@ -33,6 +33,7 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Work.Commands;
 using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Rules;
 namespace Bdgrz.Compliance.Features.Workforce.Aggregates;
 
 /// <summary>
@@ -51,6 +52,7 @@ public sealed class WorkRelationship : Aggregate
     Uuid _personId;
     string? _sourceWorkerId;
     WorkRelationshipTerms? _initialTerms;
+    WorkforceSourceIdentity? _initialSource;
     WorkRelationshipTerms? _terms;
 
     public bool IsCreated => _created;
@@ -69,6 +71,7 @@ public sealed class WorkRelationship : Aggregate
             _personId = ev.PersonId;
             _sourceWorkerId = ev.SourceWorkerId;
             _initialTerms = ev.Terms;
+            _initialSource = ev.Source;
             _terms = ev.Terms;
             _hasEnded |= ev.Terms is { LifecycleStatus: "ended" };
         });
@@ -137,7 +140,6 @@ public sealed class WorkRelationship : Aggregate
         WorkRelationshipTerms terms, ActorReference actor, DateTimeOffset changedAt,
         WorkforceSourceIdentity? source = null)
     {
-        _ = source;
         var workerId = NormalizeWorkerId(sourceWorkerId);
         if (workerId.Length is 0 or > 100)
             return Result<WorkRelationshipRegistration>.Failure(new RequestError(
@@ -146,14 +148,24 @@ public sealed class WorkRelationship : Aggregate
         if (validation is not null)
             return Result<WorkRelationshipRegistration>.Failure(validation);
         var clean = Clean(terms);
+        var cleanSource = source is null ? null : WorkforceSourceIdentityRules.Normalize(source);
+        if (cleanSource is not null)
+        {
+            var sourceError = WorkforceSourceIdentityRules.InputError(cleanSource);
+            if (sourceError is not null)
+                return Result<WorkRelationshipRegistration>.Failure(new RequestError(RequestErrorKind.Validation, sourceError));
+            if (cleanSource.SourceKind is not ("hris" or "idp"))
+                return Result<WorkRelationshipRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+                    "Work relationship provenance must name an HRIS or identity-provider source."));
+        }
         if (_created)
-            return _personId == personId && _sourceWorkerId == workerId && _initialTerms == clean
+            return _personId == personId && _sourceWorkerId == workerId && _initialTerms == clean && _initialSource == cleanSource
                 ? Result<WorkRelationshipRegistration>.Success(new WorkRelationshipRegistration(Id))
                 : Result<WorkRelationshipRegistration>.Failure(new RequestError(
                     RequestErrorKind.Conflict,
                     "The source worker ID already identifies a different work relationship."));
         RaiseEvent(new WorkRelationshipRecorded(_tenantId, Id, personId, workerId, clean, actor,
-            changedAt));
+            changedAt, cleanSource));
         return Result<WorkRelationshipRegistration>.Success(new WorkRelationshipRegistration(Id));
     }
 
