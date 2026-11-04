@@ -109,7 +109,8 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
     CommitmentReader? commitmentSources = null,
     BoundaryReader? boundarySources = null,
     RiskEvaluationReader? riskEvaluations = null,
-    RiskMethodReader? riskMethods = null)
+    RiskMethodReader? riskMethods = null,
+    IPermissionAuthorizer? sourcePermissions = null)
 {
     public const int SystemEscalationDays = 7;
     public const int DefaultHorizonDays = 30;
@@ -382,6 +383,13 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
             else
                 eligible = await accessReviewQueueEligibility.CanRemediateAsync(tenantId,
                     programId, memberId, systemInstanceId, ct).ConfigureAwait(false);
+        }
+        if (eligible && candidate.Kind == FindingClosureWork.Kind)
+        {
+            var member = await reader.HydrateAsync(Member.ForVerification(tenantId, memberId), ct).ConfigureAwait(false);
+            eligible = sourcePermissions is not null && member.IsRegistered && member.UserId != Uuid.Empty &&
+                await sourcePermissions.IsAllowedAsync(tenantId, member.UserId, memberId,
+                    Bdgrz.Compliance.Features.Remediation.Contracts.FindingClosurePermissions.Review, ct).ConfigureAwait(false);
         }
         if (eligible)
             eligible = await CanAssignAsync(tenantId, candidate, memberId, ct).ConfigureAwait(false);

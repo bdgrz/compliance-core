@@ -39,27 +39,18 @@ static class FindingClosureWork
 
     public static WorkCandidate? Candidate(FindingClosureWorkState finding)
     {
-        if (finding.Closed || finding.Actions.Length == 0 ||
+        if (finding.Closed || finding.Proposal is not { } proposal ||
             finding.Actions.Any(static action => action.Status is not (FindingStates.Completed or FindingStates.Cancelled)))
             return null;
-        var excluded = finding.Actions.Select(static action => action.OwnerMemberId).ToHashSet();
-        excluded.Add(finding.OwnerMemberId);
-        foreach (var action in finding.Actions)
-        {
-            if (action.CompletedByMemberId is { } completer)
-                excluded.Add(completer);
-            if (action.CancelledByMemberId is { } canceller)
-                excluded.Add(canceller);
-        }
         var identity = Uuid.CreateVersion5(finding.FindingId,
-            $"finding-closure\n{finding.Revision.ToString(CultureInfo.InvariantCulture)}");
+            $"finding-closure-review\n{proposal.ClosureId}\n{proposal.Revision.ToString(CultureInfo.InvariantCulture)}");
         return new WorkCandidate(WorkCandidate.IdFor(identity, Kind), Kind, finding.FindingId,
-            null, finding.FindingId, $"Verify and close finding: {finding.Title}",
-            $"Resolved corrective work at finding revision {finding.Revision} awaits independent verification.",
-            finding.DueOn, FindingStates.Materiality(finding.Severity), "close",
-            $"/api/v1/tenants/{finding.TenantId}/programs/{finding.ProgramId}/findings/{finding.FindingId}/closures",
+            null, finding.FindingId, $"Review finding closure: {finding.Title}",
+            $"Closure proposal revision {proposal.Revision} awaits independent Compliance Lead review.",
+            finding.DueOn, FindingStates.Materiality(finding.Severity), "review",
+            $"/api/v1/tenants/{finding.TenantId}/programs/{finding.ProgramId}/findings/{finding.FindingId}/closure-proposals/{proposal.ClosureId}/revisions/{proposal.Revision}/reviews",
             new OperatingHolder(OperatingAuthority.ProgramManagerHolder, finding.ProgramId),
-            null, excluded, finding.ChangedAt);
+            null, proposal.Authors.ToHashSet(), proposal.ProposedAt);
     }
 
     public static WorkCandidate? Candidate(FindingView finding) => Candidate(new FindingClosureWorkState(
@@ -68,5 +59,10 @@ static class FindingClosureWork
         finding.CorrectiveActions.Select(static action => new FindingClosureActionState(action.ActionId,
             action.OwnerMemberId, action.Status, action.CompletedByMemberId, action.CancelledByMemberId,
             action.CancellationReason)).ToArray(),
-        finding.Closure is not null, finding.History.Max(static entry => entry.At)));
+        finding.Closure is not null, finding.History.Max(static entry => entry.At), Proposal(finding)));
+
+    internal static FindingClosureProposalWorkState? Proposal(FindingView finding) =>
+        finding.ClosureProposal is not { } proposal ? null :
+            new FindingClosureProposalWorkState(proposal.ClosureId, proposal.ProposalRevision,
+                proposal.Authors ?? [Uuid.Parse(proposal.ProposedBy.Id, CultureInfo.InvariantCulture)], proposal.ProposedAt);
 }

@@ -19,7 +19,7 @@ sealed class CassieFindingClosureWorkItemDirectory(CassieProjectionDatabase data
     : CassieProjectionRepository(database, ProjectorName),
         IAccountableWorkItemDirectoryReader, IFindingClosureWorkItemProjection
 {
-    public const string ProjectorName = "AccountableWorkItemFindingClosureV4";
+    public const string ProjectorName = "AccountableWorkItemFindingClosureV5";
 
     string IAccountableWorkItemDirectoryReader.ProjectorName => ProjectorName;
     public IReadOnlyCollection<string> ProjectedKinds => [FindingClosureWork.Kind];
@@ -101,6 +101,9 @@ sealed class CassieFindingClosureWorkItemDirectory(CassieProjectionDatabase data
             if (finding is null || finding.TenantId != tenantId || finding.ProgramId != programId ||
                 finding.FindingId == Uuid.Empty || finding.FindingId.ToString() != rows.GetString(0) ||
                 finding.OwnerMemberId == Uuid.Empty || finding.Revision < 1 || finding.Actions is null ||
+                finding.Proposal is { } proposal && (proposal.ClosureId == Uuid.Empty || proposal.Revision < 1 ||
+                    proposal.Authors is null || proposal.Authors.Count == 0 || proposal.Authors.Any(author => author == Uuid.Empty) ||
+                    proposal.Authors.Distinct().Count() != proposal.Authors.Count || proposal.ProposedAt == default) ||
                 finding.Actions.Any(static action => action is null || action.OwnerMemberId == Uuid.Empty ||
                     action.ActionId == Uuid.Empty || action.Status is not (FindingStates.Open or FindingStates.Completed or FindingStates.Cancelled) ||
                     action.Status == FindingStates.Completed && (action.CompletedByMemberId is null || action.CompletedByMemberId == Uuid.Empty) ||
@@ -143,7 +146,7 @@ sealed class CassieFindingClosureWorkItemDirectory(CassieProjectionDatabase data
         view.Revision, view.Title, view.Severity, view.OwnerMemberId, view.DueOn,
         view.CorrectiveActions.Select(static action => new FindingClosureActionState(action.ActionId,
             action.OwnerMemberId, action.Status, action.CompletedByMemberId, action.CancelledByMemberId,
-            action.CancellationReason)).ToArray(), view.Closure is not null, view.History.Max(static entry => entry.At));
+            action.CancellationReason)).ToArray(), view.Closure is not null, view.History.Max(static entry => entry.At), FindingClosureWork.Proposal(view));
 
     static bool SameCandidates(WorkCandidate[] expected, IReadOnlyList<WorkCandidate> actual) =>
         expected.Length == actual.Count && expected.OrderBy(static item => item.WorkItemId.ToString(), StringComparer.Ordinal)
