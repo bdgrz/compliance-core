@@ -529,6 +529,28 @@ public sealed class AdvisorRecordVersionResolverTests
     }
 
     [Fact]
+    public async Task ShouldRefusePreviewGivenSupportWithdrawnWhileReadingSelectedEvidence()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (support, selected) = await fixture.SeedSupportAsync();
+        var handoffId = Uuid.CreateVersion4();
+        var create = new CreateAdvisorHandoff(fixture.TenantId, fixture.ProgramId, handoffId,
+            [selected], "Exact evidence", AdvisorHost.Expiry);
+        Assert.True((await fixture.CreateHandler.HandleAsync(fixture.Http(create), CancellationToken.None)).IsSuccess);
+        var sources = new AfterReadSourceReader(fixture.SharedSources, () => fixture.WithdrawAsync(support));
+        var handler = new PreviewAdvisorHandoffHandler(fixture.Handoffs, fixture.Resolver(), sources, fixture.Clock);
+
+        // Act
+        var result = await handler.HandleAsync(fixture.Http(new PreviewAdvisorHandoff(
+            fixture.TenantId, fixture.ProgramId, handoffId)), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(1, (await fixture.Handoffs.ReadAsync(fixture.TenantId, fixture.ProgramId, handoffId)).Revision);
+    }
+
+    [Fact]
     public async Task ShouldRejectLegacyUuidPairGivenUnresolvedSourceFamily()
     {
         // Arrange
@@ -605,7 +627,7 @@ public sealed class AdvisorRecordVersionResolverTests
                 ActorReference.ForMember(MemberId, "Lead"), Now));
             await Writer.SaveAsync(support, SystemDispatch);
             return (support, AdvisorRecordVersion.EvidenceArtifact(artifact.Id, artifact.Revision,
-                (ulong)artifact.Revision, artifact.ContentSha256, support.Id));
+                (ulong)artifact.Revision, artifact.ContentSha256!, support.Id));
         }
 
         public async Task WithdrawAsync(EvidenceSupport support)
@@ -785,6 +807,18 @@ public sealed class AdvisorRecordVersionResolverTests
         {
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
+        }
+    }
+
+    sealed class AfterReadSourceReader(IAdvisorSharedSourceReader inner, Func<Task> afterRead)
+        : IAdvisorSharedSourceReader
+    {
+        public async ValueTask<Result<AdvisorSharedSourceView>> GetAsync(Uuid tenantId, Uuid programId,
+            Uuid handoffId, AdvisorRecordVersion selectedSource, CancellationToken ct = default)
+        {
+            var result = await inner.GetAsync(tenantId, programId, handoffId, selectedSource, ct);
+            await afterRead();
+            return result;
         }
     }
 
