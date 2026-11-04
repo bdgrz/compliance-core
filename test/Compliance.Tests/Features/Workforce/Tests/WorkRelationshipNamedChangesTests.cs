@@ -115,7 +115,7 @@ public sealed class WorkRelationshipNamedChangesTests
         var failure = Apply(relationship, kind, 1);
 
         // Assert
-        AssertRefusal(relationship, failure, CommandFailureCode.StateConflict);
+        AssertRefusal(relationship, failure, CommandFailureCode.StateConflict, expectedPending: 0);
     }
 
     [Fact]
@@ -204,7 +204,8 @@ public sealed class WorkRelationshipNamedChangesTests
             "Correction", Author, Now);
 
         // Assert
-        AssertRefusal(relationship, failure, CommandFailureCode.InvalidContent);
+        AssertRefusal(relationship, failure, CommandFailureCode.InvalidContent,
+            expectedPending: status == "ended" ? 0 : 1);
     }
 
     [Fact]
@@ -220,7 +221,7 @@ public sealed class WorkRelationshipNamedChangesTests
         // Assert
         Assert.Null(corrected);
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(restarted).Code);
-        Assert.Equal(2, new AggregateScenario<WorkRelationship>(relationship).PendingEvents.Count);
+        Assert.Single(new AggregateScenario<WorkRelationship>(relationship).PendingEvents);
     }
 
     [Theory]
@@ -293,15 +294,23 @@ public sealed class WorkRelationshipNamedChangesTests
     static WorkRelationship Recorded(string status = "active", string workerType = "external_collaborator")
     {
         var relationship = New();
-        Assert.True(relationship.Record(Person, "E-100", new WorkRelationshipTerms(workerType, status,
-            Start, status == "ended" ? Start.AddMonths(1) : null, "Engineering", Manager, Sponsor), Author, Now).IsSuccess);
-        return relationship;
+        var terms = new WorkRelationshipTerms(workerType, status,
+            Start, status == "ended" ? Start.AddMonths(1) : null, "Engineering", Manager, Sponsor);
+        if (status is "pending" or "active")
+        {
+            Assert.True(relationship.Record(Person, "E-100", terms, Author, Now).IsSuccess);
+            return relationship;
+        }
+        var historical = DomainEventSeed.Attach(new WorkRelationshipRecorded(Tenant, relationship.Id,
+            Person, "E-100", terms, Author, Now), relationship.Id, 1);
+        return NativeFacts.Replay(relationship, [historical]);
     }
 
-    static void AssertRefusal(WorkRelationship relationship, CommandFailure? failure, CommandFailureCode code)
+    static void AssertRefusal(WorkRelationship relationship, CommandFailure? failure, CommandFailureCode code,
+        int expectedPending = 1)
     {
         Assert.Equal(code, Assert.IsType<CommandFailure>(failure).Code);
-        Assert.Single(new AggregateScenario<WorkRelationship>(relationship).PendingEvents);
+        Assert.Equal(expectedPending, new AggregateScenario<WorkRelationship>(relationship).PendingEvents.Count);
         Assert.Equal(1, relationship.Revision);
     }
 

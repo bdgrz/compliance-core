@@ -245,8 +245,14 @@ public sealed class WorkRelationshipLifecycleTests
     static WorkRelationship Recorded(string status)
     {
         var relationship = New();
-        Assert.True(relationship.Record(PersonId, "E-100", Terms(status), Author, Now).IsSuccess);
-        return relationship;
+        if (status is "pending" or "active")
+        {
+            Assert.True(relationship.Record(PersonId, "E-100", Terms(status), Author, Now).IsSuccess);
+            return relationship;
+        }
+        var historical = DomainEventSeed.Attach(new WorkRelationshipRecorded(TenantId, relationship.Id,
+            PersonId, "E-100", Terms(status), Author, Now), relationship.Id, 1);
+        return NativeFacts.Replay(relationship, [historical]);
     }
 
     static WorkRelationshipTerms Terms(string status) => new("employee", status, Start,

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce.Models;
@@ -100,7 +101,7 @@ public sealed class WorkRelationshipInitialAdmissionTests
         var failure = relationship.Start(1, Start, Author, Now);
 
         // Assert
-        Assert.NotNull(failure);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(failure).Code);
         Assert.Equal(1, relationship.Revision);
         Assert.Empty(new AggregateScenario<WorkRelationship>(relationship).PendingEvents);
     }

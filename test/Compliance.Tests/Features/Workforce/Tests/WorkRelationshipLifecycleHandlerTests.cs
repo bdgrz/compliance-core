@@ -6,6 +6,7 @@ using Bdgrz.Compliance.Features.Workforce.Commands;
 using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce.Handlers;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -78,11 +79,17 @@ public sealed class WorkRelationshipLifecycleHandlerTests
     static WorkRelationship New(Uuid tenant, string status)
     {
         var relationship = new WorkRelationship(tenant, WorkRelationship.IdFor(tenant, "E-100"));
-        Assert.True(relationship.Record(Uuid.CreateVersion4(), "E-100",
-            new WorkRelationshipTerms("employee", status, Start, null, null, null, null),
-            Bdgrz.Compliance.Features.AccessControl.Models.ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder"),
-            DateTimeOffset.UtcNow).IsSuccess);
-        return relationship;
+        var person = Uuid.CreateVersion4();
+        var terms = new WorkRelationshipTerms("employee", status, Start, null, null, null, null);
+        var actor = Bdgrz.Compliance.Features.AccessControl.Models.ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder");
+        if (status is "pending" or "active")
+        {
+            Assert.True(relationship.Record(person, "E-100", terms, actor, DateTimeOffset.UtcNow).IsSuccess);
+            return relationship;
+        }
+        var historical = DomainEventSeed.Attach(new WorkRelationshipRecorded(tenant, relationship.Id,
+            person, "E-100", terms, actor, DateTimeOffset.UtcNow), relationship.Id, 1);
+        return NativeFacts.Replay(relationship, [historical]);
     }
 
     static ValueTask<Result> SendAsync(string command, OwnerExecutor executor, Uuid tenant,
