@@ -45,6 +45,7 @@ public sealed class Person : Aggregate
         On<PersonMembershipCorrelated>(ObserveLegacy);
         On<PersonRegistrationRecorded>(ObserveNative);
         On<PersonDetailsRevised>(ObserveNative);
+        On<PersonDetailsChanged>(ObserveNative);
         On<PersonMembershipCorrelationRecorded>(ObserveNative);
     }
     public Uuid TenantId { get; }
