@@ -77,7 +77,7 @@ abstract class CassieWorkforceRepository : CassieProjectionRepository
         var take = Math.Clamp(limit, 1, 200);
         var fetchLimit = (take + 1).ToString(CultureInfo.InvariantCulture);
         await using var read = await OpenReadAsync(ct).ConfigureAwait(false);
-        await using var command = read.CreateCommand($"SELECT row_json, {sortColumn}, model_id FROM {table} WHERE projection_key = @scope{filter}" +
+        await using var command = read.CreateCommand($"SELECT row_json, {sortColumn} AS page_sort, model_id AS page_id FROM {table} WHERE projection_key = @scope{filter}" +
             (after is null ? "" : $" AND ({sortColumn} > @after OR ({sortColumn} = @after AND model_id > @after_id))") +
             $" ORDER BY {sortColumn}, model_id LIMIT {fetchLimit}");
         Bind(command, ("scope", scope));
