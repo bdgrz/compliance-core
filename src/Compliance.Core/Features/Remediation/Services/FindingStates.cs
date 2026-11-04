@@ -18,6 +18,7 @@ namespace Bdgrz.Compliance.Features.Remediation.Services;
 public static class FindingStates
 {
     public const string Open = "open";
+    public const string Closing = "closing";
     public const string Remediated = "remediated";
     public const string Closed = "closed";
     public const string Accepted = "accepted";
