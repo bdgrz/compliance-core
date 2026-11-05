@@ -9,8 +9,9 @@ or a claim that any context is complete.
 
 ## Recommendation
 
-Prioritize authoritative access and identity, the criteria/program foundation,
-then the workflows that produce compliance evidence. Build readiness and
+Prioritize organization access, then published criteria and program creation so a
+client can start a compliance effort. Follow with people/member linkage and the
+workflows that produce compliance evidence. Build readiness and
 examination conclusions from those facts. Integrate useful preserved work in
 bounded capabilities; do not restart it or merge entire WIP branches.
 
@@ -48,8 +49,8 @@ upstream failure.
 | Order | Capability and contexts | Concrete remaining work | Dependency / reason for this position |
 | --- | --- | --- | --- |
 | 1 | **Access authority and continuity** — [Platform access](contexts/platform-access.md) | Scoped team roles and custom-role permission admission; guest program caps on membership episodes; built-in protections and immediate deleted-role/team denial; primary designation with Member outcomes and creator bootstrap; rejected-first-slug recovery. Retire direct member-grant authority with its replacement. | PA-01/02/03/18/21/27 govern every later actor matrix. Primary protection must exist before removing legacy ordinary-admin continuity restrictions (PA-23). Finish coherent permissions, not just new scope fields. |
-| 2 | **Stable people and platform identities** — [Workforce](contexts/workforce-assurance.md), Platform access | Authoritative member-to-one-Person admission with many members per Person; Org Admin link/unlink and current-episode consumers. Complete verified-email claim and same-user sign-in recovery as a separate access capability. Align the UserId-keyed firm-staff directory before new professional assignment consumers. | WF-05 supplies person-owned control, review and campaign authority. PA-10/11 must preserve the actor identity attached to historical approvals. Do not make recovery completion a dependency of unrelated manual business authoring. |
-| 3 | **Published criteria and canonical program/scope** — [Criteria](contexts/criteria.md), [Program and scope](contexts/program-and-scope.md) | Runtime edition/entry publication, mandatory published edition at Program creation, named targets/stages, program-keyed boundary, all-author one-step boundary review and discard of never-approved drafts. Then applicability revisions/POFs and shared applicable-criteria composition. | CR-01/08 precede the target CreateProgram contract. The current static catalog is useful existing data, not runtime publication authority. Boundary scope may use the explicitly permitted typed unresolved references; do not wait for every inventory. Stage consumers attach when their exact readiness/outcome sources exist. |
+| 2 | **Published criteria and canonical program/scope** — [Criteria](contexts/criteria.md), [Program and scope](contexts/program-and-scope.md) | Runtime edition/entry publication with independent criterion owners and bounded admission windows (CR-09/10), mandatory published edition at Program creation, named targets/stages, program-keyed boundary, all-author one-step boundary review and discard of never-approved drafts. Then applicability revisions/POFs and shared applicable-criteria composition. | CR-01/08 precede the target CreateProgram contract. The current static catalog is useful existing data, not runtime publication authority. Boundary scope may use the explicitly permitted typed unresolved references; do not wait for every inventory. Stage consumers attach when their exact readiness/outcome sources exist. |
+| 3 | **Stable people and platform identities** — [Workforce](contexts/workforce-assurance.md), Platform access | Authoritative member-to-one-Person admission with many members per Person; Org Admin link/unlink and current-episode consumers. Complete verified-email claim and same-user sign-in recovery as a separate access capability. Align the UserId-keyed firm-staff directory before new professional assignment consumers. | WF-05 supplies person-owned control, review and campaign authority. PA-10/11 must preserve the actor identity attached to historical approvals. Do not make recovery completion a dependency of unrelated manual business authoring. |
 | 4 | **Manual inventories and source identities** — Workforce, [Application inventory](contexts/application-inventory.md), [Technology/information](contexts/technology-and-information-inventory.md), provider foundation in [Risk/provider](contexts/risk-and-provider-oversight.md) | Finish workforce lifecycle/owner reads; applications, aliases, instance owner override, access-review scope, merge-to-live-survivor and retirement/instance admission; named technology/information/location/process lifecycles and final retirement; provider identities and ownership. Resolve boundary references as records become available. | These are the subjects of controls, access populations, risk and description citations. Preserve the source-observation revision fence and canonical application outcomes in the later workforce reconciliation slice; no HRIS connector or roster-file importer is needed to use the manual path. |
 | 5 | **Usable evidence and protection** — [Evidence](contexts/evidence.md), [Retention](contexts/retention.md) | Complete capture/inspection and derivative provenance; handling-class/restricted access; terminal independent redaction review; support withdrawal with historical-versus-new-use consumers; person/team requests and fulfilment links. Add source-derived disclosures, artifact retention set/extend, and tenant HoldRegister legal/engagement coverage. | Exact available artifact versions underpin attestations, action completion and packages. EV-03/06 disclosures feed RT-06/08 coverage. The register's authoritative disposal decision must exist before target DisposeArtifact is enabled. Final package-dependent hold release comes later. |
 | 6 | **Governed controls and commitments** — [Control environment](contexts/control-environment.md), [Commitments](contexts/commitments.md) | Complete control version terms (kind, nature, cadence, subject, evidence), all-author proposals, effective person/team ControlResponsibility, reviewed mapping/unmapping and retirement. Deliver one-step commitment governance and version-bound commitment/control pair links. | CE-01/02 are prerequisites for correct occurrence identities and actor policy. Move boundary responsibility ownership with the control consumer cutover. CM-05 and CE-09 retain identifier authority in their own streams. |
@@ -67,18 +68,20 @@ upstream failure.
 1. **Restore native qualification** using #1188's single probe. Revalidate the
    already-assembled Support/Finding/Access/Program wiring before accepting it.
    The latest build repair is not another business slice to rewrite.
-2. **Finish scoped access as one capability.** Inspect
-   `wip/proposed-access-cassie` through `686b415c`: scope/guest source exists,
-   but the last commit is a behavioral test specification, not proof of GREEN.
-   Complete authoritative permission consumers, guest caps, role protections and
-   public/read paths. Then implement primary continuity separately.
-3. **Finish Person/member linkage** from `wip/proposed-workforce` (`c7277f6b`),
+2. **Deliver Criteria publication plus Program creation**, then canonical
+   boundary review. Use the locked [CR-09/10](contexts/criteria.md#decisions)
+   independent criterion owners, admitted outcomes and bounded windows. The
+   static catalog supplies seed data, not publication authority; preserve its
+   partial-coverage disclosures. Inspect preserved program/scope preparation at
+   `wip/proposed-program-scope-cassie` (`44c8cb49`) selectively; its branch tip
+   is not acceptance proof. The client can then start a compliance effort.
+3. **Finish scoped access acceptance.** Complete command-side target/reference
+   admission and full scoped public/native transport qualification. Creator
+   primary continuity and first-slug recovery are already assembled; do not redo
+   those completed source slices or mark Platform access complete.
+4. **Finish Person/member linkage** from `wip/proposed-workforce` (`c7277f6b`),
    including the Member admission answer, source-bound receiving effect,
    many-member Person view, unlink/relink races and real actor/read consumers.
-4. **Deliver Criteria publication plus Program creation**, then canonical
-   boundary review. `wip/proposed-program-scope-cassie` (`44c8cb49`) contains
-   prepared named-lifecycle work; the missing runtime Criteria publication owner
-   is a real prerequisite, not satisfied by a static catalog lookup.
 5. **Advance two ready business slices in selection order:** evidence protection
    from `wip/resume-evidence-code` (`2322936a`), then control terms/responsibility
    and operating outcomes from `wip/resume-controls-code` (`6ae26774`). They can

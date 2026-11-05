@@ -48,8 +48,13 @@ readiness ≤ Type I as-of ≤ Type II start ≤ Type II end.
 
 - A target-date revision is appended with its author; earlier targets are kept.
   Missing dates stay unknown, never placeholders (M0-D01).
-- A program holds one exact criteria edition. Moving to a newer edition is an
-  explicit, attributed selection.
+- A program holds one exact published criteria edition. The client supplies the
+  stable `ProgramId`; an exact authorized creation retry returns its original
+  result and changed creation intent under the same ID conflicts. Publication is
+  irreversible, so the committed edition source can be verified before the
+  program records that exact ID without a continuing reservation. A projection is
+  not publication authority. Moving to a newer edition is an explicit, attributed
+  selection; there is no automatic upgrade.
 - A stage change is an attributable decision that references the readiness
   decision or examination outcome it relied on (PS-03).
 

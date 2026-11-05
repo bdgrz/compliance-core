@@ -11,6 +11,16 @@ The reviews below did not execute tests. Named tests are evidence to qualify,
 not proof of current GREEN, complete workflows or merged acceptance. No context
 is declared complete by this ledger, and SQL migration does not close business gaps.
 
+## 2026-11-05 criteria authority decision
+
+[CR-09/10](contexts/criteria.md#decisions) lock independent criterion owners,
+bounded draft admission windows, exact participant outcomes/fencing and a verified
+published source-cut manifest. This is design, not implemented behavior. The
+static catalog remains data only; preserve its fixed ID and partial-coverage
+warnings until a source-backed publication migration is qualified. Program
+creation must select a published edition. Historical handoffs remain evidence of
+their revision, not evidence that the updated design is already implemented.
+
 ## 2026-11-05 organization bootstrap supplement
 
 [Organization creation and primary administration](reviews/organization-bootstrap.md)

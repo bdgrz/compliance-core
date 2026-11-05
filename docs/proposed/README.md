@@ -33,7 +33,7 @@ Mermaid flow diagrams, its decisions with Jev evidence, and its open questions.
 | [Examinations](contexts/examinations.md) | Locked 2026-11-03 |
 | [Auditor collaboration](contexts/auditor-collaboration.md) | Locked 2026-11-03 |
 | [Commitments](contexts/commitments.md) | Locked 2026-11-03 |
-| [Criteria](contexts/criteria.md) | Locked 2026-11-03 |
+| [Criteria](contexts/criteria.md) | Locked; authority revised 2026-11-05 |
 | [Control environment](contexts/control-environment.md) | Locked 2026-11-03 |
 | [Evidence](contexts/evidence.md) | Locked 2026-11-03 |
 | [Retention](contexts/retention.md) | Locked 2026-11-03 |

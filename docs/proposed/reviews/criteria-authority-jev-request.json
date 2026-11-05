@@ -1,0 +1,52 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "date": "2026-11-05",
+    "sources": [
+      "docs/proposed/contexts/criteria.md CR-01/02/08",
+      "docs/proposed/contexts/conventions.md CV-05/10/11/12/13",
+      "docs/proposed/decisions/m0-d02-criteria-content.md"
+    ],
+    "user_preference": "Aggregates should not need to own all their children to be correct; small focused aggregates and bounded blast radius. Preserve separately owned Criterion entries. Ask advisory focused design questions, not model proof.",
+    "existing_catalog": "61 numbered criteria plus 6 selected points of focus. Points of focus are partial and Privacy lifecycle unsupported. Existing content store limit 16 MiB. This seed is not a complete sizing benchmark.",
+    "proposal": "Edition is one immutable ID; each Criterion owns structural identity and lifecycle. Every structural addition/removal and parent-link mutation first obtains the only in-flight admission on a short-lived edition draft window. Each target commits acceptance/refusal with an exact operation token. Only after the durable outcome is recorded does admission proceed. Unknown outcomes stay pending. No time-based release; canceled empty or populated targets must durably fence the exact token before release, so delayed commands cannot mutate. A sealed window disallows further mutations, then publication validates a complete authoritative source cut and persists hash/count/edition and disclosure manifest. A publication request remains pending until the exact publication owner records acceptance/refusal; reopening requires authoritative refusal/fence. The selected manifest proves the published set; Criterion streams still own structural facts and summary corrections. A window retires after at most 128 terminal operations, reserves space for terminal facts, and commits one deterministic successor. Next window admits only after verifying predecessor closure; current head is found from genesis or a hint with source proof and then successor traversal. Each window has one in-flight item, so no child roster; single stream and in-memory state bounded. Edition and per-criterion event streams may still grow with that record own lifecycle; no blanket hard bound. Label is a structured code, unique even on draft and rename. Each normalized label has an independent exclusive claim with exact reservation, owner outcome and fenced release. Claim history can grow under repeated reuse; epoch rollover must be source-proven before strict history bounds claimed. Program creation checks irrevocably published edition source, stores edition ID with client-provided program ID; exact retry same intent and actor subject to current authorization. Read models do not decide publication or uniqueness."
+  },
+  "questions": {
+    "separate_children": {
+      "type": "noul",
+      "instructions": "Can edition publication remain correct while each Criterion independently owns its own identity and structural facts, using authoritative serialized admission and recorded participant outcomes?"
+    },
+    "snapshot_alone": {
+      "type": "noul",
+      "instructions": "Would an immutable published snapshot alone prevent a delayed structural child command from committing after publication, without authoritative admission and fencing?"
+    },
+    "seal_wait": {
+      "type": "noul",
+      "instructions": "Does publication require every previously admitted child operation to have a terminal outcome before the structural admission gate is sealed?"
+    },
+    "fence_empty": {
+      "type": "noul",
+      "instructions": "Before releasing a pending child admission, must cancellation fence delayed writes even when the target child does not yet exist?"
+    },
+    "bounded_window": {
+      "type": "noul",
+      "instructions": "Does retiring each admission window after 128 terminal operations limit that individual window stream, assuming retries append no duplicate facts and each operation has a fixed bounded number of records?"
+    },
+    "claim_uniqueness": {
+      "type": "noul",
+      "instructions": "Is a normalized-code claim owner needed to enforce uniqueness when two operators concurrently choose the same reusable edition label?"
+    },
+    "program_read": {
+      "type": "noul",
+      "instructions": "Once a published edition is irrevocable, can a program safely record the exact published edition ID after an authoritative source read without holding a continuing edition reservation?"
+    },
+    "seed_completeness": {
+      "type": "noul",
+      "instructions": "Would publication of the existing partial points-of-focus seed establish that all points of focus and Privacy lifecycle support are complete?"
+    },
+    "summary_ownership": {
+      "type": "noul",
+      "instructions": "Can per-criterion summary corrections remain independent after publication, given the published set of entry identities cannot change?"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "source": "docs/proposed/contexts/conventions.md CV-05/10/11/12 and criteria.md CR-01/02. One event stream per criterion. Edition publication forbids any further structural adds/removes. Child commands are idempotent only when their token is known or fenced.",
+    "race_1": "Criterion addition X reserves a gate token. The child command has been sent but no result was recorded. Publisher reads the current children and writes a published membership snapshot without waiting. Afterwards the original child command X commits CriterionAdded for this edition.",
+    "race_2": "An add command reserves token X for a Criterion stream that does not exist. The coordinator times out and releases X without writing any fact that fences X on the target. Publication completes. A delayed original command with token X later reaches the previously empty child stream.",
+    "window": "A draft admission window has one pending operation at most, records no more than 128 admitted operations each with one durable outcome, and no more than four fixed control facts. Exact retries append no duplicate facts. Its successor is fixed by one terminal closure fact, and a stale sender cannot append to the closed window."
+  },
+  "questions": {
+    "race_1_late_child": {
+      "type": "noul",
+      "instructions": "In race_1, can CriterionAdded commit after the edition is published, despite the publication snapshot?"
+    },
+    "race_2_empty_target": {
+      "type": "noul",
+      "instructions": "In race_2, can the delayed original command create the criterion after publication if the empty target has no durable token fence?"
+    },
+    "gate_must_not_seal_pending": {
+      "type": "noul",
+      "instructions": "To prevent race_1 without compensation, must a publication gate wait for the previously admitted operation to have a recorded terminal outcome before sealing?"
+    },
+    "window_limit": {
+      "type": "noul",
+      "instructions": "Does the window described have a hard maximum of 260 domain facts when the stated per-operation and fixed-fact bounds are enforced?"
+    }
+  }
+}

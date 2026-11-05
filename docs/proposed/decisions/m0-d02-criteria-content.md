@@ -25,6 +25,14 @@ Status: decided, 2026-09-22. Decision owner: Jeff Repanich, product owner.
   Licensed text never lives in platform-level content or in the repository.
 - A control mapping references `(edition_id, identifier)`, never text.
 
+## Ownership and publication update — 2026-11-05
+
+CR-09/10 in [Criteria](../contexts/criteria.md) retain one independent criterion
+owner per edition and identifier. Bounded admission windows serialize structural
+changes and publication; a verified manifest proves the accepted frozen set. It
+is not an edition-owned mutable roster and does not replace criterion outcomes.
+The existing seed ID, partial-coverage disclosures and license boundary remain.
+
 ## Repository check
 
 The platform seed and tenant-overlay contracts are described in
