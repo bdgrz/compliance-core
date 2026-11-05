@@ -4,8 +4,9 @@ This folder is the source of truth for Compliance Core's domain rules and write
 model. The write model is designed one bounded context at a time, in
 hand-authored context docs; code follows the docs.
 
-Implementation is paused. Read the [restart handoff and concurrent-agent plan](restart-handoff.md)
-before resuming; source checkpoints and audits are not completed domain acceptance.
+Implementation resumed on 2026-11-05. Read the [latest restart checkpoint](restart-handoff.md)
+for verified state and the [implementation order](implementation-order.md) for the
+recommended remaining queue. Source checkpoints and audits are not completed domain acceptance.
 
 - [Domain model](domain-model.md): modeling rules, process spine and context map.
 - [Context conventions](contexts/conventions.md): rules every context cites.
@@ -13,6 +14,8 @@ before resuming; source checkpoints and audits are not completed domain acceptan
 - [Read models](read-models.md): the read-layer plan. Where its names differ
   from a context doc, the context doc wins.
 - [External-source boundary](partner-seam.md).
+- [Implementation order](implementation-order.md): remaining capabilities, dependencies,
+  immediate queue and separate qualification gates.
 
 ## Bounded contexts (source of truth)
 
