@@ -197,7 +197,7 @@ public sealed class MemberLifecycleTests
         var scenario = new AggregateScenario<Member>(member);
 
         // Act
-        var result = MemberFacts.Register(scenario.Aggregate, "guest", GuestExpiresOn);
+        var result = MemberFacts.Register(scenario.Aggregate, "guest", GuestExpiresOn, programIds: [Uuid.CreateVersion4()]);
 
         // Assert
         Assert.True(result.IsSuccess);

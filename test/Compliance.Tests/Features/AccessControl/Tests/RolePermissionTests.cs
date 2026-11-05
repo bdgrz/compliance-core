@@ -210,7 +210,7 @@ public sealed class RolePermissionTests
     {
         // Arrange
         var id = Uuid.CreateVersion4();
-        var owner = new RolePermission(TenantId, RoleId, " CONTROLS.READ ", id);
+        var owner = new RolePermission(TenantId, RoleId, " PROGRAM.MANAGE ", id);
         var scenario = new AggregateScenario<RolePermission>(owner)
             .Given(DomainEventSeed.Attach(Assigned(id), owner.Id, 1));
 
@@ -243,7 +243,7 @@ public sealed class RolePermissionTests
     public async Task ShouldDenyBeforeRetryResolutionGivenAnUnauthorizedActor()
     {
         // Arrange
-        await using var provider = Services();
+        await using var provider = Services(allowed: false);
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var request = new AssignRolePermission(TenantId, RoleId, Permission, Uuid.CreateVersion4(), 0);
@@ -341,7 +341,7 @@ public sealed class RolePermissionTests
         Assert.Equal(assignment, Assert.IsType<RolePermissionRemoved>(restored[1]).AssignmentId);
     }
 
-    static ServiceProvider Services() => RbacManagementServices.Build(allowed: true,
+    static ServiceProvider Services(bool allowed = true) => RbacManagementServices.Build(allowed,
         portia => portia.AddRequestHandler<AssignRolePermissionHandler>()
             .AddRequestHandler<RemoveRolePermissionHandler>());
 

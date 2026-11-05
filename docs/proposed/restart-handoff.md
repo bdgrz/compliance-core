@@ -1,3 +1,26 @@
+# Scoped access checkpoint — 2026-11-05
+
+The prioritization in [implementation order](implementation-order.md) is saved and
+scoped access has advanced. Read the [scoped-team review](reviews/scoped-team-access.md)
+and [validation summary](reviews/scoped-team-access-validation.json) first.
+Production permission interfaces now use current team/role/scope owners and guest
+membership caps; direct-grant public authority is retired. Scope-bearing read
+paths, invitation caps/Viewer assignment, role rename and PUT removal are wired.
+
+Strict build/format and six Node/tool validators pass. **296 focused cases pass**.
+The last full gate ran **8,141 passed / 1,082 failed / 0 skipped**; all 6,713 inputs
+were unchanged during it. 1,021 failures are Cassie DDL/connection failures; 61 are
+other assembly failures. Afterwards two expired-guest fixture seeds gained their
+program cap and all 21 Support withdrawal handler cases passed. No later full pass,
+PR, CI or merge is claimed. Track native #1188 and assembly #1189.
+
+Next source: finish the remaining scoped read/admission acceptance, then PA-27
+primary-admin continuity; retain the older guard until that replacement is complete.
+Do not mark Platform access done or sweep the preserved branch ancestry. All 21
+WIP branches remain preserved. Earlier checkpoints below are historical.
+
+---
+
 # Resumed 2026-11-05 — assembled build repaired, native acceptance blocked
 
 The user explicitly resumed with “pickup where we left off.” The integration

@@ -92,7 +92,7 @@ public sealed class GetMemberAccessHandler(ITenantMembershipDirectoryReader memb
         var paths = new List<MemberAccessPath>(edges.Count);
         foreach (var edge in edges)
         {
-            if (TeamRoleScopes.Normalize(tenantId, edge.Scope).Kind != AccessGrantScopeKind.Organization)
+            if (TeamRoleScopes.Normalize(request.TenantId, edge.Scope).Kind != AccessGrantScopeKind.Organization)
                 continue;
             var team = await teams.GetAsync(request.TenantId, edge.TeamId, ct).ConfigureAwait(false);
             var roleView = await roles.GetAsync(request.TenantId, edge.RoleId, ct).ConfigureAwait(false);

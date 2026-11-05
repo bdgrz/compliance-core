@@ -20,7 +20,7 @@ public sealed class RemoveRolePermissionRequestScenarioTests
     const string Permission = RbacPermissions.ProgramManage;
 
     [Fact]
-    public async Task ShouldRejectUserPermissionMutationGivenTheFixedRoleCatalog()
+    public async Task ShouldRemoveCustomPermissionGivenAuthorizedOrganizationAdministrator()
     {
         // Arrange
         await using var provider = RbacManagementServices.Build(allowed: true,
@@ -32,8 +32,7 @@ public sealed class RemoveRolePermissionRequestScenarioTests
             // Act
             .When(new RemoveRolePermission(TenantId, RoleId, Permission, Uuid.CreateVersion4(), 1, RbacPermissionFacts.AssignmentId(TenantId, RoleId, Permission)))
             // Assert
-            .ExpectDenied(RequestErrorKind.Forbidden)
-            .ExpectNotHandled();
+            .ExpectSuccess();
     }
 
     [Fact]

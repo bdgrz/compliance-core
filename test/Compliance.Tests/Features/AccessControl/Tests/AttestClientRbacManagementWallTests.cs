@@ -192,7 +192,7 @@ public sealed class AttestClientRbacManagementWallTests
     }
 
     [Fact]
-    public async Task ShouldPreserveFixedRoleCatalogDenialGivenOrdinaryClientAdministrationGrant()
+    public async Task ShouldAllowCustomRoleGivenOrdinaryClientAdministrationGrant()
     {
         // Arrange
         await using var provider = Compose();
@@ -203,8 +203,7 @@ public sealed class AttestClientRbacManagementWallTests
             new DefineRole(Tenant, Uuid.CreateVersion4(), "Custom role"), Context(), CancellationToken.None);
 
         // Assert
-        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
-        Assert.Contains("fixed by the system", result.Error!.Message, StringComparison.Ordinal);
+        Assert.True(result.IsSuccess, result.Error?.Message);
     }
 
     static ServiceProvider Compose(bool allowed = true, string identity = "valid")

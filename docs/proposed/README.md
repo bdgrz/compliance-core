@@ -71,6 +71,7 @@ work.
 
 | Owner | Implementation status | Evidence |
 | --- | --- | --- |
+| Scoped team access | Partial: source-backed scoped permissions, custom roles, guest caps and public cutover; native/full acceptance and primary continuity remain | [Review](reviews/scoped-team-access.md) |
 | Program | Partial: all-present target-date ordering passes focused/native tests; full gate and canonical Program workflow remain | [Date invariant](reviews/program-target-date-ordering.md) |
 | Person | Partial: named details and generic-writer retirement locally qualified; member linkage and accepted HRIS application remain | [Writer cutover](reviews/person-named-writer-cutover.md) |
 | RiskControlTreatment (`RiskTreatmentAssertion` in current source) | Partial: reviewer independence enforced in the owner; control-retirement coordination and proposed-owner migration remain | [Review](reviews/risk-control-treatment.md) |

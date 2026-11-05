@@ -87,7 +87,7 @@ public sealed class AccessReviewWorkQueueVisibilityTests
         var guestMemberId = RbacIds.Member(scenario.Fixture.TenantId, guestUserId);
         await ProgramManagementServices.SeedAsync(scenario.Fixture.Provider,
             new Member(scenario.Fixture.TenantId, guestUserId), member => member.Register("guest",
-                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30)));
+                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30), programIds: [scenario.Fixture.ProgramId]));
         var visibility = new RestrictedApplicationVisibility(scenario.Permissions,
             scenario.VisibilityGrants, scenario.AggregateReader);
         var eligibility = new AccessReviewQueueEligibility(scenario.AggregateReader,

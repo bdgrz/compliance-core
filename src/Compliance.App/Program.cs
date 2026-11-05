@@ -84,6 +84,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ListMemberResponsibilities>(tool => tool.ReadOnly())
         .AddMcpTool<ListTeamMembers>(tool => tool.ReadOnly())
         .AddMcpTool<DefineRole>(tool => tool.Idempotent())
+        .AddMcpTool<RenameRole>(tool => tool.Idempotent())
         .AddMcpTool<DeleteRole>(tool => tool.Destructive())
         .AddMcpTool<GetRole>(tool => tool.ReadOnly())
         .AddMcpTool<ListRoles>(tool => tool.ReadOnly())
@@ -94,9 +95,6 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<RemoveTeamRole>(tool => tool.Destructive())
         .AddMcpTool<ListRoleTeams>(tool => tool.ReadOnly())
         .AddMcpTool<ListTeamRoles>(tool => tool.ReadOnly())
-        .AddMcpTool<GrantAccess>(tool => tool.Idempotent())
-        .AddMcpTool<RevokeAccessGrant>(tool => tool.Destructive())
-        .AddMcpTool<ListAccessGrants>(tool => tool.ReadOnly())
         .AddMcpTool<ListMyTenants>(tool => tool.ReadOnly())
         .AddMcpTool<RegisterTenant>()
         .AddMcpTool<SuspendTenant>(tool => tool.Destructive())
@@ -2860,10 +2858,13 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaPut<AssignTeamRole>("/api/v1/tenants/{tenant_id}/teams/{team_id}/roles/{role_id}/assignments/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<AssignTeamRole>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
-    app.MapPortiaDelete<RemoveTeamRole>("/api/v1/tenants/{tenant_id}/teams/{team_id}/roles/{role_id}/removals/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RemoveTeamRole>()
+    app.MapPortiaPut<RemoveTeamRole>("/api/v1/tenants/{tenant_id}/teams/{team_id}/roles/{role_id}/removals/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RemoveTeamRole>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
     app.MapPortiaPut<DefineRole>("/api/v1/tenants/{tenant_id}/roles/{role_id}", config => config.OnNativeResult()).WithNativeFirstResponse<DefineRole>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Roles");
+    app.MapPortiaPut<RenameRole>("/api/v1/tenants/{tenant_id}/roles/{role_id}/renames/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RenameRole>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Roles");
     app.MapPortiaPut<DeleteRole>("/api/v1/tenants/{tenant_id}/roles/{role_id}/deletions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<DeleteRole>()
@@ -2891,15 +2892,6 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListTeamRoles, Page<TeamRoleView>>("/api/v1/tenants/{tenant_id}/teams/{team_id}/roles")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
-    app.MapPortiaPost<GrantAccess>("/api/v1/tenants/{tenant_id}/access-grants/{grant_id}", config => config.OnNativeResult()).WithNativeFirstResponse<GrantAccess>()
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Access grants");
-    app.MapPortiaDelete<RevokeAccessGrant>("/api/v1/tenants/{tenant_id}/access-grants/{grant_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RevokeAccessGrant>()
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Access grants");
-    app.MapPortiaGet<ListAccessGrants, AccessGrantSetView>("/api/v1/tenants/{tenant_id}/access-grants")
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Access grants");
     app.MapPortiaPut<ConfigureTenantIdentityProvider>(
             "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ConfigureTenantIdentityProvider>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)

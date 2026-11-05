@@ -174,7 +174,8 @@ public sealed class MemberTenantDiscoveryLagTests
         Assert.True(reservation.Register(tenantId).IsSuccess);
         await writer.SaveAsync(reservation, new RequestDispatchContext(RequestActor.System));
         var member = new Member(tenantId, userId);
-        Assert.True(member.Register(affiliation, membershipExpiresOn).IsSuccess);
+        Assert.True(member.Register(affiliation, membershipExpiresOn,
+                programIds: affiliation == "guest" ? [Uuid.CreateVersion4()] : null).IsSuccess);
         await writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
     }
 

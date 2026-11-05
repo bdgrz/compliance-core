@@ -50,7 +50,7 @@ public sealed class AccessCassieCompositionTests
         {
             Assert.Empty((await scope.ServiceProvider.GetRequiredService<ITeamDirectoryReader>()
                 .ListAsync(tenant, 50, null, null, false)).Items);
-            Assert.Empty(await scope.ServiceProvider.GetRequiredService<IMemberAccessReader>()
+            Assert.Empty(await scope.ServiceProvider.GetRequiredService<CassiePermissionAuthorizer>()
                 .ReadAsync(tenant, RbacIds.Member(tenant, user)));
             foreach (var name in Projectors)
                 Assert.Equal(ProjectionCheckpoint.Start, await Store(scope.ServiceProvider, name)
@@ -158,7 +158,7 @@ public sealed class AccessCassieCompositionTests
         var permissions = services.GetRequiredService<IRolePermissionDirectoryReader>();
         var roleTeams = services.GetRequiredService<IRoleTeamDirectoryReader>();
         var teamRoles = services.GetRequiredService<ITeamRoleDirectoryReader>();
-        var access = services.GetRequiredService<IMemberAccessReader>();
+        var access = services.GetRequiredService<CassiePermissionAuthorizer>();
         Assert.Same(Store(services, "TeamDirectory"), teams);
         Assert.Same(Store(services, "TeamMemberDirectory"), members);
         Assert.Same(Store(services, "RoleDirectory"), roles);
@@ -166,7 +166,8 @@ public sealed class AccessCassieCompositionTests
         Assert.Same(Store(services, "RoleTeamDirectory"), roleTeams);
         Assert.Same(Store(services, "TeamRoleDirectory"), teamRoles);
         Assert.Same(Store(services, "PermissionProjection"), access);
-        Assert.Same(access, services.GetRequiredService<IPermissionAuthorizer>());
+        Assert.IsType<TeamRolePermissionAuthorizer>(services.GetRequiredService<IPermissionAuthorizer>());
+        Assert.Same(services.GetRequiredService<IPermissionAuthorizer>(), services.GetRequiredService<IMemberAccessReader>());
         var teamRow = Assert.Single((await teams.ListAsync(tenant, 50, null, null, false)).Items);
         var memberRow = Assert.Single((await members.ListAsync(tenant, team, 50, null, null, false)).Items);
         var roleRow = Assert.Single((await roles.ListAsync(tenant, 50, null, null, false)).Items);

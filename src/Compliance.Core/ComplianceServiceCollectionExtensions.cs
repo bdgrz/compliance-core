@@ -425,9 +425,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton<ITenantInvitationDeliveryStore>(provider =>
             new FitzKvTenantInvitationDeliveryStore(provider.GetRequiredService<IKvClient>()));
         services.AddScoped<CassiePermissionAuthorizer>();
+        services.AddScoped<TeamRolePermissionAuthorizer>();
         services.AddScoped<IPermissionProjection>(provider => provider.GetRequiredService<CassiePermissionAuthorizer>());
-        services.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<CassiePermissionAuthorizer>());
-        services.AddScoped<IMemberAccessReader>(provider => provider.GetRequiredService<CassiePermissionAuthorizer>());
+        services.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<TeamRolePermissionAuthorizer>());
+        services.AddScoped<IMemberAccessReader>(provider => provider.GetRequiredService<TeamRolePermissionAuthorizer>());
         services.AddScoped<IMemberAccessEligibility, EventSourcedMemberAccessEligibility>();
         services.AddScoped<MemberAuthorityCleanup>();
         services.AddScoped<CassieTeamDirectoryReader>();
@@ -842,13 +843,12 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzAccessGrantDirectory>());
         services.AddScoped<IAccessGrantProjection>(provider =>
             provider.GetRequiredService<FitzAccessGrantDirectory>());
-        services.AddScoped<AccessGrantPermissionAuthorizer>();
         services.AddScoped<IAccessGrantPermissionAuthorizer>(provider =>
-            provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
+            provider.GetRequiredService<TeamRolePermissionAuthorizer>());
         services.AddScoped<IAccessGrantScopePermissionAuthorizer>(provider =>
-            provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
+            provider.GetRequiredService<TeamRolePermissionAuthorizer>());
         services.AddScoped<IAccessGrantRolePermissionAuthorizer>(provider =>
-            provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
+            provider.GetRequiredService<TeamRolePermissionAuthorizer>());
         services.AddScoped<RestrictedApplicationVisibility>();
         services.AddScoped<TechnologyInventoryRestrictedVisibility>();
         services.AddScoped<OperatingAuthority>();
@@ -1340,7 +1340,6 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RemoveTeamRoleHandler>()
             .AddRequestHandler<AssignRolePermissionHandler>()
             .AddRequestHandler<RemoveRolePermissionHandler>()
-            .AddRequestHandler<GrantAccessHandler>()
             .AddRequestHandler<RevokeAccessGrantHandler>()
             .AddRequestHandler<ListAccessGrantsHandler>()
             .AddRequestAuthorizer<RbacManagementAuthorizer>()
@@ -2024,8 +2023,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<InviteOrganizationMemberHandler>()
             .AddRequestHandler<InviteGuestConsultantHandler>()
             .AddRequestHandler<ListTenantInvitationsHandler>()
-            .AddRequestHandler<GetMemberAccessHandler>()
-            .AddRequestHandler<ProvisionGuestProgramAccessHandler>()
+            .AddRequestHandler<GetTeamMemberAccessHandler>()
             .AddRequestAuthorizer<GuestInvitationReactionAuthorizer>()
             .AddRequestHandler<AcceptTenantInvitationHandler>()
             .AddRequestHandler<SendTenantInvitationHandler>()

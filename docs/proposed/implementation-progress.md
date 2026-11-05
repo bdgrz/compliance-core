@@ -1,10 +1,12 @@
 # Proposed domain implementation progress
 
-**Stopped at the user's no-credit boundary instruction.** Remaining included usage
-is not visible, so all agents were stopped conservatively. Preserve current source
-and see the latest [restart handoff](restart-handoff.md) and inventory. Program
-local acceptance passed 8,742 units on the prior Cassie image; the broader source
-platform remains unqualified, with a fresh-native initialization blocker on latest.
+**Resumed 2026-11-05; scoped-access source checkpoint preserved.** Current team-role
+permission authority, guest episode caps and public cutover have 296 passing focused
+cases, with strict build/format and tooling green. The full gate still fails:
+8,141 passed / 1,082 failed; follow-up Support fixture checks passed 21/21. See the
+[latest restart handoff](restart-handoff.md) and [scoped-team review](reviews/scoped-team-access.md).
+Native #1188 and assembly #1189 block full acceptance; no context is declared done.
+The stopped/sole-candidate inventories below are historical, not the active queue.
 
 The locked context documents are the specification. This ledger records implemented
 behavior and validation; a matching type name or a passing focused test does not

@@ -351,7 +351,7 @@ public sealed class ReviewerWorkAuthorityTests
             operations.Permissions.Managers.Add(operations.BackupMemberId);
             DomainEvent registered = MemberFacts.Registered(operations.TenantId, guestMemberId,
                 guestUserId, "guest", Uuid.CreateVersion4(),
-                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30));
+                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30), [operations.ProgramId]);
             registered.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), guestMemberId,
                 1, DateTimeOffset.UtcNow));
             var events = operations.Provider.GetRequiredService<IEventStore>();

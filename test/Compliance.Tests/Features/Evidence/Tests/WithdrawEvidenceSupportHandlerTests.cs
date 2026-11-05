@@ -295,7 +295,7 @@ public sealed class WithdrawEvidenceSupportHandlerTests
         {
             var member = new Member(TenantId, UserId);
             Assert.True(member.Register(NativeFacts.Root(member, Uuid.CreateVersion4(), "RegisterMember", 0),
-                NativeFacts.Ref(), affiliation, expiresOn).IsSuccess);
+                NativeFacts.Ref(), affiliation, expiresOn, affiliation == "guest" ? [ProgramId] : null).IsSuccess);
             await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
         }
 

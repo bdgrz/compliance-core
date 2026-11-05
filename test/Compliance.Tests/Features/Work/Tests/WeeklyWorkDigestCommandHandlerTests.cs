@@ -424,7 +424,8 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             DateOnly? membershipExpiresOn = affiliation == "guest"
                 ? DateOnly.FromDateTime(Now.UtcDateTime).AddDays(30)
                 : null;
-            Assert.True(member.Register(affiliation, membershipExpiresOn).IsSuccess);
+            Assert.True(member.Register(affiliation, membershipExpiresOn,
+                programIds: affiliation == "guest" ? [Uuid.CreateVersion4()] : null).IsSuccess);
             await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
 
             if (optedOut)

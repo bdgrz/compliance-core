@@ -11,6 +11,17 @@ The reviews below did not execute tests. Named tests are evidence to qualify,
 not proof of current GREEN, complete workflows or merged acceptance. No context
 is declared complete by this ledger, and SQL migration does not close business gaps.
 
+## 2026-11-05 scoped-access supplement
+
+The [scoped-team checkpoint](reviews/scoped-team-access.md) supersedes the older
+PA rows below where they say custom/scoped roles, guest episode caps or direct-grant
+cutover are absent. Those source paths are now integrated and the 296-case focused
+selection passes. Platform access remains partial: command-side reference admission,
+raw membership cap views, native/public transport/full-suite acceptance, primary
+continuity, housekeeping and the other named requirements remain. Broader failures
+are recorded in #1189; the native blocker remains #1188. Other historical rows are
+not silently promoted to completed acceptance.
+
 ## Platform access
 
 Paths below are under `Features/AccessControl` unless another feature is named.

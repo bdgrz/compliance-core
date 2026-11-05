@@ -8,11 +8,47 @@ using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Cntryl.Portia.Testing;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
 public sealed class ScopedTeamPermissionAuthorityTests
 {
+    [Fact]
+    public async Task ShouldUseTeamOwnersGivenProductionPermissionComposition()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Fitz:Endpoint"] = "ws://127.0.0.1:1/ws",
+            ["Fitz:ApplicationName"] = "compliance",
+            ["Cassie:ConnectionString"] = "Host=127.0.0.1;Port=1;Database=postgres;Username=root;Password=test;SSL Mode=Disable",
+        }).Build());
+        var events = new InMemoryEventStore();
+        services.AddSingleton<IEventStore>(events);
+        services.AddSingleton<IDomainEventReader>(events);
+        services.AddSingleton<IKvClient>(new InMemoryKvClient());
+        await using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+        await using var scope = provider.CreateAsyncScope();
+
+        // Act
+        var permissions = scope.ServiceProvider.GetRequiredService<IPermissionAuthorizer>();
+        var programs = scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>();
+        var roles = scope.ServiceProvider.GetRequiredService<IAccessGrantRolePermissionAuthorizer>();
+        var resources = scope.ServiceProvider.GetRequiredService<IAccessGrantScopePermissionAuthorizer>();
+
+        // Assert
+        Assert.IsType<TeamRolePermissionAuthorizer>(permissions);
+        Assert.Same(permissions, programs);
+        Assert.Same(permissions, roles);
+        Assert.Same(permissions, resources);
+    }
+
     [Theory]
     [InlineData("client_personnel", "organization", true, true)]
     [InlineData("client_personnel", "program", false, true)]

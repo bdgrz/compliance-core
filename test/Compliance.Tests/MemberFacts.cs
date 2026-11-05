@@ -54,17 +54,17 @@ static class MemberFacts
 
     /// <summary>Registers the member under a fresh logical id unless one is given.</summary>
     public static Result Register(this Member member, string affiliation = "client_personnel",
-        DateOnly? membershipExpiresOn = null, Uuid commandId = default)
+        DateOnly? membershipExpiresOn = null, Uuid commandId = default, IReadOnlyList<Uuid>? programIds = null)
     {
         var id = commandId == Uuid.Empty ? Uuid.CreateVersion4() : commandId;
         return member.Register(Provenance(member, id), new ImmutableContentRef(Uuid.CreateVersion4(),
             new string('b', 64), 2, "application/json", "first-response-descriptor.v1"), affiliation,
-            membershipExpiresOn);
+            membershipExpiresOn, programIds);
     }
 
     public static MemberRegistered Registered(Uuid tenantId, Uuid memberId, Uuid userId,
         string affiliation = "client_personnel", Uuid membershipEpisodeId = default,
-        DateOnly? membershipExpiresOn = null)
+        DateOnly? membershipExpiresOn = null, IReadOnlyList<Uuid>? programIds = null)
     {
         var commandId = membershipEpisodeId == Uuid.Empty ? Uuid.CreateVersion4() : membershipEpisodeId;
         var owner = new EventStreamAddress(tenantId.ToString(), "rbac-members", memberId.ToString());
@@ -72,7 +72,7 @@ static class MemberFacts
             "initial", null, new string('a', 64), new DateTimeOffset(2026, 10, 23, 12, 0, 0, TimeSpan.Zero),
             owner, owner);
         return new MemberRegistered(tenantId, memberId, userId, affiliation, membershipEpisodeId, membershipExpiresOn,
-            commandId, operation, null);
+            commandId, operation, null, programIds);
     }
 
     static readonly DateTimeOffset FactAt = new(2026, 10, 23, 12, 0, 0, TimeSpan.Zero);

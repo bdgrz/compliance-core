@@ -161,7 +161,8 @@ public sealed class ServiceIdentityReviewMembershipTests
                 "guest_expires_today" => Today,
                 _ => null,
             };
-            Assert.True(member.Register(expiresOn is null ? "client_personnel" : "guest", expiresOn).IsSuccess);
+            Assert.True(member.Register(expiresOn is null ? "client_personnel" : "guest", expiresOn,
+                programIds: expiresOn is null ? null : [Uuid.CreateVersion4()]).IsSuccess);
             await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
             member = await Reader.HydrateAsync(new Member(Tenant, User));
             if (state == "suspended")

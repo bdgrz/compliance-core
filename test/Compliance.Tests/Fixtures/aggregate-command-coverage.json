@@ -1,34 +1,34 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-11-04",
-  "sourceCommit": "65fdd65e674a1329c02d4c0719836a2f22601420",
+  "capturedAt": "2026-11-05",
+  "sourceCommit": "5442c8f39d3d4f7e68a664518b703cdab690692e",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 568,
-    "factsWithReducer": 543,
-    "factsWithAggregateEmitter": 418,
+    "domainEventContracts": 573,
+    "factsWithReducer": 548,
+    "factsWithAggregateEmitter": 423,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 23,
     "legacyReducerOnlyFacts": 125,
     "aggregateTypes": 136,
     "aggregateTypesWithCommandPath": 102,
-    "requestContracts": 819,
-    "commonRequestContracts": 817,
+    "requestContracts": 826,
+    "commonRequestContracts": 824,
     "requestClassificationCounts": {
-      "command": 373,
-      "confirmed_command_gap": 7,
+      "command": 372,
+      "confirmed_command_gap": 13,
       "deferred_command": 5,
       "internal_executor_context": 1,
       "internal_reaction": 155,
-      "query_or_reconstruction": 278
+      "query_or_reconstruction": 280
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 777,
-    "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 66,
+    "registeredCoreHandlerRegistrations": 778,
+    "unregisteredCoreHandlerClasses": 7,
+    "unwiredAggregateProducerOperations": 72,
     "unwiredAggregateProducerClassifications": {
-      "direct_processor_executor": 2,
+      "direct_processor_executor": 8,
       "legacy_emitter_to_prune": 1,
       "no_registered_request_route": 63
     },
@@ -327,7 +327,9 @@
       "emitters": [
         "src/Compliance.Core/Features/AccessReviews/Aggregates/AccessReviewItem.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/Tests/AccessReviewItemTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": "",
       "discriminator": "bdgrz.access_review.remediation.verified",
@@ -2822,7 +2824,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/BoundaryMcpAuthoringE2ETests.cs",
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
-        "test/Compliance.Tests/Features/Boundaries/Tests/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/Tests/CassieBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/FitzBoundaryDecisionWorkItemDirectoryTests.cs"
       ],
       "disposition": "legacy_replay",
@@ -3931,9 +3933,9 @@
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionLifecycleTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionOutcomeReactorTests.cs",
-        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeWorkflowTests.cs",
-        "test/Compliance.Tests/IncidentFacts.cs",
-        "test/Compliance.Tests/Testing/FindingSeed.cs"
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureReviewHandlerTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureWithdrawalWorkflowTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeWorkflowTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "",
@@ -4713,6 +4715,28 @@
       "schemaVersion": 1
     },
     {
+      "fact": "EvidenceSupportWithdrawn",
+      "contract": "src/Compliance.Common/Features/Evidence/Events/EvidenceSupportWithdrawn.cs",
+      "discriminator": "bdgrz.evidence.evidence-support-withdrawn",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "EvidenceSupport",
+          "source": "src/Compliance.Core/Features/Evidence/Aggregates/EvidenceSupport.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Evidence/Aggregates/EvidenceSupport.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/Tests/ApplicationEvidenceSourceReferenceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportWithdrawalTests.cs",
+        "test/Compliance.Tests/Features/Examinations/Tests/EvidenceGovernanceTypeIBaselineSourceContributorTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "ExaminationEngagementOpened",
       "contract": "src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementOpened.cs",
       "reducers": [
@@ -4793,6 +4817,24 @@
       "schemaVersion": 3
     },
     {
+      "fact": "FindingAnalysisRevised",
+      "contract": "src/Compliance.Common/Features/Remediation/Events/FindingAnalysisRevised.cs",
+      "discriminator": "bdgrz.finding.analysis.revised",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "FindingClosedV2",
       "contract": "src/Compliance.Common/Features/Remediation/Events/FindingClosedV2.cs",
       "reducers": [
@@ -4826,6 +4868,7 @@
         "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingProcessReactorTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingReactorSourceTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingTransportTests.cs"
@@ -4855,6 +4898,66 @@
       "note": "Local receiver fence that ends a pending closure after a permanent proof mismatch.",
       "discriminator": "bdgrz.finding-aggregate.finding-closure-canceled",
       "schemaVersion": 1
+    },
+    {
+      "fact": "FindingClosureProposed",
+      "contract": "src/Compliance.Common/Features/Remediation/Events/FindingClosureProposed.cs",
+      "discriminator": "bdgrz.finding.closure.proposed",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FindingClosureReturned",
+      "contract": "src/Compliance.Common/Features/Remediation/Events/FindingClosureReturned.cs",
+      "discriminator": "bdgrz.finding.closure.returned",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureReviewHandlerTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FindingClosureWithdrawn",
+      "contract": "src/Compliance.Common/Features/Remediation/Events/FindingClosureWithdrawn.cs",
+      "discriminator": "bdgrz.finding.closure.withdrawn",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureWithdrawalWorkflowTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     },
     {
       "fact": "FindingCorrectiveActionResolved",
@@ -4912,7 +5015,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": "",
       "discriminator": "bdgrz.finding.reopened",
@@ -7162,6 +7267,7 @@
         "src/Compliance.Core/Features/Snapshots/Aggregates/PopulationSnapshot.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Programs/Tests/CassieProgramScopeRepositoryTests.cs",
         "test/Compliance.Tests/Features/Snapshots/Tests/PopulationSnapshotTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/AttestWorkforceManagementWallTests.cs"
       ],
@@ -8475,7 +8581,6 @@
         "src/Compliance.Core/Features/AccessControl/Aggregates/Role.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/Tests/RoleRenameTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RoleTeamContentOperationTests.cs",
         "test/Compliance.Tests/RbacFacts.cs"
       ],
@@ -8524,7 +8629,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
         "test/Compliance.Tests/E2E/SplitHostTenantE2ETests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/FitzRolePermissionDirectoryReaderTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/CassieAccessControlRepositoryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/CassieRolePermissionDirectoryReaderTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RolePermissionTests.cs",
         "test/Compliance.Tests/RbacPermissionFacts.cs"
       ],
@@ -9081,6 +9187,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/ScopeResponsibilityIndependenceTests.cs",
+        "test/Compliance.Tests/Features/Programs/Tests/CassieProgramScopeRepositoryTests.cs",
         "test/Compliance.Tests/Features/Snapshots/Tests/ImmutableSnapshotOwnerTests.cs",
         "test/Compliance.Tests/Features/Snapshots/Tests/ScopeSnapshotTests.cs"
       ],
@@ -9441,7 +9548,9 @@
         "src/Compliance.Core/Features/AccessControl/Aggregates/TeamRole.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/Tests/FitzRoleTeamDirectoryReaderTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/CassieRoleTeamDirectoryReaderTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/CassieScopedTeamRoleTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/ScopedTeamRoleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TeamRoleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TeamRoleTransportTests.cs",
         "test/Compliance.Tests/RbacTeamRoleFacts.cs"
@@ -9464,6 +9573,7 @@
         "src/Compliance.Core/Features/AccessControl/Aggregates/TeamRole.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/CassieScopedTeamRoleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/GetMemberAccessHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TeamRoleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TeamRoleTransportTests.cs",
@@ -11586,8 +11696,6 @@
       ],
       "commandRequests": [
         "AssignTeamMember",
-        "GrantAccess",
-        "ProvisionGuestProgramAccess",
         "RegisterMember",
         "RevokeAccessGrant"
       ],
@@ -11602,8 +11710,8 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/GrantAccessReplayTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/MemberRetirementRecoveryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/ProvisionGuestProgramAccessHandlerTests.cs",
-        "test/Compliance.Tests/Features/Controls/Tests/ControlOwnerPersonReadTests.cs",
-        "test/Compliance.Tests/Features/Controls/Tests/ControlOwnerPersonWriteTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/TeamRolePermissionRevocationTests.cs",
+        "test/Compliance.Tests/Features/Controls/Tests/ControlOwnerPersonReadTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12674,9 +12782,9 @@
         "test/Compliance.Tests/Features/Examinations/Tests/DataFlowTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/Tests/DataFlowTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/Tests/InventoryRetryTests.cs",
+        "test/Compliance.Tests/Features/TechnologyInventory/Tests/InventoryTerminalLifecycleTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryAggregateTests.cs",
-        "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryRestrictedReadHandlerTests.cs",
-        "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryScopedGrantTests.cs"
+        "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryRestrictedReadHandlerTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12910,16 +13018,23 @@
       "aggregate": "EvidenceSupport",
       "source": "src/Compliance.Core/Features/Evidence/Aggregates/EvidenceSupport.cs",
       "appliedFacts": [
-        "EvidenceSupportLinked"
+        "EvidenceSupportLinked",
+        "EvidenceSupportWithdrawn"
       ],
       "commandRequests": [
-        "LinkEvidenceSupport"
+        "LinkEvidenceSupport",
+        "WithdrawEvidenceSupport"
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorRecordVersionResolverTests.cs",
+        "test/Compliance.Tests/Features/Applications/Tests/ApplicationEvidenceSourceReferenceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Applications/Tests/ApplicationEvidenceSourceReferencePreviewTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportStatusTests.cs",
         "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportTests.cs",
-        "test/Compliance.Tests/Features/Evidence/Tests/LinkEvidenceSupportHandlerTests.cs"
+        "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportWithdrawalTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/LinkEvidenceSupportHandlerTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/WithdrawEvidenceSupportHandlerTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12965,9 +13080,13 @@
       "appliedFacts": [
         "CorrectiveActionAdmitted",
         "FindingAcceptanceLinkedV2",
+        "FindingAnalysisRevised",
         "FindingClosedV2",
         "FindingClosureAccepted",
         "FindingClosureCanceled",
+        "FindingClosureProposed",
+        "FindingClosureReturned",
+        "FindingClosureWithdrawn",
         "FindingCorrectiveActionResolved",
         "FindingRaisedV2",
         "FindingReopenedV2",
@@ -12975,7 +13094,6 @@
       ],
       "commandRequests": [
         "AddCorrectiveAction",
-        "CloseFinding",
         "LinkFindingAcceptance",
         "RaiseFinding",
         "ReopenFinding",
@@ -13199,7 +13317,7 @@
         "test/Compliance.Tests/Features/Examinations/Tests/InformationAssetTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/Tests/InformationAssetTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/Tests/InventoryBoundaryReferenceReadTests.cs",
-        "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryAggregateTests.cs"
+        "test/Compliance.Tests/Features/TechnologyInventory/Tests/InventoryTerminalLifecycleTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -14109,13 +14227,13 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/BrowserE2EHostIntegrationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/AccessCassieCompositionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/AccessGrantPermissionAuthorizerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/AccessGrantProposalValidatorTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/CustomRoleLifecycleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/DeleteRoleRequestScenarioTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/GetMemberAccessHandlerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/InternalRbacTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/RbacAggregateInvariantTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/RbacContentTransportTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/InternalRbacTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -14132,14 +14250,14 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/AccessCassieCompositionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/AccessGrantPermissionAuthorizerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/GetMemberAccessHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/InternalRbacTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/OrganizationRoleAuthorityTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RemoveRolePermissionRequestScenarioTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RoleCleanupReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/RolePermissionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/TenantRbacBootstrapReactorTests.cs",
-        "test/Compliance.Tests/Features/Evidence/Tests/ArtifactMetadataAccessTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/RolePermissionPolicyTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -14161,7 +14279,7 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/WaiverManagementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Applications/Tests/AccessReviewScopeDecisionTests.cs",
         "test/Compliance.Tests/Features/Boundaries/Tests/BoundaryNativeAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/Tests/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/Tests/CassieBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/Tests/SystemBoundaryTests.cs",
         "test/Compliance.Tests/Features/Commitments/Tests/CommitmentApprovalTests.cs"
       ],
@@ -14303,7 +14421,7 @@
         "test/Compliance.Tests/Features/Applications/Tests/ApplicationBoundaryReferenceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Applications/Tests/ApplicationChangePreviewTests.cs",
         "test/Compliance.Tests/Features/Boundaries/Tests/BoundaryNativeHttpTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/Tests/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/Tests/CassieBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Programs/Tests/ProgramResourceScopeResolverTests.cs",
         "test/Compliance.Tests/Features/Programs/Tests/ProjectionFreshnessTests.cs"
       ],
@@ -14373,12 +14491,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/BrowserE2EHostIntegrationTests.cs",
         "test/Compliance.Tests/E2E/ProgramE2ETests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/AccessCassieCompositionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/AccessGrantPermissionAuthorizerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/AccessGrantProposalValidatorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/ActorReferenceTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/AttestClientRbacManagementWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/DeleteTeamRequestScenarioTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/GetMemberAccessHandlerTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/DeleteTeamRequestScenarioTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -14405,11 +14523,11 @@
         "test/Compliance.Tests/E2E/BrowserE2EHostIntegrationTests.cs",
         "test/Compliance.Tests/E2E/SplitHostTenantE2ETests.cs",
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/AccessCassieCompositionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/AccessGrantPermissionAuthorizerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/AdministratorTransitionProcessTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/DeprovisionMemberHandlerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/FitzPermissionAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/FitzTeamMemberDirectoryReaderTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/CassiePermissionAuthorizerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/CassieTeamMemberDirectoryReaderTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -14427,13 +14545,13 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/BrowserE2EHostIntegrationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/AccessCassieCompositionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/GetMemberAccessHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/InternalRbacTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/OrganizationRoleAuthorityTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RemoveTeamRoleRequestScenarioTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RoleCleanupReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/TeamRoleTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/TeamRoleTransportTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/TenantRbacBootstrapReactorTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/ScopedTeamPermissionAuthorityTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -14455,6 +14573,7 @@
         "test/Compliance.Tests/Features/Examinations/Tests/TechnologyComponentTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/Tests/InventoryBoundaryReferenceReadTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/Tests/InventoryRetryTests.cs",
+        "test/Compliance.Tests/Features/TechnologyInventory/Tests/InventoryTerminalLifecycleTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryAggregateTests.cs",
         "test/Compliance.Tests/InventoryFacts.cs"
       ],
@@ -15598,12 +15717,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingIdentifiedOperationTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/Tests/FindingNativePreparationTests.cs",
-        "test/Compliance.Tests/Features/Remediation/Tests/FindingTests.cs"
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingNativePreparationTests.cs"
       ],
       "note": "202 admission on the finding; IndependentChildMaterialization materializes the action."
     },
@@ -16470,7 +16589,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Boundaries/Tests/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/Tests/CassieBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/Tests/PersonalBoundaryDecisionTransportTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/AssignedDecisionAuthorityTests.cs",
         "test/Compliance.Tests/Testing/BoundarySeeds.cs"
@@ -16722,6 +16841,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Policies/Tests/PersonalPolicyDecisionTransportTests.cs",
+        "test/Compliance.Tests/Features/Policies/Tests/PolicyNativeContentTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyCampaignHandlerTests.cs",
         "test/Compliance.Tests/Testing/PolicyProjectionFacts.cs",
         "test/Compliance.Tests/Testing/PolicySeeds.cs"
@@ -17032,7 +17152,7 @@
     {
       "request": "AssignRolePermission",
       "contract": "src/Compliance.Common/Features/AccessControl/Commands/AssignRolePermission.cs",
-      "interfaces": "IRequest, IRbacManagementRequest, ICallable, IIdentifiedRequest",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -17295,12 +17415,15 @@
       "aggregateTargets": [
         "CorrectiveAction"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "FindingClosureVerifier"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Content/Tests/SourceUseReceiverContractTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingCancellationProofBindingTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureContentRecoveryTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureWithdrawalWorkflowTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingHistoricalClosureTests.cs"
       ],
       "note": "System-only acquire receiver of FindingClosureProcess; an unmaterialized action is a wait."
@@ -18523,6 +18646,7 @@
         "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyCampaignClosureProcessTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyCampaignNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyCampaignNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyDistributionCampaignTests.cs",
         "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
       "note": "Command; accepts the closure and seals result admission; PolicyCampaignClosureProcess drains and completes it."
@@ -18544,14 +18668,13 @@
         "CorrectiveAction",
         "FindingAggregate"
       ],
-      "aggregateTargets": [
-        "FindingAggregate"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Readiness/Tests/PersonalReadinessClosureTransportTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/ReviewerWorkAuthorityTests.cs"
@@ -19015,10 +19138,13 @@
         "FindingAggregate"
       ],
       "helperServices": [
+        "FindingClosureVerifier",
         "FindingReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureWithdrawalWorkflowTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs"
       ],
       "note": "System-only complete receiver of FindingClosureProcess; appends FindingClosedV2 once every action is held."
@@ -19651,6 +19777,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorHandoffCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorRecordVersionResolverTests.cs",
         "test/Compliance.Tests/Features/Controls/Tests/ControlDraftAuthorizationTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs",
         "test/Compliance.Tests/Testing/AdvisorHost.cs",
@@ -19733,7 +19860,7 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Applications/Tests/ApplicationChangePreviewTests.cs",
         "test/Compliance.Tests/Features/Boundaries/Tests/BoundaryNativeAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/Tests/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/Tests/CassieBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Testing/BoundarySeeds.cs"
       ],
       "note": ""
@@ -20217,7 +20344,7 @@
     {
       "request": "DefineRole",
       "contract": "src/Compliance.Common/Features/AccessControl/Commands/DefineRole.cs",
-      "interfaces": "IRequest, IRbacManagementRequest, ICallable",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -20236,6 +20363,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/AttestClientRbacManagementWallTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/CustomRoleLifecycleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RoleTeamContentOperationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantRbacBootstrapReactorTests.cs"
       ],
@@ -20348,6 +20476,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/CustomRoleLifecycleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/DeleteRoleRequestScenarioTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RoleTeamContentOperationTests.cs"
       ],
@@ -20588,7 +20717,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Boundaries/Tests/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/Tests/CassieBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Testing/BoundarySeeds.cs"
       ],
       "note": ""
@@ -21484,6 +21613,7 @@
         "AdvisorHandoffReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorRecordVersionResolverTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/GetAdvisorSharedSourceHandlerTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -22649,6 +22779,27 @@
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
+      "request": "GetEvidenceSupport",
+      "contract": "src/Compliance.Common/Features/Evidence/Queries/GetEvidenceSupport.cs",
+      "classification": "query_or_reconstruction",
+      "interfaces": "IRequest<EvidenceSupportStatusView>, IProgramReadRequest, ICallable",
+      "handlers": [
+        {
+          "name": "GetEvidenceSupportHandler",
+          "source": "src/Compliance.Core/Features/Evidence/Handlers/GetEvidenceSupportHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportStatusTests.cs"
+      ],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
       "request": "GetExaminationEngagement",
       "contract": "src/Compliance.Common/Features/Examinations/Queries/GetExaminationEngagement.cs",
       "interfaces": "IRequest<ExaminationEngagementView>, IProgramReadRequest, ICallable",
@@ -22876,8 +23027,8 @@
       "classification": "query_or_reconstruction",
       "handlers": [
         {
-          "name": "GetMemberAccessHandler",
-          "source": "src/Compliance.Core/Features/AccessControl/Handlers/GetMemberAccessHandler.cs",
+          "name": "GetTeamMemberAccessHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/Handlers/GetTeamMemberAccessHandler.cs",
           "registered": true
         }
       ],
@@ -22885,6 +23036,7 @@
       "directAggregateReferences": [
         "DataFlow",
         "InformationAsset",
+        "Member",
         "Role",
         "RolePermission",
         "Team",
@@ -22894,9 +23046,13 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/Tests/GetMemberAccessHandlerTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/GetMemberAccessHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/TeamRolePermissionRevocationTests.cs"
       ],
-      "note": "Read/reconstruction request; it does not own a business mutation."
+      "note": "Read/reconstruction request; it does not own a business mutation.",
+      "unregisteredHandlerClasses": [
+        "GetMemberAccessHandler"
+      ]
     },
     {
       "request": "GetMethodologyTemplateLine",
@@ -24174,21 +24330,13 @@
       "request": "GrantAccess",
       "contract": "src/Compliance.Common/Features/AccessControl/Commands/GrantAccess.cs",
       "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "GrantAccessHandler",
-          "source": "src/Compliance.Core/Features/AccessControl/Handlers/GrantAccessHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
+      "classification": "confirmed_command_gap",
+      "handlers": [],
+      "handlerRegistration": false,
       "directAggregateReferences": [
         "AccessGrant"
       ],
-      "aggregateTargets": [
-        "AccessGrant"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/GrantAccessHandlerTests.cs",
@@ -24196,7 +24344,10 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/RbacManagementAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Evidence/Tests/ArtifactMetadataAccessTests.cs"
       ],
-      "note": ""
+      "note": "Confirmed source gap: no registered request handler. Keep unresolved in the local delivery ledger; no new GitHub issue or implemented path is claimed.",
+      "unregisteredHandlerClasses": [
+        "GrantAccessHandler"
+      ]
     },
     {
       "request": "GrantPlatformOperator",
@@ -24465,8 +24616,13 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorRecordVersionResolverTests.cs",
+        "test/Compliance.Tests/Features/Applications/Tests/ApplicationEvidenceSourceReferenceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Applications/Tests/ApplicationEvidenceSourceReferencePreviewTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportStatusTests.cs",
         "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportTests.cs",
-        "test/Compliance.Tests/Features/Evidence/Tests/LinkEvidenceSupportHandlerTests.cs"
+        "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportWithdrawalTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/LinkEvidenceSupportHandlerTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/WithdrawEvidenceSupportHandlerTests.cs"
       ],
       "note": ""
     },
@@ -25689,6 +25845,27 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evidence/Tests/EvidenceRequestHandlerTests.cs"
+      ],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
+      "request": "ListEvidenceSupports",
+      "contract": "src/Compliance.Common/Features/Evidence/Queries/ListEvidenceSupports.cs",
+      "classification": "query_or_reconstruction",
+      "interfaces": "IRequest<Page<EvidenceSupportStatusView>>, IProgramReadRequest, ICallable",
+      "handlers": [
+        {
+          "name": "ListEvidenceSupportsHandler",
+          "source": "src/Compliance.Core/Features/Evidence/Handlers/ListEvidenceSupportsHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportStatusTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -27189,6 +27366,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorHandoffCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorRecordVersionResolverTests.cs",
         "test/Compliance.Tests/Features/Controls/Tests/ControlDraftAuthorizationTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs",
         "test/Compliance.Tests/Testing/AdvisorHost.cs",
@@ -27898,6 +28076,7 @@
         "AdvisorHandoffReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorRecordVersionResolverTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/PreviewAdvisorHandoffHandlerTests.cs",
         "test/Compliance.Tests/Features/Controls/Tests/ControlDraftAuthorizationTests.cs"
       ],
@@ -27993,8 +28172,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Boundaries/Tests/BoundaryConsumerAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/Tests/CassieBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/Tests/ControlBoundaryImpactContributorTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/Tests/FitzBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/Tests/PersonalBoundaryDecisionTransportTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -28369,7 +28548,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Boundaries/Tests/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/Tests/CassieBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Testing/BoundarySeeds.cs"
       ],
       "note": ""
@@ -28544,6 +28723,30 @@
         "test/Compliance.Tests/Testing/MethodologyTemplateContributionScenario.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "ProposeFindingClosure",
+      "contract": "src/Compliance.Common/Features/Remediation/Commands/ProposeFindingClosure.cs",
+      "classification": "confirmed_command_gap",
+      "interfaces": "IRequest<FindingView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
+      "handlers": [],
+      "handlerRegistration": false,
+      "helperServices": [
+        "FindingReader"
+      ],
+      "directAggregateReferences": [
+        "FindingAggregate"
+      ],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureWithdrawalWorkflowTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/ProposeFindingClosureHandlerTests.cs"
+      ],
+      "note": "Confirmed source gap: no registered request handler. Keep unresolved in the local delivery ledger; no new GitHub issue or implemented path is claimed.",
+      "unregisteredHandlerClasses": [
+        "ProposeFindingClosureHandler"
+      ]
     },
     {
       "request": "ProposePolicyRetirement",
@@ -28784,28 +28987,23 @@
       "request": "ProvisionGuestProgramAccess",
       "contract": "src/Compliance.Common/Features/AccessControl/Commands/ProvisionGuestProgramAccess.cs",
       "interfaces": "IRequest",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "ProvisionGuestProgramAccessHandler",
-          "source": "src/Compliance.Core/Features/AccessControl/Handlers/ProvisionGuestProgramAccessHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
+      "classification": "confirmed_command_gap",
+      "handlers": [],
+      "handlerRegistration": false,
       "directAggregateReferences": [
         "AccessGrant",
         "Member"
       ],
-      "aggregateTargets": [
-        "AccessGrant"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/ProvisionGuestProgramAccessHandlerTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantInvitationReactorTests.cs"
       ],
-      "note": ""
+      "note": "Confirmed source gap: no registered request handler. Keep unresolved in the local delivery ledger; no new GitHub issue or implemented path is claimed.",
+      "unregisteredHandlerClasses": [
+        "ProvisionGuestProgramAccessHandler"
+      ]
     },
     {
       "request": "PublishAccessReviewDecisionBatch",
@@ -28944,6 +29142,8 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingAnalysisTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingSeverityTests.cs"
@@ -29780,10 +29980,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionOutcomeReactorTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureReviewHandlerTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureWithdrawalWorkflowTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeWorkflowTests.cs",
-        "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs",
-        "test/Compliance.Tests/Testing/FindingSeed.cs"
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs"
       ],
       "note": "System-only receiver bound to its exact committed source fact; no public HTTP/MCP route."
     },
@@ -30884,10 +31086,10 @@
         "test/Compliance.Tests/E2E/ProgramAuthorizationMcpE2ETests.cs",
         "test/Compliance.Tests/E2E/SplitHostTenantE2ETests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/DeprovisionMemberHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/GuestMembershipScopeTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/MemberLifecycleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RbacManagementRequestScenarioTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/TenantRbacBootstrapReactorTests.cs",
-        "test/Compliance.Tests/Features/Tenants/Tests/TenantInvitationReactorTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/ScopedTeamPermissionAuthorityTests.cs"
       ],
       "note": ""
     },
@@ -31492,7 +31694,7 @@
     {
       "request": "RemoveRolePermission",
       "contract": "src/Compliance.Common/Features/AccessControl/Commands/RemoveRolePermission.cs",
-      "interfaces": "IRequest, IRbacManagementRequest, ICallable, IIdentifiedRequest",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -31580,7 +31782,7 @@
     {
       "request": "RenameRole",
       "contract": "src/Compliance.Common/Features/AccessControl/Commands/RenameRole.cs",
-      "interfaces": "IRequest, IRbacManagementRequest, ICallable, IIdentifiedRequest",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -31598,6 +31800,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/CustomRoleLifecycleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RoleTeamContentOperationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantRbacBootstrapReactorTests.cs"
       ],
@@ -31655,7 +31858,9 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCurrentAuthorityTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingHistoricalClosureTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingIdentifiedOperationTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingTests.cs"
@@ -32295,7 +32500,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Boundaries/Tests/BoundaryNativeAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/Tests/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/Tests/CassieBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/Tests/PersonalBoundaryDecisionTransportTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/AssignedDecisionAuthorityTests.cs",
         "test/Compliance.Tests/Testing/BoundarySeeds.cs"
@@ -32479,6 +32684,31 @@
         "test/Compliance.Tests/Testing/MappingNativeSeeds.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "ReviewFindingClosure",
+      "contract": "src/Compliance.Common/Features/Remediation/Commands/ReviewFindingClosure.cs",
+      "classification": "confirmed_command_gap",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
+      "handlers": [],
+      "handlerRegistration": false,
+      "helperServices": [
+        "FindingReader"
+      ],
+      "directAggregateReferences": [
+        "CorrectiveAction",
+        "FindingAggregate"
+      ],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureReviewHandlerTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureWithdrawalWorkflowTests.cs"
+      ],
+      "note": "Confirmed source gap: no registered request handler. Keep unresolved in the local delivery ledger; no new GitHub issue or implemented path is claimed.",
+      "unregisteredHandlerClasses": [
+        "ReviewFindingClosureHandler"
+      ]
     },
     {
       "request": "ReviewMethodologyTemplate",
@@ -32780,6 +33010,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorHandoffCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorRecordVersionResolverTests.cs",
         "test/Compliance.Tests/Features/Controls/Tests/ControlDraftAuthorizationTests.cs",
         "test/Compliance.Tests/Testing/AdvisorEvents.cs",
         "test/Compliance.Tests/Testing/AdvisorHost.cs"
@@ -32942,7 +33173,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/Tests/ApplicationBoundaryReferenceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Boundaries/Tests/BoundaryNativeAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/Tests/FitzBoundaryDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Boundaries/Tests/CassieBoundaryDirectoryTests.cs",
         "test/Compliance.Tests/Testing/BoundarySeeds.cs"
       ],
       "note": ""
@@ -33129,6 +33360,28 @@
         "test/Compliance.Tests/Features/Work/Tests/ReviewerWorkAuthorityTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "ReviseFindingAnalysis",
+      "contract": "src/Compliance.Common/Features/Remediation/Commands/ReviseFindingAnalysis.cs",
+      "classification": "confirmed_command_gap",
+      "interfaces": "IRequest<FindingView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
+      "handlers": [],
+      "handlerRegistration": false,
+      "helperServices": [
+        "FindingReader"
+      ],
+      "directAggregateReferences": [
+        "FindingAggregate"
+      ],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingAnalysisTests.cs"
+      ],
+      "note": "Confirmed source gap: no registered request handler. Keep unresolved in the local delivery ledger; no new GitHub issue or implemented path is claimed.",
+      "unregisteredHandlerClasses": [
+        "ReviseFindingAnalysisHandler"
+      ]
     },
     {
       "request": "ReviseIndependenceRules",
@@ -34212,7 +34465,9 @@
       "aggregateTargets": [
         "CorrectiveAction"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "FindingClosureVerifier"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs"
       ],
@@ -35117,6 +35372,59 @@
       "note": ""
     },
     {
+      "request": "WithdrawEvidenceSupport",
+      "contract": "src/Compliance.Common/Features/Evidence/Commands/WithdrawEvidenceSupport.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "WithdrawEvidenceSupportHandler",
+          "source": "src/Compliance.Core/Features/Evidence/Handlers/WithdrawEvidenceSupportHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "EvidenceSupport"
+      ],
+      "aggregateTargets": [
+        "EvidenceSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AdvisorCollaboration/Tests/AdvisorRecordVersionResolverTests.cs",
+        "test/Compliance.Tests/Features/Applications/Tests/ApplicationEvidenceSourceReferenceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Applications/Tests/ApplicationEvidenceSourceReferencePreviewTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportLeadAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportWithdrawalTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/WithdrawEvidenceSupportHandlerTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "WithdrawFindingClosure",
+      "contract": "src/Compliance.Common/Features/Remediation/Commands/WithdrawFindingClosure.cs",
+      "classification": "confirmed_command_gap",
+      "interfaces": "IRequest<FindingView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
+      "handlers": [],
+      "handlerRegistration": false,
+      "helperServices": [
+        "FindingReader"
+      ],
+      "directAggregateReferences": [
+        "FindingAggregate"
+      ],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureProposalTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureWithdrawalWorkflowTests.cs"
+      ],
+      "note": "Confirmed source gap: no registered request handler. Keep unresolved in the local delivery ledger; no new GitHub issue or implemented path is claimed.",
+      "unregisteredHandlerClasses": [
+        "WithdrawFindingClosureHandler"
+      ]
+    },
+    {
       "request": "WithdrawServiceEngagementStaffProposal",
       "contract": "src/Compliance.Common/Features/AccessControl/Commands/WithdrawServiceEngagementStaffProposal.cs",
       "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest,\n        IIdentifiedRequest, ICallable",
@@ -35188,6 +35496,30 @@
     }
   ],
   "unwiredAggregateProducers": [
+    {
+      "fact": "AccessGrantIssued",
+      "aggregate": "AccessGrant",
+      "method": "Issue",
+      "methodArgumentCount": 2,
+      "source": "src/Compliance.Core/Features/AccessControl/Aggregates/AccessGrant.cs",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/AccessControl/Handlers/GrantAccessHandler.cs",
+          "methods": [
+            "Issue"
+          ]
+        },
+        {
+          "source": "src/Compliance.Core/Features/AccessControl/Handlers/ProvisionGuestProgramAccessHandler.cs",
+          "methods": [
+            "Issue"
+          ]
+        }
+      ],
+      "classification": "direct_processor_executor",
+      "ownerIssue": 1022,
+      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
+    },
     {
       "fact": "ApplicationRelationshipAdded",
       "aggregate": "ApplicationRelationship",
@@ -35528,6 +35860,96 @@
       "classification": "no_registered_request_route",
       "ownerIssue": 1022,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "FindingClosureProposed",
+      "aggregate": "FindingAggregate",
+      "method": "ProposeClosure",
+      "methodArgumentCount": 7,
+      "source": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/ProposeFindingClosureHandler.cs",
+          "methods": [
+            "ProposeClosure"
+          ]
+        }
+      ],
+      "classification": "direct_processor_executor",
+      "ownerIssue": 1022,
+      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
+    },
+    {
+      "fact": "FindingClosureAccepted",
+      "aggregate": "FindingAggregate",
+      "method": "ReviewClosure",
+      "methodArgumentCount": 9,
+      "source": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/ReviewFindingClosureHandler.cs",
+          "methods": [
+            "ReviewClosure"
+          ]
+        }
+      ],
+      "classification": "direct_processor_executor",
+      "ownerIssue": 1022,
+      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
+    },
+    {
+      "fact": "FindingClosureReturned",
+      "aggregate": "FindingAggregate",
+      "method": "ReviewClosure",
+      "methodArgumentCount": 9,
+      "source": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/ReviewFindingClosureHandler.cs",
+          "methods": [
+            "ReviewClosure"
+          ]
+        }
+      ],
+      "classification": "direct_processor_executor",
+      "ownerIssue": 1022,
+      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
+    },
+    {
+      "fact": "FindingAnalysisRevised",
+      "aggregate": "FindingAggregate",
+      "method": "ReviseAnalysis",
+      "methodArgumentCount": 6,
+      "source": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/ReviseFindingAnalysisHandler.cs",
+          "methods": [
+            "ReviseAnalysis"
+          ]
+        }
+      ],
+      "classification": "direct_processor_executor",
+      "ownerIssue": 1022,
+      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
+    },
+    {
+      "fact": "FindingClosureWithdrawn",
+      "aggregate": "FindingAggregate",
+      "method": "WithdrawClosure",
+      "methodArgumentCount": 5,
+      "source": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/WithdrawFindingClosureHandler.cs",
+          "methods": [
+            "WithdrawClosure"
+          ]
+        }
+      ],
+      "classification": "direct_processor_executor",
+      "ownerIssue": 1022,
+      "note": "Source-derived direct caller path; a registered request route is not proven by this inventory. This is not a completed command path; retain the gap in the local ledger."
     },
     {
       "fact": "IdentityRecoveryAccepted",

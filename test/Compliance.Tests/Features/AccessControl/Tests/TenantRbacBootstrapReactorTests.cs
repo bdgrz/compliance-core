@@ -363,7 +363,7 @@ public sealed class TenantRbacBootstrapReactorTests
 
     [Theory]
     [MemberData(nameof(GrantCommitBoundaries))]
-    public async Task ShouldFinishWithoutRestoringRemovedAuthorityGivenAnUnknownGrantAppendOutcome(int interruption)
+    public async Task ShouldFinishWithoutChangingBuiltInPermissionsGivenAnUnknownGrantAppendOutcome(int interruption)
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -381,10 +381,11 @@ public sealed class TenantRbacBootstrapReactorTests
         var interrupted = bus.Grants[^1];
         Assert.Equal(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
-        var removeInterrupted = interrupted.Permission is not (RbacPermissions.TenantAccess or RbacPermissions.TenantRbacManage);
-        if (removeInterrupted)
-            Assert.True((await inner.SendAsync(new RemoveRolePermission(tenantId, interrupted.RoleId,
-                interrupted.Permission, Uuid.CreateVersion4(), 1, interrupted.CommandId), RequestActor.System)).IsSuccess);
+        var removal = await inner.SendAsync(new RemoveRolePermission(tenantId, interrupted.RoleId,
+            interrupted.Permission, Uuid.CreateVersion4(), 1, interrupted.CommandId), RequestActor.System);
+        var standingAdminPermission = interrupted.RoleId == BuiltInRbac.TenantAdministrationRoleId(tenantId) &&
+            interrupted.Permission is RbacPermissions.TenantAccess or RbacPermissions.TenantRbacManage;
+        Assert.Equal(standingAdminPermission ? RequestErrorKind.Conflict : RequestErrorKind.Forbidden, removal.Error?.Kind);
 
         // Act
         await scenario.RunAsync(reactor);
@@ -397,10 +398,9 @@ public sealed class TenantRbacBootstrapReactorTests
         foreach (var grant in grants)
         {
             var owner = await reader.HydrateAsync(new RolePermission(tenantId, grant.RoleId, grant.Permission));
-            var removed = removeInterrupted && grant == interrupted;
-            Assert.Equal(!removed, owner.IsAssigned);
-            Assert.Equal(removed ? 2UL : 1UL, owner.Version);
-            Assert.Equal(removed ? null : (Uuid?)grant.CommandId, owner.AssignmentId);
+            Assert.True(owner.IsAssigned);
+            Assert.Equal(1UL, owner.Version);
+            Assert.Equal(grant.CommandId, owner.AssignmentId);
         }
         Assert.All(bus.Identities, identity => Assert.Equal(identity.Typed, identity.Metadata));
         Assert.NotEqual(ProjectionCheckpoint.Start,
