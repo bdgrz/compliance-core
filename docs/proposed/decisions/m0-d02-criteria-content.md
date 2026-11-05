@@ -29,8 +29,8 @@ Status: decided, 2026-09-22. Decision owner: Jeff Repanich, product owner.
 
 CR-09/10 in [Criteria](../contexts/criteria.md) retain one independent criterion
 owner per edition and identifier. Bounded admission windows serialize structural
-changes and publication; a verified manifest proves the accepted frozen set. It
-is not an edition-owned mutable roster and does not replace criterion outcomes.
+changes and publication; the exact verified frozen source cut identifies the
+accepted set. No edition-wide manifest or mutable roster replaces criterion outcomes.
 The existing seed ID, partial-coverage disclosures and license boundary remain.
 
 ## Repository check

@@ -54,21 +54,19 @@ edition (M0-D02, CR-01).
   its children. Structural additions, removals and parent relationships, including
   seed imports, are ordered through the bounded draft admission windows below (CR-09).
 - Publication freezes admission, waits for every admitted change's recorded
-  outcome, and validates an authoritative complete source cut. It pins the exact
-  immutable, hash-verified manifest of accepted entry identities, kinds, categories
-  and parents. The manifest is a publication proof and read source, not a new
-  owner of the criterion records. No child may structurally change afterwards.
+  outcome, and validates a complete authoritative source cut. The publication
+  fact identifies the exact terminal window, terminal event and position; the
+  retained chain and individual criterion facts establish the published set.
+  There is no edition-wide manifest, catalog-sized record, or child roster.
 - The current seed is 61 numbered criteria and six selected points of focus, with
-  partial points-of-focus coverage and unsupported Privacy lifecycle. Publication
-  must retain these support disclosures in the publication fact or its immutable
-  manifest and expose them in published-edition and Program reads. Coverage and
-  readiness must report omitted/unsupported inputs as unknown or incomplete.
-- An edition manifest must contain at most 4,096 entries and fit in 16 MiB of
-  canonical serialized content. Reject oversized input explicitly, never truncate.
-  This is an initial capacity limit, not proof the partial seed represents a full
-  future edition. Qualify a complete intended catalog against it before publishing;
-  increasing the limit needs an explicit compatible decision and storage qualification.
-
+  partial points-of-focus coverage and unsupported Privacy lifecycle. Retain and
+  expose these disclosures as separately scoped small source facts, rather than
+  embedding a growing list in the edition. An absent disclosure is unknown; neither
+  publication nor an absent entry proves completeness. Coverage and readiness
+  report omitted or unsupported inputs as unknown or incomplete.
+- There is no product limit of 4,096 criteria and no 16 MiB edition object. Every
+  criterion, admission, outcome and publication fact remains individually small.
+  No one record or content object contains the complete edition.
 ```mermaid
 stateDiagram-v2
     [*] --> draft: DraftCriteriaEdition
@@ -81,13 +79,13 @@ stateDiagram-v2
 | --- | --- | --- | --- |
 | DraftCriteriaEdition | Operator via label-claim process | `EditionId` is new; exact unused label reservation held | CriteriaEditionDrafted |
 | RenameCriteriaEditionDraft | Operator via label-claim process | Draft; exact replacement label reservation held | CriteriaEditionDraftRenamed |
-| PublishCriteriaEdition | Operator via draft process | Draft; label transition complete and confirmed; exact committed CriteriaPublicationRequested fact proves the frozen current window, operation, complete verified cut, manifest hash and current edition/label revision | CriteriaEditionPublished |
+| PublishCriteriaEdition | Operator via draft process | Draft; label transition complete and confirmed; exact committed CriteriaPublicationRequested fact proves the frozen current window, operation, complete verified source cut and current edition/label revision | CriteriaEditionPublished |
 
 | Event | Carries |
 | --- | --- |
 | CriteriaEditionDrafted | edition, framework, label, exact label claim token/generation, drafted by |
 | CriteriaEditionDraftRenamed | edition, previous label/claim, new label/claim, renamed by |
-| CriteriaEditionPublished | edition, exact edition revision and confirmed label claim, sealed window and source cut, immutable manifest reference/hash, entry count, support disclosures, published at, published by |
+| CriteriaEditionPublished | edition, exact edition revision and confirmed label claim, frozen terminal window address/generation, terminal event ID/position, edition-chain anchor, published at, published by |
 
 ### Draft admission window
 
@@ -130,37 +128,40 @@ Only the criterion owner decides that change; admission is not child acceptance.
   initial label claim; a nonexistent or unaccepted edition cannot admit changes. Find the current window from that source chain; a projection may
   be a hint only and must be verified and followed to the terminal current window.
   Rollover never drops an in-flight operation or treats an uncertain result as
-  refusal. The window holds one admission and a scalar active-entry count, never
-  a criterion roster. Update the count only from exact accepted add/remove outcomes;
-  no-op/refusal does not change it. Carry the count in the predecessor closure and
-  successor proof. Refuse a new add at 4,096 after resolving exact retries; this
-  bounds the active draft as well as the final manifest. Verify the count against
-  the complete source fold before publication.
+  refusal. The window holds one admission, never a criterion roster or catalog
+  content. Its single in-flight slot serializes edition structural changes: this
+  is a throughput tradeoff, not authority over the children's business state.
 - For publication, freeze the current window only when no admission is pending.
-  Build and verify the exact manifest from the complete authoritative chain, not
-  an eventually consistent projection: traverse exact window addresses from
-  genesis through the frozen window, fold accepted structural outcomes in order,
-  and verify each pinned child address, event ID, stream position and payload
-  binding or its durable negative fence. The manifest binds the frozen generation,
-  terminal position and chain/cut identity and hash. Retain the exact window-chain
-  facts and cited child facts/fences for the published edition's life, or use a
-  separately qualified audit-equivalent archive. A hash proves byte identity,
-  not completeness. Missing/corrupt source evidence after publication is surfaced
-  as an integrity/availability failure; never silently substitute another cut. If any source is incomplete,
-  unavailable or cannot be proven current, remain pending; never publish an empty
-  or partial guess. Validate the cut while no structural writer can enter. A structural
-  writer without current admission is refused; retire superseded bypass writers.
-- Invalid content before publication dispatch closes the frozen window as refused
-  and opens its successor. After dispatch, the exact publication request remains
-  pending until `CriteriaEdition` durably accepts or refuses it. The edition accepts
-  only that exact committed `CriteriaPublicationRequested` source event, binding
-  edition ID/revision, current frozen window, token, cut, manifest hash and
-  confirmed label claim. A frozen-window read plus caller-supplied manifest is
-  insufficient. Reopening needs a recorded terminal refusal and a fence against
-  delayed publication. An exact retry replays an accepted publication even after
-  window closure and never appends another publication. If it was
-  accepted, the published manifest remains authoritative and no successor accepts
-  structural changes. Never infer failure from a timeout or a missing event.
+  Traverse exact window addresses from genesis through that frozen window, in
+  predecessor order and each stream's physical event order. Verify accepted child
+  addresses, event IDs, stream positions and payload bindings, plus terminal
+  refusal/no-effect evidence or fences. Validate the complete settled source cut;
+  an eventually consistent projection or a terminal-window ID by itself is not
+  proof of completeness. All structural writers, including seed import, obey
+  admission. No superseded writer may bypass it.
+- Read and validate incrementally using paged source reads and bounded working
+  state. Where a rule requires proving absence, such as parent removal, use a
+  complete source-backed check; repeated bounded-memory passes are acceptable. A
+  read index may locate candidates but proves completeness only when its coverage
+  of the exact cut is independently established. Neither sorting the entire history
+  in memory nor materializing a complete edition in one object is required. Total
+  history and traversal time can grow; operational visibility and provider
+  qualification are required.
+- The small publication request binds the edition ID/revision, current frozen
+  window address/generation, terminal event ID/position, deterministic chain anchor,
+  operation token and confirmed label claim. The edition accepts only that exact
+  committed `CriteriaPublicationRequested` source event. A caller-supplied cut or
+  a window-state read alone is insufficient. Before dispatch, a failed validation
+  closes the window and opens a successor. After dispatch, remain pending until the
+  edition durably accepts or refuses; reopening needs terminal refusal and a fence
+  against delayed acceptance. Exact retries replay acceptance, even after closure.
+  Once publication is accepted, no successor admits structural changes.
+- Retain the exact window-chain facts and cited criterion facts/fences for the
+  published edition's life, or use a separately qualified audit-equivalent archive.
+  A position or hash alone does not prove complete membership. Missing, truncated,
+  unavailable or corrupt source evidence before publication keeps it pending or
+  fails closed; after publication surface an integrity/availability failure. Never
+  substitute a partial cut or a different version.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
@@ -169,17 +170,17 @@ Only the criterion owner decides that change; admission is not child acceptance.
 | RecordCriterionChangeOutcome | Reactor | Exact token-bound accepted fact, terminal refusal/no-effect fact, or target fence; naked refusal/no-op is insufficient | CriterionChangeOutcomeRecorded |
 | CloseCriteriaDraftWindow | Edition draft process | No pending change; rollover, invalid sealed cut or terminal publication outcome is known | CriteriaDraftWindowClosed |
 | FreezeCriteriaDraftWindow | Edition draft process | Window open and no pending change | CriteriaDraftWindowFrozen |
-| RequestCriteriaPublication | Edition draft process | Exact frozen source cut verified, durable content and validation pass | CriteriaPublicationRequested |
+| RequestCriteriaPublication | Edition draft process | Exact frozen source cut verified and validation passes | CriteriaPublicationRequested |
 | RecordCriteriaPublicationOutcome | Reactor | Exact edition publication accepted or durably refused/fenced | CriteriaPublicationOutcomeRecorded |
 
 | Event | Carries |
 | --- | --- |
-| CriteriaDraftWindowOpened | edition, generation, exact predecessor closure proof, initial active-entry count |
+| CriteriaDraftWindowOpened | edition, generation, exact predecessor closure proof |
 | CriterionChangeAdmitted | edition, window generation, operation token, exact child stream/episode and revision, immutable verified intent reference/digest, actor and exact admission/source-cut proof |
 | CriterionChangeOutcomeRecorded | edition, window generation, operation token, accepted/refused/fenced outcome and exact child evidence |
-| CriteriaDraftWindowClosed | edition, generation, terminal reason, active-entry count and deterministic successor, if any |
-| CriteriaDraftWindowFrozen | edition, generation, exact settled admission boundary, deterministic publication operation and cut identity |
-| CriteriaPublicationRequested | edition, frozen window, publication operation, exact source cut, immutable manifest reference/hash, count and disclosures |
+| CriteriaDraftWindowClosed | edition, generation, terminal reason and deterministic successor, if any |
+| CriteriaDraftWindowFrozen | edition, generation, exact settled admission boundary, deterministic publication operation and terminal cut identity |
+| CriteriaPublicationRequested | edition, edition revision, frozen terminal window address/generation and event ID/position, chain anchor, publication operation and confirmed label claim |
 | CriteriaPublicationOutcomeRecorded | edition, frozen window, publication operation, accepted/refused/fenced outcome and exact source evidence |
 
 Every serialized application event or audit record in the window is at most
@@ -251,7 +252,7 @@ Creation accepts only its exact reserved holder/token. Publication and rename
 order on the edition owner: if publication wins, rename refuses and its new
 reservation remains until durable refusal/fence; if rename wins, publication uses
 the committed label and confirmed claim. The publication request binds the edition
-revision, exact frozen window, immutable manifest and confirmed label-claim
+revision, exact frozen window, terminal source cut and confirmed label-claim
 token/generation; a stale request records a terminal refusal/fence before any
 reopening. A lost acknowledgement leaves the exact operation pending. A late
 acceptance after a timeout is reconciled, not compensated by releasing its claim.
@@ -290,10 +291,10 @@ original product text and can be corrected at any time (CR-02).
   remove/re-add replays its original outcome and never reapplies.
 - Initial summaries come from the individual criterion facts. A published entry's
   summary can be corrected on that same entry owner without changing the frozen
-  structural manifest. A draft summary correction and removal order on the same
+  structural source cut. A draft summary correction and removal order on the same
   criterion stream; an OCC loser reloads and rechecks entry existence. Summary
   corrections do not admit structural changes. Audit consumers that freeze exact
-  summary text retain its exact criterion fact/revision, not just the manifest.
+  summary text retain its exact criterion fact/revision, not just the published structural source cut.
 - A summary never contains licensed AICPA text (M0-D02).
 
 | Command | Who | Accepts when | Emits |
@@ -408,8 +409,8 @@ flowchart LR
 
 A refused child is recorded as an outcome even when it emits no criterion fact;
 transport failure is pending. Rollover and cancellation follow the exact-token
-fencing rules above. The manifest proves the accepted cut, and never substitutes
-for admitted child outcomes.
+fencing rules above. The publication cut identifies the accepted source chain; it never substitutes
+for verification of the individual child outcomes.
 
 ### Deciding a criterion is not applicable
 
@@ -462,7 +463,7 @@ Anything in between is settled by common sense, with the reasoning stated.
 
 | ID | Decision | Evidence |
 | --- | --- | --- |
-| CR-01 | A published edition's entry identities, kinds, categories and parents are frozen; a structural change is a new edition. | Original entry freeze: 0.87. CR-09 adds admitted participant outcomes and a verified manifest; this does not move child ownership into the edition. |
+| CR-01 | A published edition's entry identities, kinds, categories and parents are frozen; a structural change is a new edition. | Original entry freeze: 0.87. CR-09 adds admitted participant outcomes and a verified source cut; this does not move child ownership into the edition. |
 | CR-02 | Each criterion and point of focus is its own small owner in an edition. Its product-written summary can be corrected after publication. | Original own record: 0.86; summary correctable: 0.84. 2026-11-05 independent-owner question: 0.90; independent published-summary question: 0.91. |
 | CR-03 | Common criteria and points of focus can both be decided not applicable, with rationale and review. | Common criteria: 0.78; points of focus: 0.86. Common sense: SOC 2 reports do carry not-applicable criteria, and the review and rationale make each one defensible. |
 | CR-04 | Licensed text is one small overlay record per entry per edition. It can be removed when the license ends; past exports stay unchanged. | Per entry: 0.75; removable: 0.83. Common sense: suppliers license per criterion text, and the small record matches the rest of the model. |
@@ -470,13 +471,13 @@ Anything in between is settled by common sense, with the reasoning stated.
 | CR-06 | Criteria in a category outside the approved boundary are out of scope, with no decision. | 0.80. |
 | CR-07 | A not-applicable decision needs a reviewer who authored no revision (CV-06). | 0.78. Same rule as every other reviewed draft. |
 | CR-08 | Platform operators draft and publish editions. | Firm methodology team instead: 0.57; restricted to a small platform-level group: 0.77. Common sense: operators are the only platform-level authority (PA-14). |
-| CR-09 | Separate criterion owners; serialized admitted changes, participant outcomes and fences; a sealed source-cut manifest proves publication. Draft windows contain at most 128 operations and 261 application event records each, including audit records. | Product direction 2026-11-05: aggregates need not own their children. Jev: independent owners 0.90; empty-target fence 0.83; bounded-window question 0.84. Concrete race follow-up: late child 0.72, empty-target race 0.33, must wait 0.80, arithmetic-bound question 0.19. The lower and conflicting results are not clearance; the explicit race trace establishes the safety rule, subject to executable qualification. The follow-up asked about four fixed facts (260); the final design counts five fixed facts, so its conditional maximum is 128 × 2 + 5 = 261, established by arithmetic, not Jev. Final recheck: independent criterion owners 0.82; possible late no-op 0.65; record limit 0.29; a per-window cap bounds all history 0.04. The low record-limit score is retained as a disagreement, not a reason to disregard the explicit budget or claim runtime proof. |
+| CR-09 | Separate criterion owners; serialized admitted changes, participant outcomes and fences; the exact sealed source cut identifies publication. Draft windows contain at most 128 operations and 261 application event records each, including audit records. | Product direction 2026-11-05: aggregates need not own their children. Jev: independent owners 0.90; empty-target fence 0.83; bounded-window question 0.84. Concrete race follow-up: late child 0.72, empty-target race 0.33, must wait 0.80, arithmetic-bound question 0.19. The lower and conflicting results are not clearance; the explicit race trace establishes the safety rule, subject to executable qualification. The follow-up asked about four fixed facts (260); the final design counts five fixed facts, so its conditional maximum is 128 × 2 + 5 = 261, established by arithmetic, not Jev. Final recheck: independent criterion owners 0.82; possible late no-op 0.65; record limit 0.29; a per-window cap bounds all history 0.04. The low record-limit score is retained as a disagreement, not a reason to disregard the explicit budget or claim runtime proof. After the bulk manifest was withdrawn, Jev gave 0.03 that criterion independence requires a parent collection and 0.93 that verified source traversal can use a small cut reference. |
 | CR-10 | Keep unique structured edition labels through per-code authoritative claims; preserve the existing seed ID and current draft rename/reuse semantics. | Jev claim owner: 0.86. Final recheck on duplicate claim after a lost acknowledgement: 0.17; the safe policy nevertheless keeps the reservation pending until target acceptance is reconciled or rejection is durably fenced. The score is not clearance. A concrete recheck gave 0.92 that accepted edition A and edition B's later reservation can coexist after premature release, and 0.08 that confirmation can precede target acceptance. Reuse makes claim history unbounded; bounded rollover is not claimed until its closure/fencing protocol is implemented and tested. |
 
 ## Open questions
 
 No business-model choice remains open for CR-09/10. Implementation must prove a
-complete authoritative source cut, content durability, participant fencing and
+complete authoritative source cut, source durability, participant fencing and
 bounded window arithmetic with real framework semantics before claiming delivery.
 The exact implementation of per-code claim rollover and a hard lifetime bound for
 ordinary per-record history are not specified or claimed by this decision.

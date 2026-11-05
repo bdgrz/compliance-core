@@ -15,7 +15,7 @@ is declared complete by this ledger, and SQL migration does not close business g
 
 [CR-09/10](contexts/criteria.md#decisions) lock independent criterion owners,
 bounded draft admission windows, exact participant outcomes/fencing and a verified
-published source-cut manifest. This is design, not implemented behavior. The
+published source cut. No complete edition is stored in one manifest or aggregate. This is design, not implemented behavior. The
 static catalog remains data only; preserve its fixed ID and partial-coverage
 warnings until a source-backed publication migration is qualified. Program
 creation must select a published edition. Historical handoffs remain evidence of

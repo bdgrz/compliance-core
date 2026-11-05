@@ -1,0 +1,34 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "user_rules": "No single god objects. No large records or content objects. A criterion owns its own facts. An edition owns only its identity and publication, not a collection of criteria.",
+    "proposal": "Each criterion has an independent stream. A small short-lived draft admission window owns only one pending admission, exact participant outcome, and its own rollover/publication state; it does not contain a list of criteria. At most one structural operation is in flight in a window. A committed window closure points to exactly one successor; a published edition references only the exact frozen terminal window, terminal event and physical position. Publication verifies the complete chain from its deterministic first window, including each exact cited child event or durable refusal/fence. Validation uses streaming or bounded-memory multiple passes, not a catalog-sized record or content object. A read index is a hint and cannot prove completeness. Source windows and child facts must be retained. Missing evidence means pending/fail-closed. Every structural writer, including seed import, must use admission. Exact no-op/refusal/unknown and delayed writers use target-side token fence. Summaries remain on their individual criterion owner. The gate serializes structural changes, which is a throughput tradeoff; it owns no child business decisions.",
+    "context": "Previous candidate contained a whole-edition manifest with 4096-entry and 16-MiB ceilings. User rejected large records, large content, and god objects. Those ceilings and the large manifest are withdrawn."
+  },
+  "questions": {
+    "criterion_independence": {
+      "type": "noul",
+      "instructions": "Does this proposal require the edition or admission window to own a collection of criterion records?"
+    },
+    "cut_without_bulk": {
+      "type": "noul",
+      "instructions": "Can a publication use a small terminal source-cut reference while still proving membership by traversing and verifying every retained window outcome and child event, without persisting the full set as one content object?"
+    },
+    "cut_alone": {
+      "type": "noul",
+      "instructions": "Does a terminal window identifier alone prove that all earlier admitted child outcomes are present and valid, without traversing and verifying the source chain?"
+    },
+    "single_inflight": {
+      "type": "noul",
+      "instructions": "Does allowing at most one in-flight structural change in an edition serialize those changes?"
+    },
+    "per_window_total": {
+      "type": "noul",
+      "instructions": "Does an upper limit on records in each window impose a fixed finite limit on the total number of windows for an edition?"
+    },
+    "fence_required": {
+      "type": "noul",
+      "instructions": "If a child handler checks admission then pauses before append, can it append after publication unless its exact target stream is fenced or its terminal outcome is known before release?"
+    }
+  }
+}

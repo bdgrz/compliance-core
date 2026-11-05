@@ -6,13 +6,22 @@ Canonical rules are [CR-09/10 and their owners](../contexts/criteria.md#decision
 The recommendation to move all structural definitions into an edition-owned
 manifest was rejected; each `Criterion` keeps its structural authority.
 
-The edition publishes only a cut proven by its admission-window chain and exact
-participant outcomes. The manifest is an immutable proof/read source of that cut,
-not an owner that accepts child changes. No pending reservation may be forgotten:
-a no-fact refusal, cancelled command or unrecorded no-op needs an exact target
-fence before admission is released, including when the target stream is empty.
-A fence and an accepted write contend on the same target; an earlier acceptance
-must be reported, never erased. A hash proves byte identity, not a complete cut.
+The 2026-11-05 direction supersedes the former whole-edition manifest proposal:
+no aggregate or content object holds the complete edition. The edition publishes a
+small reference to its exact frozen terminal window and source cut. Each criterion
+owns its own facts; the retained admission chain and exact participant facts/fences
+establish the accepted set. A small coordinator owns only admission and closure,
+not the children. It allows one structural change in flight per edition, a
+throughput tradeoff that must be qualified rather than concealed. Validation reads
+source incrementally or in bounded-memory passes; it does not sort the history or
+materialize the catalog in one object. Source-chain length and traversal time can
+still grow.
+
+No pending reservation may be forgotten: a no-fact refusal, cancelled command or
+unrecorded no-op needs an exact target fence before admission is released,
+including when the target stream is empty. A fence and an accepted write contend
+on the same target; an earlier acceptance must be reported, never erased. A
+terminal-window reference or digest alone does not prove a complete cut.
 
 A window accepts at most 128 changes. It records at most one admission and one
 terminal outcome per change. Opening, freeze, publication request, publication
@@ -24,12 +33,12 @@ metadata and any provider-generated records remain to be qualified. A successor 
 bound to its predecessor's terminal closure, and current-head discovery verifies
 source evidence; a read model is only a hint.
 
-The active edition is limited to 4,096 entries and the published manifest to
-16 MiB. These are new initial limits, not measured proof for a complete future
-catalog. The existing store enforces 16 MiB; the current seed contains 61 criteria
-and only six selected points of focus. Publishing must retain its partial-coverage
-and unsupported Privacy disclosures. A proposed complete catalog must be qualified
-against the limits before publication; refusal is explicit, never silent truncation.
+The proposed 4,096-entry and 16 MiB edition-manifest limits are withdrawn: they
+were introduced without a business requirement, and no whole-edition content object
+is needed. The existing store's 16 MiB **per-object** technical limit does not
+establish a catalog size requirement. Preserve the seed's partial-points-of-focus
+and unsupported Privacy disclosures as individually scoped source facts; a missing
+disclosure means unknown, not complete.
 
 A per-code label claim serializes code reservation and rename without a global
 roster. An unknown target outcome stays pending; a claim used by an accepted
@@ -38,7 +47,7 @@ refusal or target fence is necessary before releasing a new reservation; an old
 claim releases only after the exact rename is accepted and the new claim confirmed.
 Normalization v1 and the fixed seed ID are in CR-10. Reused-code claim history,
 criterion lifecycle/summary history, program history and the number of draft
-windows remain unbounded over time. Only the named per-window and content bounds
+windows remain unbounded over time. Only the named per-window bounds
 are claimed; no Portia snapshots, generic compaction, bounded total traversal or
 safe claim rollover are assumed. The design therefore preserves small ownership
 and bounds each window, but does **not** claim every aggregate has a finite
@@ -46,7 +55,9 @@ lifetime event-count limit.
 
 ## Jev evidence
 
-Five retained calls use `jev-1.14.0`:
+The first five calls use `jev-1.14.0` and evaluated an earlier candidate that
+included a whole-edition manifest. They are historical evidence; their
+manifest-specific answers do not qualify the revised no-manifest design:
 
 1. [Initial request](criteria-authority-jev-request.json) and
    [response](criteria-authority-jev-response.json): separate criterion owners
@@ -92,6 +103,19 @@ specified budget is enforced. The .65 no-op signal is not treated as a definitiv
 model finding: the explicit delayed-retry trace demonstrates why a terminal
 no-effect fact or fence is required. Jev is advisory and cannot prove the protocol.
 
+## No-manifest recheck — 2026-11-05
+
+The user rejected large content and god objects. The
+[small-record request](criteria-small-records-jev-request.json) and
+[response](criteria-small-records-jev-response.json) give .03 that independent
+owners require a parent collection; .93 that a small cut reference with verified
+source traversal can work without a bulk object; .03 that the cut reference alone
+proves completeness; .88 that one in-flight change serializes changes; .11 that
+bounded windows imply a bounded total window count; and .26 for the stalled-writer
+fence question. Those are advisory; particularly the .26 is not a reason to drop
+the target-side fence. The earlier contradictory stalled-writer judgments remain
+unresolved pending executable source/provider tests.
+
 ## Qualification required during implementation
 
 Run executable checks for edit/publish OCC races; parent removal/point-of-focus
@@ -99,8 +123,9 @@ admission; missing, truncated or stale source cuts; target absence and delayed
 writes; committed outcome with lost acknowledgement; no-fact refusal/no-op and
 fence races; 128-operation rollover and record/payload budgets including audit;
 crashes/restarts and stale hints; label claim contention, accepted rename with lost
-ack and stale releases; immutable content integrity; partial seed disclosures;
+ack and stale releases; exact small source-cut proof and bounded-memory traversal;
+partial seed disclosures;
 and program creation/retry/tenant isolation over API, MCP and real stores. Verify
-actual Portia/Fitz and immutable-content guarantees before claiming the physical
+actual Portia/Fitz source-read and event-store guarantees before claiming the physical
 bounds or publication completion. Existing native #1188 and assembly #1189 remain
 separate qualification blockers.
