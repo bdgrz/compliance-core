@@ -25,7 +25,7 @@ public sealed class GetTeamMemberAccessHandler(IAggregateReader reader, IMemberA
             !edges.Any(edge => edge.RoleId == expected))
             return Result<MemberAccessView>.Failure(new RequestError(RequestErrorKind.Conflict, "The expected role is not currently assigned."));
         var paths = new List<MemberAccessPath>();
-        foreach (var edge in edges)
+        foreach (var edge in edges.Where(edge => edge.TeamId != Uuid.Empty))
         {
             var team = await reader.HydrateAsync(new Team(request.TenantId, edge.TeamId), ct).ConfigureAwait(false);
             var sourceRole = await reader.HydrateAsync(new Role(request.TenantId, edge.RoleId), ct).ConfigureAwait(false);
@@ -39,8 +39,9 @@ public sealed class GetTeamMemberAccessHandler(IAggregateReader reader, IMemberA
                 paths.Add(new MemberAccessPath(edge.TeamId, teamView.Name, edge.RoleId, roleView.Name, edge.Permissions, edge.Scope));
             }
         }
-        var permissions = paths.Where(path => TeamRoleScopes.Normalize(request.TenantId, path.Scope).Kind == AccessGrantScopeKind.Organization)
+        var permissions = edges.Where(path => TeamRoleScopes.Normalize(request.TenantId, path.Scope).Kind == AccessGrantScopeKind.Organization)
             .SelectMany(path => path.Permissions).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
-        return Result<MemberAccessView>.Success(new MemberAccessView(request.TenantId, request.UserId, member.Id, paths, [], permissions));
+        return Result<MemberAccessView>.Success(new MemberAccessView(request.TenantId, request.UserId, member.Id, paths, [], permissions,
+            edges.Any(edge => edge.TeamId == Uuid.Empty) ? member.PrimaryDesignationId : Uuid.Empty));
     }
 }

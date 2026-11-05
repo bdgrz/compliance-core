@@ -1,5 +1,15 @@
 # Proposed domain implementation progress
 
+**Organization creation and primary administration — 2026-11-05.** Source is
+implemented across API, MCP, write models and read models, including mandatory
+client-created tenant IDs. Strict Release build, whitespace and tooling pass;
+**152 focused cases and 8 HTTP/MCP cases pass**. The final full gate remains
+blocked: **8,221 passed / 1,080 failed / zero skipped**, with 6,753 inputs
+unchanged during execution. See the [feature review](reviews/organization-bootstrap.md)
+and [validation evidence](reviews/organization-bootstrap-validation.json).
+Native #1188 and broader assembly #1189 remain open; no full context, hosted
+acceptance, merge or release is claimed. Earlier checkpoint text is historical.
+
 **Resumed 2026-11-05; scoped-access source checkpoint preserved.** Current team-role
 permission authority, guest episode caps and public cutover have 296 passing focused
 cases, with strict build/format and tooling green. The full gate still fails:

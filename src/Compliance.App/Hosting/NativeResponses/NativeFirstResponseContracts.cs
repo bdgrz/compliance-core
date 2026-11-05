@@ -61,7 +61,9 @@ namespace Bdgrz.Compliance.Hosting.NativeResponses;
 static class NativeFirstResponseContracts
 {
     public static bool ImmediateUnit(string command) => command is
-        "AcceptTemplateContribution"
+        "DesignatePrimaryOrgAdmin"
+        or "ReleasePrimaryOrgAdmin"
+        or "AcceptTemplateContribution"
         or "AcceptTenantInvitation"
         or "ActivateTenant"
         or "AmendAuditPackage"

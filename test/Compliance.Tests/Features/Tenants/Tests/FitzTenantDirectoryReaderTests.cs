@@ -194,6 +194,36 @@ public sealed class FitzTenantDirectoryReaderTests
         Assert.Contains(seen, tenant => tenant.TenantId == rejectedId && tenant.Status == "rejected");
     }
 
+    [Fact]
+    public async Task ShouldProjectProvisioningGivenRejectedInitialAddressRecovered()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        var tenantId = Uuid.CreateVersion4();
+        var creator = Uuid.CreateVersion4();
+        var repository = new FitzTenantDirectoryReader(client);
+        var identity = new CheckpointIdentity("TenantDirectory", EventStreamPattern.ForPattern("bdgrz", "tenants"));
+        var owner = new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(tenantId);
+        var operation = TenantFacts.Provenance(owner, "ConfirmTenantSlug");
+
+        // Act
+        await using (var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
+        {
+            await repository.ApplyAsync(new TenantRegistered(tenantId, creator, "Company", "company",
+                CreatorIsAdministrator: true, ActivationRequired: true));
+            await repository.ApplyAsync(TenantFacts.Rejected(tenantId, "company"));
+            await repository.ApplyAsync(new TenantSlugChanged(tenantId, "company", "company-next",
+                operation.LogicalId, operation, TenantFacts.Response()));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var view = await repository.GetAsync(tenantId);
+
+        // Assert
+        Assert.NotNull(view);
+        Assert.Equal("company-next", view.Slug);
+        Assert.Equal("provisioning", view.Status);
+    }
+
     static async Task SeedAsync(InMemoryKvClient client, Uuid tenantId, string name, string slug)
     {
         var repository = new FitzTenantDirectoryReader(client);

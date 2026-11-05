@@ -8,7 +8,9 @@ public sealed partial class TenantMembershipProjector(ITenantMembershipDirectory
       IProjectorHandler<MemberRegistered>,
       IProjectorHandler<MemberSuspended>,
       IProjectorHandler<MemberReinstated>,
-      IProjectorHandler<MemberDeprovisioned>
+      IProjectorHandler<MemberDeprovisioned>,
+      IProjectorHandler<MemberMarkedPrimary>,
+      IProjectorHandler<MemberPrimaryMarkRemoved>
 {
     public async ValueTask<Result> HandleAsync(IProjectorContext<MemberRegistered> context, CancellationToken ct)
     {
@@ -35,6 +37,18 @@ public sealed partial class TenantMembershipProjector(ITenantMembershipDirectory
     {
         var ev = context.Trigger;
         await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<MemberMarkedPrimary> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<MemberPrimaryMarkRemoved> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
         return Result.Success;
     }
 }

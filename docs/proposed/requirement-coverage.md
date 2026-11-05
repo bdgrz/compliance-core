@@ -11,6 +11,18 @@ The reviews below did not execute tests. Named tests are evidence to qualify,
 not proof of current GREEN, complete workflows or merged acceptance. No context
 is declared complete by this ledger, and SQL migration does not close business gaps.
 
+## 2026-11-05 organization bootstrap supplement
+
+[Organization creation and primary administration](reviews/organization-bootstrap.md)
+supersedes older PA-04/05/21/23/27 rows that say primary seats, creator designation,
+registered-tenant slug recovery or the ordinary-admin guard cutover are absent.
+Creation now requires a client-created tenant ID on HTTP and MCP; exact retry
+returns the original registration and changed intent conflicts. Both source
+activation orderings and membership/primary/access reads are exercised. Membership
+views now retain guest caps, resolving that source-view gap from the scoped-access
+checkpoint. The controlled feature tests pass; native/full acceptance remains
+blocked as documented in the review. Other requirements are not promoted to done.
+
 ## 2026-11-05 scoped-access supplement
 
 The [scoped-team checkpoint](reviews/scoped-team-access.md) supersedes the older

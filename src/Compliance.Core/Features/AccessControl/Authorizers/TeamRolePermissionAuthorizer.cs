@@ -180,6 +180,21 @@ sealed class TeamRolePermissionAuthorizer(IAggregateReader reader, IDomainEventR
         if (!Eligible(current) || current.MembershipEpisodeId != member.MembershipEpisodeId ||
             !(await reader.HydrateAsync(new Tenant(tenantId), ct).ConfigureAwait(false)).IsActive)
             return [];
+        if (current.IsPrimary && current.Affiliation != "guest" &&
+            (requiredRole is null || requiredRole == BuiltInRbac.TenantAdministrationRoleId(tenantId)))
+        {
+            var primaries = await reader.HydrateAsync(new PrimaryOrgAdmins(tenantId), ct).ConfigureAwait(false);
+            if (primaries.HasDesignated(userId, current.MembershipEpisodeId, current.PrimaryDesignationId))
+            {
+                var names = BuiltInRolePermissions.Create(current.PrimaryDesignationId, tenantId)
+                    .Where(grant => grant.RoleId == BuiltInRbac.TenantAdministrationRoleId(tenantId) &&
+                        (permission is null || grant.Permission == permission))
+                    .Select(grant => grant.Permission).Distinct(StringComparer.Ordinal).ToArray();
+                if (names.Length != 0)
+                    verified.Add(new MemberAccessEdge(Uuid.Empty, BuiltInRbac.TenantAdministrationRoleId(tenantId),
+                        names, new AccessGrantScope(AccessGrantScopeKind.Organization, tenantId)));
+            }
+        }
         if (current.Affiliation != "guest")
             return verified;
         return verified.SelectMany(edge => current.GuestProgramIds.Where(program =>

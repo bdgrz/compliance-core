@@ -30,7 +30,7 @@ public sealed class RegisterTenantAuthorizerTests
         var actor = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));
         var context = new RequestContext<RegisterTenant>(
-            new RegisterTenant("Acme", "acme", "Acme LLC"), actor);
+            new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme", "Acme LLC"), actor);
 
         // Act
         var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
@@ -46,7 +46,7 @@ public sealed class RegisterTenantAuthorizerTests
         var authorizer = new RegisterTenantAuthorizer(new PlatformOperatorAuthority([]),
             new EmailDirectory(null, false));
         var context = new RequestContext<RegisterTenant>(
-            new RegisterTenant("Acme", "acme"),
+            new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme"),
             new ClaimsPrincipal(new ClaimsIdentity()));
 
         // Act
@@ -70,7 +70,7 @@ public sealed class RegisterTenantAuthorizerTests
         // Act
         var result = await authorizer.AuthorizeAsync(
             new RequestContext<RegisterTenant>(
-                new RegisterTenant("Acme", "acme", "Acme LLC"), actor),
+                new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme", "Acme LLC"), actor),
             CancellationToken.None);
 
         // Assert
@@ -89,7 +89,7 @@ public sealed class RegisterTenantAuthorizerTests
 
         // Act
         var result = await authorizer.AuthorizeAsync(new RequestContext<RegisterTenant>(
-            new RegisterTenant("Acme", "acme", "Acme LLC"), actor),
+            new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme", "Acme LLC"), actor),
             CancellationToken.None);
 
         // Assert
@@ -109,7 +109,7 @@ public sealed class RegisterTenantAuthorizerTests
 
         // Act
         var result = await authorizer.AuthorizeAsync(new RequestContext<RegisterTenant>(
-            new RegisterTenant("Acme", "acme", "Acme LLC"), actor), CancellationToken.None);
+            new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme", "Acme LLC"), actor), CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);

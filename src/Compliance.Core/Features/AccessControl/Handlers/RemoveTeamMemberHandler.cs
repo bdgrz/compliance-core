@@ -47,15 +47,9 @@ using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
-/// <summary>
-///     Removes a team member. A non-administrator team is a direct native operation on the team-member owner and
-///     never reads the tenant manager guard; removal from the built-in Administrators team is route-determined and
-///     appends a guard fact first, withdrawing the member's availability before the administrator transition
-///     process removes the assignment.
-/// </summary>
+/// <summary>Removes the exact team assignment directly. Team membership is independent of a primary designation.</summary>
 public sealed class RemoveTeamMemberHandler(NativeOperationExecutor operations,
-    AdministratorTransitionAdmission admissions, IAggregateReader reader, IImmutableContentStore content,
-    TimeProvider clock)
+    IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<RemoveTeamMember, AdministratorTransitionResponse>
 {
     const string CommandKind = "RemoveTeamMember";
@@ -76,9 +70,6 @@ public sealed class RemoveTeamMemberHandler(NativeOperationExecutor operations,
             return Fail(RequestErrorKind.Forbidden, "The caller identity is not recognized.");
 
         var provenance = Provenance(request, actor, clock.GetUtcNow());
-        if (request.TeamId == BuiltInRbac.AdministratorsTeamId(request.TenantId))
-            return await RemoveAdministratorAsync(context, request, actor, ct).ConfigureAwait(false);
-
         var binding = AcceptedOperationBinding.Of(provenance);
         var accepted = await operations.ExecuteAsync(new NativeOperation<TeamMember>(binding,
             () => Owner(request, request.CommandId), owner => owner.Acceptance,
@@ -88,31 +79,6 @@ public sealed class RemoveTeamMemberHandler(NativeOperationExecutor operations,
             .ConfigureAwait(false);
         return await TeamMemberResponses.ReadAsync(content, request.TenantId.ToString(), accepted, ct)
             .ConfigureAwait(false);
-    }
-
-    async ValueTask<Result<AdministratorTransitionResponse>> RemoveAdministratorAsync(
-        IRequestContext<RemoveTeamMember> context, RemoveTeamMember request, ActorReference actor, CancellationToken ct)
-    {
-        var assignment = await reader.HydrateAsync(Owner(request, Uuid.Empty), ct).ConfigureAwait(false);
-        var episodeId = request.MemberEpisodeId == Uuid.Empty ? assignment.MembershipEpisodeId : request.MemberEpisodeId;
-        var admission = new AdministratorAdmission(request.CommandId, request.TenantId, AdministratorCommandKinds.Remove,
-            actor, AuthoredIntentDigest.Compute(request), clock.GetUtcNow(), request.MemberId, episodeId,
-            assignment.Stream, assignment.Id, request.ExpectedAssignmentRevision, guard =>
-            {
-                if (episodeId == Uuid.Empty)
-                    return Result<AdministratorSourceBinding>.Failure(new RequestError(RequestErrorKind.NotFound,
-                        "The member is not on this team."));
-                var unfinished = AdministratorAdmissions.Unfinished(guard, episodeId, false, static _ => false);
-                if (!unfinished.IsSuccess)
-                    return Result<AdministratorSourceBinding>.Failure(unfinished.Error!);
-                var prepared = assignment.PrepareRemove(episodeId, request.ExpectedAssignmentRevision,
-                    request.ExpectedAssignmentGeneration);
-                return prepared.IsSuccess
-                    ? Result<AdministratorSourceBinding>.Success(new AdministratorSourceBinding(0,
-                        assignment.AssignmentGeneration, assignment.AssignmentRevision, null))
-                    : Result<AdministratorSourceBinding>.Failure(prepared.Error!);
-            }, ResolveCurrentEpisode: request.MemberEpisodeId == Uuid.Empty);
-        return await admissions.AdmitAsync(context, admission, ct).ConfigureAwait(false);
     }
 
     async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(TeamMember owner, RemoveTeamMember request,

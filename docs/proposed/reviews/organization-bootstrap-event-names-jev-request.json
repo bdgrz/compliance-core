@@ -1,0 +1,73 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "source": "docs/proposed/contexts/platform-access.md PA-27 and Member/PrimaryOrgAdmins tables. PrimaryOrgAdmins owns max two seats including pending; pending cannot count as remaining completed primary. Member owns mark versus suspend/deprovision ordering. Cross-owner negative outcome is an explicit business reservation response, not a generic failed command. Names below are the approved catalog names.",
+    "facts": [
+      {
+        "name": "PrimaryOrgAdminDesignationRequested",
+        "completed_meaning": "The tenant primary seat owner durably reserved one of maximum two seats pending this exact member episode response.",
+        "payload": "using Cntryl.Portia;\nusing Bdgrz.Compliance.Features.AccessControl.Models;\nnamespace Bdgrz.Compliance.Features.AccessControl.Events;\n\n[Discriminator(\"bdgrz.rbac.primary-org-admin-designation-requested\", 1)]\npublic sealed record PrimaryOrgAdminDesignationRequested(Uuid TenantId, Uuid UserId, Uuid MembershipEpisodeId, Uuid DesignationId, ActorAttribution RequestedBy) : DomainEvent;\n"
+      },
+      {
+        "name": "PrimaryOrgAdminDesignated",
+        "completed_meaning": "The seat owner recorded that this member episode accepted the primary mark, completing its designation.",
+        "payload": "using Cntryl.Portia;\nusing Bdgrz.Compliance.Features.AccessControl.Models;\nnamespace Bdgrz.Compliance.Features.AccessControl.Events;\n\n[Discriminator(\"bdgrz.rbac.primary-org-admin-designated\", 1)]\npublic sealed record PrimaryOrgAdminDesignated(Uuid TenantId, Uuid UserId, Uuid MembershipEpisodeId, Uuid DesignationId) : DomainEvent;\n"
+      },
+      {
+        "name": "PrimaryOrgAdminDesignationRefused",
+        "completed_meaning": "The seat owner recorded the exact member outcome refusing a pending designation and freed its seat.",
+        "payload": "using Cntryl.Portia;\nusing Bdgrz.Compliance.Features.AccessControl.Models;\nnamespace Bdgrz.Compliance.Features.AccessControl.Events;\n\n[Discriminator(\"bdgrz.rbac.primary-org-admin-designation-refused\", 1)]\npublic sealed record PrimaryOrgAdminDesignationRefused(Uuid TenantId, Uuid UserId, Uuid MembershipEpisodeId, Uuid DesignationId, string Reason) : DomainEvent;\n"
+      },
+      {
+        "name": "PrimaryOrgAdminReleased",
+        "completed_meaning": "The seat owner released a completed primary after verifying another fully designated primary remains.",
+        "payload": "using Cntryl.Portia;\nusing Bdgrz.Compliance.Features.AccessControl.Models;\nnamespace Bdgrz.Compliance.Features.AccessControl.Events;\n\n[Discriminator(\"bdgrz.rbac.primary-org-admin-released\", 1)]\npublic sealed record PrimaryOrgAdminReleased(Uuid TenantId, Uuid UserId, Uuid MembershipEpisodeId, Uuid DesignationId, Uuid CommandId, Uuid ReplacedByUserId, string Reason, ActorAttribution ReleasedBy) : DomainEvent;\n"
+      },
+      {
+        "name": "MemberMarkedPrimary",
+        "completed_meaning": "The member owner accepted the protective primary mark on its current active non-guest episode.",
+        "payload": "using Cntryl.Portia;\nusing Bdgrz.Compliance.Features.AccessControl.Models;\nnamespace Bdgrz.Compliance.Features.AccessControl.Events;\n\n[Discriminator(\"bdgrz.rbac.member-marked-primary\", 1)]\npublic sealed record MemberMarkedPrimary(Uuid TenantId, Uuid MemberId, Uuid UserId, Uuid MembershipEpisodeId, Uuid DesignationId) : DomainEvent;\n"
+      },
+      {
+        "name": "MemberPrimaryMarkRefused",
+        "completed_meaning": "The member owner recorded that it cannot accept this pending designation because its episode is inactive or guest.",
+        "payload": "using Cntryl.Portia;\nusing Bdgrz.Compliance.Features.AccessControl.Models;\nnamespace Bdgrz.Compliance.Features.AccessControl.Events;\n\n[Discriminator(\"bdgrz.rbac.member-primary-mark-refused\", 1)]\npublic sealed record MemberPrimaryMarkRefused(Uuid TenantId, Uuid MemberId, Uuid UserId, Uuid MembershipEpisodeId, Uuid DesignationId, string Reason) : DomainEvent;\n"
+      },
+      {
+        "name": "MemberPrimaryMarkRemoved",
+        "completed_meaning": "The member owner removed its exact protective designation mark in response to the committed seat release.",
+        "payload": "using Cntryl.Portia;\nusing Bdgrz.Compliance.Features.AccessControl.Models;\nnamespace Bdgrz.Compliance.Features.AccessControl.Events;\n\n[Discriminator(\"bdgrz.rbac.member-primary-mark-removed\", 1)]\npublic sealed record MemberPrimaryMarkRemoved(Uuid TenantId, Uuid MemberId, Uuid UserId, Uuid MembershipEpisodeId, Uuid DesignationId) : DomainEvent;\n"
+      }
+    ]
+  },
+  "questions": {
+    "PrimaryOrgAdminDesignationRequested": {
+      "type": "noul",
+      "instructions": "Does PrimaryOrgAdminDesignationRequested precisely name its completed_meaning and distinguish this fact from the other listed primary designation facts?"
+    },
+    "PrimaryOrgAdminDesignated": {
+      "type": "noul",
+      "instructions": "Does PrimaryOrgAdminDesignated precisely name its completed_meaning and distinguish this fact from the other listed primary designation facts?"
+    },
+    "PrimaryOrgAdminDesignationRefused": {
+      "type": "noul",
+      "instructions": "Does PrimaryOrgAdminDesignationRefused precisely name its completed_meaning and distinguish this fact from the other listed primary designation facts?"
+    },
+    "PrimaryOrgAdminReleased": {
+      "type": "noul",
+      "instructions": "Does PrimaryOrgAdminReleased precisely name its completed_meaning and distinguish this fact from the other listed primary designation facts?"
+    },
+    "MemberMarkedPrimary": {
+      "type": "noul",
+      "instructions": "Does MemberMarkedPrimary precisely name its completed_meaning and distinguish this fact from the other listed primary designation facts?"
+    },
+    "MemberPrimaryMarkRefused": {
+      "type": "noul",
+      "instructions": "Does MemberPrimaryMarkRefused precisely name its completed_meaning and distinguish this fact from the other listed primary designation facts?"
+    },
+    "MemberPrimaryMarkRemoved": {
+      "type": "noul",
+      "instructions": "Does MemberPrimaryMarkRemoved precisely name its completed_meaning and distinguish this fact from the other listed primary designation facts?"
+    }
+  }
+}

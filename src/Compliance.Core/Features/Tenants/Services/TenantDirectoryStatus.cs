@@ -20,6 +20,7 @@ static class TenantDirectoryStatus
 
         return domainEvent switch
         {
+            TenantSlugChanged when current.Status == "rejected" => current.RequiresActivation ? "provisioning" : "active",
             TenantSlugConfirmed when current.RequiresActivation => "provisioning",
             TenantSlugConfirmed or TenantReactivated or TenantReactivatedV2 or TenantActivated or TenantActivatedV2 => "active",
             TenantSlugRejected => "rejected",

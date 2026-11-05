@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "release_last": {
+      "type": "noul",
+      "noul": 0.23
+    },
+    "third_seat": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "late_mark_restore": {
+      "type": "noul",
+      "noul": 0.17
+    },
+    "late_unmark_clear": {
+      "type": "noul",
+      "noul": 0.18
+    },
+    "forged_outcome": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "unreleased_unmark": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "released_authority": {
+      "type": "noul",
+      "noul": 0.28
+    },
+    "circular_activation": {
+      "type": "noul",
+      "noul": 0.3
+    },
+    "server_creation_id": {
+      "type": "noul",
+      "noul": 0.04
+    }
+  },
+  "usage": {
+    "input_tokens": 8586,
+    "output_tokens": 172
+  }
+}

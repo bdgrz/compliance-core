@@ -225,7 +225,9 @@ public sealed class TenantLifecycleStateMachineTests
         Assert.True(replayed.IsOffboarding);
         Assert.False(replayed.IsActive);
         Assert.Equal(source.Revision, replayed.Revision);
-        Assert.Equal(RequestErrorKind.Conflict, replayed.Register(OwnerUserId, "Acme", "acme").Error?.Kind);
+        Assert.True(replayed.Register(OwnerUserId, "Acme", "acme").IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, replayed.Register(OwnerUserId, "Different company", "acme").Error?.Kind);
+        Assert.Equal(source.Revision, replayed.Revision);
         Assert.True(replayed.StartOffboarding(OwnerUserId, "Repeat", At.AddHours(2)).IsSuccess);
     }
 }

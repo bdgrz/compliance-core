@@ -71,6 +71,7 @@ work.
 
 | Owner | Implementation status | Evidence |
 | --- | --- | --- |
+| Organization creation and primary administration | Implemented in source across API/MCP/write/read; 152 focused and 8 transport cases pass; native/full acceptance blocked | [Review](reviews/organization-bootstrap.md) |
 | Scoped team access | Partial: source-backed scoped permissions, custom roles, guest caps and public cutover; native/full acceptance and primary continuity remain | [Review](reviews/scoped-team-access.md) |
 | Program | Partial: all-present target-date ordering passes focused/native tests; full gate and canonical Program workflow remain | [Date invariant](reviews/program-target-date-ordering.md) |
 | Person | Partial: named details and generic-writer retirement locally qualified; member linkage and accepted HRIS application remain | [Writer cutover](reviews/person-named-writer-cutover.md) |

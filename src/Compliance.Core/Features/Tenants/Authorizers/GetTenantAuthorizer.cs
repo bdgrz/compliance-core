@@ -29,7 +29,8 @@ namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
 
 sealed class GetTenantAuthorizer(IPlatformOperatorAccess operators,
     ITenantMembershipDirectoryReader memberships, ITenantActivity tenants,
-    IPermissionAuthorizer permissions, TimeProvider? clock = null) : IRequestAuthorizer<GetTenant>
+    IPermissionAuthorizer permissions, TimeProvider? clock = null, IAggregateReader? sourceReader = null)
+    : IRequestAuthorizer<GetTenant>
 {
     public async ValueTask<Result> AuthorizeAsync(IRequestContext<GetTenant> context, CancellationToken ct)
     {
@@ -44,7 +45,8 @@ sealed class GetTenantAuthorizer(IPlatformOperatorAccess operators,
         if (membership is null || !membership.IsActiveOn(DateOnly.FromDateTime(
                 (clock ?? TimeProvider.System).GetUtcNow().UtcDateTime)))
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The tenant was not found."));
-        if (membership.Affiliation == "firm_staff")
+        if (membership.Affiliation == "firm_staff" &&
+            !await PrimaryOrgAdminAuthority.IsCurrentAsync(sourceReader, tenantId, userId, ct).ConfigureAwait(false))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Firm staff require an accepted engagement to access client work."));
         if (!await tenants.IsActiveAsync(tenantId, ct).ConfigureAwait(false))

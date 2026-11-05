@@ -163,6 +163,46 @@ public sealed class MemberTenantDiscoveryLagTests
         Assert.Equal(activeTenantId, activeSlug.Value.TenantId);
     }
 
+    [Fact]
+    public async Task ShouldExposeCompletedPrimaryGivenTenantDiscoveryBeforeMembershipProjection()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var designationId = Uuid.CreateVersion4();
+        var services = new ServiceCollection();
+        services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddPortia();
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+        await SeedTenantAsync(writer, tenantId, userId, "Primary organization", "primary-organization",
+            "client_personnel");
+        var member = await reader.HydrateAsync(new Member(tenantId, userId));
+        Assert.True(member.MarkPrimary(designationId, member.MembershipEpisodeId).IsSuccess);
+        await writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
+        var primaries = new PrimaryOrgAdmins(tenantId);
+        Assert.True(primaries.Designate(designationId, userId, member.MembershipEpisodeId).IsSuccess);
+        Assert.True(primaries.RecordOutcome(designationId, userId, member.MembershipEpisodeId, null).IsSuccess);
+        await writer.SaveAsync(primaries, new RequestDispatchContext(RequestActor.System));
+        var list = new ListMyTenantsHandler(new ActiveTenants(tenantId), new FixedMembershipDirectory(true),
+            new TenantViews(new TenantView(tenantId, "Primary organization", "primary-organization")), reader);
+        var actor = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));
+
+        // Act
+        var result = await list.HandleAsync(new RequestContext<ListMyTenants>(new ListMyTenants(), actor),
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var tenant = Assert.Single(result.Value.Items);
+        Assert.True(tenant.IsPrimary);
+        Assert.Equal(designationId, tenant.PrimaryDesignationId);
+        Assert.Equal(member.MembershipEpisodeId, tenant.MembershipEpisodeId);
+    }
+
     static async Task SeedTenantAsync(IAggregateWriter writer, Uuid tenantId, Uuid userId,
         string name, string slug, string affiliation, DateOnly? membershipExpiresOn = null)
     {

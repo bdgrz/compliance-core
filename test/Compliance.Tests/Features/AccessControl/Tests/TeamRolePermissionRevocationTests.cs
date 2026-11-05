@@ -152,6 +152,33 @@ public sealed class TeamRolePermissionRevocationTests
         Assert.Empty(result.Value.GrantPaths);
     }
 
+    [Theory]
+    [InlineData("pending", false)]
+    [InlineData("designated", true)]
+    [InlineData("released", false)]
+    public async Task ShouldUseDesignationWithoutTeamsGivenPrimaryAdministrator(string state, bool expected)
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        await fixture.ChangeAsync("removed_assignment");
+        var designation = await fixture.SeedPrimaryAsync(state);
+        var names = new DisplayNames(fixture.Team, fixture.Role);
+        var handler = new GetTeamMemberAccessHandler(fixture.Reader, fixture.Authorizer, names, names);
+        // Act
+        var allowed = await fixture.Authorizer.IsAllowedAsOrganizationRoleAsync(fixture.Tenant,
+            fixture.User, fixture.MemberId, BuiltInRbac.TenantAdministrationRoleId(fixture.Tenant),
+            RbacPermissions.TenantRbacManage);
+        var explanation = await handler.HandleAsync(new RequestContext<GetMemberAccess>(
+            new(fixture.Tenant, fixture.User), RequestActor.System), CancellationToken.None);
+        // Assert
+        Assert.Equal(expected, allowed);
+        Assert.True(explanation.IsSuccess, explanation.Error?.Message);
+        Assert.Equal(expected ? designation : Uuid.Empty, explanation.Value.PrimaryDesignationId);
+        Assert.Equal(expected, explanation.Value.EffectivePermissions.Contains(RbacPermissions.TenantRbacManage));
+        Assert.Empty(explanation.Value.Paths);
+        Assert.Empty(explanation.Value.GrantPaths);
+    }
+
     sealed class DisplayNames(Uuid team, Uuid role) : ITeamDirectoryReader, IRoleDirectoryReader
     {
         ValueTask<TeamView?> ITeamDirectoryReader.GetAsync(Uuid tenantId, Uuid teamId, CancellationToken ct) =>
@@ -228,6 +255,33 @@ public sealed class TeamRolePermissionRevocationTests
             await fixture.SeedAsync(new RolePermission(fixture.Tenant, fixture.Role, RbacPermissions.ProgramManage, fixture.PermissionAssignment),
                 owner => owner.Assign(fixture.PermissionAssignment, 0, Actor));
             return fixture;
+        }
+
+        public async Task<Uuid> SeedPrimaryAsync(string state)
+        {
+            var member = await Reader.HydrateAsync(new Member(Tenant, User));
+            var designation = Uuid.CreateVersion4();
+            await SeedAsync(new PrimaryOrgAdmins(Tenant, designation), owner => owner.Designate(designation,
+                User, member.MembershipEpisodeId));
+            if (state == "pending")
+                return designation;
+            await SeedAsync(new Member(Tenant, User), owner => owner.MarkPrimary(designation, member.MembershipEpisodeId));
+            await SeedAsync(new PrimaryOrgAdmins(Tenant), owner => owner.RecordOutcome(designation,
+                User, member.MembershipEpisodeId, null));
+            if (state == "released")
+            {
+                var replacement = Uuid.CreateVersion4();
+                var replacementId = Uuid.CreateVersion4();
+                await SeedAsync(new PrimaryOrgAdmins(Tenant, replacementId), owner => owner.Designate(replacementId,
+                    replacement, member.MembershipEpisodeId));
+                await SeedAsync(new PrimaryOrgAdmins(Tenant), owner => owner.RecordOutcome(replacementId,
+                    replacement, member.MembershipEpisodeId, null));
+                var release = Uuid.CreateVersion4();
+                await SeedAsync(new PrimaryOrgAdmins(Tenant, release), owner => owner.Release(release, User,
+                    designation, "Replacement"));
+                // Leave the original mark in place: releasing the seat revokes authority before delayed cleanup.
+            }
+            return designation;
         }
 
         public async Task ChangeAsync(string change)

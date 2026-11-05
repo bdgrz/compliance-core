@@ -679,7 +679,7 @@ public sealed class TeamMemberTests
             provider.GetRequiredService<IProjectionCheckpointStore>(), TimeProvider.System);
         // The guard is deliberately absent: a non-administrator team must never reach it.
         var handler = new AssignTeamMemberHandler(new NativeOperationExecutor(reader, executor, content),
-            null!, reader, cleanup, content, TimeProvider.System);
+            reader, cleanup, content, TimeProvider.System);
         return await handler.HandleAsync(new RequestContext<AssignTeamMember>(request, actor ?? RequestActor.System),
             CancellationToken.None);
     }
@@ -692,7 +692,7 @@ public sealed class TeamMemberTests
         var content = provider.GetRequiredService<IImmutableContentStore>();
         // The guard is deliberately absent: a non-administrator team must never reach it.
         var handler = new RemoveTeamMemberHandler(new NativeOperationExecutor(reader, executor, content),
-            null!, reader, content, TimeProvider.System);
+            content, TimeProvider.System);
         return await handler.HandleAsync(new RequestContext<RemoveTeamMember>(request, actor ?? RequestActor.System),
             CancellationToken.None);
     }

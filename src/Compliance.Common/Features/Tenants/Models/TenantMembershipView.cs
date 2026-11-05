@@ -16,8 +16,12 @@ public sealed record TenantMembershipView(Uuid UserId, Uuid TenantId,
     string? DisplayName = null, bool IsDeprovisioned = false,
     DateTimeOffset? DeprovisionedAt = null, Uuid DeprovisionedByMemberId = default,
     string? DeprovisionedByDisplay = null, string? DeprovisionReason = null,
-    DateOnly? MembershipExpiresOn = null)
+    DateOnly? MembershipExpiresOn = null, Uuid MembershipEpisodeId = default,
+    IReadOnlyList<Uuid>? ProgramIds = null, Uuid PrimaryDesignationId = default)
 {
+    /// <summary>The member remains protected until its exact primary mark is removed.</summary>
+    public bool IsPrimary => PrimaryDesignationId != Uuid.Empty;
+
     public bool IsActiveOn(DateOnly utcDate) => !IsSuspended && !IsDeprovisioned &&
         (MembershipExpiresOn is not { } expiresOn || utcDate <= expiresOn);
 }

@@ -1,30 +1,30 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-11-05",
-  "sourceCommit": "5442c8f39d3d4f7e68a664518b703cdab690692e",
+  "sourceCommit": "bbed3b767911373b31d0d04f41a35fbfdb07219e",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 573,
-    "factsWithReducer": 548,
-    "factsWithAggregateEmitter": 423,
+    "domainEventContracts": 580,
+    "factsWithReducer": 555,
+    "factsWithAggregateEmitter": 430,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 23,
     "legacyReducerOnlyFacts": 125,
-    "aggregateTypes": 136,
-    "aggregateTypesWithCommandPath": 102,
-    "requestContracts": 826,
-    "commonRequestContracts": 824,
+    "aggregateTypes": 137,
+    "aggregateTypesWithCommandPath": 103,
+    "requestContracts": 832,
+    "commonRequestContracts": 830,
     "requestClassificationCounts": {
-      "command": 372,
+      "command": 377,
       "confirmed_command_gap": 13,
       "deferred_command": 5,
       "internal_executor_context": 1,
       "internal_reaction": 155,
-      "query_or_reconstruction": 280
+      "query_or_reconstruction": 281
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 778,
+    "registeredCoreHandlerRegistrations": 784,
     "unregisteredCoreHandlerClasses": 7,
     "unwiredAggregateProducerOperations": 72,
     "unwiredAggregateProducerClassifications": {
@@ -5904,6 +5904,67 @@
       "schemaVersion": 2
     },
     {
+      "fact": "MemberMarkedPrimary",
+      "contract": "src/Compliance.Common/Features/AccessControl/Events/MemberMarkedPrimary.cs",
+      "discriminator": "bdgrz.rbac.member-marked-primary",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "Member",
+          "source": "src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantMembershipPrimaryReadTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "MemberPrimaryMarkRefused",
+      "contract": "src/Compliance.Common/Features/AccessControl/Events/MemberPrimaryMarkRefused.cs",
+      "discriminator": "bdgrz.rbac.member-primary-mark-refused",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "Member",
+          "source": "src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/PrimaryOrgAdminProtocolTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/PrimaryOrgAdminsTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "MemberPrimaryMarkRemoved",
+      "contract": "src/Compliance.Common/Features/AccessControl/Events/MemberPrimaryMarkRemoved.cs",
+      "discriminator": "bdgrz.rbac.member-primary-mark-removed",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "Member",
+          "source": "src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantMembershipPrimaryReadTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "MemberRegistered",
       "contract": "src/Compliance.Common/Features/AccessControl/Events/MemberRegistered.cs",
       "reducers": [
@@ -5942,6 +6003,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectMemberAdministrationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/MemberLifecycleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantManagerGuardTests.cs",
         "test/Compliance.Tests/MemberFacts.cs"
@@ -5966,6 +6028,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/AdministratorTransitionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectMemberAdministrationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/MemberLifecycleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantManagerGuardTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityReviewMembershipTests.cs",
@@ -7335,6 +7398,80 @@
       "note": "",
       "discriminator": "bdgrz.practice-independence-commitment.practice-independence-reserved",
       "schemaVersion": 1
+    },
+    {
+      "fact": "PrimaryOrgAdminDesignated",
+      "contract": "src/Compliance.Common/Features/AccessControl/Events/PrimaryOrgAdminDesignated.cs",
+      "discriminator": "bdgrz.rbac.primary-org-admin-designated",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "PrimaryOrgAdmins",
+          "source": "src/Compliance.Core/Features/AccessControl/Aggregates/PrimaryOrgAdmins.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/Aggregates/PrimaryOrgAdmins.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantSelfServiceActivationReactorTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "PrimaryOrgAdminDesignationRefused",
+      "contract": "src/Compliance.Common/Features/AccessControl/Events/PrimaryOrgAdminDesignationRefused.cs",
+      "discriminator": "bdgrz.rbac.primary-org-admin-designation-refused",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "PrimaryOrgAdmins",
+          "source": "src/Compliance.Core/Features/AccessControl/Aggregates/PrimaryOrgAdmins.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/Aggregates/PrimaryOrgAdmins.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "PrimaryOrgAdminDesignationRequested",
+      "contract": "src/Compliance.Common/Features/AccessControl/Events/PrimaryOrgAdminDesignationRequested.cs",
+      "discriminator": "bdgrz.rbac.primary-org-admin-designation-requested",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "PrimaryOrgAdmins",
+          "source": "src/Compliance.Core/Features/AccessControl/Aggregates/PrimaryOrgAdmins.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/Aggregates/PrimaryOrgAdmins.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "PrimaryOrgAdminReleased",
+      "contract": "src/Compliance.Common/Features/AccessControl/Events/PrimaryOrgAdminReleased.cs",
+      "discriminator": "bdgrz.rbac.primary-org-admin-released",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "PrimaryOrgAdmins",
+          "source": "src/Compliance.Core/Features/AccessControl/Aggregates/PrimaryOrgAdmins.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/Aggregates/PrimaryOrgAdmins.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
     },
     {
       "fact": "ProfessionalAssertionIdentityClaimed",
@@ -10253,6 +10390,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Tenants/Tests/ChangeTenantSlugHandlerTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/FitzTenantDirectoryReaderTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantSlugActivationReactorTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantSlugChangeAttributionTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantSlugRecoveryTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantTests.cs"
@@ -10276,6 +10415,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/BrowserE2EHostIntegrationTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantSlugActivationReactorTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantTests.cs",
         "test/Compliance.Tests/TenantFacts.cs"
       ],
@@ -13428,12 +13568,17 @@
       "appliedFacts": [
         "MemberDeprovisionCleanupCompleted",
         "MemberDeprovisioned",
+        "MemberMarkedPrimary",
+        "MemberPrimaryMarkRefused",
+        "MemberPrimaryMarkRemoved",
         "MemberRegistered",
         "MemberReinstated",
         "MemberSuspended"
       ],
       "commandRequests": [
-        "RegisterMember"
+        "MarkMemberPrimary",
+        "RegisterMember",
+        "UnmarkMemberPrimary"
       ],
       "internalReactionRequests": [
         "ApplyMemberRestoration",
@@ -13621,14 +13766,14 @@
       "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectMemberAdministrationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantManagerGuardTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/Tests/AccessReviewFixture.cs",
         "test/Compliance.Tests/Features/Applications/Tests/ApplicationRevisionGovernanceTests.cs",
         "test/Compliance.Tests/Features/Controls/Tests/ControlOwnerPersonReadTests.cs",
         "test/Compliance.Tests/Features/Controls/Tests/ControlOwnerPersonWriteTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/Tests/CampaignTransportTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyAcknowledgementIndependenceTests.cs"
+        "test/Compliance.Tests/Features/PolicyDistribution/Tests/CampaignTransportTests.cs"
       ],
       "commandRouteDisposition": "pending_command_route",
       "ownerIssue": 1022,
@@ -13821,6 +13966,33 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
+      "aggregate": "PrimaryOrgAdmins",
+      "source": "src/Compliance.Core/Features/AccessControl/Aggregates/PrimaryOrgAdmins.cs",
+      "appliedFacts": [
+        "PrimaryOrgAdminDesignated",
+        "PrimaryOrgAdminDesignationRefused",
+        "PrimaryOrgAdminDesignationRequested",
+        "PrimaryOrgAdminReleased"
+      ],
+      "commandRequests": [
+        "DesignatePrimaryOrgAdmin",
+        "RecordPrimaryMarkOutcome",
+        "ReleasePrimaryOrgAdmin"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/PrimaryOrgAdminEntryPointAuthorizerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/PrimaryOrgAdminProtocolTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/PrimaryOrgAdminsReadTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/PrimaryOrgAdminsTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/TeamRolePermissionRevocationTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/ActivateTenantIdentityTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/ActivateTenantReadinessTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/MemberTenantDiscoveryLagTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
       "aggregate": "ProfessionalAssertionIdentityClaim",
       "source": "src/Compliance.Core/Features/AccessControl/Aggregates/ProfessionalAssertionIdentityClaim.cs",
       "appliedFacts": [
@@ -13916,9 +14088,9 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/AdministratorTransitionProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/ClientServiceIndependenceTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/DeprovisionMemberHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectMemberAdministrationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/DirectoryIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/EngagementForeignChildSettlementTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/EngagementManagementAcknowledgementHandlerTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/EngagementForeignChildSettlementTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -14753,7 +14925,9 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantManagerNativeBoundaryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantManagerNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Evidence/Tests/ArtifactMetadataAccessTests.cs",
-        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs",
+        "test/Compliance.Tests/Testing/HistoricalAssignTeamMemberHandler.cs",
+        "test/Compliance.Tests/Testing/HistoricalReinstateMemberHandler.cs"
       ],
       "commandRouteDisposition": "pending_command_route",
       "ownerIssue": 1022,
@@ -15649,7 +15823,7 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "Member",
-        "TeamMember",
+        "PrimaryOrgAdmins",
         "Tenant"
       ],
       "aggregateTargets": [
@@ -15663,7 +15837,8 @@
         "test/Compliance.Tests/Features/Tenants/Tests/ActivateTenantReadinessTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantActivationPolicyResultTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantInvitationReactorTests.cs",
-        "test/Compliance.Tests/Features/Tenants/Tests/TenantSelfServiceActivationReactorTests.cs"
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantSelfServiceActivationReactorTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantSlugActivationReactorTests.cs"
       ],
       "note": ""
     },
@@ -17231,7 +17406,8 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/TeamMemberTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantRbacBootstrapReactorTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantInvitationReactorTests.cs",
-        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs",
+        "test/Compliance.Tests/Testing/HistoricalAssignTeamMemberHandler.cs"
       ],
       "note": ""
     },
@@ -18307,8 +18483,10 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/PrimaryOrgAdminEntryPointAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/ChangeTenantSlugHandlerTests.cs",
-        "test/Compliance.Tests/Features/Tenants/Tests/PlatformOperatorOrTenantAdminAuthorizerTests.cs"
+        "test/Compliance.Tests/Features/Tenants/Tests/PlatformOperatorOrTenantAdminAuthorizerTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantCreatorBootstrapTests.cs"
       ],
       "note": ""
     },
@@ -19224,7 +19402,9 @@
       "helperServices": [
         "MemberAuthorityCleanup"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectMemberAdministrationTests.cs"
+      ],
       "note": "System-only native-source recovery; required typed identity derives from exact source event, owner and episode. No HTTP/MCP route."
     },
     {
@@ -20394,7 +20574,8 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/AttestClientRbacManagementWallTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RbacManagementAuthorizerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RoleTeamContentOperationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/TenantRbacBootstrapReactorTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/TenantRbacBootstrapReactorTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs"
       ],
       "note": ""
     },
@@ -20614,17 +20795,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Member"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
         "AdministratorTransitionAdmission"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/DeprovisionMemberHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectMemberAdministrationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RbacManagementRequestScenarioTests.cs",
-        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs",
+        "test/Compliance.Tests/Testing/HistoricalDeprovisionMemberHandler.cs"
       ],
       "note": ""
     },
@@ -20651,6 +20832,32 @@
         "test/Compliance.Tests/Features/Controls/Tests/ControlOwnerPersonReadTests.cs",
         "test/Compliance.Tests/Features/Controls/Tests/ControlOwnerPersonWriteTests.cs",
         "test/Compliance.Tests/Testing/ControlSeeds.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "DesignatePrimaryOrgAdmin",
+      "contract": "src/Compliance.Common/Features/AccessControl/Commands/DesignatePrimaryOrgAdmin.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
+      "handlers": [
+        {
+          "name": "DesignatePrimaryOrgAdminHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/Handlers/DesignatePrimaryOrgAdminHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "PrimaryOrgAdmins",
+        "Tenant"
+      ],
+      "aggregateTargets": [
+        "PrimaryOrgAdmins"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs"
       ],
       "note": ""
     },
@@ -23047,7 +23254,8 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/GetMemberAccessHandlerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/TeamRolePermissionRevocationTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/TeamRolePermissionRevocationTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation.",
       "unregisteredHandlerClasses": [
@@ -23301,6 +23509,30 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
+      "request": "GetPrimaryOrgAdmins",
+      "contract": "src/Compliance.Common/Features/AccessControl/Queries/GetPrimaryOrgAdmins.cs",
+      "classification": "query_or_reconstruction",
+      "interfaces": "IRequest<PrimaryOrgAdminsView>, IRbacManagementRequest, ICallable",
+      "handlers": [
+        {
+          "name": "GetPrimaryOrgAdminsHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/Handlers/GetPrimaryOrgAdminsHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "PrimaryOrgAdmins"
+      ],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/PrimaryOrgAdminsReadTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -24005,8 +24237,10 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/PrimaryOrgAdminEntryPointAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/GetTenantAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/GetTenantProvisioningStatusRequestScenarioTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs",
         "test/Compliance.Tests/Hosting/Persistence/PersistenceValidationRequestBusTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -24029,7 +24263,9 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/AttestClientRbacManagementWallTests.cs",
-        "test/Compliance.Tests/Features/Tenants/Tests/MemberEmailEnrichmentTests.cs"
+        "test/Compliance.Tests/Features/Tenants/Tests/MemberEmailEnrichmentTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantMembershipPrimaryReadTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -24053,6 +24289,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Tenants/Tests/GetTenantProvisioningStatusRequestScenarioTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantProvisioningStatusContractTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -26157,7 +26394,8 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "Member"
+        "Member",
+        "PrimaryOrgAdmins"
       ],
       "aggregateTargets": [],
       "helperServices": [],
@@ -27120,6 +27358,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/RbacManagementAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/MemberEmailEnrichmentTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantMembershipPrimaryReadTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantPagedReadContractTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -27371,6 +27611,32 @@
         "test/Compliance.Tests/Testing/AdvisorEvents.cs",
         "test/Compliance.Tests/Testing/AdvisorHost.cs",
         "test/Compliance.Tests/Testing/AdvisorSeed.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "MarkMemberPrimary",
+      "contract": "src/Compliance.Common/Features/AccessControl/Commands/MarkMemberPrimary.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IRbacManagementRequest",
+      "handlers": [
+        {
+          "name": "MarkMemberPrimaryHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/Handlers/MarkMemberPrimaryHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "Member",
+        "PrimaryOrgAdmins"
+      ],
+      "aggregateTargets": [
+        "Member"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs"
       ],
       "note": ""
     },
@@ -30453,6 +30719,32 @@
       "note": ""
     },
     {
+      "request": "RecordPrimaryMarkOutcome",
+      "contract": "src/Compliance.Common/Features/AccessControl/Commands/RecordPrimaryMarkOutcome.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IRbacManagementRequest",
+      "handlers": [
+        {
+          "name": "RecordPrimaryMarkOutcomeHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/Handlers/RecordPrimaryMarkOutcomeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "Member",
+        "PrimaryOrgAdmins"
+      ],
+      "aggregateTargets": [
+        "PrimaryOrgAdmins"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs"
+      ],
+      "note": ""
+    },
+    {
       "request": "RecordProvider",
       "contract": "src/Compliance.Common/Features/Providers/Commands/RecordProvider.cs",
       "interfaces": "IRequest<OperationAcceptedResponse>, IProviderManagementRequest, IClientManagementMutationRequest, ICallable,\n        IIdentifiedRequest",
@@ -31120,7 +31412,7 @@
     {
       "request": "RegisterTenant",
       "contract": "src/Compliance.Common/Features/Tenants/Commands/RegisterTenant.cs",
-      "interfaces": "IRequest<TenantRegistration>, ICallable",
+      "interfaces": "IRequest<TenantRegistration>, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -31138,6 +31430,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/RegisterTenantAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/RegisterTenantRequestScenarioTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/RegisterTenantSlugAvailabilityGuardTests.cs",
@@ -31186,15 +31479,15 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Member"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
         "AdministratorTransitionAdmission"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectMemberAdministrationTests.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs",
+        "test/Compliance.Tests/Testing/HistoricalReinstateMemberHandler.cs"
       ],
       "note": ""
     },
@@ -31617,6 +31910,31 @@
       "note": "Process receiver: releases a name claim only for the exact holder and generation. System principal only; no HTTP/MCP route."
     },
     {
+      "request": "ReleasePrimaryOrgAdmin",
+      "contract": "src/Compliance.Common/Features/AccessControl/Commands/ReleasePrimaryOrgAdmin.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
+      "handlers": [
+        {
+          "name": "ReleasePrimaryOrgAdminHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/Handlers/ReleasePrimaryOrgAdminHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "PrimaryOrgAdmins"
+      ],
+      "aggregateTargets": [
+        "PrimaryOrgAdmins"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs"
+      ],
+      "note": ""
+    },
+    {
       "request": "ReleaseProviderName",
       "contract": "src/Compliance.Common/Features/Providers/Commands/ReleaseProviderName.cs",
       "interfaces": "INamedRecordReceiver",
@@ -31742,11 +32060,13 @@
         "AdministratorTransitionAdmission"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectMemberAdministrationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/RemoveTeamMemberRequestScenarioTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TeamCleanupReactorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TeamMemberTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantManagerGuardTests.cs",
-        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs",
+        "test/Compliance.Tests/Testing/HistoricalRemoveTeamMemberHandler.cs"
       ],
       "note": ""
     },
@@ -35181,16 +35501,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Member"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
         "AdministratorTransitionAdmission"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectMemberAdministrationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantManagerGuardTests.cs",
-        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs",
+        "test/Compliance.Tests/Testing/HistoricalSuspendMemberHandler.cs"
       ],
       "note": ""
     },
@@ -35238,6 +35558,32 @@
         "test/Compliance.Tests/Features/UserIdentities/Tests/TenantIdentityProviderCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/Tests/TenantIdentityProviderTransportTests.cs",
         "test/Compliance.Tests/Testing/TenantIdentityProviderHost.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "UnmarkMemberPrimary",
+      "contract": "src/Compliance.Common/Features/AccessControl/Commands/UnmarkMemberPrimary.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IRbacManagementRequest",
+      "handlers": [
+        {
+          "name": "UnmarkMemberPrimaryHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/Handlers/UnmarkMemberPrimaryHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "Member",
+        "PrimaryOrgAdmins"
+      ],
+      "aggregateTargets": [
+        "Member"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/Tests/OrganizationBootstrapAcceptanceTests.cs"
       ],
       "note": ""
     },

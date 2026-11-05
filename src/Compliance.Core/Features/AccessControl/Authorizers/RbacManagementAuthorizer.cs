@@ -57,7 +57,8 @@ namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 ///     <see cref="RbacPermissions.TenantRbacManage" /> in the target tenant.
 /// </summary>
 sealed class RbacManagementAuthorizer(IPermissionAuthorizer permissions, ITenantActivity tenants,
-    ITenantMembershipDirectoryReader memberships) : IRequestAuthorizer<IRbacManagementRequest>
+    ITenantMembershipDirectoryReader memberships, IAggregateReader? sourceReader = null)
+    : IRequestAuthorizer<IRbacManagementRequest>
 {
     public async ValueTask<Result> AuthorizeAsync(
         IRequestContext<IRbacManagementRequest> context,
@@ -84,7 +85,8 @@ sealed class RbacManagementAuthorizer(IPermissionAuthorizer permissions, ITenant
         if (membership is null || membership.TenantId != tenantId || membership.UserId != userId ||
             membership.IsSuspended || membership.IsDeprovisioned)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The tenant was not found."));
-        if (membership.Affiliation == "firm_staff")
+        if (membership.Affiliation == "firm_staff" &&
+            !await PrimaryOrgAdminAuthority.IsCurrentAsync(sourceReader, tenantId, userId, ct).ConfigureAwait(false))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Firm staff require an accepted engagement to access client work."));
         if (!await tenants.IsActiveAsync(tenantId, ct).ConfigureAwait(false))

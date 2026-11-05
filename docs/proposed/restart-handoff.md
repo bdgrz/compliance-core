@@ -1,5 +1,15 @@
 # Scoped access checkpoint — 2026-11-05
 
+**Organization creation and primary administration — 2026-11-05.** Source is
+implemented across API, MCP, write models and read models, including mandatory
+client-created tenant IDs. Strict Release build, whitespace and tooling pass;
+**152 focused cases and 8 HTTP/MCP cases pass**. The final full gate remains
+blocked: **8,221 passed / 1,080 failed / zero skipped**, with 6,753 inputs
+unchanged during execution. See the [feature review](reviews/organization-bootstrap.md)
+and [validation evidence](reviews/organization-bootstrap-validation.json).
+Native #1188 and broader assembly #1189 remain open; no full context, hosted
+acceptance, merge or release is claimed. Earlier checkpoint text is historical.
+
 The prioritization in [implementation order](implementation-order.md) is saved and
 scoped access has advanced. Read the [scoped-team review](reviews/scoped-team-access.md)
 and [validation summary](reviews/scoped-team-access-validation.json) first.

@@ -60,6 +60,12 @@ public sealed class Member : Aggregate
     readonly Uuid _tenantId;
     readonly Uuid _selectedEpisodeId;
     Uuid _userId;
+    Uuid _primaryDesignationId;
+    readonly Dictionary<Uuid, DomainEvent> _primaryOutcomes = [];
+    public bool IsPrimary => _primaryDesignationId != Uuid.Empty;
+    public Uuid PrimaryDesignationId => _primaryDesignationId;
+    public DomainEvent? PrimaryOutcome(Uuid designationId) => _primaryOutcomes.GetValueOrDefault(designationId);
+
     bool _isRegistered;
     string? _affiliation;
     DateOnly? _membershipExpiresOn;
@@ -124,6 +130,29 @@ public sealed class Member : Aggregate
         _selectedEpisodeId = selectedEpisodeId;
         _userId = userId;
         Acceptance = new NativeAcceptance(selectedCommandId);
+        On<MemberMarkedPrimary>(ev =>
+        {
+            RequirePrimaryIdentity(ev.TenantId, ev.MemberId, ev.UserId, ev.MembershipEpisodeId, ev.DesignationId);
+            if (!_isRegistered || _isSuspended || _isDeprovisioned || _affiliation == "guest" || IsPrimary ||
+                ev.MembershipEpisodeId != _membershipEpisodeId || _primaryOutcomes.ContainsKey(ev.DesignationId))
+                throw new MemberHistoryIntegrityException("Only an active non-guest member episode can accept a primary designation once.");
+            _primaryDesignationId = ev.DesignationId;
+            _primaryOutcomes.Add(ev.DesignationId, ev);
+        });
+        On<MemberPrimaryMarkRefused>(ev =>
+        {
+            RequirePrimaryIdentity(ev.TenantId, ev.MemberId, ev.UserId, ev.MembershipEpisodeId, ev.DesignationId);
+            if (ev.Reason is not ("not_active" or "guest") || _primaryOutcomes.ContainsKey(ev.DesignationId))
+                throw new MemberHistoryIntegrityException("A primary mark refusal must answer one designation with a known outcome.");
+            _primaryOutcomes.Add(ev.DesignationId, ev);
+        });
+        On<MemberPrimaryMarkRemoved>(ev =>
+        {
+            RequirePrimaryIdentity(ev.TenantId, ev.MemberId, ev.UserId, ev.MembershipEpisodeId, ev.DesignationId);
+            if (_primaryDesignationId != ev.DesignationId || _membershipEpisodeId != ev.MembershipEpisodeId)
+                throw new MemberHistoryIntegrityException("Primary mark removal must close the exact marked membership episode.");
+            _primaryDesignationId = Uuid.Empty;
+        });
         On<MemberRegistered>(registered =>
         {
             if (_isRegistered || _isDeprovisioned && !_isDeprovisionCleanupComplete)
@@ -161,6 +190,8 @@ public sealed class Member : Aggregate
         });
         On<MemberSuspended>(suspended =>
         {
+            if (IsPrimary)
+                throw new MemberHistoryIntegrityException("A marked primary administrator cannot be suspended.");
             RequireOwnOperation(suspended.Operation);
             RequireMemberIdentity(suspended.TenantId, suspended.MemberId, suspended.UserId);
             Acceptance.Observe(suspended);
@@ -175,6 +206,8 @@ public sealed class Member : Aggregate
         });
         On<MemberDeprovisioned>(deprovisioned =>
         {
+            if (IsPrimary)
+                throw new MemberHistoryIntegrityException("A marked primary administrator cannot be deprovisioned.");
             Acceptance.Observe(deprovisioned);
             RequireOwnOperation(deprovisioned.Operation);
             if (deprovisioned.TenantId != _tenantId || deprovisioned.MemberId != Id ||
@@ -236,6 +269,40 @@ public sealed class Member : Aggregate
         return Result.Success;
     }
 
+    /// <summary>The member owns admission of its primary mark; negative outcomes let the seat reservation end.</summary>
+    public Result MarkPrimary(Uuid designationId, Uuid episodeId)
+    {
+        EnsureUserIdentity();
+        if (designationId == Uuid.Empty || episodeId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A designation and membership episode are required."));
+        if (_primaryOutcomes.TryGetValue(designationId, out var prior))
+            return prior switch
+            {
+                MemberMarkedPrimary accepted when accepted.MembershipEpisodeId == episodeId => Result.Success,
+                MemberPrimaryMarkRefused refused when refused.MembershipEpisodeId == episodeId => Result.Success,
+                _ => Result.Failure(new RequestError(RequestErrorKind.Conflict, "The designation already has different intent."))
+            };
+        var refusal = !IsRegistered || IsSuspended || IsDeprovisioned || _membershipEpisodeId != episodeId || IsPrimary
+            ? "not_active" : _affiliation == "guest" ? "guest" : null;
+        if (refusal is null)
+            RaiseEvent(new MemberMarkedPrimary(_tenantId, Id, _userId, episodeId, designationId));
+        else
+            RaiseEvent(new MemberPrimaryMarkRefused(_tenantId, Id, _userId, episodeId, designationId, refusal));
+        return Result.Success;
+    }
+
+    /// <summary>A delayed release removes only the exact designation it answered.</summary>
+    public Result UnmarkPrimary(Uuid designationId, Uuid episodeId)
+    {
+        EnsureUserIdentity();
+        if (designationId == Uuid.Empty || episodeId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A designation and membership episode are required."));
+        if (_primaryDesignationId != designationId || _membershipEpisodeId != episodeId)
+            return Result.Success;
+        RaiseEvent(new MemberPrimaryMarkRemoved(_tenantId, Id, _userId, episodeId, designationId));
+        return Result.Success;
+    }
+
     static bool ValidProgramCap(string affiliation, IReadOnlyList<Uuid>? programs) => affiliation == "guest"
         ? programs is { Count: > 0 } && programs.All(static id => id != Uuid.Empty)
         : programs is null or { Count: 0 };
@@ -275,6 +342,9 @@ public sealed class Member : Aggregate
     public Result PrepareSuspend(Uuid episodeId, long expectedRevision, string reason, bool suspensionPending = false)
     {
         EnsureUserIdentity();
+        if (IsPrimary)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Release this primary administrator after designating a replacement before changing their membership."));
         var current = CheckEpisode(episodeId, expectedRevision);
         if (!current.IsSuccess)
             return current;
@@ -289,7 +359,7 @@ public sealed class Member : Aggregate
     /// <summary>Accepts the suspension as the native fact of <paramref name="operation" />.</summary>
     public Result Suspend(OperationProvenance operation, ImmutableContentRef intent, ImmutableContentRef? operationResult,
         Uuid actorMemberId, string actorDisplay, DateTimeOffset suspendedAt, string reason, Uuid episodeId,
-        long expectedRevision)
+        long expectedRevision, ImmutableContentRef? firstResponse = null)
     {
         var accepted = CheckOperation(operation, intent, actorMemberId, actorDisplay);
         if (!accepted.IsSuccess)
@@ -298,7 +368,7 @@ public sealed class Member : Aggregate
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new MemberSuspended(_tenantId, Id, _userId, actorMemberId, actorDisplay.Trim(), suspendedAt,
-            reason.Trim(), operation, intent, null, operationResult));
+            reason.Trim(), operation, intent, firstResponse, operationResult));
         return Result.Success;
     }
 
@@ -320,7 +390,8 @@ public sealed class Member : Aggregate
 
     /// <summary>Accepts the reinstatement as the native fact of <paramref name="operation" />.</summary>
     public Result Reinstate(OperationProvenance operation, ImmutableContentRef intent, ImmutableContentRef? operationResult,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset reinstatedAt, Uuid episodeId, long expectedRevision)
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset reinstatedAt, Uuid episodeId, long expectedRevision,
+        ImmutableContentRef? firstResponse = null)
     {
         var accepted = CheckOperation(operation, intent, actorMemberId, actorDisplay);
         if (!accepted.IsSuccess)
@@ -329,7 +400,7 @@ public sealed class Member : Aggregate
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new MemberReinstated(_tenantId, Id, _userId, _affiliation!, actorMemberId, actorDisplay.Trim(),
-            reinstatedAt, operation, intent, null, operationResult));
+            reinstatedAt, operation, intent, firstResponse, operationResult));
         return Result.Success;
     }
 
@@ -341,6 +412,9 @@ public sealed class Member : Aggregate
     public Result PrepareDeprovision(Uuid episodeId, long expectedRevision, string reason, bool deprovisionPending = false)
     {
         EnsureUserIdentity();
+        if (IsPrimary)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Release this primary administrator after designating a replacement before changing their membership."));
         var current = CheckEpisode(episodeId, expectedRevision);
         if (!current.IsSuccess)
             return current;
@@ -358,7 +432,7 @@ public sealed class Member : Aggregate
     /// <summary>Accepts the deprovisioning as the native fact of <paramref name="operation" />.</summary>
     public Result Deprovision(OperationProvenance operation, ImmutableContentRef intent,
         ImmutableContentRef? operationResult, Uuid actorMemberId, string actorDisplay, DateTimeOffset deprovisionedAt,
-        string reason, Uuid episodeId, long expectedRevision)
+        string reason, Uuid episodeId, long expectedRevision, ImmutableContentRef? firstResponse = null)
     {
         var accepted = CheckOperation(operation, intent, actorMemberId, actorDisplay);
         if (!accepted.IsSuccess)
@@ -369,7 +443,7 @@ public sealed class Member : Aggregate
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new MemberDeprovisioned(_tenantId, Id, _userId, actorMemberId, actorDisplay.Trim(), deprovisionedAt,
-            reason.Trim(), _membershipEpisodeId, operation, intent, null, operationResult));
+            reason.Trim(), _membershipEpisodeId, operation, intent, firstResponse, operationResult));
         return Result.Success;
     }
 
@@ -451,6 +525,18 @@ public sealed class Member : Aggregate
     {
         if (tenantId != _tenantId || memberId != Id || userId == Uuid.Empty || userId != _userId)
             throw new MemberHistoryIntegrityException("The member lifecycle fact must retain the exact tenant and user identity.");
+    }
+
+    void RequirePrimaryIdentity(Uuid tenantId, Uuid memberId, Uuid userId, Uuid episodeId, Uuid designationId)
+    {
+        if (tenantId != _tenantId || memberId != Id || userId == Uuid.Empty || RbacIds.Member(_tenantId, userId) != Id)
+            throw new MemberHistoryIntegrityException("A primary member fact must retain its canonical tenant and user identity.");
+        // A refused designation can be this stream's first fact, before any membership exists.
+        if (_userId == Uuid.Empty)
+            _userId = userId;
+        RequireMemberIdentity(tenantId, memberId, userId);
+        if (episodeId == Uuid.Empty || designationId == Uuid.Empty)
+            throw new MemberHistoryIntegrityException("A primary member fact requires its exact designation and membership episode.");
     }
 
     void EnsureUserIdentity()

@@ -134,8 +134,6 @@ public sealed class ActivateTenantIdentityTests
             services.AddSingleton<IEventStore>(new InMemoryEventStore());
             services.AddSingleton(TimeProvider.System);
             services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(new InMemoryKvClient()));
-            services.AddSingleton<ITenantMembershipDirectoryReader>(new Members());
-            services.AddSingleton<IPermissionAuthorizer>(new Permissions());
             services.AddScoped<NativeOperationExecutor>();
             services.AddPortia();
             _provider = services.BuildServiceProvider();
@@ -155,7 +153,13 @@ public sealed class ActivateTenantIdentityTests
             await _writer.SaveAsync(tenant, context);
             var member = new Member(TenantId, UserId);
             Assert.True(member.Register().IsSuccess);
+            var designation = Uuid.CreateVersion4();
+            var primaries = new PrimaryOrgAdmins(TenantId, designation);
+            Assert.True(primaries.Designate(designation, UserId, member.MembershipEpisodeId).IsSuccess);
+            Assert.True(member.MarkPrimary(designation, member.MembershipEpisodeId).IsSuccess);
+            Assert.True(primaries.RecordOutcome(designation, UserId, member.MembershipEpisodeId, null).IsSuccess);
             await _writer.SaveAsync(member, context);
+            await _writer.SaveAsync(primaries, context);
             var assignment = new TeamMember(TenantId, BuiltInRbac.AdministratorsTeamId(TenantId), RbacIds.Member(TenantId, UserId));
             Assert.True(assignment.Assign(member.MembershipEpisodeId).IsSuccess);
             await _writer.SaveAsync(assignment, context);
@@ -165,18 +169,5 @@ public sealed class ActivateTenantIdentityTests
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
         }
-    }
-    sealed class Members : ITenantMembershipDirectoryReader
-    {
-        public ValueTask<TenantMembershipView?> GetAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
-            ValueTask.FromResult<TenantMembershipView?>(new(userId, Uuid.Parse(tenantId, null), "client_personnel"));
-        public ValueTask<bool> IsMemberAsync(string tenantId, Uuid userId, CancellationToken ct = default) => ValueTask.FromResult(true);
-        public ValueTask<Page<TenantMembershipView>> ListAsync(Uuid tenantId, int limit, string? cursor, CancellationToken ct = default) =>
-            ValueTask.FromResult(new Page<TenantMembershipView>([], null));
-    }
-    sealed class Permissions : IPermissionAuthorizer
-    {
-        public ValueTask<bool> IsAllowedAsync(Uuid tenantId, Uuid userId, Uuid memberId, string permission, CancellationToken ct = default) =>
-            ValueTask.FromResult(true);
     }
 }

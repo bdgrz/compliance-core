@@ -521,11 +521,11 @@ public sealed class TenantInvitationReactorTests
         var registrations = services
             .Where(descriptor => descriptor.ServiceType == typeof(WorkloadRegistration))
             .Select(descriptor => (WorkloadRegistration)descriptor.ImplementationInstance!)
-            .Where(registration => registration.Name is "TenantInvitation" or "TenantSelfServiceActivationV1")
+            .Where(registration => registration.Name is "TenantInvitation" or "TenantSelfServiceActivationV2" or "TenantSlugActivationV1")
             .ToArray();
 
         // Assert
-        Assert.Equal(2, registrations.Length);
+        Assert.Equal(3, registrations.Length);
         Assert.All(registrations, registration =>
             Assert.Equal(TenantActivationPolicy.WorkloadFailureAttemptLimit, registration.FailureAttemptLimit));
         Assert.Equal(int.MaxValue, TenantActivationPolicy.WorkloadFailureAttemptLimit);

@@ -69,10 +69,14 @@ public sealed class ChangeTenantSlugHandler(NativeOperationExecutor operations, 
         return await UnitOperations.RunAsync(operations, content, clock, context, requestedBy, request.CommandId,
             CommandKind, CurrentEpisode, request.ExpectedRevision >= 0 ? (ulong)request.ExpectedRevision : null,
             selected => new Tenant(request.TenantId, selected), tenant => tenant.Acceptance,
-            tenant => available
-                ? tenant.PrepareRequestSlugChange(slug, request.ExpectedRevision)
-                : Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The tenant slug is already reserved or retired.")),
+            tenant => tenant.NeedsCreatorActivation && !RequestActor.IsSystem(context.Actor) &&
+                      requestedBy?.Kind != "platform_operator" &&
+                      (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var user) || !tenant.WasRegisteredByCreator(user))
+                ? Result.Failure(new RequestError(RequestErrorKind.NotFound, "The tenant was not found."))
+                : available
+                    ? tenant.PrepareRequestSlugChange(slug, request.ExpectedRevision)
+                    : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The tenant slug is already reserved or retired.")),
             (Tenant tenant, OperationProvenance operation, ImmutableContentRef response) => tenant.RequestSlugChange(operation, response, slug,
                 request.ExpectedRevision, requestedBy, operation.AcceptedAt),
             Tenant.SlugUnchanged).ConfigureAwait(false);

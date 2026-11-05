@@ -1332,6 +1332,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<DefineTeamHandler>()
             .AddRequestHandler<DeleteTeamHandler>()
             .AddRequestHandler<DefineRoleHandler>()
+            .AddRequestHandler<DesignatePrimaryOrgAdminHandler>()
+            .AddRequestHandler<ReleasePrimaryOrgAdminHandler>()
+            .AddRequestHandler<MarkMemberPrimaryHandler>()
+            .AddRequestHandler<UnmarkMemberPrimaryHandler>()
+            .AddRequestHandler<RecordPrimaryMarkOutcomeHandler>()
+            .AddRequestHandler<GetPrimaryOrgAdminsHandler>()
             .AddRequestHandler<RenameRoleHandler>()
             .AddRequestHandler<DeleteRoleHandler>()
             .AddRequestHandler<AssignTeamMemberHandler>()
@@ -2090,10 +2096,18 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<PlatformUserDirectoryProjector>("PlatformUserDirectoryV2", WorkloadScope.Global)
             .AddProjector<IdentityDirectoryProjector>("UserIdentityDirectory", WorkloadScope.Global)
             .AddProjector<EmailAddressDirectoryProjector>("EmailAddressDirectory", WorkloadScope.Global)
+            .AddReactor<PrimaryOrgAdminReactor>("PrimaryOrgAdminV1", WorkloadScope.PerTenant)
+            .AddReactor<PrimaryMemberOutcomeReactor>("PrimaryMemberOutcomeV1", WorkloadScope.PerTenant)
             .AddReactor<TenantRbacBootstrapReactor>("TenantRbacBootstrap", WorkloadScope.Global)
-            // Creator activation follows its durable team assignment on a tenant workload,
-            // so a stalled activation cannot hold the global RBAC bootstrap cursor.
-            .AddReactor<TenantSelfServiceActivationReactor>("TenantSelfServiceActivationV1",
+            // Either the completed primary designation or confirmed slug may arrive last.
+            .AddReactor<TenantSlugActivationReactor>("TenantSlugActivationV1", WorkloadScope.Global,
+                options =>
+                {
+                    options.MaximumFailureDelay = TimeSpan.FromSeconds(2);
+                    options.FailureAttemptLimit = TenantActivationPolicy.WorkloadFailureAttemptLimit;
+                })
+            // A primary activation failure cannot hold the global RBAC bootstrap cursor.
+            .AddReactor<TenantSelfServiceActivationReactor>("TenantSelfServiceActivationV2",
                 WorkloadScope.PerTenant, options =>
                 {
                     options.MaximumFailureDelay = TimeSpan.FromSeconds(2);
