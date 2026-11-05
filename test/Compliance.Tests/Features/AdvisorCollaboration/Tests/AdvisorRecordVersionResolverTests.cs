@@ -460,7 +460,7 @@ public sealed class AdvisorRecordVersionResolverTests
 
         // Act
         var create = await fixture.CreateHandler.HandleAsync(fixture.Http(original with
-            { HandoffId = newHandoffId }), CancellationToken.None);
+        { HandoffId = newHandoffId }), CancellationToken.None);
         var revise = await fixture.ReviseHandler.HandleAsync(fixture.Http(new ReviseAdvisorHandoffSelection(
             Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, handoffId, 1,
             [selected], "Reconsider the evidence")), CancellationToken.None);

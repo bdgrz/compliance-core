@@ -723,14 +723,14 @@ public sealed class PreviewApplicationChangeHandler(
                             hasHiddenEvidenceSourceReferences = true;
                             continue;
                         }
-                        var current = await _supportStatus.ReadStatusAsync(request.TenantId,
+                        var supportStatus = await _supportStatus.ReadStatusAsync(request.TenantId,
                             reference.ProgramId, reference.EvidenceSupportId, ct).ConfigureAwait(false);
-                        if (!current.IsSuccess || !MatchesOriginalSupport(reference, current.Value.Original))
+                        if (!supportStatus.IsSuccess || !MatchesOriginalSupport(reference, supportStatus.Value.Original))
                             return Result<ApplicationChangePreview>.Failure(new RequestError(
                                 RequestErrorKind.Conflict,
                                 "The application evidence-source reference does not match its authoritative support.",
                                 isTransient: true));
-                        evidenceSourceReferenceItems.Add(reference with { SupportStatus = current.Value });
+                        evidenceSourceReferenceItems.Add(reference with { SupportStatus = supportStatus.Value });
                     }
 
                     if (sourcePage.NextCursor is not null)

@@ -156,7 +156,7 @@ public sealed class EvidenceSupportStatusTests
         var hooked = new AfterSupportRead(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
             () => WithdrawAsync(fixture, program, link.CommandId));
         var read = Read(scope.ServiceProvider, hooked);
-        var dispatch = new RequestDispatchContext(ProgramManagementServices.Actor(fixture.UserId));
+        var dispatch = ProgramManagementServices.Actor(fixture.UserId);
 
         // Act
         var error = list
@@ -243,7 +243,7 @@ public sealed class EvidenceSupportStatusTests
         await using var scope = fixture.Provider.CreateAsyncScope();
         var read = Read(scope.ServiceProvider);
         return await new GetEvidenceSupportHandler(read).HandleAsync(new RequestContext<GetEvidenceSupport>(
-            new(fixture.TenantId, program, support), new RequestDispatchContext(ProgramManagementServices.Actor(fixture.UserId))),
+            new(fixture.TenantId, program, support), ProgramManagementServices.Actor(fixture.UserId)),
             CancellationToken.None);
     }
 
@@ -253,7 +253,7 @@ public sealed class EvidenceSupportStatusTests
         await using var scope = fixture.Provider.CreateAsyncScope();
         return await new ListEvidenceSupportsHandler(Read(scope.ServiceProvider)).HandleAsync(
             new RequestContext<ListEvidenceSupports>(query,
-                new RequestDispatchContext(ProgramManagementServices.Actor(fixture.UserId))), CancellationToken.None);
+                ProgramManagementServices.Actor(fixture.UserId)), CancellationToken.None);
     }
 
     static EvidenceSupportStatusRead Read(IServiceProvider services, IAggregateReader? reader = null) => new(

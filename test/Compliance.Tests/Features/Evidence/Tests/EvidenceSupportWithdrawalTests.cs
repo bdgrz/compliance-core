@@ -200,7 +200,7 @@ public sealed class EvidenceSupportWithdrawalTests
         var owner = Linked(link);
         var request = Withdrawal(owner.Id);
         Assert.Null(owner.Withdraw(request, Actor(), Now.AddMinutes(1)));
-        var history = Events(owner).Select((fact, index) => DomainEventSeed.Attach(fact, owner.Id, (ulong)index + 1)).ToArray();
+        var history = Events(owner);
 
         // Act
         var replayed = new AggregateScenario<EvidenceSupport>(new EvidenceSupport(TenantId, ProgramId, owner.Id))
@@ -249,7 +249,8 @@ public sealed class EvidenceSupportWithdrawalTests
         };
         var replay = new AggregateScenario<EvidenceSupport>(new EvidenceSupport(TenantId, ProgramId, owner.Id));
 
-        // Act / Assert
+        // Act
+        // Assert
         Assert.Throws<InvalidOperationException>(() => replay.Given(link, fact));
     }
 
@@ -267,7 +268,8 @@ public sealed class EvidenceSupportWithdrawalTests
         var empty = new AggregateScenario<EvidenceSupport>(new EvidenceSupport(TenantId, ProgramId, owner.Id));
         var duplicate = new AggregateScenario<EvidenceSupport>(new EvidenceSupport(TenantId, ProgramId, owner.Id));
 
-        // Act / Assert
+        // Act
+        // Assert
         Assert.Throws<InvalidOperationException>(() => empty.Given(missingPredecessor));
         Assert.Throws<InvalidOperationException>(() => duplicate.Given(history[0], firstWithdrawal, secondWithdrawal));
     }

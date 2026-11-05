@@ -1,3 +1,45 @@
+# Resumed 2026-11-05 — assembled build repaired, native acceptance blocked
+
+The user explicitly resumed with “pickup where we left off.” The integration
+checkout was clean at `e3c31259`; all 21 preserved WIP branches remain intact.
+Live `origin/main` remains `4e4c9d01`, and no open PR targets the integration head.
+The former usage-stop text below is historical; the usage/credit balance remains
+invisible to this session. No parallel agents were started in this resumption.
+
+Restored the isolated `ListEvidenceSupports` namespace correction from
+`f7e4d495` as `59d5e0af`. Fresh strict compilation exposed further unfinished
+integration: a shadowed Application local, the wrong Superseded outcome member,
+missing extension/test imports, incompatible fixture APIs, and formatting/analyzer
+errors. These were repaired without changing analyzer enforcement. Access
+composition tests assert persisted checkpoint progress through the public runner;
+they no longer attempt to read Portia's internal `Projector.Store` property.
+
+Actual focused RED: 141 passed / 7 failed. Six replay cases lacked generated JSON
+metadata for Finding proposal facts; one Support replay fixture attached event
+metadata twice. Added the four new Finding fact registrations and reused the
+fixture's already-attached events. Focused GREEN: **148 passed / 0 failed** across
+Support withdrawal, Finding closure proposal, Controls lifecycle/terms, occurrence
+lifecycle, Policy lifecycle and inventory terminal lifecycle tests.
+
+Strict Release build passed with **0 warnings / 0 errors**. Whole-solution whitespace
+verification passed. Evidence logs are local at
+`/tmp/compliance-resume-{build,focused,format,native}-20261105.log`.
+
+The single native schema probe still fails before behavior assertions:
+`CassieProjectionDatabase.InitializeAsync` cannot rebuild cardinality statistics
+for `portia_projection_checkpoints`: “transactional DDL cannot access multiple
+databases.” The pinned image remains `14c99b2e…`. Recorded reproducible blocker
+[#1188](https://github.com/bdgrz/compliance-core/issues/1188), distinct from concurrent
+startup #1184. No engine workaround, dependency rollback, skipped native test,
+full-suite pass, PR, CI or merge is claimed.
+
+Next: resolve #1188 through a published compatible dependency, rerun the schema
+probe and focused native consumers, then full backend units. Independent WIP
+source integration remains possible using the preserved branch manifest; never
+sweep broad ancestry. Full reviewed-domain source completion remains partial.
+
+---
+
 # Worktree cleanup — latest recovery locations
 
 All uncommitted source was committed before cleanup. The 23 auxiliary worktrees

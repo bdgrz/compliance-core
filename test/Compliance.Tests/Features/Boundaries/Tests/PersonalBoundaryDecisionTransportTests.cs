@@ -93,7 +93,6 @@ using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.Boundaries.Commands;
 using Bdgrz.Compliance.Features.Boundaries.Events;
 using Bdgrz.Compliance.Features.Boundaries.Models;
-using Bdgrz.Compliance.Features.Boundaries.Projections;
 using Bdgrz.Compliance.Features.Boundaries.Queries;
 using Bdgrz.Compliance.Features.Incidents.Commands;
 using Bdgrz.Compliance.Features.Programs.Models;

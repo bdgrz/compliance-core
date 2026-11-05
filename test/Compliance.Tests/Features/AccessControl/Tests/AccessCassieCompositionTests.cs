@@ -86,7 +86,7 @@ public sealed class AccessCassieCompositionTests
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 
-    static async Task SeedAsync(IEventStore events, Uuid tenant, Uuid user, Uuid team, string name)
+    static async Task SeedAsync(InMemoryEventStore events, Uuid tenant, Uuid user, Uuid team, string name)
     {
         var member = RbacIds.Member(tenant, user);
         var role = BuiltInRbac.ViewerRoleId(tenant);
@@ -118,7 +118,6 @@ public sealed class AccessCassieCompositionTests
             Assert.Equal(WorkloadScope.PerTenant, registration.Scope);
             var projector = (Projector)services.GetRequiredService(registration.ComponentType);
             var store = Store(services, name);
-            Assert.Same(store, projector.Store);
             await new ProjectorScenario(new TenantId(tenant.ToString())).RunAsync(projector);
             var identity = new CheckpointIdentity(name, projector.Pattern);
             var checkpoint = await store.LoadCheckpointAsync(identity);

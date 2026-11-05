@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Cntryl.Portia;
@@ -27,7 +28,8 @@ public sealed class InventoryTerminalLifecycleTests
         // Act
         var result = replayed.Revise(2, value => value with
         {
-            Name = "Changed", Lifecycle = reactivate ? "active" : "retired"
+            Name = "Changed",
+            Lifecycle = reactivate ? "active" : "retired"
         }, Actor, At);
 
         // Assert
@@ -54,7 +56,8 @@ public sealed class InventoryTerminalLifecycleTests
         // Act
         var result = replayed.Revise(2, value => value with
         {
-            Name = "Changed", Lifecycle = reactivate ? "active" : "retired"
+            Name = "Changed",
+            Lifecycle = reactivate ? "active" : "retired"
         }, Actor, At);
 
         // Assert
@@ -82,7 +85,8 @@ public sealed class InventoryTerminalLifecycleTests
         // Act
         var result = replayed.Revise(2, value => value with
         {
-            Purpose = "Changed", Lifecycle = reactivate ? "active" : "retired"
+            Purpose = "Changed",
+            Lifecycle = reactivate ? "active" : "retired"
         }, Actor, At);
 
         // Assert

@@ -282,7 +282,8 @@ public sealed class FindingAggregate : Aggregate
         var frozen = terms with
         {
             ResolutionEvidence = Array.AsReadOnly(terms.ResolutionEvidence.ToArray()),
-            VerificationRationale = terms.VerificationRationale.Trim(), Rationale = terms.Rationale.Trim(),
+            VerificationRationale = terms.VerificationRationale.Trim(),
+            Rationale = terms.Rationale.Trim(),
         };
         RaiseEvent(new FindingClosureProposed(operation.LogicalId, _tenantId, _programId, _findingId,
             _revision + 1, closureId, previousProposalRevision + 1, frozen, actions, operation.Actor,

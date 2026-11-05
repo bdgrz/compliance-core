@@ -65,7 +65,7 @@ sealed class CassieBoundaryDirectory(CassieProjectionDatabase database, Boundary
         var header = fact.Header;
         if (Identity.Pattern != EventStreamPattern.ForPattern(header.TenantId.ToString()) || fact.ChangeCount != 1 || fact.NativeSequence < 1 || header.Revision < 1 || !header.IsCreated)
             throw new InvalidOperationException("A boundary directory fact requires its exact native owner and batch tenant.");
-        var current = await CurrentBoundaryAsync( header.BoundaryId, ct).ConfigureAwait(false);
+        var current = await CurrentBoundaryAsync(header.BoundaryId, ct).ConfigureAwait(false);
         if (current is not null && current.Header == header && current.NativeSequence == fact.NativeSequence)
             return;
         if (value is BoundaryDraftCreated)

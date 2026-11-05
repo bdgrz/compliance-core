@@ -77,7 +77,6 @@ using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Authorizers;
 using Bdgrz.Compliance.Features.Boundaries.Commands;
 using Bdgrz.Compliance.Features.Boundaries.Models;
-using Bdgrz.Compliance.Features.Boundaries.Projections;
 using Bdgrz.Compliance.Features.Boundaries.Queries;
 using Bdgrz.Compliance.Features.Commitments.Aggregates;
 using Bdgrz.Compliance.Features.Commitments.Commands;

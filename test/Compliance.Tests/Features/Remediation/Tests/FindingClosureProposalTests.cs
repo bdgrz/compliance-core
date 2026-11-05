@@ -109,7 +109,7 @@ public sealed class FindingClosureProposalTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Equal(2, owner.ClosureProposal!.ProposalRevision);
-        Assert.Equal(new[] { Uuid.Parse(Author.Id), Uuid.Parse(Other.Id) }.OrderBy(static id => id.ToString(), StringComparer.Ordinal),
+        Assert.Equal(new[] { Uuid.Parse(Author.Id, System.Globalization.CultureInfo.InvariantCulture), Uuid.Parse(Other.Id, System.Globalization.CultureInfo.InvariantCulture) }.OrderBy(static id => id.ToString(), StringComparer.Ordinal),
             owner.ProposalAuthors(closure));
         Assert.Empty(new AggregateScenario<FindingAggregate>(owner).PendingEvents);
     }
@@ -209,7 +209,8 @@ public sealed class FindingClosureProposalTests
             Uuid.CreateVersion4(), 2);
         var report = FindingContent.Provenance(Uuid.CreateVersion5(source.EventId, nameof(RecordCorrectiveActionOutcome)),
             nameof(RecordCorrectiveActionOutcome), owner.Stream, ActorReference.ForSystemProcess("report", "Report outcome"),
-            null, new string('a', 64), NativeFacts.Now) with { FirstOwner = owner.Stream, CausationEventId = source.EventId };
+            null, new string('a', 64), NativeFacts.Now) with
+        { FirstOwner = owner.Stream, CausationEventId = source.EventId };
         Assert.True(owner.RecordActionOutcome(report, action, "completed", source, NativeFacts.Ref(SourceFactProofs.RequiredFactsSchema)).IsSuccess);
         new AggregateScenario<FindingAggregate>(owner).Given();
 
@@ -259,7 +260,7 @@ public sealed class FindingClosureProposalTests
         Assert.Equal(waiver, binding!.Waiver);
         Assert.Equal(closure, binding.ClosureId);
         Assert.Equal(1, binding.ProposalRevision);
-        Assert.Equal(Uuid.Parse(Author.Id), binding.ReviewerMemberId);
+        Assert.Equal(Uuid.Parse(Author.Id, System.Globalization.CultureInfo.InvariantCulture), binding.ReviewerMemberId);
     }
 
     [Theory]
@@ -398,7 +399,7 @@ public sealed class FindingClosureProposalTests
             "revision" => accepted with { Review = accepted.Review! with { ProposalRevision = 2 } },
             "author" => accepted with
             {
-                Review = accepted.Review! with { ReviewerMemberId = Uuid.Parse(Author.Id), ReviewedBy = Author },
+                Review = accepted.Review! with { ReviewerMemberId = Uuid.Parse(Author.Id, System.Globalization.CultureInfo.InvariantCulture), ReviewedBy = Author },
                 Operation = accepted.Operation with { Actor = Author },
             },
             "expected-revision" => accepted with { Operation = accepted.Operation with { OriginalExpectedRevision = 0 } },
@@ -514,14 +515,15 @@ public sealed class FindingClosureProposalTests
 
     static Result Finish(FindingAggregate owner, FindingClosureAccepted pending) => owner.CompleteClosure(pending.Operation with
     {
-        LogicalId = Uuid.CreateVersion4(), CommandKind = nameof(CompleteFindingClosure),
+        LogicalId = Uuid.CreateVersion4(),
+        CommandKind = nameof(CompleteFindingClosure),
     }, NativeFacts.Ref(), NativeFacts.Ref(), pending.Intent, NativeFacts.Ref());
 
     static SeparationOfDutiesWaiverProof Waiver(FindingAggregate owner, Uuid closure, long revision,
         ActorReference actor, bool approve)
     {
         var id = Uuid.CreateVersion4();
-        var member = Uuid.Parse(actor.Id);
+        var member = Uuid.Parse(actor.Id, System.Globalization.CultureInfo.InvariantCulture);
         return new SeparationOfDutiesWaiverProof(owner.TenantId, id, member, member,
             approve ? SeparationOfDutiesActions.Approve : SeparationOfDutiesActions.Review,
             SeparationOfDutiesRecordTypes.Finding, owner.FindingId, closure, revision,
@@ -538,5 +540,6 @@ public sealed class FindingClosureProposalTests
     static OperationProvenance Op(FindingAggregate owner, string kind, ActorReference actor, long? revision = -1,
         Uuid id = default) => FindingContent.Provenance(id == Uuid.Empty ? Uuid.CreateVersion4() : id, kind,
         owner.Stream, actor, revision == -1 ? (ulong)owner.Revision : revision is { } expected ? (ulong)expected : null,
-        new string('c', 64), NativeFacts.Now) with { FirstOwner = owner.Stream };
+        new string('c', 64), NativeFacts.Now) with
+        { FirstOwner = owner.Stream };
 }

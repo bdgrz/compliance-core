@@ -176,10 +176,16 @@ public sealed class CassiePermissionAuthorizerTests
         }
         await using var command = connection.CreateCommand();
         command.CommandText = "DELETE FROM access_permission_states WHERE projection_key = @scope";
-        CassieAccessControlSql.Bind(command, ("scope", projection));
+        var scopeParameter = command.CreateParameter();
+        scopeParameter.ParameterName = "scope";
+        scopeParameter.Value = projection;
+        _ = command.Parameters.Add(scopeParameter);
         Assert.Equal(1, await command.ExecuteNonQueryAsync());
         command.CommandText = "INSERT INTO access_permission_states (projection_key, payload) VALUES (@scope, @payload)";
-        CassieAccessControlSql.Bind(command, ("payload", payload));
+        var payloadParameter = command.CreateParameter();
+        payloadParameter.ParameterName = "payload";
+        payloadParameter.Value = payload;
+        _ = command.Parameters.Add(payloadParameter);
         Assert.Equal(1, await command.ExecuteNonQueryAsync());
         return payload;
     }

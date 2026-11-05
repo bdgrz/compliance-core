@@ -89,8 +89,11 @@ public sealed class ProposeFindingClosureHandlerTests
             problem == "quarantined" ? EvidenceInspectionOutcome.Malware : EvidenceInspectionOutcome.Clean);
         var request = Command(fixture, finding, artifact);
         if (problem == "version")
-            request = request with { Terms = request.Terms with
-            { ResolutionEvidence = [new FindingClosureArtifactVersion(artifact, new string('b', 64))] } };
+            request = request with
+            {
+                Terms = request.Terms with
+                { ResolutionEvidence = [new FindingClosureArtifactVersion(artifact, new string('b', 64))] }
+            };
         var before = await fixture.FindingStreamAsync(finding.FindingId);
         await using var scope = provider.CreateAsyncScope();
         var handler = ActivatorUtilities.CreateInstance<ProposeFindingClosureHandler>(scope.ServiceProvider);

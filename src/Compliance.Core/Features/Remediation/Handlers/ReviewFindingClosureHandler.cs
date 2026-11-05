@@ -47,7 +47,8 @@ public sealed class ReviewFindingClosureHandler(NativeOperationExecutor operatio
         var reviewedBy = ActorReference.ForMember(actor.MemberId, actor.Display);
         var snapshot = new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, nameof(ReviewFindingClosure), snapshot.Stream,
-            reviewedBy, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with { FirstOwner = snapshot.Stream };
+            reviewedBy, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
         SeparationOfDutiesWaiverProof? waiver = null;
         ImmutableContentRef? intent = null;

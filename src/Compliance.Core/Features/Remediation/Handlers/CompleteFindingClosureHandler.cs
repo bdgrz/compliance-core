@@ -88,7 +88,7 @@ sealed class CompleteFindingClosureHandler(IAggregateReader reader, IAggregateEx
         var binding = AcceptedOperationBinding.Of(provenance);
         async ValueTask<Result<ReceiverOutcome>> SettleWithdrawalAsync(Result<ReceiverOutcome> outcome)
         {
-            if (!outcome.IsSuccess || outcome.Value is not ReceiverOutcome.Superseded { Fact: { } terminal })
+            if (!outcome.IsSuccess || outcome.Value is not ReceiverOutcome.Superseded { Evidence: { } terminal })
                 return outcome;
             var ended = await verifier.VerifyTerminalAsync(terminal, command.Intent, command.OperationId, command.CommandId, ct)
                 .ConfigureAwait(false);

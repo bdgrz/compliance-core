@@ -150,7 +150,7 @@ public sealed class PolicyLifecycleTests
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(wrongReview).Code);
         Assert.Null(reviewer);
         Assert.NotNull(policy.CurrentVersion);
-        Assert.Equal(ReviewerId.ToString(), policy.ReadDecisions().Last().Actor.Id);
+        Assert.Equal(ReviewerId.ToString(), policy.ReadDecisions()[^1].Actor.Id);
     }
 
     [Fact]

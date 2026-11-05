@@ -131,7 +131,7 @@ public sealed class FindingClosureReviewHandlerTests
 
         // Act
         var result = await handler.HandleAsync(ProposeFindingClosureHandlerTests.Context(Review(fixture, proposed, true) with
-            { SeparationOfDutiesWaiverId = waiver }, fixture.LeadUserId), CancellationToken.None);
+        { SeparationOfDutiesWaiverId = waiver }, fixture.LeadUserId), CancellationToken.None);
         var after = await fixture.FindingStreamAsync(proposed.FindingId);
 
         // Assert
@@ -154,7 +154,7 @@ public sealed class FindingClosureReviewHandlerTests
 
         // Act
         var result = await handler.HandleAsync(ProposeFindingClosureHandlerTests.Context(Review(fixture, proposed, true) with
-            { SeparationOfDutiesWaiverId = waiver }, fixture.OwnerUserId), CancellationToken.None);
+        { SeparationOfDutiesWaiverId = waiver }, fixture.OwnerUserId), CancellationToken.None);
         var after = await fixture.FindingStreamAsync(proposed.FindingId);
 
         // Assert

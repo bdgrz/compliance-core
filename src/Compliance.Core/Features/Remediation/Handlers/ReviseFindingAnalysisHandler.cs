@@ -11,6 +11,7 @@ using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Readers;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Remediation.Services;
+using Bdgrz.Compliance.Features.Versioning.Services;
 namespace Bdgrz.Compliance.Features.Remediation.Handlers;
 
 /// <summary>Records a named analysis revision for the current owner, Compliance Lead or Contributor.</summary>
@@ -43,7 +44,8 @@ public sealed class ReviseFindingAnalysisHandler(NativeOperationExecutor operati
         var affected = FindingRules.Trimmed(request.AffectedRecords);
         var snapshot = new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, nameof(ReviseFindingAnalysis), snapshot.Stream,
-            revisedBy, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with { FirstOwner = snapshot.Stream };
+            revisedBy, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
         ImmutableContentRef? result = null;
         async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(FindingAggregate owner, CancellationToken token)

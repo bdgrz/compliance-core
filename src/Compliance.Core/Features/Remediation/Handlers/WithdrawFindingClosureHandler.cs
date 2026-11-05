@@ -30,7 +30,8 @@ public sealed class WithdrawFindingClosureHandler(NativeOperationExecutor operat
         var withdrawnBy = ActorReference.ForMember(actor.MemberId, actor.Display);
         var snapshot = new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, nameof(WithdrawFindingClosure), snapshot.Stream,
-            withdrawnBy, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with { FirstOwner = snapshot.Stream };
+            withdrawnBy, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with
+        { FirstOwner = snapshot.Stream };
         var binding = AcceptedOperationBinding.Of(provenance);
         ImmutableContentRef? result = null;
 

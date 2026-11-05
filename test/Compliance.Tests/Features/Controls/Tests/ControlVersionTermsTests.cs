@@ -59,7 +59,9 @@ public sealed class ControlVersionTermsTests
         var owner = new ControlRules(tenant, ControlRules.IdFor(tenant, program, "TERMS-VALID"));
         var content = Content() with
         {
-            Kind = " DETECTIVE ", Nature = " HYBRID ", Cadence = " " + cadence.ToUpperInvariant() + " ",
+            Kind = " DETECTIVE ",
+            Nature = " HYBRID ",
+            Cadence = " " + cadence.ToUpperInvariant() + " ",
             OccurrenceSubject = " MATERIAL_PROVIDER "
         };
 
