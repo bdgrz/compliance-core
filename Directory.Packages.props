@@ -11,7 +11,7 @@
     <PackageVersion Include="Cntryl.Fitz.Testing" Version="4.0.0" />
     <PackageVersion Include="Cntryl.LexKey" Version="0.1.2" />
     <PackageVersion Include="Cntryl.Portia.Abstractions" Version="0.10.0" />
-    <PackageVersion Include="Cntryl.Portia.Analyzers" Version="0.10.0" />
+    <PackageVersion Include="Cntryl.Portia.Analyzers" Version="0.12.1" />
     <PackageVersion Include="Cntryl.Portia.AspNetCore" Version="0.10.0" />
     <PackageVersion Include="Cntryl.Portia.Cassie" Version="0.10.0" />
     <PackageVersion Include="Cntryl.Portia.Fitz" Version="0.10.0" />
