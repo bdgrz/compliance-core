@@ -87,6 +87,7 @@ using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Authorizers;
 namespace Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
 
+[Collection("Cassie test server")]
 public sealed class MethodologyTemplateReadHandlerTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 24, 12, 0, 0, TimeSpan.Zero);

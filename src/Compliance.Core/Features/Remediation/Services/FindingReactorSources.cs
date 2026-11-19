@@ -25,7 +25,7 @@ namespace Bdgrz.Compliance.Features.Remediation.Services;
 /// <summary>Verifies the exact committed typed trigger, including its actual physical source position, before any reaction.</summary>
 static class FindingReactorSources
 {
-    public static async Task VerifyAsync<TEvent>(ISourceFactResolver resolver, IImmutableContentStore content,
+    public static async Task<Result> VerifyAsync<TEvent>(ISourceFactResolver resolver, IImmutableContentStore content,
         EventStreamPattern pattern, IReactorContext<TEvent> context, EventStreamAddress expected,
         CancellationToken ct) where TEvent : DomainEvent
     {
@@ -43,15 +43,16 @@ static class FindingReactorSources
                 ContentDigest.Sha256(actual, typeof(TEvent)) != ContentDigest.Sha256(context.Trigger, typeof(TEvent)) ||
                 ContentDigest.Sha256(actual, typeof(TEvent)) != ContentDigest.Sha256(context.Source.Event, typeof(TEvent)))
                 throw new ImmutableContentIntegrityException("The remediation trigger differs from its exact committed typed source bytes.");
+            return Result.Success;
         }
         catch (SourceFactVerificationException error)
         {
-            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 $"The exact remediation source cannot be verified: {error.Message}", error is SourceFactUnavailableException));
         }
         catch (ImmutableContentIntegrityException error)
         {
-            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 $"The exact remediation bytes cannot be verified: {error.Message}", error is ImmutableContentUnavailableException));
         }
     }

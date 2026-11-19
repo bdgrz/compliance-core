@@ -1,11 +1,11 @@
 using System.Text;
 using System.Text.Json;
-using Cntryl.Fitz;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Content.Services;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Work.Models;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work.Services;
 
@@ -16,7 +16,7 @@ sealed class FitzKvWeeklyDigestSchedulePages(IKvClient client) : IWeeklyDigestSc
     {
         await using var tx = await client.BeginAsync(Route(tenantId), KvMode.ReadOnly, ct).ConfigureAwait(false);
         var found = await tx.GetAsync(Key(pageId), ct).ConfigureAwait(false);
-        return found.Found ? Parse(found.Value!.Value.Span, tenantId, pageId) : null;
+        return found is KvFound { Value: var bytes } ? Parse(bytes.Span, tenantId, pageId) : null;
     }
 
     public async Task<Result<WeeklyDigestSchedulePage>> AcceptIfAbsentAsync(WeeklyDigestSchedulePage candidate,
@@ -29,9 +29,9 @@ sealed class FitzKvWeeklyDigestSchedulePages(IKvClient client) : IWeeklyDigestSc
                 await using var tx = await client.BeginAsync(Route(candidate.TenantId), KvMode.ReadWrite, ct)
                     .ConfigureAwait(false);
                 var found = await tx.GetAsync(Key(candidate.PageId), ct).ConfigureAwait(false);
-                if (found.Found)
+                if (found is KvFound { Value: var bytes })
                 {
-                    var existing = Parse(found.Value!.Value.Span, candidate.TenantId, candidate.PageId);
+                    var existing = Parse(bytes.Span, candidate.TenantId, candidate.PageId);
                     return existing.Limit == candidate.Limit
                         ? Result<WeeklyDigestSchedulePage>.Success(existing)
                         : Result<WeeklyDigestSchedulePage>.Failure(ChangedIntent());
@@ -58,9 +58,9 @@ sealed class FitzKvWeeklyDigestSchedulePages(IKvClient client) : IWeeklyDigestSc
                 await using var tx = await client.BeginAsync(Route(admitted.TenantId), KvMode.ReadWrite, ct)
                     .ConfigureAwait(false);
                 var found = await tx.GetAsync(Key(admitted.PageId), ct).ConfigureAwait(false);
-                if (!found.Found)
+                if (found is not KvFound { Value: var bytes })
                     throw new ImmutableContentUnavailableException("The admitted schedule page is not readable yet.");
-                var current = Parse(found.Value!.Value.Span, admitted.TenantId, admitted.PageId);
+                var current = Parse(bytes.Span, admitted.TenantId, admitted.PageId);
                 if (current.Limit != admitted.Limit || current.Plan != admitted.Plan)
                     throw new ImmutableContentIntegrityException("The schedule page's admitted intent changed.");
                 if (current.Result is not null)

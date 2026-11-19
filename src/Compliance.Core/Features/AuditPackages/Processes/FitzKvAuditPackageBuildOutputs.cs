@@ -1,19 +1,18 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using Cntryl.Fitz;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Contracts;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Content.Services;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.Operations.Models;
@@ -24,10 +23,11 @@ using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.SourceFacts.Readers;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AuditPackages.Processes;
 
 /// <summary>Durable insert-if-absent checkpoint before the successful result receiver can be dispatched.</summary>
@@ -37,9 +37,9 @@ sealed class FitzKvAuditPackageBuildOutputs(IKvClient client) : IAuditPackageBui
     {
         await using var tx = await client.BeginAsync(Route(tenantId, buildId), KvMode.ReadOnly, ct).ConfigureAwait(false);
         var found = await tx.GetAsync(Key(buildId), ct).ConfigureAwait(false);
-        if (!found.Found)
+        if (found is not KvFound { Value: var bytes })
             return null;
-        var output = Parse(found.Value!.Value.Span);
+        var output = Parse(bytes.Span);
         if (output.TenantId != tenantId || output.BuildId != buildId)
             throw new ImmutableContentIntegrityException("A build checkpoint differs from its exact tenant or logical build.");
         return output;
@@ -55,9 +55,9 @@ sealed class FitzKvAuditPackageBuildOutputs(IKvClient client) : IAuditPackageBui
                 await using var tx = await client.BeginAsync(Route(output.TenantId, output.BuildId), KvMode.ReadWrite,
                     ct).ConfigureAwait(false);
                 var found = await tx.GetAsync(Key(output.BuildId), ct).ConfigureAwait(false);
-                if (found.Found)
+                if (found is KvFound { Value: var bytes })
                 {
-                    var existing = Parse(found.Value!.Value.Span);
+                    var existing = Parse(bytes.Span);
                     await tx.RollbackAsync(ct).ConfigureAwait(false);
                     if (existing != output)
                         throw new ImmutableContentIntegrityException("A logical build cannot publish a different source or archive.");

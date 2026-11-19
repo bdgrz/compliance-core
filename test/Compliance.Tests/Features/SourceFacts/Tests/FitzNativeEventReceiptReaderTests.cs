@@ -49,7 +49,7 @@ public sealed class FitzNativeEventReceiptReaderTests
         var serializer = provider.GetRequiredService<IDomainEventSerializer>();
         var value = Source();
         var raw = Raw(serializer.Serialize(value));
-        var client = new ResolverStreamClient((_, _, _, _) => Page(raw));
+        var client = new ResolverStreamClient((_, _) => [Page(raw)]);
         var reader = new FitzNativeEventReceiptReader(client, serializer);
 
         // Act
@@ -92,7 +92,7 @@ public sealed class FitzNativeEventReceiptReaderTests
             Offset = changed == "offset" ? 2UL : 1UL,
             Timestamp = changed == "timestamp_absent" ? 0UL : changed == "timestamp_overflow" ? ulong.MaxValue : checked((ulong)Receipt.ToUnixTimeMilliseconds()),
         };
-        var reader = new FitzNativeEventReceiptReader(new ResolverStreamClient((_, _, _, _) => Page(raw)), serializer);
+        var reader = new FitzNativeEventReceiptReader(new ResolverStreamClient((_, _) => [Page(raw)]), serializer);
 
         // Act
         var failure = await Record.ExceptionAsync(async () => await reader.RecordedAtAsync(new(Stream, value, 1, EventCursor.Start)));
@@ -105,7 +105,7 @@ public sealed class FitzNativeEventReceiptReaderTests
     {
         // Arrange
         await using var provider = EventPersistenceFrameTests.Compose();
-        var client = new ResolverStreamClient((_, _, _, _) => new StreamReadPage([], new(0, null, null, null, 11, 100, false)));
+        var client = new ResolverStreamClient((_, start) => [new StreamReadBatch([], start, start, true)]);
         var reader = new FitzNativeEventReceiptReader(client, provider.GetRequiredService<IDomainEventSerializer>());
 
         // Act
@@ -121,5 +121,7 @@ public sealed class FitzNativeEventReceiptReaderTests
         return value;
     }
     static StreamRecord Raw(ReadOnlyMemory<byte> bytes) => new(Stream.ToString(), 1, null, null, null, bytes, null, checked((ulong)Receipt.ToUnixTimeMilliseconds()));
-    static StreamReadPage Page(StreamRecord value) => new([new(value.Route, StreamReadItemKind.Event, value, 0, 0, 0, null)], new(value.Offset, null, null, null, 11, 100, false));
+    static StreamReadBatch Page(StreamRecord value) =>
+        new([new StreamReadItem(value.Route, StreamReadItemKind.Event, value)], value.Offset,
+            checked(value.Offset + 1), true);
 }

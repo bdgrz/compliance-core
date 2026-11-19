@@ -8,6 +8,7 @@ using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
 
+[Collection("Cassie test server")]
 public sealed class CassieMethodologyTemplateDirectoryTests
 {
     static readonly DateTimeOffset Now = new(2026, 11, 4, 12, 0, 0, TimeSpan.Zero);

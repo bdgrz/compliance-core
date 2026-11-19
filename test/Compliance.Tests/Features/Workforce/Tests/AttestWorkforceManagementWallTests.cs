@@ -91,6 +91,7 @@ using Bdgrz.Compliance.Features.Workforce.Queries;
 using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
+[Collection("Cassie test server")]
 public sealed class AttestWorkforceManagementWallTests
 {
     [Theory]

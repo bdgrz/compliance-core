@@ -1,42 +1,41 @@
-using Bdgrz.Compliance.Features.Applications.Queries;
-using Bdgrz.Compliance.Features.AuditPopulations.Queries;
-using Bdgrz.Compliance.Features.AuditorRequests.Commands;
-using Bdgrz.Compliance.Features.AuditorRequests.Queries;
-using Bdgrz.Compliance.Features.Evidence.Commands;
-using Bdgrz.Compliance.Features.Evidence.Queries;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Queries;
-using Bdgrz.Compliance.Features.Responsibilities.Commands;
-using Bdgrz.Compliance.Features.Responsibilities.Queries;
-using Bdgrz.Compliance.Features.Retention.Commands;
-using Bdgrz.Compliance.Features.Retention.Queries;
-using Bdgrz.Compliance.Features.SystemDescription.Commands;
-using Bdgrz.Compliance.Features.SystemDescription.Queries;
-using Bdgrz.Compliance.Features.UserIdentities.Commands;
-using Bdgrz.Compliance.Features.UserIdentities.Queries;
-using Bdgrz.Compliance.Features.Applications.Commands;
-using Bdgrz.Compliance.Hosting.NativeResponses;
-using Bdgrz.Compliance.Hosting;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance;
-using Cntryl.Portia;
-using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Queries;
+using Bdgrz.Compliance.Features.AuditorRequests.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Queries;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Queries;
+using Bdgrz.Compliance.Features.Evidence.Commands;
 using Bdgrz.Compliance.Features.Evidence.Handlers;
+using Bdgrz.Compliance.Features.Evidence.Queries;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Queries;
+using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.NativeOperations.Contracts;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Queries;
+using Bdgrz.Compliance.Features.Retention.Commands;
 using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Retention.Queries;
+using Bdgrz.Compliance.Features.SystemDescription.Commands;
 using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Queries;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
+using Bdgrz.Compliance.Features.UserIdentities.Queries;
 using Bdgrz.Compliance.Features.UserIdentities.Readers;
-
-using Bdgrz.Compliance.Features.NamedRecords;
+using Bdgrz.Compliance.Hosting;
+using Bdgrz.Compliance.Hosting.NativeResponses;
+using Cntryl.Portia;
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi;
 
 var hostMode = ComplianceHostModeParser.Parse(
     Environment.GetEnvironmentVariable("COMPLIANCE_HOST_MODE"));
@@ -3168,7 +3167,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
-    app.MapPortiaGet<ListAdvisorRequests, Cntryl.Fitz.Extensions.Page<AdvisorRequestSummaryView>>(
+    app.MapPortiaGet<ListAdvisorRequests, Bdgrz.Compliance.Page<AdvisorRequestSummaryView>>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
@@ -3180,7 +3179,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/preview")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
-    app.MapPortiaGet<ListAdvisorFeedback, Cntryl.Fitz.Extensions.Page<AdvisorFeedbackView>>(
+    app.MapPortiaGet<ListAdvisorFeedback, Bdgrz.Compliance.Page<AdvisorFeedbackView>>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
@@ -3465,7 +3464,7 @@ public partial class Program
         int index, string name, bool nullable, bool hasDefault, out bool supplied)
     {
         var wireName = options.PropertyNamingPolicy?.ConvertName(name) ?? name;
-        supplied = PortiaHttpBinding.HasBodyMember<TRequest, T>(body, options, index, wireName);
+        supplied = PortiaHttpBinding.HasBodyMember<TRequest, T>(body, options, index, name, wireName);
         if (!supplied && PortiaHttpBinding.ReadQuery(context, wireName) is { } raw)
         {
             // Preserve generated binding's body-before-query scalar fallback and parsing.

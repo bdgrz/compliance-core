@@ -201,7 +201,7 @@ public sealed class RbacPagedReadContractTests
             LastSearch = search;
             LastDescending = descending;
             return RejectCursor
-                ? ValueTask.FromException<Page<TeamView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<TeamView>>(new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(Page);
         }
     }
@@ -228,7 +228,7 @@ public sealed class RbacPagedReadContractTests
             LastDescending = descending;
             LastTeamId = teamId;
             return RejectCursor
-                ? ValueTask.FromException<Page<TeamMemberView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<TeamMemberView>>(new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(Page);
         }
     }
@@ -255,7 +255,7 @@ public sealed class RbacPagedReadContractTests
             LastSearch = search;
             LastDescending = descending;
             return RejectCursor
-                ? ValueTask.FromException<Page<RoleView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<RoleView>>(new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(Page);
         }
     }
@@ -282,7 +282,7 @@ public sealed class RbacPagedReadContractTests
             LastDescending = descending;
             LastRoleId = roleId;
             return RejectCursor
-                ? ValueTask.FromException<Page<RolePermissionView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<RolePermissionView>>(new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(Page);
         }
     }
@@ -309,7 +309,7 @@ public sealed class RbacPagedReadContractTests
             LastDescending = descending;
             LastRoleId = roleId;
             return RejectCursor
-                ? ValueTask.FromException<Page<RoleTeamView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<RoleTeamView>>(new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(Page);
         }
     }

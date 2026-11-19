@@ -1,18 +1,18 @@
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
+using Bdgrz.Compliance.Features.AccessReviews.Events;
 using Bdgrz.Compliance.Features.AccessReviews.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
-using Bdgrz.Compliance.Features.AccessReviews.Events;
-using Bdgrz.Compliance.Features.Providers.Projections;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessReviews.Projections;
 
 /// <summary>Transient complete native/item business history; all publication and fence maps stay outside authority.</summary>
@@ -29,8 +29,8 @@ public sealed class AccessReviewItemHistorySnapshot
         _cut = AccessReviewPreparedCut.Capture(owner);
         Facts = Array.AsReadOnly(facts.ToArray());
         BusinessFacts = Array.AsReadOnly(business.ToArray());
-        _provisional = new(provisional);
-        _fences = new(fences);
+        _provisional = [with(provisional)];
+        _fences = [with(fences)];
         _published = [.. published];
     }
     public IReadOnlyList<DomainEvent> Facts { get; }

@@ -1,22 +1,22 @@
-using Cntryl.Fitz;
-using Cntryl.Fitz.Extensions;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.AccessControl.Events;
-using Bdgrz.Compliance.Features.AccessControl.Projections;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Extensions;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>
@@ -41,7 +41,7 @@ sealed class FitzRoleTeamDirectoryReader(IKvClient client)
                         assigned.ExpectedRevision + 1), ct).ConfigureAwait(false);
                 break;
             case TeamRoleRemoved removed:
-                await RoleTeamDirectorySchema.Directory.DeleteAsync(
+                await RoleTeamDirectorySchema.Directory.DeleteByIdAsync(
                     Transaction, (removed.RoleId, removed.TeamId), ct).ConfigureAwait(false);
                 break;
         }

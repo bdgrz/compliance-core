@@ -1,11 +1,11 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Evidence.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -13,6 +13,7 @@ using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Models;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
@@ -20,8 +21,7 @@ using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.Providers.Models;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Providers.Rules;
 
 /// <summary>Validation and canonicalization for provider-specific coverage gaps.</summary>
@@ -29,15 +29,16 @@ public static class ProviderCoverageGapRules
 {
     public const int MaximumTextLength = 2_000;
 
-    static readonly HashSet<string> SourceKinds = new(StringComparer.Ordinal)
-    {
+    static readonly HashSet<string> SourceKinds =
+    [
+        with(StringComparer.Ordinal),
         "assurance_report",
         "provider_review",
         "service_commitment",
         "system_requirement",
         "subservice_responsibility",
         "evidence_artifact",
-    };
+    ];
 
     public static string? InputError(ProviderCoverageGapContent? content)
     {

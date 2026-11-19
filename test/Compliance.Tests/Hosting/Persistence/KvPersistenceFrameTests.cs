@@ -108,10 +108,13 @@ public sealed class KvPersistenceFrameTests
         var result = await read.GetAsync(key);
 
         // Assert
-        Assert.True(result.Found);
-        Assert.Equal(value, result.Value!.Value.ToArray());
-        var operation = PinnedFitzFrameTests.OperationPayload(false, Encoding.UTF8.GetBytes(Route), key,
-            result.Value.Value.ToArray());
+        var storedValue = result switch
+        {
+            KvFound found => found.Value.ToArray(),
+            KvNotFound => throw new InvalidOperationException("The written KV value was not found."),
+        };
+        Assert.Equal(value, storedValue);
+        var operation = PinnedFitzFrameTests.OperationPayload(false, Encoding.UTF8.GetBytes(Route), key, storedValue);
         Assert.Equal(ushort.MaxValue + FitzLimits.MinFrameSize,
             PinnedFitzFrameTests.Encode(insert ? "KvInsert" : "KvPut", operation).Length);
     }

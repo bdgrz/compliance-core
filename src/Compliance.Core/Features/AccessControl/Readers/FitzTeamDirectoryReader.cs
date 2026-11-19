@@ -1,15 +1,17 @@
-using Cntryl.Fitz;
-using Cntryl.Fitz.Extensions;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -24,17 +26,15 @@ using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Events;
-using Bdgrz.Compliance.Features.AccessControl.Projections;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Extensions;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 /// <summary>
@@ -58,7 +58,7 @@ sealed class FitzTeamDirectoryReader(IKvClient client)
                     Transaction, new TeamView(defined.TeamId, defined.Name), ct).ConfigureAwait(false);
                 break;
             case TeamDeleted deleted:
-                await TeamDirectorySchema.Directory.DeleteAsync(Transaction, deleted.TeamId, ct).ConfigureAwait(false);
+                await TeamDirectorySchema.Directory.DeleteByIdAsync(Transaction, deleted.TeamId, ct).ConfigureAwait(false);
                 break;
         }
     }

@@ -1,7 +1,7 @@
 using System.Globalization;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
 
@@ -13,8 +13,8 @@ public sealed class TemplateVersionApplication : Aggregate
     readonly Uuid _programId;
     readonly Uuid _templateId;
     readonly long _version;
-    readonly HashSet<string> _entries = new(StringComparer.Ordinal);
-    readonly Dictionary<string, TemplateEntryOutcome> _outcomes = new(StringComparer.Ordinal);
+    readonly HashSet<string> _entries = [with(StringComparer.Ordinal)];
+    readonly Dictionary<string, TemplateEntryOutcome> _outcomes = [with(StringComparer.Ordinal)];
 
     public TemplateVersionApplication(Uuid tenantId, Uuid programId, Uuid templateId, long version)
         : base(Identity(tenantId, programId, templateId, version),

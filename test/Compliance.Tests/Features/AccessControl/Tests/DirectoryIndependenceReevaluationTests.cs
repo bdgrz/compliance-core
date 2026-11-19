@@ -141,9 +141,8 @@ public sealed class DirectoryIndependenceReevaluationTests
             .ReadJsonAsync<DirectoryIndependenceReevaluationView>(fixture.Tenant.ToString(), receipt.ReevaluationContent);
 
         // Assert
-        var pending = Assert.IsType<ReactionCommandFailedException>(failure.InnerException);
-        Assert.Same(pending.Error, failure.Error);
-        Assert.True(pending.Error.IsTransient);
+        Assert.Null(failure.InnerException);
+        Assert.True(failure.Error!.IsTransient);
         Assert.Equal(before, heldBack);
         Assert.Empty(receiptsWhilePending);
         Assert.Equal(fixture.Lead.StaffMemberId, view.Source.StaffMemberId);

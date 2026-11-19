@@ -186,7 +186,7 @@ public sealed class ControlDraftHistoryReadTests
             ReadCalls++;
             return RejectCursor
                 ? ValueTask.FromException<Page<ControlDraftRevisionView>>(
-                    new KvDirectoryQueryException())
+                    new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(new Page<ControlDraftRevisionView>([], null));
         }
     }

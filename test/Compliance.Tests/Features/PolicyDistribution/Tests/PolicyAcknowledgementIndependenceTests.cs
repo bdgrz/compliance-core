@@ -98,6 +98,7 @@ using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
 
+[Collection("Cassie test server")]
 public sealed class PolicyAcknowledgementIndependenceTests
 {
     [Theory]

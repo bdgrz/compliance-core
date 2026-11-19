@@ -87,7 +87,7 @@ public sealed class SnapshotPagedReadContractTests
         public ValueTask<Page<SnapshotView>> ListProgramAsync(Uuid tenantId, Uuid programId,
             int limit, string? cursor, CancellationToken ct = default) =>
             RejectCursor
-                ? ValueTask.FromException<Page<SnapshotView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<SnapshotView>>(new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(new Page<SnapshotView>([], null));
     }
 

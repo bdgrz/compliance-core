@@ -8,6 +8,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
+[Collection("Cassie test server")]
 public sealed class CassieWorkforceRepositoryTests
 {
     static readonly DateTimeOffset Now = new(2026, 11, 4, 12, 0, 0, TimeSpan.Zero);

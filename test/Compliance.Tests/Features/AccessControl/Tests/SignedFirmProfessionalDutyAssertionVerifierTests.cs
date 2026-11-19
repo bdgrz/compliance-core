@@ -186,5 +186,5 @@ public sealed class SignedFirmProfessionalDutyAssertionVerifierTests
             FirmProfessionalDuty.EngagementPartner, Uuid.CreateVersion4(), 1, "active", null,
             now.AddMinutes(-1), now.AddMinutes(20));
 
-    static Dictionary<string, object> Copy(Dictionary<string, object> claims) => new(claims);
+    static Dictionary<string, object> Copy(Dictionary<string, object> claims) => [with(claims)];
 }

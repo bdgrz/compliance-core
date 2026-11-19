@@ -292,7 +292,7 @@ public sealed class TenantPagedReadContractTests
             ListCount++;
             LastLimit = limit;
             return RejectCursor
-                ? ValueTask.FromException<Page<TenantView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<TenantView>>(new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(new Page<TenantView>([], null));
         }
     }
@@ -343,7 +343,7 @@ public sealed class TenantPagedReadContractTests
             ListCount++;
             LastLimit = limit;
             return RejectCursor
-                ? ValueTask.FromException<Page<TenantMembershipView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<TenantMembershipView>>(new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(Page);
         }
     }
@@ -371,7 +371,7 @@ public sealed class TenantPagedReadContractTests
             LastLimit = limit;
             return RejectCursor
                 ? ValueTask.FromException<Page<TenantInvitationDirectoryEntry>>(
-                    new KvDirectoryQueryException())
+                    new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(Page);
         }
     }

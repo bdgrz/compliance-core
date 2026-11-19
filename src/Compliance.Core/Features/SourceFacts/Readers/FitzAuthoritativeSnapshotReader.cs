@@ -1,14 +1,13 @@
-using Cntryl.Fitz;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.ControlMappings.History;
@@ -24,6 +23,7 @@ using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
@@ -35,14 +35,14 @@ using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.SourceFacts.Services;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.SourceFacts.Readers;
 
 /// <summary>
@@ -57,13 +57,20 @@ sealed class FitzAuthoritativeSnapshotReader(IStreamClient streams, IDomainEvent
 
     public async Task<SnapshotCapture> CaptureAsync(CancellationToken ct = default)
     {
-        var page = await streams.ReadPageAsync(AnchorRoute, 0, 1, new StreamFilterSet(), null, null, null, ct)
-            .ConfigureAwait(false);
-        var watermark = page.Cursor.CapturedWatermark ?? throw new SourceFactVerificationException(
-            "The broker did not report a global watermark.");
+        // Fitz 4.3 exposes replay-to-caught-up rather than a detached cursor carrying a watermark.
+        // Consume one immutable global replay and use its terminal position as the exclusive cut.
+        ulong watermark = 0;
+        ulong next = 0;
+        await foreach (var batch in streams.ReadAsync(AnchorRoute, next, StreamReadMode.Replay,
+                           new StreamReadOptions { BatchSize = PageSize }, ct).ConfigureAwait(false))
+        {
+            if (batch.FromOffset != next || batch.NextOffset < next)
+                throw new SourceFactVerificationException("The broker returned a non-contiguous global replay cursor.");
+            next = batch.NextOffset;
+            watermark = next;
+        }
         return new SnapshotCapture(
-            new AuthoritativeReadCut(AnchorRoute, watermark, (time ?? TimeProvider.System).GetUtcNow()),
-            page.Cursor.CursorFingerprint);
+            new AuthoritativeReadCut(AnchorRoute, watermark, (time ?? TimeProvider.System).GetUtcNow()), null);
     }
 
     public async Task<SnapshotReadResult> ReadAtAsync(SnapshotSelector selector, string tenantScope,
@@ -82,20 +89,24 @@ sealed class FitzAuthoritativeSnapshotReader(IStreamClient streams, IDomainEvent
         var facts = new List<ResolvedSourceFact>();
         var nextResource = new Dictionary<string, ulong>(StringComparer.Ordinal);
         var fresh = cursor is null;
-        while (state.NextGlobalOffset < watermark)
+        var next = state.NextGlobalOffset;
+        if (next >= watermark)
+            return new SnapshotReadResult(facts, state with
+            {
+                Fingerprint = null,
+                CapturedWatermark = null,
+            }, true);
+        var reachedCut = false;
+        await foreach (var batch in streams.ReadAsync(route, next, StreamReadMode.Replay,
+                           new StreamReadOptions { BatchSize = 1 }, ct).ConfigureAwait(false))
         {
             ct.ThrowIfCancellationRequested();
-            var page = await streams.ReadPageAsync(route, state.NextGlobalOffset, PageSize, new StreamFilterSet(),
-                null, state.Fingerprint, state.CapturedWatermark, ct).ConfigureAwait(false);
-            var snapshot = page.Cursor.CapturedWatermark ?? throw new SourceFactVerificationException(
-                "The broker did not report a selector watermark.");
-            if (snapshot < watermark)
-                throw new SourceFactVerificationException("The selector snapshot is older than the cut.");
-            if (state.CapturedWatermark is { } pinned && pinned != snapshot)
-                throw new SourceFactVerificationException("The selector snapshot changed between pages.");
-            var reached = false;
-            var next = state.NextGlobalOffset;
-            foreach (var item in page.Items)
+            var from = next;
+            if (batch.FromOffset != from || batch.NextOffset < from)
+                throw new SourceFactVerificationException("The broker returned a non-contiguous selector replay cursor.");
+            if (batch.Items.Count > 1)
+                throw new SourceFactVerificationException("The broker returned more items than the bounded snapshot read requested.");
+            foreach (var item in batch.Items)
             {
                 var address = Address(item.Route);
                 var ownScope = string.Equals(address.Realm, tenantScope, StringComparison.Ordinal);
@@ -103,6 +114,14 @@ sealed class FitzAuthoritativeSnapshotReader(IStreamClient streams, IDomainEvent
                 {
                     if (!ownScope)
                         continue;
+                    if (item.Kind == StreamReadItemKind.FilteredRange && batch.NextOffset > watermark)
+                        throw new SourceFactVerificationException(
+                            "A withheld range overlaps the fixed cut, so source coverage cannot be verified.");
+                    if (batch.NextOffset > watermark)
+                    {
+                        reachedCut = true;
+                        break;
+                    }
                     throw new SourceFactVerificationException(
                         "A relevant record was withheld, so the source coverage is incomplete.");
                 }
@@ -112,7 +131,7 @@ sealed class FitzAuthoritativeSnapshotReader(IStreamClient streams, IDomainEvent
                     throw new SourceFactVerificationException("The broker returned records out of global order.");
                 if (globalOffset >= watermark)
                 {
-                    reached = true;
+                    reachedCut = true;
                     break;
                 }
                 next = globalOffset + 1;
@@ -124,21 +143,20 @@ sealed class FitzAuthoritativeSnapshotReader(IStreamClient streams, IDomainEvent
                     continue;
                 facts.Add(SourceFactVerifier.Build(address, record.Offset, realmOffset, globalOffset, domainEvent));
             }
-            state = state with
-            {
-                Fingerprint = page.Cursor.CursorFingerprint ?? state.Fingerprint,
-                CapturedWatermark = snapshot,
-            };
-            if (reached || !page.Cursor.HasMore)
+            if (reachedCut || batch.CaughtUp || batch.NextOffset >= watermark)
                 break;
-            if (page.Cursor.LastGlobalOffset is { } last)
-                next = Math.Max(next, last + 1);
-            if (next <= state.NextGlobalOffset)
+            if (batch.NextOffset <= from)
                 throw new SourceFactVerificationException("The broker page made no progress.");
-            state = state with { NextGlobalOffset = next };
+            next = batch.NextOffset;
         }
-        // Coverage reached the cut. An empty complete scan checkpoints the watermark itself (zero), never offset 1.
-        return new SnapshotReadResult(facts, state with { NextGlobalOffset = watermark }, true);
+        // Replay reaches the broker's current tail. Since it began after capture and records are append-only,
+        // it covers the fixed cut; an empty scan checkpoints the watermark itself (zero), never offset 1.
+        return new SnapshotReadResult(facts, state with
+        {
+            NextGlobalOffset = watermark,
+            Fingerprint = null,
+            CapturedWatermark = null,
+        }, true);
     }
 
     static void CheckContinuity(Dictionary<string, ulong> nextResource, StreamRecord record, bool fresh)

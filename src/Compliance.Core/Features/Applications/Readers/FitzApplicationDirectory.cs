@@ -1,15 +1,18 @@
-using Cntryl.Fitz;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Projections;
 using Bdgrz.Compliance.Features.Applications.Services;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Models;
@@ -25,13 +28,10 @@ using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
-using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.Applications.Events;
-using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.Applications.Projections;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Applications.Readers;
 
 sealed partial class FitzApplicationDirectory(IKvClient client)
@@ -234,13 +234,14 @@ sealed partial class FitzApplicationDirectory(IKvClient client)
     }
 
     const string DeclarationConflict = "declaration_conflict";
-    static readonly HashSet<string> InstanceGapCodes = new(StringComparer.Ordinal)
-    {
+    static readonly HashSet<string> InstanceGapCodes =
+    [
+        with(StringComparer.Ordinal),
         "access_boundary_missing",
         "access_boundary_unverified",
         "source_identifier_missing",
         "source_identifier_unverified",
-    };
+    ];
 
     static IReadOnlyList<string> RevisedInstanceGaps(IReadOnlyList<string> unresolved,
         string? accessBoundary, string? sourceIdentifier) =>

@@ -199,9 +199,9 @@ public sealed class AccessReviewIdentifiedTransportTests
         Assert.Equal(HttpStatusCode.OK, classified.StatusCode);
         Assert.Equal(classifiedText, await classifiedAgain.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Conflict, changedClassify.StatusCode);
-        Assert.Equal(population.ToString(), JsonDocument.Parse(openedText).RootElement.GetProperty("population_id")
+        Assert.Equal(population.ToString(), JsonElement.Parse(openedText).GetProperty("population_id")
             .GetString());
-        Assert.Equal(1, JsonDocument.Parse(classifiedText).RootElement.GetProperty("sequence").GetInt32());
+        Assert.Equal(1, JsonElement.Parse(classifiedText).GetProperty("sequence").GetInt32());
     }
 
     [Fact]
@@ -257,8 +257,8 @@ public sealed class AccessReviewIdentifiedTransportTests
         Assert.Equal(HttpStatusCode.OK, missing.StatusCode);
         Assert.Equal(missingText, await missingAgain.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Conflict, changedMissing.StatusCode);
-        Assert.Equal("approved", JsonDocument.Parse(approvedText).RootElement.GetProperty("status").GetString());
-        Assert.Equal("proposed", JsonDocument.Parse(proposedText).RootElement.GetProperty("status").GetString());
+        Assert.Equal("approved", JsonElement.Parse(approvedText).GetProperty("status").GetString());
+        Assert.Equal("proposed", JsonElement.Parse(proposedText).GetProperty("status").GetString());
     }
 
     static async Task<Arranged> ArrangeAsync(WebApplicationFactory<Program> factory, HttpClient manager,

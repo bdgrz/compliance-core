@@ -13,6 +13,7 @@ using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
 
+[Collection("Cassie test server")]
 public sealed class MethodologyTemplateLineQueryTests
 {
     [Fact]

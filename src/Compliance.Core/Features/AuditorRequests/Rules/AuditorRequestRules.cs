@@ -1,17 +1,21 @@
 using System.Text;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditorRequests.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
@@ -20,11 +24,7 @@ using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Services;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AuditorRequests.Commands;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Providers.Projections;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AuditorRequests.Rules;
 
 /// <summary>
@@ -41,23 +41,23 @@ static class AuditorRequestRules
     public const int MaximumEvidenceArtifacts = 64;
     public const int MaximumSampleRows = 500;
 
-    static readonly HashSet<string> Sources = new(StringComparer.Ordinal)
-    {
-        "external_email", "external_portal", "in_product_attest",
-    };
+    static readonly HashSet<string> Sources =
+    [
+with(StringComparer.Ordinal),         "external_email", "external_portal", "in_product_attest",
+    ];
 
-    static readonly HashSet<string> Priorities = new(StringComparer.Ordinal) { "low", "normal", "high", "urgent" };
-    static readonly HashSet<string> Compartments = new(StringComparer.Ordinal) { "internal", "attest_shared" };
+    static readonly HashSet<string> Priorities = [with(StringComparer.Ordinal), "low", "normal", "high", "urgent"];
+    static readonly HashSet<string> Compartments = [with(StringComparer.Ordinal), "internal", "attest_shared"];
 
-    static readonly HashSet<string> SampleMethods = new(StringComparer.Ordinal)
-    {
-        "judgmental", "random", "stratified", "targeted",
-    };
+    static readonly HashSet<string> SampleMethods =
+    [
+with(StringComparer.Ordinal),         "judgmental", "random", "stratified", "targeted",
+    ];
 
-    static readonly HashSet<string> Dispositions = new(StringComparer.Ordinal)
-    {
-        "accepted", "rejected", "changes_requested",
-    };
+    static readonly HashSet<string> Dispositions =
+    [
+with(StringComparer.Ordinal),         "accepted", "rejected", "changes_requested",
+    ];
 
     public static string CleanText(string? value) => (value ?? string.Empty).Trim().Normalize(NormalizationForm.FormC);
 

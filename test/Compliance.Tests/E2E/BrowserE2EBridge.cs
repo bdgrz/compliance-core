@@ -119,11 +119,12 @@ namespace Bdgrz.Compliance.Tests.E2E;
 
 sealed class LoopbackTestServerProxy : IAsyncDisposable
 {
-    static readonly HashSet<string> HopByHopHeaders = new(StringComparer.OrdinalIgnoreCase)
-    {
+    static readonly HashSet<string> HopByHopHeaders =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "Connection", "Keep-Alive", "Proxy-Authenticate", "Proxy-Authorization", "TE",
         "Trailer", "Transfer-Encoding", "Upgrade",
-    };
+    ];
 
     readonly WebApplication _application;
     readonly HttpMessageInvoker _testServer;

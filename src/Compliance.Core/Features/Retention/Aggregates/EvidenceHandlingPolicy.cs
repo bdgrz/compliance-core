@@ -1,22 +1,23 @@
 using System.Security.Cryptography;
 using System.Text;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -28,6 +29,7 @@ using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
@@ -35,6 +37,8 @@ using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.Retention.Events;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Retention.Projections;
 using Bdgrz.Compliance.Features.Risks.Models;
@@ -42,15 +46,11 @@ using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Contracts;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.Evidence.Aggregates;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.Retention.Commands;
-using Bdgrz.Compliance.Features.Retention.Events;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Retention.Aggregates;
 
 /// <summary>
@@ -63,14 +63,14 @@ public sealed class EvidenceHandlingPolicy : Aggregate
     public const long CurrentPolicyVersion = 1;
     const int MaximumRationaleLength = 2000;
     const int MaximumHistory = 32;
-    static readonly HashSet<string> HandlingClasses = new(StringComparer.Ordinal)
-    {
-        "public", "internal", "confidential", "restricted"
-    };
-    static readonly HashSet<string> AssignableSourceStates = new(StringComparer.Ordinal)
-    {
-        "pending_inspection", "available", "quarantined"
-    };
+    static readonly HashSet<string> HandlingClasses =
+    [
+with(StringComparer.Ordinal),         "public", "internal", "confidential", "restricted"
+    ];
+    static readonly HashSet<string> AssignableSourceStates =
+    [
+with(StringComparer.Ordinal),         "pending_inspection", "available", "quarantined"
+    ];
 
     readonly Uuid _tenantId;
     readonly Uuid _artifactId;

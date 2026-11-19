@@ -92,6 +92,7 @@ using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
 
+[Collection("Cassie test server")]
 public sealed class NotApplicableOccurrenceReviewTests
 {
     [Theory]

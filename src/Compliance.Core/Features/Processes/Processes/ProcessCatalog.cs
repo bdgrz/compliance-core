@@ -1,8 +1,8 @@
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
@@ -18,17 +18,17 @@ using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.Processes.Processes;
 
 /// <summary>Registered process definitions, looked up by name or by root source fact kind.</summary>
 public sealed class ProcessCatalog
 {
-    readonly Dictionary<string, ProcessDefinition> _byName = new(StringComparer.Ordinal);
-    readonly Dictionary<string, ProcessDefinition> _byRoot = new(StringComparer.Ordinal);
+    readonly Dictionary<string, ProcessDefinition> _byName = [with(StringComparer.Ordinal)];
+    readonly Dictionary<string, ProcessDefinition> _byRoot = [with(StringComparer.Ordinal)];
 
     public ProcessCatalog(IEnumerable<ProcessDefinition> definitions)
     {

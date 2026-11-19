@@ -1,17 +1,17 @@
 using System.Text.Json;
-using Cntryl.Fitz;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Projections;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
@@ -23,13 +23,13 @@ using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.AccessControl.Events;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl.Readers;
 
 sealed class FitzAccessGrantDirectory(IKvClient client, IDomainEventReader events)
@@ -40,9 +40,9 @@ sealed class FitzAccessGrantDirectory(IKvClient client, IDomainEventReader event
     {
         await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
         var stored = await tx.GetAsync(AccessGrantProjectionKeys.State, ct).ConfigureAwait(false);
-        if (!stored.Found)
+        if (stored is not KvFound { Value: var storedBytes })
             return new AccessGrantSetView(tenantId, 0, []);
-        var state = JsonSerializer.Deserialize(stored.Value!.Value.Span,
+        var state = JsonSerializer.Deserialize(storedBytes.Span,
             ComplianceCoreJsonContext.Default.AccessGrantProjectionState);
         return state?.ToView(tenantId) ??
                throw new InvalidOperationException("The access grant projection state could not be read.");
@@ -53,9 +53,9 @@ sealed class FitzAccessGrantDirectory(IKvClient client, IDomainEventReader event
     {
         await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
         var stored = await tx.GetAsync(AccessGrantProjectionKeys.State, ct).ConfigureAwait(false);
-        if (!stored.Found)
+        if (stored is not KvFound { Value: var storedBytes })
             return null;
-        var state = JsonSerializer.Deserialize(stored.Value!.Value.Span,
+        var state = JsonSerializer.Deserialize(storedBytes.Span,
             ComplianceCoreJsonContext.Default.AccessGrantProjectionState);
         if (state is null)
             throw new InvalidOperationException("The access grant projection state could not be read.");
@@ -67,9 +67,9 @@ sealed class FitzAccessGrantDirectory(IKvClient client, IDomainEventReader event
     {
         await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
         var stored = await tx.GetAsync(AccessGrantProjectionKeys.State, ct).ConfigureAwait(false);
-        if (!stored.Found)
+        if (stored is not KvFound { Value: var storedBytes })
             return null;
-        var state = JsonSerializer.Deserialize(stored.Value!.Value.Span,
+        var state = JsonSerializer.Deserialize(storedBytes.Span,
             ComplianceCoreJsonContext.Default.AccessGrantProjectionState);
         if (state is null)
             throw new InvalidOperationException("The access grant projection state could not be read.");
@@ -103,8 +103,8 @@ sealed class FitzAccessGrantDirectory(IKvClient client, IDomainEventReader event
             return;
 
         var stored = await Transaction.GetAsync(AccessGrantProjectionKeys.State, ct).ConfigureAwait(false);
-        var state = stored.Found
-            ? JsonSerializer.Deserialize(stored.Value!.Value.Span,
+        var state = stored is KvFound { Value: var storedBytes }
+            ? JsonSerializer.Deserialize(storedBytes.Span,
                 ComplianceCoreJsonContext.Default.AccessGrantProjectionState)
             : new AccessGrantProjectionState();
         if (state is null)

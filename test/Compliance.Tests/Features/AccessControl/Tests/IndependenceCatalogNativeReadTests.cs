@@ -198,8 +198,11 @@ public sealed class IndependenceCatalogNativeReadTests
         {
             var key = Encoding.UTF8.GetBytes($"c/{hex}/000000");
             var stored = await transaction.GetAsync(key);
-            Assert.True(stored.Found);
-            var bytes = stored.Value!.Value.ToArray();
+            var bytes = stored switch
+            {
+                KvFound found => found.Value.ToArray(),
+                KvNotFound => throw new InvalidOperationException("The independence catalog content chunk was not stored."),
+            };
             bytes[0] ^= 1;
             await transaction.PutAsync(key, bytes);
         }

@@ -1,35 +1,35 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using Cntryl.Fitz;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Contracts;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.Work.Authorizers;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.UserIdentities.Processes;
 
 /// <summary>
@@ -45,7 +45,7 @@ sealed class FitzKvEmailChallengeDeliveryLedger(IKvClient client) : IEmailChalle
     {
         await using var tx = await client.BeginAsync(Route(challengeId), KvMode.ReadOnly, ct).ConfigureAwait(false);
         var found = await tx.GetAsync(RecordKey(challengeId), ct).ConfigureAwait(false);
-        return found.Found ? Parse(found.Value!.Value.Span) : null;
+        return found is KvFound { Value: var bytes } ? Parse(bytes.Span) : null;
     }
 
     public Task<EmailChallengeDeliveryRecord> OpenAttemptAsync(Uuid challengeId, string purpose, DateTimeOffset now,
@@ -54,7 +54,7 @@ sealed class FitzKvEmailChallengeDeliveryLedger(IKvClient client) : IEmailChalle
         {
             await using var tx = await client.BeginAsync(Route(challengeId), KvMode.ReadWrite, ct).ConfigureAwait(false);
             var found = await tx.GetAsync(RecordKey(challengeId), ct).ConfigureAwait(false);
-            var current = found.Found ? Parse(found.Value!.Value.Span) : null;
+            var current = found is KvFound { Value: var bytes } ? Parse(bytes.Span) : null;
             if (current is { IsDelivered: true } or { IsFailed: true } or { HasOpenAttempt: true })
             {
                 await tx.RollbackAsync(ct).ConfigureAwait(false);
@@ -81,14 +81,14 @@ sealed class FitzKvEmailChallengeDeliveryLedger(IKvClient client) : IEmailChalle
                 await using var tx = await client.BeginAsync(Route(challengeId), KvMode.ReadWrite, ct)
                     .ConfigureAwait(false);
                 var found = await tx.GetAsync(RecordKey(challengeId), ct).ConfigureAwait(false);
-                if (!found.Found)
+                if (found is not KvFound { Value: var bytes })
                 {
                     await tx.RollbackAsync(ct).ConfigureAwait(false);
                     return new EmailChallengeOutcomeDecision(EmailChallengeOutcomeKind.UnknownAttempt,
                         EmailChallengeDeliveryRecord.Empty(challengeId, string.Empty));
                 }
 
-                var current = Parse(found.Value!.Value.Span);
+                var current = Parse(bytes.Span);
                 var decision = current.Decide(attemptId, outcome, failureCode, commandId, at);
                 if (decision.Kind is EmailChallengeOutcomeKind.Closed or EmailChallengeOutcomeKind.Resolved)
                 {

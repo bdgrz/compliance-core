@@ -52,7 +52,7 @@ services:
 
   broker:
     container_name: broker
-    image: ghcr.io/cntryl/fitz:0.4.0@sha256:5e7d844c52dc24de35f33fb024a3a19b0fa13af7d1fa64edfc8e953371051e1f
+    image: ghcr.io/cntryl/fitz:latest
     restart: unless-stopped
     stop_signal: SIGINT
     stop_grace_period: 15s
@@ -79,7 +79,7 @@ services:
       - fitz_cache:/data
 
   cassie:
-    image: ghcr.io/cntryl/cassie@sha256:c179afabb7051e19629cfd1ecc6b83fa88bfb4deb6a391060aa1f472f7a0d1de
+    image: ghcr.io/cntryl/cassie:latest
     restart: unless-stopped
     init: true
     environment:
@@ -95,7 +95,7 @@ services:
 
   storage:
     container_name: storage
-    image: ghcr.io/sqrzl/sqrzl-emulator:latest@sha256:da1a2a731fe6de71ce8241e3d9fda9ae48dec6015f8b531f4f3129e4ca9969a8
+    image: ghcr.io/sqrzl/sqrzl-emulator:latest
     restart: unless-stopped
     environment:
       SQRZL_BLOBS_PATH: /app/blobs

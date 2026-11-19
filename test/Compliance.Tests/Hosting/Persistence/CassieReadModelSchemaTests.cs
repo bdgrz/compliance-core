@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Bdgrz.Compliance.Tests.Hosting.Persistence;
 
+[Collection("Cassie test server")]
 public sealed class CassieReadModelSchemaTests
 {
     [Fact]

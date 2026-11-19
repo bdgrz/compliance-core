@@ -10,6 +10,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
+[Collection("Cassie test server")]
 public sealed class WorkRelationshipNamedChangeProjectionTests
 {
     static readonly DateOnly Start = new(2026, 1, 5);

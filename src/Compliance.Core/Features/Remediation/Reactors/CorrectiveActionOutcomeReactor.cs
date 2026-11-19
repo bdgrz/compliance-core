@@ -28,7 +28,10 @@ public sealed partial class CorrectiveActionOutcomeReactor(IProjectionCheckpoint
         Uuid finding, Uuid action, string outcome, CancellationToken ct) where TEvent : DomainEvent
     {
         var expected = new CorrectiveAction(tenant, program, finding, action).Stream;
-        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context, expected, ct).ConfigureAwait(false);
+        var sourceVerification = await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
+            expected, ct).ConfigureAwait(false);
+        if (!sourceVerification.IsSuccess)
+            return sourceVerification;
         return await bus.SendReactionAsync(new RecordCorrectiveActionOutcome(
             Uuid.CreateVersion5(context.Trigger.Metadata.EventId, nameof(RecordCorrectiveActionOutcome)), tenant,
             program, finding, action, outcome, NativeFactReference.Of(expected, context.Trigger),

@@ -11,6 +11,7 @@ using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
+[Collection("Cassie test server")]
 public sealed class CassieWorkforceSourceDirectoryTests
 {
     [Fact]

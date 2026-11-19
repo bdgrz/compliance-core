@@ -51,3 +51,4 @@ global using Bdgrz.Compliance.Features.UserIdentities.Projectors;
 global using Bdgrz.Compliance.Features.UserIdentities.Queries;
 global using Bdgrz.Compliance.Features.UserIdentities.Reactors;
 global using Bdgrz.Compliance.Features.UserIdentities.Readers;
+global using Bdgrz.Compliance;
