@@ -5,7 +5,7 @@ using Bdgrz.Compliance.Features.Commitments.Governance.Models;
 namespace Bdgrz.Compliance.Features.Commitments.Governance.Commands;
 
 [Discriminator("bdgrz.commitment.governance.revisecommitmentdraft", 1)]
-public sealed record ReviseCommitmentDraft(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid CommitmentId, long ExpectedRevision, CommitmentTerms Terms)
+public sealed record ReviseGovernanceCommitmentDraft(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid CommitmentId, long ExpectedRevision, CommitmentTerms Terms)
     : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;

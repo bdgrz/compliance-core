@@ -97,11 +97,11 @@ static class EvidenceRedactionRules
 
     public static string IdentityDigest(EvidenceRedactionSourceCapsule source) =>
         Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(source with { IdentitySha256 = "" },
-            typeof(EvidenceRedactionSourceCapsule), ComplianceCoreJsonContext.Default)));
+            typeof(EvidenceRedactionSourceCapsule), ComplianceCoreJsonMetadata.Default)));
 
     public static bool ValidActor(ActorReference? actor) => actor is { Kind: "member", Display.Length: > 0 and <= 200 } &&
         Uuid.TryParse(actor.Id, out var id) && id != Uuid.Empty;
-    public static bool Fits<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value, value!.GetType(), ComplianceCoreJsonContext.Default).Length <= 48 * 1024;
+    public static bool Fits<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value, value!.GetType(), ComplianceCoreJsonMetadata.Default).Length <= 48 * 1024;
     static bool ValidDigest(string? value) => value is { Length: 64 } && value.All(c => c is >= '0' and <= '9' or >= 'a' and <= 'f');
     static Result<T> Refuse<T>(RequestErrorKind kind, string message) => Result<T>.Failure(new RequestError(kind, message));
 }

@@ -120,5 +120,5 @@ public sealed class ControlDraftActorProjectionTests
     static ControlDraftCreatedContent LegacyCreated() => Assert.IsType<ControlDraftCreatedContent>(
         JsonSerializer.Deserialize($$"""
             {"tenant_id":"{{TenantId}}","program_id":"{{ProgramId}}","control_id":"{{ControlId}}","create_request_id":"{{Uuid.CreateVersion4()}}","identifier":"AC-01","content":{"title":"Access review","objective":"Review access","description":"Management reviews access","implementation_narrative":"The owner reviews access quarterly.","expected_evidence_descriptions":["Dated review record"]},"actor_member_id":"{{MemberId}}","actor_display":"Legacy display","changed_at":"2026-09-23T12:00:00+00:00"}
-            """, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(ControlDraftCreatedContent))!));
+            """, ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(ControlDraftCreatedContent))!));
 }

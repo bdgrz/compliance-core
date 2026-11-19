@@ -67,7 +67,7 @@ public sealed class SourceUseReceiverContractTests
                 root, 1, null, intent, owner, source.EventId, 17, root, owner),
             _ => throw new ArgumentOutOfRangeException(nameof(kind)),
         };
-        var type = ComplianceCoreJsonContext.Default.GetTypeInfo(request.GetType())!;
+        var type = ComplianceCoreJsonMetadata.Default.GetTypeInfo(request.GetType())!;
         var wire = JsonSerializer.SerializeToNode(request, type)!;
         var receiving = Uuid.CreateVersion4();
         wire["receiving_owner_id"] = receiving.ToString();

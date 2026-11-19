@@ -130,7 +130,7 @@ public static class PersonContent
         value.Sha256 is { Length: 64 } && value.Sha256.All(Uri.IsHexDigit);
     public static bool Matches<T>(ImmutableContentRef reference, T value, string schema) where T : notnull
     {
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, typeof(T), ComplianceCoreJsonContext.Default);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, typeof(T), ComplianceCoreJsonMetadata.Default);
         return Reference(reference, schema) && reference.Bytes == bytes.LongLength && reference.Sha256 == ContentDigest.Sha256(bytes);
     }
 }

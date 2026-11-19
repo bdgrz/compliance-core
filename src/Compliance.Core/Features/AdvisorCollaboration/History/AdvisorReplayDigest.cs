@@ -36,7 +36,7 @@ static class AdvisorReplayDigest
         Add(hash, Encoding.UTF8.GetBytes(previous));
         Add(hash, Encoding.UTF8.GetBytes(Bdgrz.Compliance.Features.SourceFacts.History.EventKind.Of(fact)));
         Add(hash, JsonSerializer.SerializeToUtf8Bytes(fact,
-            ComplianceCoreJsonContext.Default.GetTypeInfo(fact.GetType())!));
+            ComplianceCoreJsonMetadata.Default.GetTypeInfo(fact.GetType())!));
         var metadata = fact.Metadata;
         Add(hash, Encoding.UTF8.GetBytes(metadata.EventId.ToString()));
         Add(hash, Encoding.UTF8.GetBytes(metadata.AggregateId.ToString()));

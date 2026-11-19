@@ -290,7 +290,7 @@ public sealed class RiskEvaluationNativeSourceTests
     static DomainEvent Alter(DomainEvent original, string change)
     {
         var value = (DomainEvent)JsonSerializer.Deserialize(JsonSerializer.SerializeToUtf8Bytes(original,
-            original.GetType(), ComplianceCoreJsonContext.Default), original.GetType(), ComplianceCoreJsonContext.Default)!;
+            original.GetType(), ComplianceCoreJsonMetadata.Default), original.GetType(), ComplianceCoreJsonMetadata.Default)!;
         var fact = (IRiskEvaluationFact)value;
         var operation = fact.Operation with { FirstOwner = new EventStreamAddress(Uuid.CreateVersion4().ToString(), RiskEvaluation.Area, fact.RiskId.ToString()) };
         var header = change == "null_header" ? null! : fact.Header with { ViewSha256 = new string('a', 64) };

@@ -376,6 +376,6 @@ public sealed class ControlEvaluationProtocolTests
         Assert.Equal(items, read.Steps[0].Result!.InspectedItems);
         var fact = Assert.IsType<ControlEvaluationStepRecorded>(stream[^1].Event);
         Assert.True(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(fact, fact.GetType(),
-            ComplianceCoreJsonContext.Default).Length < 6 * 1024);
+            ComplianceCoreJsonMetadata.Default).Length < 6 * 1024);
     }
 }

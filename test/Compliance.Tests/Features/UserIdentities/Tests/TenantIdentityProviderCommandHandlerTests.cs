@@ -561,7 +561,7 @@ public sealed class TenantIdentityProviderCommandHandlerTests
         Assert.Equal(1 + 210 + 105, saved.Revision);
         Assert.Equal(105, facts.OfType<TenantIdentityProviderTested>().Count());
         Assert.All(facts, fact => Assert.True(JsonSerializer.SerializeToUtf8Bytes(fact, fact.GetType(),
-            ComplianceCoreJsonContext.Default.Options).Length < 4096));
+            ComplianceCoreJsonMetadata.Default.Options).Length < 4096));
     }
 
     [Fact]

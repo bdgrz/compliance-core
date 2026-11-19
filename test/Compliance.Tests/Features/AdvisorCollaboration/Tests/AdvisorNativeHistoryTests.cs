@@ -430,7 +430,7 @@ public sealed class AdvisorNativeHistoryTests
         Assert.Equal(text, (await AdvisorAuthored.ReadAsync(host.Content,
             Assert.Single(revoked.Facts.OfType<AdvisorHandoffRevoked>()), CancellationToken.None)).Rationale);
         Assert.All(native, fact => Assert.True(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(fact,
-            ComplianceCoreJsonContext.Default.GetTypeInfo(fact.GetType())!).Length <= 48 * 1024));
+            ComplianceCoreJsonMetadata.Default.GetTypeInfo(fact.GetType())!).Length <= 48 * 1024));
     }
 
     [Fact]

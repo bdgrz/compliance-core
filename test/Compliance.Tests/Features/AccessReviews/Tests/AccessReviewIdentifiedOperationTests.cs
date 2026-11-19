@@ -50,7 +50,7 @@ namespace Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 public sealed class AccessReviewIdentifiedOperationTests
 {
     static string Wire<T>(T value) => System.Text.Json.JsonSerializer.Serialize(value,
-        ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!);
 
     [Fact]
     public async Task ShouldReturnOriginalDecisionGivenExactRetryAfterLaterItemChange()

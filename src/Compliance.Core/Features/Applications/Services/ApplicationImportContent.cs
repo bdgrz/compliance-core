@@ -163,5 +163,5 @@ static class ApplicationImportContent
 
     /// <summary>The wire size of a value, to refuse content beyond the store's single-write bound.</summary>
     public static int Size<T>(T value) where T : notnull =>
-        JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!).Length;
+        JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!).Length;
 }

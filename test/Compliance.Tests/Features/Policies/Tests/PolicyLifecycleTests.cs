@@ -411,11 +411,11 @@ public sealed class PolicyLifecycleTests
     }
 
     static string Json<T>(T value) => JsonSerializer.Serialize(value, typeof(T),
-        ComplianceCoreJsonContext.Default);
+        ComplianceCoreJsonMetadata.Default);
 
     static DomainEvent RoundTrip(DomainEvent ev) => (DomainEvent)JsonSerializer.Deserialize(
-        JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonContext.Default),
-        ev.GetType(), ComplianceCoreJsonContext.Default)!;
+        JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonMetadata.Default),
+        ev.GetType(), ComplianceCoreJsonMetadata.Default)!;
 
     static SeparationOfDutiesWaiverProof CreateWaiver(SeparationOfDutiesWaiverScope scope,
         Uuid beneficiary)

@@ -57,7 +57,7 @@ public sealed class RiskEvaluationCompactionTests
         // Act
         var collections = typeof(RiskEvaluation).GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
             .Where(field => field.GetValue(evaluation) is System.Collections.ICollection).ToArray();
-        var maximum = facts.Max(value => JsonSerializer.SerializeToUtf8Bytes(value, value.GetType(), ComplianceCoreJsonContext.Default).Length);
+        var maximum = facts.Max(value => JsonSerializer.SerializeToUtf8Bytes(value, value.GetType(), ComplianceCoreJsonMetadata.Default).Length);
         var read = await source.Evaluations.ReadAsync(tenant, program, risk);
 
         // Assert

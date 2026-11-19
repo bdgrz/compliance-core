@@ -219,7 +219,7 @@ public sealed class MethodologyTemplateDraft : Aggregate
     {
         if (!ValidEntries(entries) || content is null || !ValidReference(content))
             return false;
-        var info = ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(IReadOnlyList<MethodologyTemplateRecordContent>))
+        var info = ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(IReadOnlyList<MethodologyTemplateRecordContent>))
             ?? throw new InvalidOperationException("Methodology entry serialization metadata is missing.");
         var bytes = JsonSerializer.SerializeToUtf8Bytes(entries, info);
         return content.Bytes == bytes.LongLength && content.Sha256 == ContentDigest.Sha256(bytes);

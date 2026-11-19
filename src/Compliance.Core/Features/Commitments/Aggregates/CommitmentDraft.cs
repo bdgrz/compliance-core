@@ -465,7 +465,7 @@ public sealed class CommitmentDraft : Aggregate
     {
         if (!Reference(reference, schema))
             return false;
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!);
         return reference.Bytes == bytes.LongLength && reference.Sha256 == ContentDigest.Sha256(bytes);
     }
     static bool Hex(string? value) => value is { Length: 64 } && value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f');

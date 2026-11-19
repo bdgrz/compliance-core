@@ -139,7 +139,7 @@ public sealed class ControlNativeContentTests
         Assert.Equal("Revision 70", current.CurrentContent!.Title);
         Assert.Equal(70, facts.Count);
         Assert.All(facts, fact => Assert.True(JsonSerializer.SerializeToUtf8Bytes(fact,
-            ComplianceCoreJsonContext.Default.GetTypeInfo(fact.GetType())!).Length < 8 * 1024));
+            ComplianceCoreJsonMetadata.Default.GetTypeInfo(fact.GetType())!).Length < 8 * 1024));
         Assert.DoesNotContain("Revision 1", JsonSerializer.Serialize(owner.Header,
             ComplianceCoreJsonContext.Default.ControlAuthorityHeader), StringComparison.Ordinal);
     }
@@ -244,7 +244,7 @@ public sealed class ControlNativeContentTests
             Assert.Equal(response.Body, original.Value);
             var body = Assert.IsType<StandardResponseBody>(original.Value);
             Assert.Equal(expectedSchema, body.Content.Schema);
-            var json = JsonSerializer.SerializeToElement(fact, ComplianceCoreJsonContext.Default.GetTypeInfo(fact.GetType())!);
+            var json = JsonSerializer.SerializeToElement(fact, ComplianceCoreJsonMetadata.Default.GetTypeInfo(fact.GetType())!);
             Assert.True(json.TryGetProperty("change", out _));
             Assert.True(json.TryGetProperty("authority", out _));
             Assert.False(json.TryGetProperty("state", out _));

@@ -4,5 +4,5 @@ namespace Bdgrz.Compliance.Features.FirmServices.Events;
 
 /// <summary>Retained per-record advisory service fact.</summary>
 [Discriminator("bdgrz.firm-services.nonattest.recorded", 1)]
-public sealed record NonattestServiceRecorded(Uuid TenantId, Uuid RecordId, long Revision,
+public sealed record FirmNonattestServiceRecorded(Uuid TenantId, Uuid RecordId, long Revision,
     NonattestServiceTerms Terms, FirmServiceReceipt Receipt) : DomainEvent;

@@ -28,7 +28,7 @@ public sealed class NativeReplayCommitmentTests
         }
         Add(hash, Encoding.UTF8.GetBytes(NativeReplayCommitment.Empty));
         Add(hash, Encoding.UTF8.GetBytes("bdgrz.tenant.registered@1"));
-        Add(hash, JsonSerializer.SerializeToUtf8Bytes(fact, ComplianceCoreJsonContext.Default.GetTypeInfo(fact.GetType())!));
+        Add(hash, JsonSerializer.SerializeToUtf8Bytes(fact, ComplianceCoreJsonMetadata.Default.GetTypeInfo(fact.GetType())!));
         Add(hash, Encoding.UTF8.GetBytes(fact.Metadata.EventId.ToString()));
         Add(hash, Encoding.UTF8.GetBytes(fact.Metadata.AggregateId.ToString()));
         Add(hash, Encoding.UTF8.GetBytes(fact.Metadata.AggregateVersion.ToString(CultureInfo.InvariantCulture)));

@@ -84,8 +84,8 @@ static class ControlNativeRuleReplay
             ControlDraft.Area, prepared.Id.ToString()), EventCursor.Start, CancellationToken.None))
         {
             var clone = (DomainEvent)JsonSerializer.Deserialize(JsonSerializer.Serialize(record.Event,
-                record.Event.GetType(), ComplianceCoreJsonContext.Default), record.Event.GetType(),
-                ComplianceCoreJsonContext.Default)!;
+                record.Event.GetType(), ComplianceCoreJsonMetadata.Default), record.Event.GetType(),
+                ComplianceCoreJsonMetadata.Default)!;
             facts.Add(clone);
         }
         var compact = new AggregateScenario<ControlDraft>(new ControlDraft(prepared.TenantId, prepared.Id))

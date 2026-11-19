@@ -359,7 +359,7 @@ public sealed class MethodologyTemplateNameClaimTests
         100 + fact.Metadata.AggregateVersion, 10 + fact.Metadata.AggregateVersion);
     static ImmutableContentRef Content<T>(T value, string schema) where T : notnull
     {
-        var info = ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!;
+        var info = ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!;
         var bytes = JsonSerializer.SerializeToUtf8Bytes(value, info);
         return new ImmutableContentRef(Uuid.CreateVersion4(), ContentDigest.Sha256(bytes), bytes.LongLength, "application/json", schema);
     }

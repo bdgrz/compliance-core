@@ -242,7 +242,7 @@ public sealed class TypeIIPeriodCloseHistory(IDomainEventReader events,
 
     public static TypeIIPeriodCloseNativeSource Capture(EventStreamAddress stream, DomainEvent fact) =>
         new(NativeFactReference.Of(stream, fact), EventKind.Of(fact), ContentDigest.Sha256(fact, fact.GetType()),
-            JsonSerializer.SerializeToElement(fact, fact.GetType(), ComplianceCoreJsonContext.Default));
+            JsonSerializer.SerializeToElement(fact, fact.GetType(), ComplianceCoreJsonMetadata.Default));
 
     static (Uuid Tenant, Uuid Program, Uuid Record, DateTimeOffset At)? State(DomainEvent fact) => fact switch
     {

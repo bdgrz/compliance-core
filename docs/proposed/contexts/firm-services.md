@@ -236,13 +236,13 @@ Nothing is ever deleted.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| RecordNonattestService | Engagement partner or reactor | `RecordId` is new | NonattestServiceRecorded |
+| RecordFirmNonattestService | Engagement partner or reactor | `RecordId` is new | FirmNonattestServiceRecorded |
 | ReviseNonattestService | Engagement partner or reactor | Not voided; reason given | NonattestServiceRevised |
 | VoidNonattestService | Engagement partner | Not voided; reason given | NonattestServiceVoided |
 
 | Event | Carries |
 | --- | --- |
-| NonattestServiceRecorded | tenant, record, service kind, start, end, engagement (optional), recorded by |
+| FirmNonattestServiceRecorded | tenant, record, service kind, start, end, engagement (optional), recorded by |
 | NonattestServiceRevised | tenant, record, changed fields, reason, revised by |
 | NonattestServiceVoided | tenant, record, reason, voided by |
 
@@ -414,7 +414,7 @@ flowchart LR
     E1 -. checks .-> C2[/AcceptServiceEngagement/]
     A([Ordered admission: no accepted, open attest engagement, for an impairing kind]) -. admits .-> C2
     C2 --> E2([ServiceEngagementAccepted])
-    E2 --> R1{{"Record the service (RecordId = EngagementId)"}} --> C3[/RecordNonattestService/] --> E3([NonattestServiceRecorded])
+    E2 --> R1{{"Record the service (RecordId = EngagementId)"}} --> C3[/RecordFirmNonattestService/] --> E3([FirmNonattestServiceRecorded])
     E2 -. checks .-> C4[/AssignEngagementStaff/] --> E4([EngagementStaffAssignmentRequested])
     E4 --> RC{{Admit to compartment}} --> CC[/EnterPracticeCompartment/] --> EC([Compartment admission answer])
     EC --> RA{{Complete}} --> CA[/CompleteEngagementAssignment/] --> EA([EngagementStaffAssigned])
@@ -472,7 +472,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    C1[/RecordNonattestService or ReviseNonattestService/] --> E1([NonattestServiceRecorded / NonattestServiceRevised])
+    C1[/RecordFirmNonattestService or ReviseNonattestService/] --> E1([FirmNonattestServiceRecorded / NonattestServiceRevised])
     E1 -. "impairing, inside an open attest engagement's window" .-> G1[[Projected gap: independence_impaired]]
     E1 -. "ordered admission" .-> C2[/AssignEngagementStaff/]
     E1 -. "ordered admission" .-> C3[[Examinations: RecordAuditOutcome]]

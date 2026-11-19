@@ -3,7 +3,7 @@ using Cntryl.Portia;
 using Bdgrz.Compliance.Features.FirmServices.Aggregates;
 using Bdgrz.Compliance.Features.FirmServices.Events;
 using Bdgrz.Compliance.Features.FirmServices.Models;
-using NonattestServiceRecorded = Bdgrz.Compliance.Features.FirmServices.Events.NonattestServiceRecorded;
+using NonattestServiceRecorded = Bdgrz.Compliance.Features.FirmServices.Events.FirmNonattestServiceRecorded;
 namespace Bdgrz.Compliance.Features.FirmServices.Readers;
 
 /// <summary>Discovers records from source and hydrates each authoritative lifecycle, including voids.</summary>

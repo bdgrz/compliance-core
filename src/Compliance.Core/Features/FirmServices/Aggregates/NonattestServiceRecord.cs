@@ -3,8 +3,8 @@ using Bdgrz.Compliance.Features.FirmServices.Commands;
 using Bdgrz.Compliance.Features.FirmServices.Events;
 using Bdgrz.Compliance.Features.FirmServices.Models;
 using Bdgrz.Compliance.Features.Kernel.Services;
-using RecordNonattestServiceRequest = Bdgrz.Compliance.Features.FirmServices.Commands.RecordNonattestService;
-using NonattestServiceRecordedEvent = Bdgrz.Compliance.Features.FirmServices.Events.NonattestServiceRecorded;
+using RecordNonattestServiceRequest = Bdgrz.Compliance.Features.FirmServices.Commands.RecordFirmNonattestService;
+using NonattestServiceRecordedEvent = Bdgrz.Compliance.Features.FirmServices.Events.FirmNonattestServiceRecorded;
 namespace Bdgrz.Compliance.Features.FirmServices.Aggregates;
 
 /// <summary>One independently corrected advisory service; voiding preserves all recorded facts.</summary>

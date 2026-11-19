@@ -48,7 +48,7 @@ public sealed class CorrectiveActionCancellationBaselineTests
         var snapshot = JsonSerializer.Deserialize(bytes.AsSpan(separator + 1),
             ComplianceCoreJsonContext.Default.FindingTypeIBaselineSourceContent)!;
         var captured = Assert.Single(snapshot.History, fact => fact.Kind == "corrective_action_cancelled");
-        var cancellation = captured.Payload.Deserialize<CorrectiveActionCancelled>(ComplianceCoreJsonContext.Default.Options)!;
+        var cancellation = captured.Payload.Deserialize<CorrectiveActionCancelled>(ComplianceCoreJsonMetadata.Default.Options)!;
         Assert.Equal(action.ActionId, cancellation.ActionId);
         Assert.Equal(reason, cancellation.Reason);
         Assert.Equal(fixture.LeadMemberId, cancellation.CancelledByMemberId);

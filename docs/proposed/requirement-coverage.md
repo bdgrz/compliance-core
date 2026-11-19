@@ -116,7 +116,7 @@ Current implementations are primarily under `Features/AccessControl`.
 | Requirement | Source evidence / implemented behavior | Remaining acceptance |
 | --- | --- | --- |
 | FS-01 | IndependenceCompartments computes from retained services/rules; policy/evaluation tests | Target evaluation owner/one approval/exact service revisions absent. Current calculation excludes services starting during the examination period. |
-| FS-02 | RecordNonattestService handler and complete retained history; ClientServiceIndependenceTests | Independent per-record owner, reasoned revision and void, current-history queries and replay. |
+| FS-02 | RecordFirmNonattestService handler and complete retained history; ClientServiceIndependenceTests | Independent per-record owner, reasoned revision and void, current-history queries and replay. |
 | FS-03 | Acceptance admission checks current rules/client epoch and retained source cut; stale-input tests | Replace superseded epoch/reservation coupling with approved exact service-revision freshness after new record/evaluation owners exist. |
 | FS-04 | EngagementAcceptancePolicy immediately allows advisory; a test asserts unconditional allowance | Engagement terms lack service kind. Add target terms and authoritative refusal of impairing advisory acceptance while an attest engagement is accepted/open. |
 | FS-05 | Existing assignment admission refuses draft engagements; ServiceEngagementStaffAssignmentTests | Independent assignment owner with request/answer/completion/end/re-request lifecycle; implement with FS-13. |

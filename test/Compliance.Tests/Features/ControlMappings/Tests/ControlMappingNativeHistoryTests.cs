@@ -177,7 +177,7 @@ public sealed class ControlMappingNativeHistoryTests
             CriterionApplicabilityReviewedChange value => value with { Rationale = "Another review rationale." },
             _ => throw new InvalidOperationException(),
         };
-        var altered = body with { Change = JsonSerializer.SerializeToElement(wrong, wrong.GetType(), ComplianceCoreJsonContext.Default) };
+        var altered = body with { Change = JsonSerializer.SerializeToElement(wrong, wrong.GetType(), ComplianceCoreJsonMetadata.Default) };
         var reference = await NativeContent.WriteAsync(fixture.Content, fixture.Tenant, MappingLineContent.Schema, altered);
         DomainEvent malformed = seeded.Facts[1] switch
         {

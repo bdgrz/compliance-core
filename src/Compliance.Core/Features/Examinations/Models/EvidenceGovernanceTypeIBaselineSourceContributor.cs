@@ -896,7 +896,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
             EvidenceSupportLinked ev => ("evidence_support_linked",
                 JsonSerializer.SerializeToElement(ev, context.EvidenceSupportLinked)),
             EvidenceSupportWithdrawn ev => ("evidence_support_withdrawn",
-                JsonSerializer.SerializeToElement(ev, context.EvidenceSupportWithdrawn)),
+                JsonSerializer.SerializeToElement(ev, ComplianceCoreAdditionalJsonContext.Default.EvidenceSupportWithdrawn)),
             EvidenceArtifactRegistered ev => ("evidence_artifact_registered",
                 JsonSerializer.SerializeToElement(ev, context.EvidenceArtifactRegistered)),
             EvidenceArtifactInspected ev => ("evidence_artifact_inspected",

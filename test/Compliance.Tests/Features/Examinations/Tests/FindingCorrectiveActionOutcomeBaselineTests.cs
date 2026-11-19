@@ -40,14 +40,14 @@ public sealed class FindingCorrectiveActionOutcomeBaselineTests
         var payload = bytes.AsSpan(Array.IndexOf(bytes, (byte)0) + 1);
         var snapshot = JsonSerializer.Deserialize(payload, ComplianceCoreJsonContext.Default.FindingTypeIBaselineSourceContent)!;
         var recorded = Assert.Single(snapshot.History, fact => fact.Kind == "finding_corrective_action_resolved");
-        var fact = recorded.Payload.Deserialize<FindingCorrectiveActionResolved>(ComplianceCoreJsonContext.Default.Options)!;
+        var fact = recorded.Payload.Deserialize<FindingCorrectiveActionResolved>(ComplianceCoreJsonMetadata.Default.Options)!;
         Assert.Equal(report.Source, fact.Source);
         Assert.Equal("cancelled", fact.Outcome);
         Assert.Equal(finding.Revision + 1, selected.Revision);
         var proofBlob = Assert.Single(envelope.RootElement.GetProperty("content_blobs").EnumerateArray(), blob =>
-            blob.GetProperty("reference").Deserialize<ImmutableContentRef>(ComplianceCoreJsonContext.Default.Options) == fact.SourceProof);
+            blob.GetProperty("reference").Deserialize<ImmutableContentRef>(ComplianceCoreJsonMetadata.Default.Options) == fact.SourceProof);
         var proofBytes = Convert.FromBase64String(proofBlob.GetProperty("base64").GetString()!);
-        var proof = JsonSerializer.Deserialize<SourceFactLocator>(proofBytes, ComplianceCoreJsonContext.Default.Options)!;
+        var proof = JsonSerializer.Deserialize<SourceFactLocator>(proofBytes, ComplianceCoreJsonMetadata.Default.Options)!;
         Assert.Equal(source.Event.Metadata.EventId, proof.EventId);
         Assert.Equal(source.Stream, proof.Source);
         Assert.Equal(source.ResourceOffset, proof.ResourcePosition);

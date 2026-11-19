@@ -25,7 +25,7 @@ public sealed class RuntimeCriteriaTransportContractTests
 
         // Act
         var failure = Record.Exception(() => JsonSerializer.Deserialize(json,
-            ComplianceCoreJsonContext.Default.DraftCriteriaEdition));
+            ComplianceCoreAdditionalJsonContext.Default.DraftCriteriaEdition));
 
         // Assert
         Assert.IsType<JsonException>(failure);
@@ -37,13 +37,13 @@ public sealed class RuntimeCriteriaTransportContractTests
         // Arrange
         var fact = new CriteriaEditionDrafted(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             "tsc", "edition_1", 1, Uuid.CreateVersion4());
-        var json = JsonSerializer.Serialize(fact, ComplianceCoreJsonContext.Default.CriteriaEditionDrafted);
+        var json = JsonSerializer.Serialize(fact, ComplianceCoreAdditionalJsonContext.Default.CriteriaEditionDrafted);
         var payload = JsonNode.Parse(json)!.AsObject();
         Assert.True(payload.Remove("framework"));
 
         // Act
         var failure = Record.Exception(() => JsonSerializer.Deserialize(payload.ToJsonString(),
-            ComplianceCoreJsonContext.Default.CriteriaEditionDrafted));
+            ComplianceCoreAdditionalJsonContext.Default.CriteriaEditionDrafted));
 
         // Assert
         Assert.IsType<JsonException>(failure);

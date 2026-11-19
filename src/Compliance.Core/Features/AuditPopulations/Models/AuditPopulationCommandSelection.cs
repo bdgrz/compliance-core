@@ -24,7 +24,7 @@ sealed record AuditPopulationCommandSelection(Uuid CommandId, Uuid TenantId, Uui
     };
     static T Copy<T>(T value) where T : IRequest
     {
-        var info = ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))
+        var info = ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))
             ?? throw new InvalidOperationException("The population command has no actual serializer contract.");
         var bytes = JsonSerializer.SerializeToUtf8Bytes(value, info);
         return (T)(JsonSerializer.Deserialize(bytes, info)

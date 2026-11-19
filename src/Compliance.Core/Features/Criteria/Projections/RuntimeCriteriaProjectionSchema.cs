@@ -25,31 +25,31 @@ static class RuntimeCriteriaProjectionSchema
         static entry => [entry.Generation, entry.EditionId.ToString(), entry.Identifier]);
 
     internal static readonly KvDirectory<RuntimeCriteriaEditionIndexRow, EditionKey> Editions = new(
-        "runtime_criteria_editions", ComplianceCoreJsonContext.Default.RuntimeCriteriaEditionIndexRow,
+        "runtime_criteria_editions", ComplianceCoreAdditionalJsonContext.Default.RuntimeCriteriaEditionIndexRow,
         static edition => new EditionKey(edition.Generation, edition.EditionId),
         static key => [key.Generation, key.EditionId.ToString()], [ByPublication]);
 
     internal static readonly KvDirectory<RuntimeCriteriaEntryIndexRow, EntryKey> Entries = new(
-        "runtime_criteria_entries", ComplianceCoreJsonContext.Default.RuntimeCriteriaEntryIndexRow,
+        "runtime_criteria_entries", ComplianceCoreAdditionalJsonContext.Default.RuntimeCriteriaEntryIndexRow,
         static entry => new EntryKey(entry.Generation, entry.EditionId, entry.Identifier),
         static key => [key.Generation, key.EditionId.ToString(), key.Identifier], [ByEditionIdentifier]);
 
     internal static readonly KvDirectory<RuntimeCriteriaProjectionClock, string> Clock = new(
-        "runtime_criteria_projection_clock", ComplianceCoreJsonContext.Default.RuntimeCriteriaProjectionClock,
+        "runtime_criteria_projection_clock", ComplianceCoreAdditionalJsonContext.Default.RuntimeCriteriaProjectionClock,
         static clock => clock.Generation, static generation => [generation], []);
 
     internal static readonly KvDirectory<RuntimeCriteriaEditionFactIndexRow, EditionFactKey> EditionFacts = new(
-        "runtime_criteria_edition_facts", ComplianceCoreJsonContext.Default.RuntimeCriteriaEditionFactIndexRow,
+        "runtime_criteria_edition_facts", ComplianceCoreAdditionalJsonContext.Default.RuntimeCriteriaEditionFactIndexRow,
         static fact => new EditionFactKey(fact.Generation, fact.EditionId, fact.EventId),
         static key => [key.Generation, key.EditionId.ToString(), key.EventId.ToString()], []);
 
     internal static readonly KvDirectory<RuntimeCriteriaValueClaimIndexRow, ValueOwnerKey> ValueClaims = new(
-        "runtime_criteria_value_claims", ComplianceCoreJsonContext.Default.RuntimeCriteriaValueClaimIndexRow,
+        "runtime_criteria_value_claims", ComplianceCoreAdditionalJsonContext.Default.RuntimeCriteriaValueClaimIndexRow,
         static claim => new ValueOwnerKey(claim.Generation, claim.OwnerId),
         static key => [key.Generation, key.OwnerId.ToString()], []);
 
     internal static readonly KvDirectory<RuntimeCriteriaValuePendingIndexRow, ValueOwnerKey> PendingValues = new(
-        "runtime_criteria_pending_values", ComplianceCoreJsonContext.Default.RuntimeCriteriaValuePendingIndexRow,
+        "runtime_criteria_pending_values", ComplianceCoreAdditionalJsonContext.Default.RuntimeCriteriaValuePendingIndexRow,
         static pending => new ValueOwnerKey(pending.Generation, pending.OwnerId),
         static key => [key.Generation, key.OwnerId.ToString()], []);
 
@@ -59,7 +59,7 @@ static class RuntimeCriteriaProjectionSchema
             unresolved.OutcomeEventId.ToString()]);
 
     internal static readonly KvDirectory<RuntimeCriteriaValueUnresolvedIndexRow, ValueOutcomeKey> UnresolvedValues = new(
-        "runtime_criteria_unresolved_values", ComplianceCoreJsonContext.Default.RuntimeCriteriaValueUnresolvedIndexRow,
+        "runtime_criteria_unresolved_values", ComplianceCoreAdditionalJsonContext.Default.RuntimeCriteriaValueUnresolvedIndexRow,
         static unresolved => new ValueOutcomeKey(unresolved.Generation, unresolved.OutcomeEventId),
         static key => [key.Generation, key.OutcomeEventId.ToString()], [ByUnresolvedEdition]);
 
@@ -69,7 +69,7 @@ static class RuntimeCriteriaProjectionSchema
             disclosure.Category, disclosure.Code]);
 
     internal static readonly KvDirectory<RuntimeCriteriaDisclosureIndexRow, DisclosureKey> Disclosures = new(
-        "runtime_criteria_disclosures", ComplianceCoreJsonContext.Default.RuntimeCriteriaDisclosureIndexRow,
+        "runtime_criteria_disclosures", ComplianceCoreAdditionalJsonContext.Default.RuntimeCriteriaDisclosureIndexRow,
         static disclosure => new DisclosureKey(disclosure.Generation, disclosure.EditionId,
             disclosure.Category, disclosure.Code),
         static key => [key.Generation, key.EditionId.ToString(), key.Category, key.Code], [ByEditionDisclosure]);

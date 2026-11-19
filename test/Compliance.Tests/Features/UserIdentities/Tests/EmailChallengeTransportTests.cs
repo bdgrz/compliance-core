@@ -116,7 +116,7 @@ public sealed class EmailChallengeTransportTests
             fact => Assert.Equal(challenge, Assert.IsType<EmailChallengeIssued>(fact).Operation.LogicalId),
             fact => Assert.Equal(challenge, Assert.IsType<EmailAddressVerified>(fact).Operation.LogicalId));
         Assert.DoesNotContain(token, string.Join('\n', facts.Select(fact =>
-            JsonSerializer.Serialize(fact, fact.GetType(), ComplianceCoreJsonContext.Default.Options))), StringComparison.Ordinal);
+            JsonSerializer.Serialize(fact, fact.GetType(), ComplianceCoreJsonMetadata.Default.Options))), StringComparison.Ordinal);
 
         async Task<HttpStatusCode> PutTwiceAsync(string route, object body)
         {

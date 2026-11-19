@@ -105,7 +105,7 @@ public sealed class ControlMappingNativeBoundaryTests
             Uuid.CreateVersion4(), "criterion", text, text, actor, "Author", NativeFacts.Now);
         var mapping = await MappingNativeSeeds.BuildAsync(rules, content);
         var fact = Assert.Single(new AggregateScenario<ControlCriterionMapping>(mapping).PendingEvents);
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(fact, ComplianceCoreJsonContext.Default.GetTypeInfo(fact.GetType())!);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(fact, ComplianceCoreJsonMetadata.Default.GetTypeInfo(fact.GetType())!);
         var decoded = await MappingLineContent.ReadAsync(content, fact, CancellationToken.None);
         var change = Assert.IsType<ControlCriterionMappingProposedChange>(decoded.Change);
 

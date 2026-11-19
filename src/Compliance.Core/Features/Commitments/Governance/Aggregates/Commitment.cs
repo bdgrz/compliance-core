@@ -6,11 +6,11 @@ using Bdgrz.Compliance.Features.Commitments.Governance.Models;
 using Bdgrz.Compliance.Features.Commitments.Services;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.Versioning.Models;
-using ReviseCommitmentDraftRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.ReviseCommitmentDraft;
-using ReviewCommitmentDraftRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.ReviewCommitmentDraft;
-using RetireCommitmentRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.RetireCommitment;
-using GovernanceCommitmentDraftRevised = Bdgrz.Compliance.Features.Commitments.Governance.Events.CommitmentDraftRevised;
-using GovernanceCommitmentRetired = Bdgrz.Compliance.Features.Commitments.Governance.Events.CommitmentRetired;
+using ReviseGovernanceCommitmentDraftRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.ReviseGovernanceCommitmentDraft;
+using ReviewGovernanceCommitmentDraftRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.ReviewGovernanceCommitmentDraft;
+using RetireGovernanceCommitmentRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.RetireGovernanceCommitment;
+using GovernanceCommitmentDraftRevised = Bdgrz.Compliance.Features.Commitments.Governance.Events.GovernanceCommitmentDraftRevised;
+using GovernanceCommitmentRetired = Bdgrz.Compliance.Features.Commitments.Governance.Events.GovernanceCommitmentRetired;
 namespace Bdgrz.Compliance.Features.Commitments.Governance.Aggregates;
 
 /// <summary>Owns the immutable identifier, one open draft and one-step publication of that commitment.</summary>
@@ -76,7 +76,7 @@ public sealed class Commitment : Aggregate
             digest, Uuid.Parse(actor.Id, System.Globalization.CultureInfo.InvariantCulture), at, Freeze(request.Terms)));
         return null;
     }
-    public CommandFailure? Revise(ReviseCommitmentDraftRequest request, ActorReference actor, DateTimeOffset at)
+    public CommandFailure? Revise(ReviseGovernanceCommitmentDraftRequest request, ActorReference actor, DateTimeOffset at)
     {
         var digest = AuthoredIntentDigest.Compute(request);
         if (Retry(request.CommandId, digest, actor, out var prior))
@@ -106,7 +106,7 @@ public sealed class Commitment : Aggregate
             digest, Uuid.Parse(actor.Id, System.Globalization.CultureInfo.InvariantCulture), at));
         return null;
     }
-    public CommandFailure? Review(ReviewCommitmentDraftRequest request, ActorReference actor, Uuid boundaryVersion,
+    public CommandFailure? Review(ReviewGovernanceCommitmentDraftRequest request, ActorReference actor, Uuid boundaryVersion,
         SeparationOfDutiesWaiverProof? waiver, DateTimeOffset at)
     {
         var digest = AuthoredIntentDigest.Compute(request);
@@ -139,7 +139,7 @@ public sealed class Commitment : Aggregate
             digest, member, at, approved, waiver));
         return null;
     }
-    public CommandFailure? Retire(RetireCommitmentRequest request, ActorReference actor, DateTimeOffset at)
+    public CommandFailure? Retire(RetireGovernanceCommitmentRequest request, ActorReference actor, DateTimeOffset at)
     {
         var digest = AuthoredIntentDigest.Compute(request);
         if (Retry(request.CommandId, digest, actor, out var prior))

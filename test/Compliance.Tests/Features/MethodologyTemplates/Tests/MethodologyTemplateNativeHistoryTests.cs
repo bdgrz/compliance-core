@@ -383,7 +383,7 @@ public sealed class MethodologyTemplateNativeHistoryTests
             Assert.Equal(UnitResult.Schema, body.Content.Schema);
             _ = await scenario.Content.ReadJsonAsync<UnitResult>(MethodologyTemplate.Realm, body.Content);
             var json = JsonSerializer.SerializeToElement(fact,
-                ComplianceCoreJsonContext.Default.GetTypeInfo(fact.GetType())!);
+                ComplianceCoreJsonMetadata.Default.GetTypeInfo(fact.GetType())!);
             Assert.True(json.TryGetProperty("change", out _));
             Assert.False(json.TryGetProperty("state", out _));
             Assert.False(json.TryGetProperty("content", out _));

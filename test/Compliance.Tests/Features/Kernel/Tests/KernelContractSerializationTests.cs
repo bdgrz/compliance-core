@@ -27,8 +27,8 @@ public sealed class KernelContractSerializationTests
 
     static T RoundTrip<T>(T value)
     {
-        var json = JsonSerializer.Serialize(value, typeof(T), ComplianceCoreJsonContext.Default);
-        return (T)JsonSerializer.Deserialize(json, typeof(T), ComplianceCoreJsonContext.Default)!;
+        var json = JsonSerializer.Serialize(value, typeof(T), ComplianceCoreJsonMetadata.Default);
+        return (T)JsonSerializer.Deserialize(json, typeof(T), ComplianceCoreJsonMetadata.Default)!;
     }
 
     [Fact]

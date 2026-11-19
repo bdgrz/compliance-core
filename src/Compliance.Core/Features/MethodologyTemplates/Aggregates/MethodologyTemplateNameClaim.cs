@@ -195,7 +195,7 @@ public sealed class MethodologyTemplateNameClaim : NameClaim
     {
         if (!Reference(reference, schema))
             return false;
-        var info = ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))
+        var info = ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))
             ?? throw new InvalidOperationException("Methodology creation content metadata is missing.");
         var bytes = JsonSerializer.SerializeToUtf8Bytes(value, info);
         return bytes.LongLength == reference.Bytes && ContentDigest.Sha256(bytes) == reference.Sha256;

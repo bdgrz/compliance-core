@@ -277,7 +277,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
     static FindingTypeIBaselineSourceEvent Capture(DomainEvent fact)
     {
         var metadata = fact.Metadata;
-        var info = ComplianceCoreJsonContext.Default.GetTypeInfo(fact.GetType())
+        var info = ComplianceCoreJsonMetadata.Default.GetTypeInfo(fact.GetType())
             ?? throw new JsonException("The remediation fact has no registered serializer.");
         return new FindingTypeIBaselineSourceEvent(metadata.EventId, metadata.AggregateVersion, RevisionOf(fact),
             metadata.OccurredOn, KindOf(fact), JsonSerializer.SerializeToElement(fact, info));

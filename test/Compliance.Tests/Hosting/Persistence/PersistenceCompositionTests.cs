@@ -160,7 +160,7 @@ public sealed class PersistenceCompositionTests
             .Where(static type => !type.IsAbstract && typeof(DomainEvent).IsAssignableFrom(type)).ToArray();
 
         // Act
-        var missing = types.Where(static type => ComplianceCoreJsonContext.Default.GetTypeInfo(type) is null)
+        var missing = types.Where(static type => ComplianceCoreJsonMetadata.Default.GetTypeInfo(type) is null)
             .Select(static type => type.FullName).ToArray();
 
         // Assert

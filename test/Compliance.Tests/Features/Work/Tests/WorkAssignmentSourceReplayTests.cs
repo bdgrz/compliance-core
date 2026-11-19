@@ -127,7 +127,7 @@ public sealed class WorkAssignmentSourceReplayTests
 
         // Act
         var imported = Assert.Single(native, value => value.GetType().Name.EndsWith("HistoryImported", StringComparison.Ordinal));
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(imported, ComplianceCoreJsonContext.Default.GetTypeInfo(imported.GetType())!);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(imported, ComplianceCoreJsonMetadata.Default.GetTypeInfo(imported.GetType())!);
 
         // Assert
         Assert.True(bytes.Length < 409_600, $"The imported native fact retained {bytes.Length} bytes of cumulative history.");

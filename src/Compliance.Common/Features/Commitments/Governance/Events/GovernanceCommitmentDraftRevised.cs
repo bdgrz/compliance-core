@@ -4,5 +4,5 @@ using Bdgrz.Compliance.Features.Commitments.Governance.Models;
 namespace Bdgrz.Compliance.Features.Commitments.Governance.Events;
 
 [Discriminator("bdgrz.commitment.governance.commitmentdraftrevised", 1)]
-public sealed record CommitmentDraftRevised(Uuid TenantId, Uuid ProgramId, Uuid CommitmentId, long Revision, Uuid CommandId, string IntentSha256, Uuid ActorId, DateTimeOffset OccurredAt, CommitmentTerms Terms)
+public sealed record GovernanceCommitmentDraftRevised(Uuid TenantId, Uuid ProgramId, Uuid CommitmentId, long Revision, Uuid CommandId, string IntentSha256, Uuid ActorId, DateTimeOffset OccurredAt, CommitmentTerms Terms)
     : CommitmentGovernanceFact(TenantId, ProgramId, CommitmentId, Revision, CommandId, IntentSha256, ActorId, OccurredAt);

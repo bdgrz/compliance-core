@@ -72,8 +72,8 @@ public sealed class WorkRelationshipInitialAdmissionTests
         if (serialized)
         {
             var restored = (WorkRelationshipRecorded)JsonSerializer.Deserialize(
-                JsonSerializer.Serialize(fact, typeof(WorkRelationshipRecorded), ComplianceCoreJsonContext.Default),
-                typeof(WorkRelationshipRecorded), ComplianceCoreJsonContext.Default)!;
+                JsonSerializer.Serialize(fact, typeof(WorkRelationshipRecorded), ComplianceCoreJsonMetadata.Default),
+                typeof(WorkRelationshipRecorded), ComplianceCoreJsonMetadata.Default)!;
             relationship = NativeFacts.Replay(New(), [DomainEventSeed.Attach(restored, New().Id, 1)]);
         }
         var revision = relationship.Revision;

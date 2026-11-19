@@ -691,7 +691,7 @@ public sealed class ControlDraft : Aggregate, ISourceUseOwner
     {
         if (!Reference(reference, schema))
             return false;
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!);
         return reference.Bytes == bytes.LongLength && reference.Sha256 == ContentDigest.Sha256(bytes);
     }
 

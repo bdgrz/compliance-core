@@ -12,7 +12,7 @@ static class DomainEventPayload
     public static int Size(DomainEvent ev)
     {
         ArgumentNullException.ThrowIfNull(ev);
-        var metadata = ComplianceCoreJsonContext.Default.GetTypeInfo(ev.GetType())
+        var metadata = ComplianceCoreJsonMetadata.Default.GetTypeInfo(ev.GetType())
             ?? throw new InvalidOperationException("A domain event requires concrete generated JSON metadata.");
         return JsonSerializer.SerializeToUtf8Bytes(ev, metadata).Length;
     }

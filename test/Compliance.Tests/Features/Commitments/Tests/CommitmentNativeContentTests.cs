@@ -154,7 +154,7 @@ public sealed class CommitmentNativeContentTests
         Assert.Equal("Statement 70", current.Draft!.Statement);
         Assert.Equal(70, current.ReadRevisions().Count);
         Assert.All(facts, fact => Assert.True(JsonSerializer.SerializeToUtf8Bytes(fact,
-            ComplianceCoreJsonContext.Default.GetTypeInfo(fact.GetType())!).Length < 12 * 1024));
+            ComplianceCoreJsonMetadata.Default.GetTypeInfo(fact.GetType())!).Length < 12 * 1024));
         foreach (var fact in facts)
         {
             var native = Assert.IsAssignableFrom<ICommitmentFact>(fact);

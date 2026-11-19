@@ -26,10 +26,10 @@ public sealed class CommitmentGovernanceTests
         var terms = Terms();
         var owner = new Commitment(Tenant, Commitment.IdFor(Tenant, Program, "service_commitment", "SC-1"));
         Assert.Null(owner.Draft(new DraftCommitment(owner.Id, Tenant, Program, "service_commitment", "SC-1", terms), Author, Now));
-        Assert.Null(owner.Revise(new ReviseCommitmentDraft(Uuid.CreateVersion4(), Tenant, Program, owner.Id, 1,
+        Assert.Null(owner.Revise(new ReviseGovernanceCommitmentDraft(Uuid.CreateVersion4(), Tenant, Program, owner.Id, 1,
             terms with { Statement = "Availability commitment" }), Other, Now.AddMinutes(1)));
         var before = new AggregateScenario<Commitment>(owner).PendingEvents.ToArray();
-        var review = new ReviewCommitmentDraft(Uuid.CreateVersion4(), Tenant, Program, owner.Id, 2,
+        var review = new ReviewGovernanceCommitmentDraft(Uuid.CreateVersion4(), Tenant, Program, owner.Id, 2,
             "approve", "Agreed", Today);
 
         // Act

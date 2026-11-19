@@ -4,7 +4,7 @@ using Bdgrz.Compliance.Features.FirmServices.Aggregates;
 using Bdgrz.Compliance.Features.FirmServices.Commands;
 using Bdgrz.Compliance.Features.FirmServices.Models;
 using Bdgrz.Compliance.Tests.Testing;
-using RecordNonattestServiceRequest = Bdgrz.Compliance.Features.FirmServices.Commands.RecordNonattestService;
+using RecordNonattestServiceRequest = Bdgrz.Compliance.Features.FirmServices.Commands.RecordFirmNonattestService;
 namespace Bdgrz.Compliance.Tests.Features.FirmServices.Tests;
 
 public sealed class NonattestServiceRecordTests

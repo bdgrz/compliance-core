@@ -169,7 +169,7 @@ public sealed class PolicyNativeContentTests
         Assert.Equal("Revision 70", current.DraftContent!.Title);
         Assert.Equal(70, facts.Count);
         Assert.All(facts, fact => Assert.True(JsonSerializer.SerializeToUtf8Bytes(fact,
-            ComplianceCoreJsonContext.Default.GetTypeInfo(fact.GetType())!).Length < 8 * 1024));
+            ComplianceCoreJsonMetadata.Default.GetTypeInfo(fact.GetType())!).Length < 8 * 1024));
         Assert.DoesNotContain("Revision 1", JsonSerializer.Serialize(owner.Header,
             ComplianceCoreJsonContext.Default.PolicyAuthorityHeader), StringComparison.Ordinal);
     }

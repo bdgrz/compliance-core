@@ -18,5 +18,5 @@ namespace Bdgrz.Compliance.Tests.Testing;
 static class WireJson
 {
     public static string Of<T>(T value) => JsonSerializer.Serialize(value,
-        ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!);
 }

@@ -81,16 +81,16 @@ effective-dated.
 ```mermaid
 stateDiagram-v2
     [*] --> drafting: DraftCommitment
-    drafting --> drafting: ReviseCommitmentDraft
-    drafting --> drafting: ReviewCommitmentDraft (changes requested)
-    drafting --> approved: ReviewCommitmentDraft (approve)
+    drafting --> drafting: ReviseGovernanceCommitmentDraft
+    drafting --> drafting: ReviewGovernanceCommitmentDraft (changes requested)
+    drafting --> approved: ReviewGovernanceCommitmentDraft (approve)
     drafting --> [*]: DiscardCommitmentDraft (never approved)
     approved --> changing: ProposeCommitmentChange
-    changing --> changing: ReviseCommitmentDraft
-    changing --> approved: ReviewCommitmentDraft (approve)
+    changing --> changing: ReviseGovernanceCommitmentDraft
+    changing --> approved: ReviewGovernanceCommitmentDraft (approve)
     changing --> approved: DiscardCommitmentDraft
-    approved --> retired: RetireCommitment
-    changing --> retired: RetireCommitment
+    approved --> retired: RetireGovernanceCommitment
+    changing --> retired: RetireGovernanceCommitment
     retired --> [*]
 ```
 
@@ -98,20 +98,20 @@ stateDiagram-v2
 | --- | --- | --- | --- |
 | DraftCommitment | Compliance Lead or Contributor | `CommitmentId` (from program, kind and identifier) is new; categories in boundary; provider rule holds | CommitmentDrafted |
 | ProposeCommitmentChange | Compliance Lead or Contributor | Approved; no open draft | CommitmentChangeProposed |
-| ReviseCommitmentDraft | Compliance Lead or Contributor | Draft open; categories in boundary | CommitmentDraftRevised |
+| ReviseGovernanceCommitmentDraft | Compliance Lead or Contributor | Draft open; categories in boundary | GovernanceCommitmentDraftRevised |
 | DiscardCommitmentDraft | Compliance Lead or the author | Draft open | CommitmentDraftDiscarded |
-| ReviewCommitmentDraft | Management approver who authored no revision, or covered by a waiver | Draft open; reviews the current revision; categories in boundary; approval: effective date later than the previous version's | CommitmentChangesRequested or CommitmentVersionApproved |
-| RetireCommitment | Management approver | Not retired; reason given | CommitmentRetired |
+| ReviewGovernanceCommitmentDraft | Management approver who authored no revision, or covered by a waiver | Draft open; reviews the current revision; categories in boundary; approval: effective date later than the previous version's | CommitmentChangesRequested or CommitmentVersionApproved |
+| RetireGovernanceCommitment | Management approver | Not retired; reason given | GovernanceCommitmentRetired |
 
 | Event | Carries |
 | --- | --- |
 | CommitmentDrafted | tenant, commitment, program, kind, identifier, statement, service, source citation, owner, categories, provider, drafted by |
 | CommitmentChangeProposed | tenant, commitment, from version, draft content, proposed by |
-| CommitmentDraftRevised | tenant, commitment, revision, changed fields, revised by |
+| GovernanceCommitmentDraftRevised | tenant, commitment, revision, changed fields, revised by |
 | CommitmentDraftDiscarded | tenant, commitment, revision, discarded by |
 | CommitmentChangesRequested | tenant, commitment, revision, note, reviewer |
 | CommitmentVersionApproved | tenant, commitment, version, revision, full content, effective at, boundary version, approver, waiver (if any) |
-| CommitmentRetired | tenant, commitment, effective at, reason, retired by |
+| GovernanceCommitmentRetired | tenant, commitment, effective at, reason, retired by |
 
 ### CommitmentControlLink
 
@@ -159,7 +159,7 @@ flowchart LR
     B([Current approved boundary categories]) -. checks .-> C1
     U([Identifier unused in program and kind]) -. checks .-> C1
     C1[/DraftCommitment/] --> E1([CommitmentDrafted])
-    E1 -. "current revision; reviewer authored none" .-> C2[/ReviewCommitmentDraft/]
+    E1 -. "current revision; reviewer authored none" .-> C2[/ReviewGovernanceCommitmentDraft/]
     B -. checks .-> C2
     C2 --> E2([CommitmentVersionApproved])
     E2 -. "approved, active" .-> C3[/LinkCommitmentToControl/]
@@ -173,7 +173,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     C1[/ProposeCommitmentChange/] --> E1([CommitmentChangeProposed])
-    E1 -. "current revision; reviewer authored none" .-> C2[/ReviewCommitmentDraft/] --> E2([CommitmentVersionApproved])
+    E1 -. "current revision; reviewer authored none" .-> C2[/ReviewGovernanceCommitmentDraft/] --> E2([CommitmentVersionApproved])
     E2 -. "link shows needing confirmation" .-> C3[/ConfirmCommitmentControlLink/] --> E3([CommitmentControlLinkConfirmed])
     E2 -.-> X1[[System description: commitments section]]
 ```

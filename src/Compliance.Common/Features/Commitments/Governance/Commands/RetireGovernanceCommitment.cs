@@ -4,8 +4,8 @@ using Bdgrz.Compliance.Features.Programs.Contracts;
 using Bdgrz.Compliance.Features.Commitments.Governance.Models;
 namespace Bdgrz.Compliance.Features.Commitments.Governance.Commands;
 
-[Discriminator("bdgrz.commitment.governance.reviewcommitmentdraft", 1)]
-public sealed record ReviewCommitmentDraft(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid CommitmentId, long ExpectedRevision, string Outcome, string Rationale, DateOnly? EffectiveOn = null, Uuid? SeparationOfDutiesWaiverId = null)
+[Discriminator("bdgrz.commitment.governance.retirecommitment", 1)]
+public sealed record RetireGovernanceCommitment(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid CommitmentId, long ExpectedRevision, DateOnly EffectiveOn, string Reason)
     : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;

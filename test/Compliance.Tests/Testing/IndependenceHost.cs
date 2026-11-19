@@ -155,7 +155,7 @@ sealed class IndependenceHost : IAsyncDisposable
 
     /// <summary>The wire form of a value, for comparing views whose collections compare by reference.</summary>
     public static string Json<T>(T value) => System.Text.Json.JsonSerializer.Serialize(value,
-        ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!);
 
     public static ClaimsPrincipal ActorFor(Uuid user) => new(new ClaimsIdentity([
         new Claim("iss", "bdgrz"), new Claim("sub", user.ToString())], "BdgrzSession"));
