@@ -2407,6 +2407,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(SendTenantInvitation))]
 [JsonSerializable(typeof(RecordTenantInvitationDeliverySent))]
 [JsonSerializable(typeof(RecordTenantInvitationDeliveryFailed))]
+[JsonSerializable(typeof(RecordTenantInvitationDeliveryUnknown))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.Models.SourceFactProof<TenantMemberInvited>))]
 [JsonSerializable(typeof(TenantInvitationDeliveryPayload))]
 [JsonSerializable(typeof(TenantInvitationDeliveryRecord))]

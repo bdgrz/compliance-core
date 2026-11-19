@@ -267,8 +267,11 @@ public sealed class WorkDigestAttemptBindingTests
     sealed class DelayedDelivery(Func<Task> beforeResult) : IWorkDigestDelivery
     {
         public int Calls { get; private set; }
-        public async ValueTask<WorkDigestTransportOutcome> SendAsync(WorkDigestDeliveryMessage message, CancellationToken ct)
+        public async ValueTask<WorkDigestTransportOutcome> SendAsync(Uuid tenantId,
+            WorkDigestDeliveryMessage message, CancellationToken ct)
         {
+            _ = tenantId;
+            _ = message;
             Calls++;
             await beforeResult();
             return new WorkDigestTransportOutcome(WorkDigestTransportOutcomeKind.Accepted);

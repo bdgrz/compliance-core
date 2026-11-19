@@ -44,12 +44,15 @@ public sealed record TenantInvitationDeliveryRecord(Uuid TenantId, Uuid Invitati
     /// <summary>The attempt definitely failed and the invitation needs an explicit new invitation.</summary>
     public const string Failed = "failed";
 
+    /// <summary>The provider outcome is uncertain and the invitation must not be resent automatically.</summary>
+    public const string Unknown = "unknown";
+
     /// <summary>A new record without attempts.</summary>
     public static TenantInvitationDeliveryRecord Start(Uuid tenantId, Uuid invitationId) =>
         new(tenantId, invitationId, Pending, [], 0);
 
     /// <summary>True once the outcome of the delivery is recorded.</summary>
-    public bool IsTerminal => Status is Delivered or Failed;
+    public bool IsTerminal => Status is Delivered or Failed or Unknown;
 
     /// <summary>The identity of the single attempt of an invitation; a resumed send reuses it.</summary>
     public static Uuid AttemptIdFor(Uuid invitationId) =>

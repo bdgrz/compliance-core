@@ -157,6 +157,35 @@ public sealed class TenantInvitationDeliveryProcessTests
     }
 
     [Fact]
+    public async Task ShouldBlockAutomaticResendGivenProviderOutcomeIsUnknown()
+    {
+        // Arrange
+        var mailbox = new RecordingInvitationDelivery { UnknownFirst = true };
+        await using var host = new TenantInvitationHost(mailbox: mailbox);
+        var invitationId = Uuid.CreateVersion4();
+        var replacementId = Uuid.CreateVersion4();
+        Assert.True((await host.InviteMemberAsync(invitationId, Email)).IsSuccess);
+        var replacementBeforeOutcome = await host.InviteMemberAsync(replacementId, Email);
+
+        // Act
+        var process = await host.DriveDeliveryAsync(invitationId);
+        var resumed = await host.ResumeDeliveryAsync(invitationId);
+        var replacementAfterOutcome = await host.InviteMemberAsync(replacementId, Email);
+        var record = await host.Deliveries.ReadAsync(host.TenantId, invitationId);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, replacementBeforeOutcome.Error?.Kind);
+        Assert.Equal(ProcessState.Completed, process.State);
+        Assert.Equal(ProcessState.Completed, resumed.State);
+        Assert.Single(mailbox.Sends);
+        Assert.Equal(RequestErrorKind.Conflict, replacementAfterOutcome.Error?.Kind);
+        Assert.Equal(TenantInvitationDeliveryRecord.Unknown, record!.Status);
+        var attempt = Assert.Single(record.Attempts);
+        Assert.Equal(TenantInvitationDeliveryAttempt.Unknown, attempt.Result);
+        Assert.Equal("provider_outcome_unknown", attempt.FailureCode);
+    }
+
+    [Fact]
     public async Task ShouldAllowNewInvitationGivenPriorDeliveryDefinitelyFailed()
     {
         // Arrange

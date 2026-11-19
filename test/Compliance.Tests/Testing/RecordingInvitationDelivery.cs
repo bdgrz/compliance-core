@@ -20,6 +20,7 @@ using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
@@ -52,6 +53,8 @@ sealed class RecordingInvitationDelivery : ITenantInvitationDelivery
 
     public bool FailFirst { get; init; }
 
+    public bool UnknownFirst { get; init; }
+
     public CancellationTokenSource? CancelAfterFirstSend { get; set; }
 
     public ValueTask SendAsync(Uuid attemptId, Uuid tenantId, string emailAddress, string token, CancellationToken ct)
@@ -59,6 +62,9 @@ sealed class RecordingInvitationDelivery : ITenantInvitationDelivery
         Sends.Add((attemptId, tenantId, emailAddress, token));
         if (FailFirst && Sends.Count == 1)
             throw new InvalidOperationException($"provider secret {token} for {emailAddress}");
+        if (UnknownFirst && Sends.Count == 1)
+            throw new TenantInvitationDeliveryException(TenantInvitationDeliveryAttempt.Unknown,
+                "provider_outcome_unknown");
         if (CancelAfterFirstSend is { } cancellation && Sends.Count == 1)
         {
             cancellation.Cancel();

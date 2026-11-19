@@ -33,4 +33,7 @@ public sealed record TenantInvitationDeliveryAttempt(Uuid AttemptId, DateTimeOff
 
     /// <summary>The send definitely failed.</summary>
     public const string Rejected = "rejected";
+
+    /// <summary>The provider may have accepted the message; never resend this attempt automatically.</summary>
+    public const string Unknown = "unknown";
 }

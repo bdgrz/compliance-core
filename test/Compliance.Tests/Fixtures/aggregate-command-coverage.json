@@ -13,18 +13,18 @@
     "legacyReducerOnlyFacts": 128,
     "aggregateTypes": 159,
     "aggregateTypesWithCommandPath": 111,
-    "requestContracts": 942,
-    "commonRequestContracts": 919,
+    "requestContracts": 943,
+    "commonRequestContracts": 920,
     "requestClassificationCounts": {
       "command": 409,
       "confirmed_command_gap": 66,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 160,
+      "internal_reaction": 161,
       "query_or_reconstruction": 301
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 830,
+    "registeredCoreHandlerRegistrations": 831,
     "unregisteredCoreHandlerClasses": 51,
     "unwiredAggregateProducerOperations": 158,
     "unwiredAggregateProducerClassifications": {
@@ -35959,6 +35959,27 @@
         "test/Compliance.Tests/Features/Tenants/Tests/TenantInvitationDeliveryProcessTests.cs"
       ],
       "note": "Process receiver: records the delivered outcome of the attempt that sent in the delivery process record. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "RecordTenantInvitationDeliveryUnknown",
+      "contract": "src/Compliance.Common/Features/Tenants/Commands/RecordTenantInvitationDeliveryUnknown.cs",
+      "interfaces": "ITenantInvitationDeliveryReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RecordTenantInvitationDeliveryUnknownHandler",
+          "source": "src/Compliance.Core/Features/Tenants/Handlers/RecordTenantInvitationDeliveryUnknownHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantInvitationDeliveryProcessTests.cs"
+      ],
+      "note": "Process receiver: records an uncertain provider outcome in the delivery record and blocks automatic resend. System principal only; no HTTP/MCP route."
     },
     {
       "request": "RecordTrainingCompletion",

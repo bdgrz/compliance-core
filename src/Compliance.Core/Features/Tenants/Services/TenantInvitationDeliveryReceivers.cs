@@ -14,4 +14,5 @@ public static class TenantInvitationDeliveryReceivers
     public const string SendTenantInvitation = nameof(SendTenantInvitation);
     public const string RecordTenantInvitationDeliverySent = nameof(RecordTenantInvitationDeliverySent);
     public const string RecordTenantInvitationDeliveryFailed = nameof(RecordTenantInvitationDeliveryFailed);
+    public const string RecordTenantInvitationDeliveryUnknown = nameof(RecordTenantInvitationDeliveryUnknown);
 }

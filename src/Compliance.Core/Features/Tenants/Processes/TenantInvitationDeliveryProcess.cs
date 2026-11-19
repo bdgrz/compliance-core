@@ -67,7 +67,8 @@ public static class TenantInvitationDeliveryProcess
             [
                 TenantInvitationDeliveryReceivers.RecordTenantInvitationDeliverySent,
                 TenantInvitationDeliveryReceivers.RecordTenantInvitationDeliveryFailed,
-            ], "Exactly one outcome receiver, selected by the result the attempt stored."),
+                TenantInvitationDeliveryReceivers.RecordTenantInvitationDeliveryUnknown,
+            ], "Exactly one typed outcome receiver is selected from the stored provider result."),
         ],
         [],
         CreateReceiverAsync);
@@ -100,6 +101,10 @@ public static class TenantInvitationDeliveryProcess
                 TenantInvitationDeliveryAttempt.Rejected) => new RecordTenantInvitationDeliveryFailed(step.CommandId,
                 proof, payload.TenantId, payload.InvitationId, attempt.AttemptId,
                 attempt.FailureCode ?? "delivery_failed", at),
+            (TenantInvitationDeliveryReceivers.RecordTenantInvitationDeliveryUnknown,
+                TenantInvitationDeliveryAttempt.Unknown) => new RecordTenantInvitationDeliveryUnknown(step.CommandId,
+                proof, payload.TenantId, payload.InvitationId, attempt.AttemptId,
+                attempt.FailureCode ?? "provider_outcome_unknown", at),
             _ => null,
         };
     }

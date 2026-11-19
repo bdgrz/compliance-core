@@ -297,8 +297,11 @@ public sealed class WorkDigestDispatchProcessorTests
     sealed class AmbiguousThenAcceptedDelivery : IWorkDigestDelivery
     {
         public List<Uuid> Messages { get; } = [];
-        public ValueTask<WorkDigestTransportOutcome> SendAsync(WorkDigestDeliveryMessage message, CancellationToken ct)
+        public ValueTask<WorkDigestTransportOutcome> SendAsync(Uuid tenantId,
+            WorkDigestDeliveryMessage message, CancellationToken ct)
         {
+            _ = tenantId;
+            _ = ct;
             Messages.Add(message.MessageId);
             return ValueTask.FromResult(new WorkDigestTransportOutcome(Messages.Count == 1
                 ? WorkDigestTransportOutcomeKind.Unknown : WorkDigestTransportOutcomeKind.Accepted));
@@ -336,9 +339,12 @@ public sealed class WorkDigestDispatchProcessorTests
     {
         public int Calls { get; private set; }
 
-        public ValueTask<WorkDigestTransportOutcome> SendAsync(
+        public ValueTask<WorkDigestTransportOutcome> SendAsync(Uuid tenantId,
             WorkDigestDeliveryMessage message, CancellationToken ct)
         {
+            _ = tenantId;
+            _ = message;
+            _ = ct;
             Calls++;
             return ValueTask.FromResult(new WorkDigestTransportOutcome(
                 WorkDigestTransportOutcomeKind.Accepted));
@@ -352,9 +358,10 @@ public sealed class WorkDigestDispatchProcessorTests
         public string? StatusAtSend { get; private set; }
         public Uuid MessageId { get; private set; }
 
-        public async ValueTask<WorkDigestTransportOutcome> SendAsync(
+        public async ValueTask<WorkDigestTransportOutcome> SendAsync(Uuid actualTenantId,
             WorkDigestDeliveryMessage message, CancellationToken ct)
         {
+            _ = actualTenantId;
             Calls++;
             MessageId = message.MessageId;
             var aggregate = await reader.HydrateAsync(new WorkDigestDispatch(tenantId, memberId, new DateOnly(2026, 10, 5)), ct);
