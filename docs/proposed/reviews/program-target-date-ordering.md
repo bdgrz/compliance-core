@@ -4,7 +4,7 @@ Specification: [Program and scope](../contexts/program-and-scope.md), Program
 invariant: readiness ≤ Type I as-of ≤ Type II start ≤ Type II end for dates that
 are present. Missing dates remain unknown. Tracking: [#1176](https://github.com/bdgrz/compliance-core/issues/1176).
 
-Status: **paused checkpoint; focused acceptance passed, full gate interrupted**. This is an invariant
+Status: **local acceptance passed after explicit resume; final-head delivery pending**. This is an invariant
 repair in the existing ProgramRules path, not completion of the canonical Program
 commands, criteria-at-creation or stage lifecycle.
 
@@ -23,7 +23,19 @@ six at the intended refusal assertions: each of the three missing pairs on
 creation and revision. After the repair, 65 focused/native/history/HTTP cases
 passed, including all 35 new cases. Strict Release build had zero warnings/errors;
 whole-solution whitespace verification passed. The full run was canceled when the
-user paused implementation; it is not a completed full gate.
+user paused implementation; that interrupted run is not a completed full gate.
+
+After the user's explicit resume on 2026-11-04, an isolated checkout based on
+`4e4c9d0129e0390df270695565ea4b21291df66c` imported only this repair and its tests.
+The two source hashes matched the saved focused-GREEN inputs before and after
+acceptance. SDK 10.0.403 restore and strict Release build (`-m:1`) passed with
+zero warnings/errors; whole-solution whitespace verification passed. The full
+backend unit gate passed **8,742/8,742**, with no
+failed or skipped cases, in 14m48s. Ordinary xUnit collection parallelism and the
+existing native schema setup gate were retained. This run used pinned native
+Cassie `sha256:c179afabb7051e19629cfd1ecc6b83fa88bfb4deb6a391060aa1f472f7a0d1de`;
+it does not qualify a later engine image. Logs and TRX are under
+`/tmp/compliance-program-resume-validation/`.
 
 Tests cover all six pair inversions on creation/revision, all sixteen present/null
 patterns, all six equal-date pairs and all-four equality. Refusal leaves identity,
@@ -39,6 +51,20 @@ The test-proof question remained inconclusive at .49; the finite six-pair source
 map and executed RED/GREEN checks are separate evidence, not model clearance.
 Requests/responses are preserved locally in
 `/tmp/compliance-program-dates-assembled-jev-*` and the preparation review artifacts.
+
+Fresh independent source review confirmed all six strict nullable comparisons,
+pre-append validation, unchanged current authority and frozen native response
+replay. Fresh Jev (`jev-latest` resolving to `jev-1.14.0`, HTTP 200) adverse
+probabilities were .20 for accepting a reversed present pair, .18 for rejecting a
+valid plan, .20 for refusal mutation and .19 for append before validation. Its .62
+historical-rejection signal agrees with the qualification below. A broad
+missing-regression signal of .65 conflicted with explicit test cases; one bounded
+per-pair followup recognized the three nonadjacent reversal cases at .85/.78/.64.
+The last answer remains moderate. The finite six-pair source map, explicit
+InlineData and observed RED/GREEN establish coverage independently of Jev.
+Fresh review and request/response artifacts are under
+`/tmp/compliance-program-resume-review.md` and
+`/tmp/compliance-program-resume-jev-*`.
 
 ## Accepted historical-data qualification
 
@@ -56,7 +82,7 @@ correct handling of valid historical plans.
 
 ## Remaining acceptance
 
-The assembled full backend gate, final committed-head review, exact-head CI, merge
-and post-merge readback remain separate delivery gates. Named target changes,
+Final committed-head review, exact-head CI, merge and post-merge readback remain
+separate delivery gates. Named target changes,
 criteria edition at creation, boundary workflows and the rest of the approved
 Program/scope context remain partial.
