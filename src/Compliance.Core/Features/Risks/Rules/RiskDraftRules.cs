@@ -137,7 +137,8 @@ public sealed class RiskDraftRules
         if (ReplayCreate(request, actorMemberId) is { } original)
             return original;
         return Create(request.ProgramId, request.RiskId, request.Identifier,
-            new(request.Title, request.Scenario, request.PotentialEffect, request.SourceNote), actorMemberId,
+            new RiskDraftContent(request.Title, request.Scenario, request.PotentialEffect, request.SourceNote)
+            { TemplateOrigin = request.TemplateOrigin }, actorMemberId,
             actorDisplay, changedAt, AuthoredIntentDigest.Compute(request));
     }
 
@@ -181,7 +182,8 @@ public sealed class RiskDraftRules
                 ? null : CommandFailure.StateConflict("The revision identity already accepted another actor or authored intent.");
         var before = _revision;
         var failure = Revise(request.ProgramId, request.ExpectedRevision,
-            new(request.Title, request.Scenario, request.PotentialEffect, request.SourceNote), actorMemberId, actorDisplay,
+            new RiskDraftContent(request.Title, request.Scenario, request.PotentialEffect, request.SourceNote)
+            { TemplateOrigin = request.TemplateOrigin }, actorMemberId, actorDisplay,
             changedAt, request.CommandId, digest);
         if (failure is null && _revision != before + 1)
             throw new InvalidOperationException("A new risk revision must append exactly one decision.");
@@ -222,6 +224,9 @@ public sealed class RiskDraftRules
             string.IsNullOrWhiteSpace(content.PotentialEffect))
             return new RequestError(RequestErrorKind.Validation,
                 "A risk draft requires a title, scenario, and potential effect.");
+        if (content.TemplateOrigin is { } origin && (origin.TemplateId == Uuid.Empty || origin.Version < 1 ||
+                string.IsNullOrWhiteSpace(origin.EntryKey) || origin.EntryKey.Length > 200 || origin.EntryKey != origin.EntryKey.Trim()))
+            return new RequestError(RequestErrorKind.Validation, "A template origin requires its exact published entry identity.");
         if (content.Title.Length > 200 || content.Scenario.Length > 8000 ||
             content.PotentialEffect.Length > 8000 || content.SourceNote?.Length > 4000)
             return new RequestError(RequestErrorKind.Validation,
@@ -241,11 +246,12 @@ public sealed class RiskDraftRules
 
     public static RiskDraftContent Clean(RiskDraftContent content) => new(
         content.Title.Trim(), content.Scenario.Trim(), content.PotentialEffect.Trim(),
-        string.IsNullOrWhiteSpace(content.SourceNote) ? null : content.SourceNote.Trim());
+        string.IsNullOrWhiteSpace(content.SourceNote) ? null : content.SourceNote.Trim())
+    { TemplateOrigin = content.TemplateOrigin };
 
     static bool Equal(RiskDraftContent left, RiskDraftContent right) =>
         StringComparer.Ordinal.Equals(left.Title, right.Title) &&
         StringComparer.Ordinal.Equals(left.Scenario, right.Scenario) &&
         StringComparer.Ordinal.Equals(left.PotentialEffect, right.PotentialEffect) &&
-        StringComparer.Ordinal.Equals(left.SourceNote, right.SourceNote);
+        StringComparer.Ordinal.Equals(left.SourceNote, right.SourceNote) && left.TemplateOrigin == right.TemplateOrigin;
 }
