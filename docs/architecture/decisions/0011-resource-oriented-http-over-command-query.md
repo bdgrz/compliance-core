@@ -1,6 +1,7 @@
 # Resource-oriented HTTP over a command/query core
 
-Status: desired API design; current-route gap analysis is recorded separately.
+Status: desired API design; see the
+[current-route gap analysis](../../proposed/reviews/resource-oriented-http-gap-analysis.md).
 Recorded 2026-11-19.
 
 This document captures the target HTTP contract for Compliance Core. It is a
@@ -30,17 +31,23 @@ request contracts, handlers, OpenAPI output, or clients already conform.
 
 ### Owner and scope
 
+- Tenant-scoped requests carry the selected `tenant_id` in the `Tenant-Id`
+  HTTP header. The header is the sole tenant selector for the request; do not
+  repeat that `tenant_id` in the route, query, or write body. Treat the header
+  as untrusted input and authorize it on every request. Missing or invalid
+  tenant context must fail closed; its exact HTTP error mapping is part of the
+  API contract work.
 - Create bodies carry their owner or scope, for example
   `{"scope_kind":"company","scope_id":"…"}` or
   `{"application_id":"…"}`.
 - Collection reads select optional owner/scope filters in the query string,
   for example
-  `GET /v1/teams?scope_kind=company&scope_id=…`. With no filter, a list returns
-  every resource the caller is authorized to read.
-- A value carried by the path is not repeated in the body or query string.
-  Owner and scope values remain untrusted input: request authorization and
-  domain ownership checks must verify them for every request. This decision
-  changes where scope is carried; it does not weaken tenant isolation.
+  `GET /v1/teams?scope_kind=company&scope_id=…`. With no additional scope
+  filter, a list returns every resource the caller may read in the selected
+  tenant.
+- Owner and scope values remain untrusted input: request authorization and
+  domain ownership checks must verify them for every request. The header
+  replaces path-carried tenant selection; it does not weaken tenant isolation.
 
 ### Verbs and responses
 
@@ -91,6 +98,8 @@ route across multiple commands merely to encode transition-specific names.
 
 ### Teams example
 
+Every tenant-scoped request below includes `Tenant-Id: …`.
+
 ```http
 GET    /v1/teams?scope_kind=&scope_id=
 GET    /v1/teams/{team_id}
@@ -105,19 +114,23 @@ DELETE /v1/teams/{team_id}/members/{user_id}
 ## Relationship to earlier decisions
 
 When this target is adopted for runtime routes, it supersedes the route-layout
-and path-carried tenant/scope clauses in
+and path-carried tenant-selection clauses in
 [ADR 0009](0009-tenant-identity-federation-and-context.md). ADR 0009's authorization, tenant-isolation,
-identity, and context-propagation requirements remain in force. The gap
-analysis must identify every route and request contract affected, including
-how caller-supplied body/query scope is authoritatively verified and how
-unfiltered reads remain limited to resources the caller may read.
+identity, and context-propagation requirements remain in force. The
+`Tenant-Id` header replaces `tenant_id` in the route; resource owner and
+additional scope stay in the body or query. The gap analysis must identify
+every route and request contract affected, including how header-selected
+tenant context and body/query scope are authoritatively verified and how
+unfiltered reads remain limited to resources the caller may read in that
+tenant.
 
 ## Consequences
 
 - Existing `/api/v1/...` routes and path-scoped routes are not implicitly
   compatible. Route and client migrations require an explicit cutover plan.
-- Resource IDs, owners, scopes, and command identities must be bound exactly
-  once at the transport boundary and passed to the one selected request type.
+- Resource IDs, the `Tenant-Id` header, owners, scopes, and command identities
+  must be bound exactly once at the transport boundary and passed to the one
+  selected request type.
 - HTTP and MCP continue to dispatch through the same transport-independent
   request, authorization, guard, and handler pipeline.
 - The target does not relax server-defined authorization, lifecycle rules,
