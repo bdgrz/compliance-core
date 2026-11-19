@@ -24,9 +24,10 @@ namespace Bdgrz.Compliance.Features.Work.Services;
 sealed class SmtpWorkDigestDelivery(EmailChallengeDeliverySettings settings)
     : IWorkDigestDelivery
 {
-    public async ValueTask<WorkDigestTransportOutcome> SendAsync(
+    public async ValueTask<WorkDigestTransportOutcome> SendAsync(Cntryl.Portia.Uuid tenantId,
         WorkDigestDeliveryMessage digest, CancellationToken ct)
     {
+        _ = tenantId;
         try
         {
             using var message = new MailMessage(settings.FromAddress!, digest.Recipient)

@@ -88,7 +88,7 @@ sealed class WeeklyWorkDigestProcessor(IAggregateReader reader, IAggregateExecut
         WorkDigestTransportOutcome result;
         try
         {
-            result = await delivery.SendAsync(message, ct).ConfigureAwait(false);
+            result = await delivery.SendAsync(tenantId, message, ct).ConfigureAwait(false);
         }
         catch (Exception) when (!ct.IsCancellationRequested)
         {

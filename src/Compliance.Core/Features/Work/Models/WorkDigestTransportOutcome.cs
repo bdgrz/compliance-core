@@ -16,6 +16,6 @@ sealed record WorkDigestDeliveryMessage(Cntryl.Portia.Uuid MessageId,
 
 interface IWorkDigestDelivery
 {
-    ValueTask<WorkDigestTransportOutcome> SendAsync(WorkDigestDeliveryMessage message,
-        CancellationToken ct);
+    ValueTask<WorkDigestTransportOutcome> SendAsync(Cntryl.Portia.Uuid tenantId,
+        WorkDigestDeliveryMessage message, CancellationToken ct);
 }

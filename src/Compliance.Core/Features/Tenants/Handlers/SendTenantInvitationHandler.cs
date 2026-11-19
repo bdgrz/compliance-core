@@ -155,6 +155,10 @@ public sealed class SendTenantInvitationHandler(TenantInvitationDeliverySupport 
         {
             throw;
         }
+        catch (TenantInvitationDeliveryException exception)
+        {
+            return (exception.Result, exception.FailureCode);
+        }
         catch (Exception)
         {
             // Provider failures may carry recipient addresses or secrets; only the stable code is kept.

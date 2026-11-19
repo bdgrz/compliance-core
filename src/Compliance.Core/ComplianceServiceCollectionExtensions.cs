@@ -1,3 +1,6 @@
+using Amazon.SimpleEmailV2;
+using Cntryl.Portia.Communications;
+using Cntryl.Portia.Communications.Aws;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Authorizers;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
@@ -391,13 +394,26 @@ public static class ComplianceServiceCollectionExtensions
         var emailDeliverySettings = EmailChallengeDeliverySettings.FromConfiguration(configuration,
             requireRealEmailDelivery);
         services.AddSingleton(emailDeliverySettings);
+        if (emailDeliverySettings.Mode == "ses")
+        {
+            var sesClient = new AmazonSimpleEmailServiceV2Client(new AmazonSimpleEmailServiceV2Config
+            {
+                MaxErrorRetry = 0,
+            });
+            services.AddSingleton<IAmazonSimpleEmailServiceV2>(sesClient);
+            services.AddSingleton<IAwsMailTenantResolver, PortiaAwsMailTenantResolver>();
+            services.AddAwsMail(options => options.UseClient(sesClient));
+        }
         var workDigestDeliverySettings = WorkDigestDeliverySettings.FromConfiguration(configuration,
             requireRealEmailDelivery);
         services.AddSingleton(workDigestDeliverySettings);
         services.AddSingleton<MockWorkDigestDelivery>();
-        services.AddSingleton<IWorkDigestDelivery>(provider => emailDeliverySettings.Mode == "smtp"
-            ? new SmtpWorkDigestDelivery(emailDeliverySettings)
-            : provider.GetRequiredService<MockWorkDigestDelivery>());
+        services.AddSingleton<IWorkDigestDelivery>(provider => emailDeliverySettings.Mode switch
+        {
+            "smtp" => new SmtpWorkDigestDelivery(emailDeliverySettings),
+            "ses" => new PortiaWorkDigestDelivery(provider.GetRequiredService<IMailSender>()),
+            _ => provider.GetRequiredService<MockWorkDigestDelivery>(),
+        });
         services.AddScoped<WorkDigestContentReader>();
         services.AddScoped<IWorkDigestContentReader>(provider =>
             provider.GetRequiredService<WorkDigestContentReader>());
@@ -408,15 +424,19 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(EmailChallengeTokenKeys.FromConfiguration(configuration,
             emailDeliverySettings.Mode == "mock"));
         services.AddSingleton<MockEmailChallengeDelivery>();
-        services.AddSingleton<IEmailChallengeDelivery>(provider =>
-            emailDeliverySettings.Mode == "smtp"
-                ? new SmtpEmailChallengeDelivery(emailDeliverySettings)
-                : provider.GetRequiredService<MockEmailChallengeDelivery>());
+        services.AddSingleton<IEmailChallengeDelivery>(provider => emailDeliverySettings.Mode switch
+        {
+            "smtp" => new SmtpEmailChallengeDelivery(emailDeliverySettings),
+            "ses" => new PortiaEmailChallengeDelivery(provider.GetRequiredService<IMailSender>()),
+            _ => provider.GetRequiredService<MockEmailChallengeDelivery>(),
+        });
         services.AddSingleton<MockTenantInvitationDelivery>();
-        services.AddSingleton<ITenantInvitationDelivery>(provider =>
-            emailDeliverySettings.Mode == "smtp"
-                ? new SmtpTenantInvitationDelivery(emailDeliverySettings)
-                : provider.GetRequiredService<MockTenantInvitationDelivery>());
+        services.AddSingleton<ITenantInvitationDelivery>(provider => emailDeliverySettings.Mode switch
+        {
+            "smtp" => new SmtpTenantInvitationDelivery(emailDeliverySettings),
+            "ses" => new PortiaTenantInvitationDelivery(provider.GetRequiredService<IMailSender>()),
+            _ => provider.GetRequiredService<MockTenantInvitationDelivery>(),
+        });
         services.AddScoped<FitzEmailAddressDirectory>();
         services.AddScoped<IEmailAddressDirectoryProjection>(
             provider => provider.GetRequiredService<FitzEmailAddressDirectory>());
@@ -2068,6 +2088,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<SendTenantInvitationHandler>()
             .AddRequestHandler<RecordTenantInvitationDeliverySentHandler>()
             .AddRequestHandler<RecordTenantInvitationDeliveryFailedHandler>()
+            .AddRequestHandler<RecordTenantInvitationDeliveryUnknownHandler>()
             .AddRequestAuthorizer<TenantInvitationDeliveryReceiverAuthorizer>()
             .AddRequestHandler<GetTenantHandler>()
             .AddRequestAuthorizer<GetTenantAuthorizer>()

@@ -19,23 +19,26 @@ public sealed record EmailChallengeDeliverySettings(
     {
         var section = configuration.GetSection("Compliance:EmailDelivery");
         var mode = section["Mode"]?.Trim().ToLowerInvariant() ?? "mock";
-        if (requireRealDelivery && mode != "smtp")
+        if (requireRealDelivery && mode is not ("ses" or "smtp"))
             throw new InvalidOperationException("Production email challenge delivery must be configured.");
         if (mode == "mock" && !requireRealDelivery)
             return new EmailChallengeDeliverySettings(mode, null, 0, null, null, null);
-        if (mode != "smtp")
+        if (mode is not ("ses" or "smtp"))
             throw new InvalidOperationException("Unsupported email challenge delivery mode.");
 
-        var host = section["Smtp:Host"];
-        var from = section["Smtp:FromAddress"];
-        var username = section["Smtp:Username"];
-        var password = section["Smtp:Password"];
-        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from) ||
-            !int.TryParse(section["Smtp:Port"], out var port) || port is < 1 or > 65535 ||
-            string.IsNullOrEmpty(username) != string.IsNullOrEmpty(password))
+        var host = mode == "smtp" ? section["Smtp:Host"] : null;
+        var from = mode == "ses" ? section["FromAddress"] : section["Smtp:FromAddress"];
+        var username = mode == "smtp" ? section["Smtp:Username"] : null;
+        var password = mode == "smtp" ? section["Smtp:Password"] : null;
+        var port = 0;
+        if (mode == "smtp" && (string.IsNullOrWhiteSpace(host) ||
+            !int.TryParse(section["Smtp:Port"], out port) || port is < 1 or > 65535 ||
+            string.IsNullOrEmpty(username) != string.IsNullOrEmpty(password)))
             throw new InvalidOperationException("SMTP email challenge delivery configuration is incomplete.");
+        if (mode == "ses" && string.IsNullOrWhiteSpace(from))
+            throw new InvalidOperationException("Amazon SES email delivery requires a from address.");
         if (!System.Net.Mail.MailAddress.TryCreate(from, out _))
-            throw new InvalidOperationException("SMTP email challenge sender is invalid.");
+            throw new InvalidOperationException("Email sender address is invalid.");
         return new EmailChallengeDeliverySettings(mode, host, port, from, username, password);
     }
 }

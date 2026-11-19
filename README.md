@@ -101,39 +101,35 @@ For Entra, put the delegated API scope (for example, `api://.../Compliance.Read`
   `not_issued`, `pending`, `failed`, `delivered`, `expired`, or `verified` to the owner.
   Email ownership and verification are HTTP-only; they are not MCP tools.
 
-Development and tests default to `MockEmailChallengeDelivery`. Other environments require
-`Compliance:EmailDelivery:Mode=smtp`, a STARTTLS SMTP host/port/sender, and an active 32-byte
-base64 token key under `Compliance:EmailDelivery:TokenKeys:<key-id>`. Set the same key ring and
-active key ID on API and worker hosts. The worker derives the token from the persisted challenge
-ID and key, sends it, and records delivery status. Neither events nor responses contain the
-plaintext token. Keep a previous key configured until all challenges and invitations issued
-with it expire (up to 7 days). A missing key or SMTP failure records a terminal failed attempt;
-the owner must reissue the challenge after the cause is fixed.
-The SMTP `Message-ID` is stable per challenge. Delivery is at least once: a crash after SMTP
-acceptance but before the sent event can produce another email with the same valid token.
-Reissuing replaces the challenge and invalidates its previous token. Keep SMTP credentials and
-token keys in deployment secrets. The `.env.example` remains suitable for local mock delivery.
-Invitations use the same configured SMTP relay and key ring outside development. The API commits
-only a token hash and key ID under the client-chosen invitation ID; the invitation delivery process
-(not the invitation stream) derives the seven-day invitation token, sends it with a stable
-`Message-ID` for one attempt, and keeps the attempt result in its own process record. A worker
-restart retries an unacknowledged send with the same token and message ID. SMTP delivery is at
-least once; the relay may still deliver a duplicate after a crash. A recorded key or SMTP failure
-requires an administrator to invite again under a new invitation ID, which is allowed once the
-failed delivery is recorded; the tenant worker continues with later invitations. At most one
-invitation is pending per mailbox: a second invitation ID for the same address conflicts until
-the first is accepted, expired or failed. Development and
-tests default to `MockTenantInvitationDelivery` in the worker that sent the invitation. Invitation
-acceptance and email verification are human HTTP flows and have no MCP tools; operator invitation
-management, organization queries, lifecycle, and slug operations use both HTTP and MCP.
+Development and tests default to `MockEmailChallengeDelivery`. Production defaults to Portia's
+Amazon SES sender. Set `Compliance:EmailDelivery:FromAddress`, `AWS_REGION`, and an AWS default-chain
+credential with SES send permission on every API and worker host. The sender disables SDK retries
+because an SES retry after a lost response can duplicate a message. SES acceptance is not inbox
+delivery; Portia reports accepted, rejected, or unknown, and unknown attempts are never resent
+automatically. Neither events nor responses contain the plaintext token. Keep an active 32-byte
+base64 token key under `Compliance:EmailDelivery:TokenKeys:<key-id>` and use the same key ring and
+active key ID on API and worker hosts. Keep a previous key configured until all challenges and
+invitations issued with it expire (up to 7 days). Reissuing replaces a challenge and invalidates its
+previous token. The `.env.example` remains suitable for local mock delivery.
+
+The API commits only a token hash and key ID under the client-chosen invitation ID; the invitation
+delivery process (not the invitation stream) derives the seven-day invitation token and keeps its
+attempt result in its own process record. A provider-accepted invitation is not proof of delivery.
+An unknown SES outcome blocks automatic resend for that attempt; a known failure requires an
+administrator to invite again under a new invitation ID after the cause is fixed. At most one
+invitation is pending per mailbox: a second invitation ID for the same address conflicts until the
+first is accepted, expired, or failed. Development and tests default to
+`MockTenantInvitationDelivery` in the worker that sent the invitation. Invitation acceptance and
+email verification are human HTTP flows and have no MCP tools; operator invitation management,
+organization queries, lifecycle, and slug operations use both HTTP and MCP.
 
 ### Weekly work digest delivery
 
-Weekly digests use the same `Compliance:EmailDelivery:Mode=smtp` relay, sender, and optional
-paired SMTP username/password as email verification and tenant invitations. Development defaults
-to an in-process mock transport; explicitly setting `Mode=smtp` also selects SMTP there. In
-non-Development deployments, configure SMTP and the digest link settings on each API and worker
-host; startup validates these settings for both roles.
+Weekly digests use the same Portia SES sender and from address as email verification and tenant
+invitations. Development defaults to an in-process mock transport; setting
+`Compliance:EmailDelivery:Mode=smtp` selects the compatibility SMTP transport. In non-Development
+deployments, configure SES and the digest link settings on each API and worker host; startup
+validates these settings for both roles.
 
 The digest link settings are:
 
