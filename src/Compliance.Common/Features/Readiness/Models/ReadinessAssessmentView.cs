@@ -18,5 +18,11 @@ public sealed record ReadinessAssessmentView(Uuid TenantId, Uuid ProgramId, Uuid
     int RuleMetCount, int GapCount, ActorReference RunBy, DateTimeOffset RunAt,
     ReadinessDecisionView? Decision, TypeIEntryDecisionView? TypeIEntryDecision = null)
 {
+    public ReadinessCompleteness Completeness => new(
+        Inputs.All(static input => input.Status == "assessed"),
+        Inputs.Any(static input => input.Status != "assessed") ? "incomplete" : Gaps.Count > 0 ? "not_ready" : "ready",
+        Inputs.Where(static input => input.Status != "assessed")
+            .Select(static input => new ReadinessIncompleteInput(input.Family, input.Status, input.Explanation)).ToArray());
+
     public IReadOnlyList<ReadinessAccessReviewScopeView> AccessReviewScopes { get; init; } = [];
 }

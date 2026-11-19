@@ -758,7 +758,7 @@ public static class ReadinessRules
     }
 
     /// <summary>The boundary version approved by the as-of time with the latest effective date on or before it.</summary>
-    static BoundaryVersionView? BoundaryVersionAt(ReadinessBoundaryInput boundary,
+    internal static BoundaryVersionView? BoundaryVersionAt(ReadinessBoundaryInput boundary,
         DateTimeOffset asOf, DateOnly asOfDate)
     {
         var approvedBy = boundary.Decisions
