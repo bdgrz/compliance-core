@@ -79,6 +79,12 @@ route across multiple commands merely to encode transition-specific names.
 - The aggregate creates under the supplied ID, accepts an identical repeat,
   and rejects a different body at that ID with a conflict. It does not police
   how the caller derived the ID.
+- Request tracking should reuse the caller-minted resource or relationship ID
+  when one exists. Do not require a separate `command_id` in the URL solely to
+  make a write retryable. If internal processing needs a distinct operation
+  ID, keep it separate from public resource identity and expose it as a route
+  identity only when the operation is itself an independently addressable
+  resource.
 - Names and codes are labels that may change and need not be unique. If a
   business rule requires uniqueness, enforce it through an explicit
   authoritative record. Facts that protect behavior, such as `is_built_in`,
