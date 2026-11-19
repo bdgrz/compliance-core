@@ -31,3 +31,4 @@ The target domain model, including aggregate boundaries, commands, events, and r
 - [Snapshot manifest regeneration](decisions/0008-snapshot-manifest-regeneration.md)
 - [Tenant identity federation and context](decisions/0009-tenant-identity-federation-and-context.md)
 - [Verified-email identity recovery](decisions/0010-verified-email-identity-recovery.md)
+- [Resource-oriented HTTP over a command/query core](decisions/0011-resource-oriented-http-over-command-query.md)
