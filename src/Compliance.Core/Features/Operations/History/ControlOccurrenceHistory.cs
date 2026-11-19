@@ -53,6 +53,7 @@ public static class ControlOccurrenceHistory
             {
                 ControlOccurrenceOpened fact => fact.TenantId == owner.TenantId && fact.ProgramId == owner.ProgramId && fact.ControlId == owner.ControlId && fact.Revision == index + 1 && fact.OccurrenceId == owner.Id,
                 ControlOccurrenceAttested fact => fact.TenantId == owner.TenantId && fact.ProgramId == owner.ProgramId && fact.ControlId == owner.ControlId && fact.Revision == index + 1 && fact.OccurrenceId == owner.Id,
+                ControlOccurrenceCancelled fact => fact.TenantId == owner.TenantId && fact.ProgramId == owner.ProgramId && fact.ControlId == owner.ControlId && fact.Revision == index + 1 && fact.OccurrenceId == owner.Id,
                 ControlOccurrenceReviewed fact => fact.TenantId == owner.TenantId && fact.ProgramId == owner.ProgramId && fact.ControlId == owner.ControlId && fact.Revision == index + 1 && fact.OccurrenceId == owner.Id,
                 _ => false,
             };

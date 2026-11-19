@@ -75,6 +75,8 @@ public sealed class ControlOccurrence : Aggregate
     ControlOccurrenceOpened? _opened;
     long _revision;
     int _attestations;
+    string? _reviewOutcome;
+    bool _cancelled;
 
     /// <summary>Opens the occurrence with a known id, selecting the logical operation to resolve.</summary>
     public ControlOccurrence(Uuid tenantId, Uuid programId, Uuid controlId, Uuid occurrenceId,
@@ -86,6 +88,7 @@ public sealed class ControlOccurrence : Aggregate
         On<ControlOccurrenceOpened>(Apply);
         On<ControlOccurrenceAttested>(Apply);
         On<ControlOccurrenceReviewed>(Apply);
+        On<ControlOccurrenceCancelled>(Apply);
     }
 
     /// <summary>Opens the occurrence of a business window.</summary>
@@ -170,6 +173,8 @@ public sealed class ControlOccurrence : Aggregate
     /// <summary>Checks the attestation guards without raising anything; an unmaterialized occurrence is at revision zero.</summary>
     public Result PrepareProof(long expectedRevision, bool mayMaterialize)
     {
+        if (_cancelled)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The occurrence is cancelled."));
         if (_opened is null && !mayMaterialize)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The control occurrence was not found."));
         return expectedRevision == _revision ? Result.Success : Stale();
@@ -190,6 +195,9 @@ public sealed class ControlOccurrence : Aggregate
         var prepared = PrepareProof((long)expected, materialize is not null);
         if (!prepared.IsSuccess)
             return prepared;
+        if (_attestations > 0 && (_latest is not ControlOccurrenceReviewed || _reviewOutcome != "returned"))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only a returned attestation can be corrected."));
         if (_opened is null)
             RaiseOpened(materialize!.Operation, materialize.Terms, materialize.CreationIntent, null, null);
         RaiseEvent(new ControlOccurrenceAttested(_tenantId, _programId, _controlId, Id, _revision + 1, attestation,
@@ -199,7 +207,7 @@ public sealed class ControlOccurrence : Aggregate
 
     /// <summary>Records a review decision as the root native fact of its operation.</summary>
     public Result Review(OperationProvenance operation, ImmutableContentRef review, ImmutableContentRef firstResponse,
-        ImmutableContentRef operationResult)
+        ImmutableContentRef operationResult, string outcome = "approved")
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(review);
@@ -209,11 +217,33 @@ public sealed class ControlOccurrence : Aggregate
         var prepared = PrepareProof((long)expected, false);
         if (!prepared.IsSuccess)
             return prepared;
-        if (_attestations == 0)
+        if (_latest is not ControlOccurrenceAttested)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "A review needs an attestation of this occurrence to review."));
+                "A review needs an attestation awaiting its first review."));
+        if (outcome is not ("accepted" or "approved" or "returned" or "action_requested" or "deferred"))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The review outcome is invalid."));
         RaiseEvent(new ControlOccurrenceReviewed(_tenantId, _programId, _controlId, Id, _revision + 1, review,
-            operation, firstResponse, operationResult));
+            operation, firstResponse, operationResult, outcome));
+        return Result.Success;
+    }
+
+    /// <summary>Cancels only open or returned work; submitted and reviewed proof remains final.</summary>
+    public Result Cancel(OperationProvenance operation, string reason, ImmutableContentRef? firstResponse,
+        ImmutableContentRef? operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected ||
+            string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 4000)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A cancellation requires its own operation, expected revision, and bounded reason."));
+        var prepared = PrepareProof((long)expected, false);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (_latest is not ControlOccurrenceOpened &&
+            (_latest is not ControlOccurrenceReviewed || _reviewOutcome != "returned"))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "Only an open occurrence may be cancelled."));
+        RaiseEvent(new ControlOccurrenceCancelled(_tenantId, _programId, _controlId, Id, _revision + 1,
+            reason.Trim(), operation, firstResponse, operationResult));
         return Result.Success;
     }
 
@@ -241,10 +271,12 @@ public sealed class ControlOccurrence : Aggregate
     void Apply(ControlOccurrenceAttested ev)
     {
         Acceptance.Observe(ev);
-        if (_opened is null || ev.TenantId != _tenantId || ev.ProgramId != _programId ||
+        if (_opened is null || _cancelled || _attestations > 0 &&
+            (_latest is not ControlOccurrenceReviewed || _reviewOutcome != "returned") ||
+            ev.TenantId != _tenantId || ev.ProgramId != _programId ||
             ev.ControlId != _controlId || ev.OccurrenceId != Id || ev.Revision != _revision + 1 ||
             ev.Operation.Owner != Stream)
-            throw new InvalidOperationException("An attestation follows the materialization at the next revision.");
+            throw new InvalidOperationException("An attestation follows opening or a returned attestation at the next revision.");
         _attestations++;
         _revision = ev.Revision;
         _latest = ev;
@@ -253,10 +285,27 @@ public sealed class ControlOccurrence : Aggregate
     void Apply(ControlOccurrenceReviewed ev)
     {
         Acceptance.Observe(ev);
-        if (_opened is null || _attestations == 0 || ev.TenantId != _tenantId || ev.ProgramId != _programId ||
+        if (_opened is null || _cancelled || _latest is not ControlOccurrenceAttested ||
+            ev.Outcome is not ("accepted" or "approved" or "returned" or "action_requested" or "deferred") ||
+            ev.TenantId != _tenantId || ev.ProgramId != _programId ||
             ev.ControlId != _controlId || ev.OccurrenceId != Id || ev.Revision != _revision + 1 ||
             ev.Operation.Owner != Stream)
             throw new InvalidOperationException("A review follows an attestation at the next revision.");
+        _reviewOutcome = ev.Outcome;
+        _revision = ev.Revision;
+        _latest = ev;
+    }
+
+    void Apply(ControlOccurrenceCancelled ev)
+    {
+        if (_opened is null || _cancelled ||
+            _latest is not ControlOccurrenceOpened && (_latest is not ControlOccurrenceReviewed || _reviewOutcome != "returned") ||
+            ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.ControlId != _controlId ||
+            ev.OccurrenceId != Id || ev.Revision != _revision + 1 || ev.Operation.Owner != Stream ||
+            string.IsNullOrWhiteSpace(ev.Reason) || ev.Reason.Length > 4000)
+            throw new InvalidOperationException("Only an open occurrence may be cancelled at its next revision.");
+        Acceptance.Observe(ev);
+        _cancelled = true;
         _revision = ev.Revision;
         _latest = ev;
     }

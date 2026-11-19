@@ -243,8 +243,8 @@ public static class ControlOperationRules
             findingDecision == "none" && !IsBoundedText(findingRationale) ||
             findingRationale is { Length: > MaximumTextLength })
             return CommandFailure.InvalidContent("A finding decision is raise or none; none requires a bounded reason.");
-        if (attestation.Result is ControlOperationStates.Failed or ControlOperationStates.Skipped or "not_performed" &&
-            outcome is ControlOperationStates.Approved or "accepted" or ControlOperationStates.ActionRequested &&
+        if ((attestation.Result is ControlOperationStates.Failed or ControlOperationStates.Skipped or "not_performed") &&
+            (outcome is ControlOperationStates.Approved or "accepted" or ControlOperationStates.ActionRequested) &&
             findingDecision is null)
             return CommandFailure.InvalidContent("Accepting a failed or not-performed attestation requires an explicit finding decision.");
         return null;
