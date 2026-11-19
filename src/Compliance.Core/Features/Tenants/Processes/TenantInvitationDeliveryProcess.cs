@@ -62,7 +62,7 @@ public static class TenantInvitationDeliveryProcess
     public static ProcessDefinition Definition { get; } = new(Name, [nameof(TenantMemberInvited)], true,
         [
             new ProcessStageDefinition("send", [TenantInvitationDeliveryReceivers.SendTenantInvitation],
-                "One immutable payload and one attempt identity; a resumed unknown result sends the same attempt."),
+                "One immutable payload and one attempt identity; a resumed open attempt becomes unknown without resending."),
             new ProcessStageDefinition("record",
             [
                 TenantInvitationDeliveryReceivers.RecordTenantInvitationDeliverySent,

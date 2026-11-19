@@ -53,10 +53,10 @@ namespace Bdgrz.Compliance.Features.Tenants.Handlers;
 
 /// <summary>
 ///     Performs the external send of the delivery process for one frozen payload. The attempt is begun and stored
-///     before the send with a stable identity, and the provider result is stored on that attempt afterwards. A crash
-///     between the send and the stored result resumes with the same attempt, so the message keeps its identity and
-///     the accepted at-least-once policy applies; it never starts a second attempt. A definite rejection is stored as
-///     a failure and is not retried automatically.
+///     before the send with a stable identity, and the provider result is stored on that attempt afterwards. A replay
+///     that finds an open attempt records an unknown outcome instead of resending, because the provider may have
+///     accepted the message and does not deduplicate sends. A definite rejection is stored as a failure and is not
+///     retried automatically.
 /// </summary>
 public sealed class SendTenantInvitationHandler(TenantInvitationDeliverySupport support, IImmutableContentStore content,
     IAggregateReader reader, ITenantInvitationDelivery delivery, EmailChallengeTokenKeys tokenKeys, TimeProvider clock)
@@ -67,6 +67,9 @@ public sealed class SendTenantInvitationHandler(TenantInvitationDeliverySupport 
 
     /// <summary>Failure code stored when the provider rejected or could not take the message.</summary>
     public const string DeliveryFailed = "delivery_failed";
+
+    /// <summary>Failure code stored when a prior worker stopped before recording the provider outcome.</summary>
+    public const string OutcomeNotRecorded = "outcome_not_recorded";
 
     public async ValueTask<Result<ReceiverOutcome>> HandleAsync(IRequestContext<SendTenantInvitation> context,
         CancellationToken ct)
@@ -86,8 +89,16 @@ public sealed class SendTenantInvitationHandler(TenantInvitationDeliverySupport 
             .ConfigureAwait(false);
         if (record.IsTerminal)
             return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Replayed(reference));
-        if (record.Attempt(attemptId) is { Result: not TenantInvitationDeliveryAttempt.InFlight })
+        if (record.Attempt(attemptId) is { } priorAttempt)
+        {
+            if (priorAttempt.Result == TenantInvitationDeliveryAttempt.InFlight)
+                await support.UpdateAsync(request.TenantId, request.InvitationId,
+                    current => current.Attempt(attemptId) is { Result: TenantInvitationDeliveryAttempt.InFlight }
+                        ? current.WithResult(attemptId, TenantInvitationDeliveryAttempt.Unknown, OutcomeNotRecorded,
+                            clock.GetUtcNow())
+                        : current, ct).ConfigureAwait(false);
             return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Applied(reference));
+        }
 
         var moot = await MootReasonAsync(request, invited, ct).ConfigureAwait(false);
         if (moot is not null)

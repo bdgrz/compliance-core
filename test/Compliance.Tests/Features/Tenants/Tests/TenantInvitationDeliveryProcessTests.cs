@@ -212,7 +212,7 @@ public sealed class TenantInvitationDeliveryProcessTests
     }
 
     [Fact]
-    public async Task ShouldResendSameAttemptAndTokenGivenCrashAfterSendBeforeResultIsStored()
+    public async Task ShouldRecordUnknownWithoutResendGivenCrashAfterSendBeforeResultIsStored()
     {
         // Arrange
         CrashingDeliveryStore? crashing = null;
@@ -234,13 +234,12 @@ public sealed class TenantInvitationDeliveryProcessTests
         Assert.NotNull(crash);
         Assert.Equal(TenantInvitationDeliveryAttempt.InFlight, Assert.Single(pending!.Attempts).Result);
         Assert.Equal(ProcessState.Completed, resumed.State);
-        Assert.Equal(2, host.Mailbox.Sends.Count);
-        Assert.All(host.Mailbox.Sends, send =>
-        {
-            Assert.Equal(TenantInvitationDeliveryRecord.AttemptIdFor(invitationId), send.AttemptId);
-            Assert.Equal(token, send.Token);
-        });
-        Assert.Equal(TenantInvitationDeliveryRecord.Delivered, delivered!.Status);
+        var send = Assert.Single(host.Mailbox.Sends);
+        Assert.Equal(TenantInvitationDeliveryRecord.AttemptIdFor(invitationId), send.AttemptId);
+        Assert.Equal(token, send.Token);
+        Assert.Equal(TenantInvitationDeliveryRecord.Unknown, delivered!.Status);
+        Assert.Equal(TenantInvitationDeliveryAttempt.Unknown, Assert.Single(delivered.Attempts).Result);
+        Assert.Equal(SendTenantInvitationHandler.OutcomeNotRecorded, delivered.Attempts[0].FailureCode);
         Assert.Single(delivered.Attempts);
     }
 
