@@ -5,9 +5,9 @@ policies approved, provider guarantees unqualified**, 2026-11-05. The user subse
 approved replacement first and at most two confirmed or pending primaries. The current
 [protocol and alternatives](platform-operator-primary-protocol.md) distinguish
 that decision from the conditional two-seat candidate reviewed here. This review
-does not assert that a provider supplies the required guarantees. The current implementation still uses a global
-[PlatformOperatorRoster](../../../src/Compliance.Core/Features/Tenants/Aggregates/PlatformOperatorRoster.cs)
-and [bootstrap service](../../../src/Compliance.Core/Features/Tenants/Services/PlatformOperatorRosterBootstrap.cs).
+does not assert that a provider supplies the required guarantees. The current
+implementation uses the [PrimaryPlatformOperators aggregate](../../../src/Compliance.Core/Features/AccessControl/Aggregates/PrimaryPlatformOperators.cs)
+and [bootstrap service](../../../src/Compliance.Core/Features/Tenants/Services/PlatformOperatorBootstrap.cs).
 
 ## Conditional safety argument
 

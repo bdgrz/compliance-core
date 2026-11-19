@@ -576,7 +576,7 @@ the coordinating primary protocol must preserve the approved rule.
 
 **Identity:** the platform.
 
-**Required invariant:** at least one confirmed, designated primary remains
+**Invariant:** at least one confirmed, designated primary remains
 after bootstrap. The primary owner must not hold a roster of ordinary operators.
 The proposed mark and seat protocol is not provider-qualified.
 
