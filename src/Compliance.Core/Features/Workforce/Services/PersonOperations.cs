@@ -52,6 +52,7 @@ using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Commands;
 using Bdgrz.Compliance.Features.Workforce.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 namespace Bdgrz.Compliance.Features.Workforce.Services;
 
 /// <summary>All three identified producers share native acceptance before fresh values, canonical correlation or candidate publication.</summary>
@@ -66,7 +67,7 @@ public sealed class PersonOperations(NativeOperationExecutor operations, PersonR
             {
                 var result = rules.Record(request.DisplayName, request.WorkEmail, request.PersonalContact, operation.Actor, operation.AcceptedAt);
                 return ValueTask.FromResult(result.IsSuccess ? Result.Success : Result.Failure(result.Error!));
-            }, ct).ConfigureAwait(false);
+            }, ct: ct).ConfigureAwait(false);
         return await NativeContent.ResponseAsync<PersonRegistration>(content, request.TenantId, accepted, ct).ConfigureAwait(false);
     }
     public async ValueTask<Result<UnitResult>> ChangeDetailsAsync(IRequestContext<ChangePersonDetails> context, CancellationToken ct)
@@ -75,7 +76,7 @@ public sealed class PersonOperations(NativeOperationExecutor operations, PersonR
         var accepted = await ExecuteAsync(context, request.CommandId, request.PersonId, request.ExpectedRevision,
             nameof(ChangePersonDetails), (rules, operation, _) => ValueTask.FromResult(ToResult(rules.ChangeDetails(
                 request.ExpectedRevision, request.DisplayName, request.WorkEmail, request.PersonalContact,
-                operation.Actor, operation.AcceptedAt))), ct).ConfigureAwait(false);
+                operation.Actor, operation.AcceptedAt))), ct: ct).ConfigureAwait(false);
         return await NativeContent.ResponseAsync<UnitResult>(content, request.TenantId, accepted, ct).ConfigureAwait(false);
     }
     public async ValueTask<Result<UnitResult>> CorrelateAsync(IRequestContext<CorrelatePersonMembership> context, CancellationToken ct)
@@ -95,20 +96,47 @@ public sealed class PersonOperations(NativeOperationExecutor operations, PersonR
                         return Result.Failure(new RequestError(RequestErrorKind.Validation, "Firm staff are not tenant workforce and cannot be correlated to the roster."));
                 }
                 return ToResult(rules.CorrelateMembership(request.ExpectedRevision, request.UserId, operation.Actor, operation.AcceptedAt));
-            }, ct).ConfigureAwait(false);
+            }, ct: ct).ConfigureAwait(false);
         return await NativeContent.ResponseAsync<UnitResult>(content, request.TenantId, accepted, ct).ConfigureAwait(false);
     }
+    public ValueTask<Result<UnitResult>> LinkMemberAsync(IRequestContext<LinkPersonToMember> context,
+        VerifiedSourceProof<MemberPersonLinkAdmitted> admission, CancellationToken ct) =>
+        ApplyMemberLinkAsync(context, admission, ct);
+
+    public async ValueTask<Result<UnitResult>> ApplyMemberLinkAsync<T>(IRequestContext<T> context,
+        VerifiedSourceProof<MemberPersonLinkAdmitted> admission, CancellationToken ct) where T : IRequestBase, IWorkforceRequest
+    {
+        var fact = admission.Facts;
+        var link = new PersonMemberLink(fact.UserId, fact.MemberId, fact.LinkId, fact.Generation, admission.EventId);
+        var stream = new Person(fact.TenantId, fact.PersonId).Stream;
+        var operation = fact.Operation with { Owner = stream, FirstOwner = stream, AffectedOwner = stream, ExpectedRevisionOwner = stream };
+        var accepted = await ExecuteAsync(context, fact.LinkId, fact.PersonId, null,
+            nameof(LinkPersonToMember), (rules, provenance, _) => ValueTask.FromResult(ToResult(rules.LinkMember(link,
+                provenance.Actor, provenance.AcceptedAt))), link, admission, operation, ct).ConfigureAwait(false);
+        return await NativeContent.ResponseAsync<UnitResult>(content, fact.TenantId, accepted, ct).ConfigureAwait(false);
+    }
+
+    public async ValueTask<Result<UnitResult>> UnlinkMemberAsync(IRequestContext<UnlinkPersonFromMember> context,
+        PersonMemberLink link, CancellationToken ct)
+    {
+        var accepted = await ExecuteAsync(context, context.Request.CommandId, context.Request.PersonId, null,
+            nameof(UnlinkPersonFromMember), (rules, operation, _) => ValueTask.FromResult(ToResult(rules.UnlinkMember(link,
+                operation.Actor, operation.AcceptedAt))), memberLink: link, ct: ct).ConfigureAwait(false);
+        return await NativeContent.ResponseAsync<UnitResult>(content, context.Request.TenantId, accepted, ct).ConfigureAwait(false);
+    }
+
     async ValueTask<Result<AcceptedAppendResult>> ExecuteAsync<T>(IRequestContext<T> context, Uuid logical, Uuid personId,
         long? expectedRevision, string command, Func<PersonRules, OperationProvenance, CancellationToken, ValueTask<Result>> mutate,
-        CancellationToken ct) where T : IRequestBase, IWorkforceRequest
+        PersonMemberLink? memberLink = null, VerifiedSourceProof<MemberPersonLinkAdmitted>? admission = null,
+        OperationProvenance? admittedOperation = null, CancellationToken ct = default) where T : IRequestBase, IWorkforceRequest
     {
         var request = context.Request;
         if (request.TenantId == Uuid.Empty || personId == Uuid.Empty || logical == Uuid.Empty || expectedRevision is < 0)
             return Result<AcceptedAppendResult>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A person mutation requires tenant, person, logical identity and a nonnegative expected revision."));
-        var actor = WorkforceActor.From(context);
+        var actor = admittedOperation?.Actor ?? WorkforceActor.From(context);
         var stream = new Person(request.TenantId, personId).Stream;
-        var operation = RootOperation.Provenance(logical, command, stream, actor, expectedRevision,
+        var operation = admittedOperation ?? RootOperation.Provenance(logical, command, stream, actor, expectedRevision,
             AuthoredIntentDigest.Compute(request), clock.GetUtcNow()) with
         { FirstOwner = stream };
         var binding = AcceptedOperationBinding.Of(operation);
@@ -125,9 +153,9 @@ public sealed class PersonOperations(NativeOperationExecutor operations, PersonR
                 var changed = await mutate(rules, operation, token).ConfigureAwait(false);
                 if (!changed.IsSuccess)
                     return Result<FirstResponseDescriptor>.Failure(changed.Error!);
-                prepared = await PersonContent.FreezeAsync(content, snapshot, rules, operation, token).ConfigureAwait(false);
+                prepared = await PersonContent.FreezeAsync(content, snapshot, rules, operation, memberLink, token).ConfigureAwait(false);
                 return Result<FirstResponseDescriptor>.Success(prepared.Response);
-            }, (Person owner, ImmutableContentRef frozen) => owner.Append(prepared!, operation, frozen)), context, ct).ConfigureAwait(false);
+            }, (Person owner, ImmutableContentRef frozen) => owner.Append(prepared!, operation, frozen, admission)), context, ct).ConfigureAwait(false);
     }
     static Result ToResult(CommandFailure? failure) => failure is null ? Result.Success : Result.Failure(failure.ToRequestError());
 }

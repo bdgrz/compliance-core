@@ -9,8 +9,9 @@ using Bdgrz.Compliance.Features.Workforce.Commands;
 namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 /// <summary>Correlates an exact canonical tenant member without granting any access.</summary>
-public sealed class CorrelatePersonMembershipHandler(PersonOperations operations) : IRequestHandler<CorrelatePersonMembership, UnitResult>
+public sealed class CorrelatePersonMembershipHandler : IRequestHandler<CorrelatePersonMembership, UnitResult>
 {
     public ValueTask<Result<UnitResult>> HandleAsync(IRequestContext<CorrelatePersonMembership> context, CancellationToken ct) =>
-        operations.CorrelateAsync(context, ct);
+        ValueTask.FromResult(Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Validation,
+            "Use LinkPersonToMember or UnlinkPersonFromMember; singular correlation is retired.")));
 }

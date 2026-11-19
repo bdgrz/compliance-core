@@ -153,6 +153,60 @@ public sealed class Member : Aggregate
                 throw new MemberHistoryIntegrityException("Primary mark removal must close the exact marked membership episode.");
             _primaryDesignationId = Uuid.Empty;
         });
+        On<MemberPersonLinkAdmitted>(fact =>
+        {
+            RequireMemberIdentity(fact.TenantId, fact.MemberId, fact.UserId);
+            RequireOwnOperation(fact.Operation);
+            if (fact.PersonId == Uuid.Empty || fact.LinkId != fact.Operation.LogicalId ||
+                fact.Generation != _personLinkGeneration + 1 || _linkedPersonId is not null || _pendingPersonId is not null)
+                throw new MemberHistoryIntegrityException("A member person admission must advance one unbound generation.");
+            _pendingPersonId = fact.PersonId;
+            _personLinkGeneration = fact.Generation;
+            _personLinkAdmission = fact;
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkRefused>(fact =>
+        {
+            RequireMemberIdentity(fact.TenantId, fact.MemberId, fact.UserId);
+            RequireOwnOperation(fact.Operation);
+            if (fact.PersonId == Uuid.Empty || fact.LinkId != fact.Operation.LogicalId || fact.Generation != _personLinkGeneration ||
+                string.IsNullOrWhiteSpace(fact.Reason))
+                throw new MemberHistoryIntegrityException("A refused person admission cannot alter the member binding.");
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkConfirmed>(fact =>
+        {
+            RequirePersonConclusion(fact.TenantId, fact.MemberId, fact.UserId, fact.PersonId, fact.Link);
+            RequireOwnOperation(fact.Operation);
+            if (_pendingPersonId != fact.PersonId || _linkedPersonId is not null)
+                throw new MemberHistoryIntegrityException("A person link confirmation needs the exact pending admission.");
+            _pendingPersonId = null;
+            _linkedPersonId = fact.PersonId;
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkAdmissionCancelled>(fact =>
+        {
+            RequirePersonConclusion(fact.TenantId, fact.MemberId, fact.UserId, fact.PersonId, fact.Link);
+            RequireOwnOperation(fact.Operation);
+            if (_pendingPersonId != fact.PersonId || _linkedPersonId is not null || fact.Generation != _personLinkGeneration + 1)
+                throw new MemberHistoryIntegrityException("A cancelled admission must release its exact pending generation.");
+            _pendingPersonId = null;
+            _personLinkGeneration = fact.Generation;
+            _personLinkAdmission = null;
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkReleased>(fact =>
+        {
+            RequirePersonConclusion(fact.TenantId, fact.MemberId, fact.UserId, fact.PersonId, fact.Link);
+            RequireOwnOperation(fact.Operation);
+            if ((_pendingPersonId ?? _linkedPersonId) != fact.PersonId || fact.Generation != _personLinkGeneration + 1)
+                throw new MemberHistoryIntegrityException("A released link must release its exact admitted generation.");
+            _pendingPersonId = null;
+            _linkedPersonId = null;
+            _personLinkGeneration = fact.Generation;
+            _personLinkAdmission = null;
+            Acceptance.Observe(fact);
+        });
         On<MemberRegistered>(registered =>
         {
             if (_isRegistered || _isDeprovisioned && !_isDeprovisionCleanupComplete)

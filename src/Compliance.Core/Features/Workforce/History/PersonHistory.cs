@@ -123,10 +123,12 @@ public static class PersonHistory
             PersonDetailsRevised => nameof(RevisePerson),
             PersonDetailsChanged => nameof(ChangePersonDetails),
             PersonMembershipCorrelationRecorded => nameof(CorrelatePersonMembership),
+            PersonLinkedToMember => nameof(LinkPersonToMember),
+            PersonUnlinkedFromMember => nameof(UnlinkPersonFromMember),
             _ => throw Invalid("Another native person transition kind."),
         };
         if (native.Operation.Owner != stream || !NativeOwnerHistory.IsOwnRoot(new Person(tenant, person), native.Operation, command,
-                command == nameof(RecordPerson) ? null : (ulong?)before?.Revision) ||
+                command is nameof(RecordPerson) or nameof(LinkPersonToMember) or nameof(UnlinkPersonFromMember) ? null : (ulong?)before?.Revision) ||
             command == nameof(RecordPerson) && (before is not null || native.Operation.LogicalId != person || !native.Changed || header.Revision != 1 || header.CorrelatedUserId is not null) ||
             command != nameof(RecordPerson) && (before is null || header.Revision != before.Revision + (native.Changed ? 1 : 0)) ||
             (command == nameof(RevisePerson) || command == nameof(ChangePersonDetails)) &&
@@ -136,11 +138,18 @@ public static class PersonHistory
                 header.ValuesSha256 == before!.ValuesSha256) ||
             command == nameof(CorrelatePersonMembership) && header.ValuesSha256 != before!.ValuesSha256 ||
             command == nameof(CorrelatePersonMembership) && native.Changed == (header.CorrelatedUserId == before!.CorrelatedUserId) ||
+            command is nameof(LinkPersonToMember) or nameof(UnlinkPersonFromMember) &&
+                (!native.Changed || header.ValuesSha256 != before!.ValuesSha256 || header.CorrelatedUserId != before.CorrelatedUserId) ||
+            fact is PersonLinkedToMember added && (!ValidLink(tenant, added.Link) || added.Link.LinkId != added.Operation.LogicalId) ||
+            fact is PersonUnlinkedFromMember removed && !ValidLink(tenant, removed.Link) ||
             native.Changed && (header.LastChangedBy != native.Operation.Actor || header.LastChangedAt != native.Operation.AcceptedAt) ||
             !native.Changed && header != before)
             throw Invalid("The native person fact differs from its exact original root, revision or correlation transition.");
         return header;
     }
+    static bool ValidLink(Uuid tenant, PersonMemberLink? link) => link is not null && link.UserId != Uuid.Empty &&
+        link.MemberId == RbacIds.Member(tenant, link.UserId) && link.LinkId != Uuid.Empty && link.Generation > 0 && link.AdmissionEventId != Uuid.Empty;
+
     static bool ValidActor(ActorReference? actor) => actor is not null && !string.IsNullOrWhiteSpace(actor.Display) &&
         (actor.Kind == "system_process" ? !string.IsNullOrWhiteSpace(actor.Id) :
             actor.Kind is "member" or "platform_operator" or "firm_staff" &&
