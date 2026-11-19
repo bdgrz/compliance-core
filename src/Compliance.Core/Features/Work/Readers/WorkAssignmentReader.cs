@@ -37,6 +37,7 @@ using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Work.Contracts;
 using Bdgrz.Compliance.Features.Work.History;
 using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Services;
 using Bdgrz.Compliance.Features.Work.Projections;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
@@ -78,6 +79,14 @@ public sealed class WorkAssignmentReader(IAggregateReader reader, IDomainEventRe
                     throw Invalid("The immutable legacy history differs from its compact imported current authority.");
                 history.AddRange(frozen.State.History);
                 (assignee, escalated) = (frozen.State.AssigneeMemberId, frozen.State.Escalated);
+                continue;
+            }
+            if (fact is WorkItemAutomaticallyEscalated system)
+            {
+                history.Add(new WorkAssignmentEntryView(system.Revision, WorkItemAssignment.Escalate,
+                    null, null, "The source work is seven days overdue.",
+                    ActorReference.ForSystemProcess(WorkEscalationSweep.ProcessId, "Overdue work scheduler"), system.EscalatedAt));
+                escalated = true;
                 continue;
             }
             var native = (IWorkAssignmentFact)fact;

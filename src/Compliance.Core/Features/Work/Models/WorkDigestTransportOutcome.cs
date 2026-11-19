@@ -12,7 +12,7 @@ sealed record WorkDigestTransportOutcome(WorkDigestTransportOutcomeKind Kind,
     string? FailureCode = null);
 
 sealed record WorkDigestDeliveryMessage(Cntryl.Portia.Uuid MessageId,
-    string Recipient, string Subject, string TextBody);
+    string Recipient, string Subject, string TextBody, IReadOnlyList<Cntryl.Portia.Uuid>? ItemKeys = null);
 
 interface IWorkDigestDelivery
 {

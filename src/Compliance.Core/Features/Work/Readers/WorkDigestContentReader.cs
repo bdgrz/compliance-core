@@ -71,7 +71,7 @@ interface IWorkDigestContentReader
 sealed class WorkDigestContentReader(ITenantDirectoryReader tenants, ITenantActivity tenantActivity,
     ITenantMembershipDirectoryReader memberships, IEmailAddressDirectoryReader emails,
     IProgramDirectoryReader programs, IAccessGrantPermissionAuthorizer scopedPermissions,
-    WorkQueueReader queue, IAggregateReader reader, WorkDigestDeliverySettings settings)
+    WorkQueueReader queue, IAggregateReader reader, WorkDigestDeliverySettings settings, TimeProvider? clock = null)
     : IWorkDigestContentReader
 {
     public async ValueTask<WorkDigestContentRead> ReadAsync(Uuid tenantId, Uuid userId,
@@ -91,7 +91,11 @@ sealed class WorkDigestContentReader(ITenantDirectoryReader tenants, ITenantActi
         if (membership is null || membership.TenantId != tenantId || membership.UserId != userId ||
             membership.IsSuspended || membership.IsDeprovisioned)
             return WorkDigestContentRead.Skip("member_inactive");
-        if (membership.Affiliation == "guest")
+        var member = await reader.HydrateAsync(Member.ForVerification(tenantId, memberId), ct).ConfigureAwait(false);
+        var today = DateOnly.FromDateTime((clock ?? TimeProvider.System).GetUtcNow().UtcDateTime);
+        if (!member.IsAccessEligibleOn(today) || member.UserId != userId || member.Affiliation == "firm_staff")
+            return WorkDigestContentRead.Skip("member_inactive");
+        if (membership.Affiliation == "guest" || member.Affiliation == "guest")
             return WorkDigestContentRead.Skip("guest_member");
 
         var preference = await ReadPreferenceAsync(reader, tenantId, memberId, ct)
@@ -159,8 +163,12 @@ sealed class WorkDigestContentReader(ITenantDirectoryReader tenants, ITenantActi
         do
         {
             var page = await emails.ListAsync(userId, 200, cursor, ct).ConfigureAwait(false);
-            verified.AddRange(page.Items.Where(address => address.UserId == userId && address.Verified)
-                .Select(static address => address.EmailAddress));
+            foreach (var address in page.Items.Where(address => address.UserId == userId && address.Verified))
+            {
+                var current = await reader.HydrateAsync(new EmailAddress(address.EmailAddress), ct).ConfigureAwait(false);
+                if (current.Owner == userId && current.IsVerified)
+                    verified.Add(address.EmailAddress);
+            }
             cursor = page.NextCursor;
             if (cursor is not null && !seenCursors.Add(cursor))
                 return null;

@@ -41,6 +41,14 @@ static class FindingWorkScope
                 return (ev.TenantId, ev.ProgramId, ev.FindingId);
             case FindingRevisedV2 ev:
                 return (ev.TenantId, ev.ProgramId, ev.FindingId);
+            case FindingAnalysisRevised ev:
+                return (ev.TenantId, ev.ProgramId, ev.FindingId);
+            case FindingClosureProposed ev:
+                return (ev.TenantId, ev.ProgramId, ev.FindingId);
+            case FindingClosureWithdrawn ev:
+                return (ev.TenantId, ev.ProgramId, ev.FindingId);
+            case FindingClosureReturned ev:
+                return (ev.TenantId, ev.ProgramId, ev.FindingId);
             case FindingAcceptanceLinkedV2 ev:
                 return (ev.TenantId, ev.ProgramId, ev.FindingId);
             case FindingClosedV2 ev:
