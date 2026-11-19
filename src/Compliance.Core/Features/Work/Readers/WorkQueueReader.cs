@@ -1,5 +1,6 @@
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
 using Bdgrz.Compliance.Features.AccessControl.History;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
@@ -161,7 +162,7 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
     {
         try
         {
-            return await ReadCoreAsync(tenantId, programId, actor, horizonDays, workItemId, todayOverride, ct, scheduler).ConfigureAwait(false);
+            return await ReadCoreAsync(tenantId, programId, actor, horizonDays, workItemId, todayOverride, scheduler, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException error)
         {
@@ -172,7 +173,7 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
 
     async ValueTask<Result<WorkQueueSnapshot>> ReadCoreAsync(Uuid tenantId, Uuid programId,
         OperationsActor actor, int horizonDays, Uuid? workItemId,
-        DateOnly? todayOverride, CancellationToken ct, bool scheduler)
+        DateOnly? todayOverride, bool scheduler, CancellationToken ct)
     {
         var captured = await queueConsistency.CaptureAsync(tenantId, ct).ConfigureAwait(false);
         if (!captured.IsSuccess)

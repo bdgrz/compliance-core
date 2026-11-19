@@ -74,7 +74,7 @@ public sealed class RiskMethodNativeTests
         {
             var published = await fixture.Handler.HandleAsync(fixture.Context(fixture.Request(version, 12)), CancellationToken.None);
             Assert.True(published.IsSuccess, published.Error?.Message);
-            original ??= published.Value;
+            original ??= published.Value!.Value;
             fixture.Clock.Now = fixture.Clock.Now.AddMinutes(1);
         }
         var reader = new RiskMethodReader(fixture.Reader, fixture.Events, fixture.Content);
@@ -88,7 +88,7 @@ public sealed class RiskMethodNativeTests
         Assert.Equal(128, owner.PublishedVersion);
         Assert.Equal(128, history.Versions.Count);
         Assert.Equal(original!.MethodVersionId, history.GetVersion(1)!.MethodVersionId);
-        Assert.Equal(original.MethodVersionId, replay.Value!.MethodVersionId);
+        Assert.Equal(original.MethodVersionId, replay.Value!.Value.MethodVersionId);
         Assert.True(DomainEventPayload.Size(owner.Latest!) < 16 * 1024);
         Assert.Equal(history.Facts[^1].Content, owner.Latest!.Content);
         Assert.Equal(history.Versions[^1].MethodVersionId, (await reader.CurrentAsync(fixture.Tenant, fixture.Program))!.MethodVersionId);
@@ -154,7 +154,7 @@ public sealed class RiskMethodNativeTests
 
         // Assert
         Assert.Equal("Rare", read.Current!.LikelihoodScale[0]);
-        Assert.Equal(published.Value!.PublishedAt, replay.Value!.PublishedAt);
+        Assert.Equal(published.Value!.Value.PublishedAt, replay.Value!.Value.PublishedAt);
         Assert.Equal(AuthoredIntentDigest.Compute(request), read.Facts[0].Operation.AuthoredIntentSha256);
         Assert.Equal(read.Facts[0].Operation.Owner, read.Facts[0].Operation.FirstOwner);
     }

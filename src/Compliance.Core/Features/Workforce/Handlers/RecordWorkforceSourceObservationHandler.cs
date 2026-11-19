@@ -22,18 +22,19 @@ using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Commands;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Hosting;
 namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class RecordWorkforceSourceObservationHandler(IAggregateExecutor executor,
     IAggregateReader reader, WorkforceSourceTargets targets, TimeProvider clock, IPermissionAuthorizer permissions)
-    : IRequestHandler<RecordWorkforceSourceObservation, WorkforceSourceRegistration>
+    : IRequestHandler<RecordWorkforceSourceObservation, PortiaCreateOutcome<WorkforceSourceRegistration>>
 {
-    public async ValueTask<Result<WorkforceSourceRegistration>> HandleAsync(
+    public async ValueTask<Result<PortiaCreateOutcome<WorkforceSourceRegistration>>> HandleAsync(
         IRequestContext<RecordWorkforceSourceObservation> context, CancellationToken ct)
     {
         var request = context.Request;
         if (request.Source is null)
-            return Result<WorkforceSourceRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+            return Result<PortiaCreateOutcome<WorkforceSourceRegistration>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A source identity is required."));
         var id = WorkforceSourceObservation.IdFor(request.TenantId, request.Source);
         var existing = await reader.HydrateAsync(new WorkforceSourceObservation(request.TenantId, id), ct)
@@ -42,21 +43,26 @@ public sealed class RecordWorkforceSourceObservationHandler(IAggregateExecutor e
             context.Actor, request.TargetKind == "work_relationship" || request.Facts is { WorkRelationship: not null } ||
                            existing.Observation?.TargetKind == "work_relationship", ct).ConfigureAwait(false);
         if (!access.IsSuccess)
-            return Result<WorkforceSourceRegistration>.Failure(access.Error);
+            return Result<PortiaCreateOutcome<WorkforceSourceRegistration>>.Failure(access.Error);
         if (!existing.IsRecorded)
         {
             var target = await targets.GetAsync(request.TenantId, request.TargetKind, request.TargetId, ct)
                 .ConfigureAwait(false);
             if (!target.IsSuccess)
-                return Result<WorkforceSourceRegistration>.Failure(target.Error);
+                return Result<PortiaCreateOutcome<WorkforceSourceRegistration>>.Failure(target.Error);
             if (request.ExpectedTargetRevision != target.Value.Revision)
-                return Result<WorkforceSourceRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
+                return Result<PortiaCreateOutcome<WorkforceSourceRegistration>>.Failure(new RequestError(RequestErrorKind.Conflict,
                     "The canonical workforce revision changed; preview the current record before observing it."));
         }
-        return await executor.ExecuteAsync(new WorkforceSourceObservation(request.TenantId, id),
-            observation => AggregateOutcome.CommitOnSuccess(observation.Record(request.Source,
-                request.TargetKind, request.TargetId, request.ExpectedTargetRevision, request.Facts,
-                request.ObservedAt, WorkforceActor.From(context), clock.GetUtcNow())), context, ct)
-            .ConfigureAwait(false);
+        var created = false;
+        var result = await executor.ExecuteAsync(new WorkforceSourceObservation(request.TenantId, id),
+            observation =>
+            {
+                created = !observation.IsRecorded;
+                return AggregateOutcome.CommitOnSuccess(observation.Record(request.Source,
+                    request.TargetKind, request.TargetId, request.ExpectedTargetRevision, request.Facts,
+                    request.ObservedAt, WorkforceActor.From(context), clock.GetUtcNow()));
+            }, context, ct).ConfigureAwait(false);
+        return PortiaCreateOutcomes.From(result, created);
     }
 }

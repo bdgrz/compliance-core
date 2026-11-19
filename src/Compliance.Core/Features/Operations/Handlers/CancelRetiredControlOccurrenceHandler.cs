@@ -9,6 +9,7 @@ using Bdgrz.Compliance.Features.Operations.Events;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Contracts;
 using Bdgrz.Compliance.Features.SourceFacts.Services;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations.Handlers;
@@ -53,16 +54,17 @@ public sealed class CancelRetiredControlOccurrenceHandler(IAggregateExecutor exe
             switch (current.Acceptance.Decide(binding))
             {
                 case NativeAcceptanceDecision.Conflict:
-                    return Result.Failure(AcceptedAppendResult.ConflictError);
+                    return AggregateOutcome.Discard(Result.Failure(AcceptedAppendResult.ConflictError));
                 case NativeAcceptanceDecision.Replayed:
-                    return Result.Success;
+                    return AggregateOutcome.Discard(Result.Success);
             }
             if (current.Opened is not { BusinessWindow: ControlCalendarWindow window } ||
                 window.From < retirement.EffectiveUntil ||
                 current.Latest is not ControlOccurrenceOpened &&
                 current.Latest is not ControlOccurrenceReviewed { Outcome: "returned" })
-                return Result.Success;
-            return current.Cancel(provenance, retirement.Rationale, null, null);
+                return AggregateOutcome.Discard(Result.Success);
+            var canceled = current.Cancel(provenance, retirement.Rationale, null, null);
+            return canceled.IsSuccess ? AggregateOutcome.Commit(canceled) : AggregateOutcome.Discard(canceled);
         }, context, ct).ConfigureAwait(false);
     }
 }

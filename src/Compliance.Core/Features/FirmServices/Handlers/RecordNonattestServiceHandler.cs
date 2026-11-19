@@ -3,13 +3,14 @@ using Bdgrz.Compliance.Features.FirmServices.Aggregates;
 using Bdgrz.Compliance.Features.FirmServices.Commands;
 using Bdgrz.Compliance.Features.FirmServices.Models;
 using Bdgrz.Compliance.Features.FirmServices.Services;
+using RecordNonattestServiceRequest = Bdgrz.Compliance.Features.FirmServices.Commands.RecordNonattestService;
 namespace Bdgrz.Compliance.Features.FirmServices.Handlers;
 
 /// <summary>Invokes one service owner after current partner authority, including accepted retries.</summary>
 sealed class RecordNonattestServiceHandler(IAggregateExecutor executor, FirmServicesAuthority authority, TimeProvider clock)
-    : IRequestHandler<RecordNonattestService, NonattestServiceRecordView>
+    : IRequestHandler<RecordNonattestServiceRequest, NonattestServiceRecordView>
 {
-    public async ValueTask<Result<NonattestServiceRecordView>> HandleAsync(IRequestContext<RecordNonattestService> context,
+    public async ValueTask<Result<NonattestServiceRecordView>> HandleAsync(IRequestContext<RecordNonattestServiceRequest> context,
         CancellationToken ct)
     {
         var actor = await authority.RequirePartnerAsync(context.Actor, "engagement_partner", ct).ConfigureAwait(false);

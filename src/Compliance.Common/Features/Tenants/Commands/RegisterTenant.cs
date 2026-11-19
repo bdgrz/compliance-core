@@ -11,7 +11,7 @@ namespace Bdgrz.Compliance.Features.Tenants.Commands;
 [Discriminator("bdgrz.tenant.register", 1)]
 [method: JsonConstructor]
 public sealed record RegisterTenant([property: JsonRequired] Uuid TenantId, string Name, string Slug, string? LegalName = null,
-    string? FirstAdministratorEmail = null) : IRequest<TenantRegistration>, ICallable, IIdentifiedRequest
+    string? FirstAdministratorEmail = null) : IRequest<PortiaCreateOutcome<TenantRegistration>>, ICallable, IIdentifiedRequest
 {
     Uuid IIdentifiedRequest.RequestId => TenantId;
 }

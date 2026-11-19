@@ -2,6 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Operations.Services;
+using Bdgrz.Compliance.Features.Versioning.Models;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Operations.Tests;
@@ -28,7 +29,7 @@ public sealed class ControlOccurrenceLifecycleRulesTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(RequestErrorKind.Conflict, result.ToRequestError().Kind);
+        Assert.Equal(CommandFailureCode.StateConflict, result.Code);
     }
 
     [Fact]
@@ -61,7 +62,7 @@ public sealed class ControlOccurrenceLifecycleRulesTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(RequestErrorKind.Validation, result.ToRequestError().Kind);
+        Assert.Equal(CommandFailureCode.InvalidContent, result.Code);
     }
 
     [Theory]

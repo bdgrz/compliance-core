@@ -16,8 +16,7 @@ public sealed class RetiredPersonCorrelationTests
         var request = new CorrelatePersonMembership(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             1, clear ? null : Uuid.CreateVersion4());
         var context = new RequestContext<CorrelatePersonMembership>(request,
-            new RequestDispatchContext(ProgramManagementServices.Actor(Uuid.CreateVersion4()),
-                new HttpInvocation("POST", "/retired", "/retired", "retired")));
+            ProgramManagementServices.Actor(Uuid.CreateVersion4()));
 
         // Act
         var result = await new CorrelatePersonMembershipHandler().HandleAsync(context, CancellationToken.None);

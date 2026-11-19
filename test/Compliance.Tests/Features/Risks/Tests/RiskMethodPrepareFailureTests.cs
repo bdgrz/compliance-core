@@ -59,7 +59,7 @@ public sealed class RiskMethodPrepareFailureTests
         {
             var accepted = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
             Assert.True(accepted.IsSuccess, accepted.Error?.Message);
-            winner = accepted.Value;
+            winner = accepted.Value!.Value;
             fixture.Clock.Now = fixture.Clock.Now.AddDays(2);
         });
         var handler = new PublishRiskMethodVersionHandler(new NativeOperationExecutor(fixture.Reader, fixture.Executor,
@@ -71,8 +71,8 @@ public sealed class RiskMethodPrepareFailureTests
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.NotNull(winner);
-        Assert.Equal(winner.MethodVersionId, result.Value!.MethodVersionId);
-        Assert.Equal(winner.PublishedAt, result.Value.PublishedAt);
+        Assert.Equal(winner.MethodVersionId, result.Value!.Value.MethodVersionId);
+        Assert.Equal(winner.PublishedAt, result.Value.Value.PublishedAt);
         Assert.Equal(1, (await fixture.Reader.HydrateAsync(new RiskMethod(fixture.Tenant, fixture.Program))).PublishedVersion);
     }
 

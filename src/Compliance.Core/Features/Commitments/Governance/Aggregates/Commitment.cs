@@ -6,6 +6,11 @@ using Bdgrz.Compliance.Features.Commitments.Governance.Models;
 using Bdgrz.Compliance.Features.Commitments.Services;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.Versioning.Models;
+using ReviseCommitmentDraftRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.ReviseCommitmentDraft;
+using ReviewCommitmentDraftRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.ReviewCommitmentDraft;
+using RetireCommitmentRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.RetireCommitment;
+using GovernanceCommitmentDraftRevised = Bdgrz.Compliance.Features.Commitments.Governance.Events.CommitmentDraftRevised;
+using GovernanceCommitmentRetired = Bdgrz.Compliance.Features.Commitments.Governance.Events.CommitmentRetired;
 namespace Bdgrz.Compliance.Features.Commitments.Governance.Aggregates;
 
 /// <summary>Owns the immutable identifier, one open draft and one-step publication of that commitment.</summary>
@@ -21,11 +26,11 @@ public sealed class Commitment : Aggregate
         TenantId = tenantId;
         On<CommitmentDrafted>(Apply);
         On<CommitmentChangeProposed>(Apply);
-        On<CommitmentDraftRevised>(Apply);
+        On<GovernanceCommitmentDraftRevised>(Apply);
         On<CommitmentDraftDiscarded>(Apply);
         On<CommitmentChangesRequested>(Apply);
         On<CommitmentVersionApproved>(Apply);
-        On<CommitmentRetired>(Apply);
+        On<GovernanceCommitmentRetired>(Apply);
     }
     public Uuid TenantId { get; }
     public Uuid ProgramId { get; private set; }
@@ -71,7 +76,7 @@ public sealed class Commitment : Aggregate
             digest, Uuid.Parse(actor.Id, System.Globalization.CultureInfo.InvariantCulture), at, Freeze(request.Terms)));
         return null;
     }
-    public CommandFailure? Revise(ReviseCommitmentDraft request, ActorReference actor, DateTimeOffset at)
+    public CommandFailure? Revise(ReviseCommitmentDraftRequest request, ActorReference actor, DateTimeOffset at)
     {
         var digest = AuthoredIntentDigest.Compute(request);
         if (Retry(request.CommandId, digest, actor, out var prior))
@@ -82,7 +87,7 @@ public sealed class Commitment : Aggregate
             return guard;
         if (OpenDraft is null || !ValidTerms(Kind, request.Terms))
             return Invalid();
-        RaiseEvent(new CommitmentDraftRevised(TenantId, ProgramId, Id, Revision + 1, request.CommandId,
+        RaiseEvent(new GovernanceCommitmentDraftRevised(TenantId, ProgramId, Id, Revision + 1, request.CommandId,
             digest, Uuid.Parse(actor.Id, System.Globalization.CultureInfo.InvariantCulture), at, Freeze(request.Terms)));
         return null;
     }
@@ -101,7 +106,7 @@ public sealed class Commitment : Aggregate
             digest, Uuid.Parse(actor.Id, System.Globalization.CultureInfo.InvariantCulture), at));
         return null;
     }
-    public CommandFailure? Review(ReviewCommitmentDraft request, ActorReference actor, Uuid boundaryVersion,
+    public CommandFailure? Review(ReviewCommitmentDraftRequest request, ActorReference actor, Uuid boundaryVersion,
         SeparationOfDutiesWaiverProof? waiver, DateTimeOffset at)
     {
         var digest = AuthoredIntentDigest.Compute(request);
@@ -134,7 +139,7 @@ public sealed class Commitment : Aggregate
             digest, member, at, approved, waiver));
         return null;
     }
-    public CommandFailure? Retire(RetireCommitment request, ActorReference actor, DateTimeOffset at)
+    public CommandFailure? Retire(RetireCommitmentRequest request, ActorReference actor, DateTimeOffset at)
     {
         var digest = AuthoredIntentDigest.Compute(request);
         if (Retry(request.CommandId, digest, actor, out var prior))
@@ -145,7 +150,7 @@ public sealed class Commitment : Aggregate
             return guard;
         if (_versions.Count == 0 || request.EffectiveOn <= _versions[^1].EffectiveOn || !Text(request.Reason, 2000))
             return Invalid();
-        RaiseEvent(new CommitmentRetired(TenantId, ProgramId, Id, Revision + 1, request.CommandId, digest,
+        RaiseEvent(new GovernanceCommitmentRetired(TenantId, ProgramId, Id, Revision + 1, request.CommandId, digest,
             Uuid.Parse(actor.Id, System.Globalization.CultureInfo.InvariantCulture), at, request.EffectiveOn, request.Reason.Trim()));
         return null;
     }
@@ -174,14 +179,25 @@ public sealed class Commitment : Aggregate
         {
             case CommitmentDrafted value when Revision == 0 && Kinds.Contains(value.Kind) &&
                 Id == IdFor(TenantId, value.ProgramId, value.Kind, value.Identifier) && ValidTerms(value.Kind, value.Terms):
-                ProgramId = value.ProgramId; Kind = value.Kind; Identifier = value.Identifier;
-                OpenDraft = Freeze(value.Terms); _authors.Add(value.ActorId); break;
+                ProgramId = value.ProgramId;
+                Kind = value.Kind;
+                Identifier = value.Identifier;
+                OpenDraft = Freeze(value.Terms);
+                _authors.Add(value.ActorId);
+                break;
             case CommitmentChangeProposed value when OpenDraft is null && _versions.Count > 0 && ValidTerms(Kind, value.Terms):
-                OpenDraft = Freeze(value.Terms); _authors.Clear(); _authors.Add(value.ActorId); break;
-            case CommitmentDraftRevised value when OpenDraft is not null && ValidTerms(Kind, value.Terms):
-                OpenDraft = Freeze(value.Terms); _authors.Add(value.ActorId); break;
+                OpenDraft = Freeze(value.Terms);
+                _authors.Clear();
+                _authors.Add(value.ActorId);
+                break;
+            case GovernanceCommitmentDraftRevised value when OpenDraft is not null && ValidTerms(Kind, value.Terms):
+                OpenDraft = Freeze(value.Terms);
+                _authors.Add(value.ActorId);
+                break;
             case CommitmentDraftDiscarded when OpenDraft is not null:
-                OpenDraft = null; _authors.Clear(); break;
+                OpenDraft = null;
+                _authors.Clear();
+                break;
             case CommitmentChangesRequested value when OpenDraft is not null && Text(value.Rationale, 2000):
                 break;
             case CommitmentVersionApproved value when OpenDraft is not null && value.Approved.Version == _versions.Count + 1 &&
@@ -189,12 +205,20 @@ public sealed class Commitment : Aggregate
                 value.Approved.ApprovedBy == value.ActorId && value.Approved.ApprovedAt == value.OccurredAt &&
                 (_versions.Count == 0 || value.Approved.EffectiveOn > _versions[^1].EffectiveOn) &&
                 ContentDigest.OfJson(value.Approved.Terms) == ContentDigest.OfJson(OpenDraft):
-                _versions.Add(value.Approved with { Terms = Freeze(value.Approved.Terms) }); OpenDraft = null; _authors.Clear(); break;
-            case CommitmentRetired value when _versions.Count > 0 && value.EffectiveOn > _versions[^1].EffectiveOn && Text(value.Reason, 2000):
-                RetiredOn = value.EffectiveOn; OpenDraft = null; _authors.Clear(); break;
-            default: throw new InvalidOperationException("The commitment fact has no valid local transition.");
+                _versions.Add(value.Approved with { Terms = Freeze(value.Approved.Terms) });
+                OpenDraft = null;
+                _authors.Clear();
+                break;
+            case GovernanceCommitmentRetired value when _versions.Count > 0 && value.EffectiveOn > _versions[^1].EffectiveOn && Text(value.Reason, 2000):
+                RetiredOn = value.EffectiveOn;
+                OpenDraft = null;
+                _authors.Clear();
+                break;
+            default:
+                throw new InvalidOperationException("The commitment fact has no valid local transition.");
         }
-        Revision = fact.Revision; _accepted.Add(fact.CommandId, (fact.IntentSha256, fact.ActorId));
+        Revision = fact.Revision;
+        _accepted.Add(fact.CommandId, (fact.IntentSha256, fact.ActorId));
     }
     public static bool ValidTerms(string kind, CommitmentTerms? value) => value is not null && Text(value.Statement, 4000) &&
         value.ServiceId != Uuid.Empty && value.OwnerPersonId != Uuid.Empty && value.BoundaryId != Uuid.Empty &&

@@ -183,7 +183,8 @@ public sealed class MemberPersonLinkTests
         operation = operation with { CausationEventId = sourceId };
         var header = new PersonHeader(Tenant, Person, 2, null, new string('a', 64), operation.Actor, Now);
         var sourceOperation = NativeFacts.Root(person, Uuid.CreateVersion4(), "PersonMemberLinkConclusion", 1, at: Now)
-            with { RootOperationId = link.LinkId };
+            with
+        { RootOperationId = link.LinkId };
         return conclusion switch
         {
             "confirm" => member.ConfirmPersonLink(operation, NativeFacts.Ref(), Verified(person.Stream, sourceId,

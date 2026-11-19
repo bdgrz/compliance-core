@@ -20,8 +20,6 @@ public sealed class PolicyCampaignSnapshot(PolicyDistributionCampaign owner, IRe
     public PolicyDistributionCampaign Owner { get; } = owner;
     public IReadOnlyList<DomainEvent> Facts { get; } = facts;
     public IReadOnlyList<PolicyCampaignAudienceAmended> Amendments { get; } = [.. facts.OfType<PolicyCampaignAudienceAmended>()];
-    public IReadOnlyList<PolicyCampaignWorkforceAudienceAmended> WorkforceAmendments { get; } =
-        [.. facts.OfType<PolicyCampaignWorkforceAudienceAmended>()];
     public IReadOnlyList<PolicyParticipantResultAdmitted> Admitted { get; } = [.. facts.OfType<PolicyParticipantResultAdmitted>()];
     public Uuid Id => Owner.Id;
     public Uuid TenantId => Owner.TenantId;

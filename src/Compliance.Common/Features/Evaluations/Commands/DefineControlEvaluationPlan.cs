@@ -9,7 +9,7 @@ public sealed record DefineControlEvaluationPlan(Uuid TenantId, Uuid ProgramId, 
     Uuid ControlVersionId, long ExpectedVersion, string Objective,
     IReadOnlyList<EvaluationProcedureStep>? Steps,
     bool TesterIndependenceRequired)
-    : IRequest<ControlEvaluationPlanVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest
+    : IRequest<PortiaCreateOutcome<ControlEvaluationPlanVersionView>>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest
 {
     Uuid IIdentifiedRequest.RequestId => ControlEvaluationPlanIdentity.For(TenantId, ProgramId, ControlId, ExpectedVersion);
 }

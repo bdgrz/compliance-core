@@ -19,6 +19,7 @@ using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Services;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
@@ -106,6 +107,7 @@ public static class ProgramHistory
             replay.InitialCriteriaPublication != owner.InitialCriteriaPublication ||
             replay.CreationGeneration != owner.CreationGeneration ||
             replay.FencedCreationIntent != owner.FencedCreationIntent || replay.FencedCreationActor != owner.FencedCreationActor ||
+            replay.Stage != owner.Stage ||
             replay.LastChangeWasSelection != owner.LastChangeWasSelection || !Same(replay.CurrentSelection, owner.CurrentSelection))
             throw new ImmutableContentIntegrityException("The verified program prefix differs from compact current authority.");
         owner.NativeCut.Confirm(owner, replay.NativeCut.Digest, replay.NativeCut.MetadataDigest, known);
@@ -120,12 +122,16 @@ public static class ProgramHistory
         var kind = fact switch
         {
             ProgramCreated => nameof(CreateProgram),
+            ProgramRenamed => nameof(RenameProgram),
+            ProgramTargetsRevised => nameof(ReviseProgramTargets),
+            ProgramStageChanged => nameof(ChangeProgramStage),
             ProgramRevised => nameof(ReviseProgram),
             ProgramCriteriaEditionSelected => nameof(SelectProgramCriteriaEdition),
             _ => throw new ImmutableContentIntegrityException("The program has another native fact kind."),
         };
         if (fact.TenantId == Uuid.Empty || fact.ProgramId == Uuid.Empty || fact.Revision < 1 || fact.NativeSequence < 1 ||
-            fact.ChangeCount is < 0 or > 1 || fact.ChangeCount == 0 && fact is not ProgramCriteriaEditionSelected ||
+            fact.ChangeCount is < 0 or > 1 || fact.ChangeCount == 0 &&
+                fact is not (ProgramCriteriaEditionSelected or ProgramRenamed or ProgramTargetsRevised) ||
             operation is null || operation.Actor is null || operation.Actor.Display is null || operation.Actor.Kind != "member" ||
             operation.AuthoredIntentSha256 is not { Length: 64 } ||
             !Uuid.TryParse(operation.Actor.Id, CultureInfo.InvariantCulture, out var member) || member == Uuid.Empty ||
@@ -155,6 +161,31 @@ public static class ProgramHistory
                 !ProgramAdmissionEvidence.Matches(created.AccessAdmission, fact.TenantId,
                     owner.Id, owner.Stream, operation, created.CreationGeneration))))
             throw new ImmutableContentIntegrityException("The program creation has inconsistent publication evidence.");
+        if (fact is ProgramRenamed renamed &&
+            (string.IsNullOrWhiteSpace(renamed.PreviousName) || string.IsNullOrWhiteSpace(renamed.Name) ||
+             renamed.Name != renamed.Name.Trim() || !Reference(renamed.PreviousContent, ProgramContent.Schema) ||
+             renamed.ChangeCount != (renamed.Name == renamed.PreviousName ? 0 : 1) ||
+             renamed.ChangeCount == 0 && renamed.Content != renamed.PreviousContent ||
+             renamed.ChangeCount == 1 && renamed.Content == renamed.PreviousContent ||
+             operation.AuthoredIntentSha256 != AuthoredIntentDigest.Compute(new RenameProgram(operation.LogicalId,
+                 fact.TenantId, fact.ProgramId, (long)operation.OriginalExpectedRevision!.Value, renamed.Name))))
+            throw new ImmutableContentIntegrityException("The program rename differs from its exact authored command binding.");
+        if (fact is ProgramTargetsRevised targets &&
+            (!Reference(targets.PreviousContent, ProgramContent.Schema) || targets.Plan is null ||
+             targets.ChangeCount == 0 && targets.Content != targets.PreviousContent ||
+             targets.ChangeCount == 1 && targets.Content == targets.PreviousContent ||
+             operation.AuthoredIntentSha256 != AuthoredIntentDigest.Compute(new ReviseProgramTargets(operation.LogicalId,
+                 fact.TenantId, fact.ProgramId, (long)operation.OriginalExpectedRevision!.Value, targets.Plan))))
+            throw new ImmutableContentIntegrityException("The program target revision differs from its exact authored command binding.");
+        if (fact is ProgramStageChanged stage &&
+            (stage.PreviousStage is null || stage.Content is null || stage.Support is null ||
+             ProgramRules.StageError(fact.TenantId, fact.ProgramId, stage.PreviousStage, stage.Stage,
+                 stage.Support, stage.Rationale) is not null ||
+             operation.AuthoredIntentSha256 != AuthoredIntentDigest.Compute(new ChangeProgramStage(operation.LogicalId,
+                 fact.TenantId, fact.ProgramId, (long)operation.OriginalExpectedRevision!.Value, stage.Stage,
+                 new NativeFactReference(stage.Support.Source.Source, stage.Support.Source.EventId,
+                     stage.Support.Source.AggregateVersion), stage.Support.Source.ResourcePosition, stage.Rationale))))
+            throw new ImmutableContentIntegrityException("The program stage transition differs from its exact authored command binding.");
     }
 
     static bool Reference(ImmutableContentRef? reference, string schema) => reference is not null &&

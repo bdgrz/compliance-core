@@ -19,7 +19,7 @@ public static class BoundaryResponses
     public static async ValueTask<FirstResponseDescriptor> FreezeAsync(IImmutableContentStore content,
         BoundaryRules after, string kind, CancellationToken ct = default)
     {
-        if (kind is nameof(CreateBoundary) or nameof(ProposeBoundarySuccessor))
+        if (kind is nameof(CreateBoundary) or nameof(ProposeBoundarySuccessor) or nameof(DraftBoundary))
         {
             var body = await content.WriteJsonAsync(after.TenantId.ToString(), Uuid.CreateVersion4(), Registration,
                 new BoundaryRegistration(after.Id, after.DraftVersionId), ct).ConfigureAwait(false);

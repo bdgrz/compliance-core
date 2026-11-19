@@ -83,13 +83,13 @@ public sealed class RiskMethodPublicationTests
 
         // Assert
         Assert.True(replay.IsSuccess, replay.Error?.Message);
-        Assert.Equal(original.Value!.MethodVersionId, replay.Value!.MethodVersionId);
-        Assert.Equal(original.Value.Version, replay.Value.Version);
-        Assert.Equal(original.Value.PublishedAt, replay.Value.PublishedAt);
-        Assert.Equal(original.Value.AppetiteThreshold, replay.Value.AppetiteThreshold);
+        Assert.Equal(original.Value!.Value.MethodVersionId, replay.Value!.Value.MethodVersionId);
+        Assert.Equal(original.Value.Value.Version, replay.Value.Value.Version);
+        Assert.Equal(original.Value.Value.PublishedAt, replay.Value.Value.PublishedAt);
+        Assert.Equal(original.Value.Value.AppetiteThreshold, replay.Value.Value.AppetiteThreshold);
         var current = await fixture.CurrentAsync();
         Assert.True(current.IsSuccess, current.Error?.Message);
-        Assert.Equal(later.Value!.MethodVersionId, current.Value!.MethodVersionId);
+        Assert.Equal(later.Value!.Value.MethodVersionId, current.Value!.MethodVersionId);
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public sealed class RiskMethodPublicationTests
         Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
         Assert.Equal(RequestErrorKind.Conflict, otherActor.Error?.Kind);
         var current = await fixture.CurrentAsync();
-        Assert.Equal(original.Value!.MethodVersionId, current.Value!.MethodVersionId);
+        Assert.Equal(original.Value!.Value.MethodVersionId, current.Value!.MethodVersionId);
         Assert.Equal(1, current.Value.Version);
     }
 

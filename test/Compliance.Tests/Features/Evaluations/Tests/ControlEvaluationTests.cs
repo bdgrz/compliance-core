@@ -77,14 +77,9 @@ public sealed class ControlEvaluationTests
         Uuid? userId = null, Uuid? retestOf = null, Uuid? planVersionId = null)
     {
         var plan = await fixture.GetOrDefineEvaluationPlanAsync();
-        var predecessor = retestOf is { } predecessorId
-            ? await fixture.AsAsync(fixture.OutsiderUserId, new GetControlEvaluation(fixture.TenantId,
-                fixture.ProgramId, fixture.ControlId, predecessorId)) : null;
         return await fixture.AsAsync(userId ?? fixture.OwnerUserId, new StartControlEvaluation(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, fixture.ControlId,
-            planVersionId ?? plan.PlanVersionId, retestOf,
-            predecessor?.Deviations.Where(static deviation => deviation.Classification == "material")
-                .Select(static deviation => deviation.DeviationId).ToArray()));
+            planVersionId ?? plan.PlanVersionId, retestOf));
     }
 
     internal static IReadOnlyList<EvaluationAssertionConclusion> AllEffectiveConclusions => AllEffective;
@@ -546,9 +541,8 @@ public sealed class ControlEvaluationTests
         // Act
         var plan = await fixture.GetOrDefineEvaluationPlanAsync();
         await fixture.Scenario(fixture.OwnerUserId).When(new StartControlEvaluation(Uuid.CreateVersion4(),
-            fixture.TenantId, fixture.ProgramId, fixture.ControlId, plan.PlanVersionId, accepted.EvaluationId,
-            accepted.Deviations.Select(static deviation => deviation.DeviationId).ToArray()))
-            .ExpectError(RequestErrorKind.Conflict);
+            fixture.TenantId, fixture.ProgramId, fixture.ControlId, plan.PlanVersionId, accepted.EvaluationId))
+            .ExpectFailure(RequestErrorKind.Conflict);
 
         // Assert
         var original = await fixture.AsAsync(fixture.OutsiderUserId, new GetControlEvaluation(

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.FirmServices.Aggregates;
 using Bdgrz.Compliance.Features.FirmServices.Models;
@@ -58,7 +59,7 @@ public static class IndependenceAssessment
             value.Revision > 0 && NonattestServiceRecord.ValidTerms(value.Terms)) &&
         services.Select(static value => value.RecordId).Distinct().Count() == services.Count;
 
-    static IReadOnlyList<NonattestServiceVersion> Versions(IReadOnlyList<NonattestServiceRecordView> services) =>
+    static ReadOnlyCollection<NonattestServiceVersion> Versions(IReadOnlyList<NonattestServiceRecordView> services) =>
         Array.AsReadOnly(services.OrderBy(static value => value.RecordId.ToString(), StringComparer.Ordinal)
             .Select(static value => new NonattestServiceVersion(value.RecordId, value.Revision)).ToArray());
 

@@ -45,7 +45,8 @@ public sealed class CommitmentControlLinkHandler(IAggregateReader reader, IAggre
                 (value.EffectiveUntil is null || value.EffectiveUntil > today));
             if (promise.ProgramId != program || !promise.IsActiveOn(today) || current is null || operation.IsRetired || version is null)
                 return Result.Failure(new RequestError(RequestErrorKind.Conflict, "Both linked records must be active and approved in this program."));
-            selectedCommitment = current.Version; selectedControl = version.Revision;
+            selectedCommitment = current.Version;
+            selectedControl = version.Revision;
         }
         return await executor.ExecuteAsync(new CommitmentControlLink(tenant, commitment, control),
             value => CommandFailureRequestAdapter.ToOutcome(apply(value, selectedCommitment, selectedControl, actor.Value, now)), context, ct).ConfigureAwait(false);

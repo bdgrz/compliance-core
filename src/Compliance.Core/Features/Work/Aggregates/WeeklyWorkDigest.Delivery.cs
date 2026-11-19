@@ -25,7 +25,7 @@ public sealed partial class WeeklyWorkDigest
     internal WorkDigestDispatchStatusView ReadDelivery() => (_deliveryState?.View(TenantId, _deliveryMember) ??
         new WorkDigestDispatchStatusView(TenantId, _deliveryMember, _deliveryWeek, "UTC", DateTimeOffset.MinValue,
             "not_scheduled", 0, null, Uuid.Empty, DateTimeOffset.MinValue, null, null, null, null, null)) with
-        { Revision = checked((long)Version) };
+    { Revision = checked((long)Version) };
 
     internal bool ScheduleDelivery(WorkDigestScheduleWindow window, TimeSpan retryWindow, DateTimeOffset at)
     {

@@ -13,9 +13,9 @@ public sealed class TemplateVersionApplication : Aggregate
     readonly Uuid _programId;
     readonly Uuid _templateId;
     readonly long _version;
-    readonly HashSet<string> _entries = new(StringComparer.Ordinal);
-    readonly Dictionary<string, TemplateEntryOutcome> _outcomes = new(StringComparer.Ordinal);
-    readonly Dictionary<string, TemplateEntryProposalBase> _proposalBases = new(StringComparer.Ordinal);
+    readonly HashSet<string> _entries = [];
+    readonly Dictionary<string, TemplateEntryOutcome> _outcomes = [];
+    readonly Dictionary<string, TemplateEntryProposalBase> _proposalBases = [];
 
     public TemplateVersionApplication(Uuid tenantId, Uuid programId, Uuid templateId, long version)
         : base(Identity(tenantId, programId, templateId, version),

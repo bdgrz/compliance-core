@@ -472,6 +472,7 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzTenantInvitationDirectory>());
         services.AddScoped<ProgramReader>();
         services.AddScoped<ProgramOperations>();
+        services.AddScoped<ProgramNamedOperations>();
         services.AddScoped<CassieProgramDirectory>();
         services.AddScoped<Bdgrz.Compliance.Features.Programs.Services.ProgramApplicationAdmission>();
         services.AddScoped<ProgramDirectoryReadConsistency>();
@@ -1565,6 +1566,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<MaterializeAdvisorFeedbackHandler>()
             .AddRequestAuthorizer<AdvisorReceiverAuthorizer>()
             .AddRequestHandler<CreateProgramHandler>()
+            .AddRequestHandler<CreateProgramV3Handler>()
+            .AddRequestHandler<RenameProgramHandler>()
+            .AddRequestHandler<ReviseProgramTargetsHandler>()
+            .AddRequestHandler<ChangeProgramStageHandler>()
             .AddRequestHandler<ListCriteriaCatalogEditionsHandler>()
             .AddRequestHandler<GetCriteriaCatalogEditionHandler>()
             .AddRequestHandler<ListCriteriaCatalogEntriesHandler>()
@@ -2000,6 +2005,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListClientServiceRevisionsHandler>()
             .AddRequestHandler<GetClientServiceRevisionHandler>()
             .AddRequestHandler<CreateBoundaryHandler>()
+            .AddRequestHandler<DraftBoundaryHandler>()
+            .AddRequestHandler<ReviewBoundaryDraftHandler>()
             .AddRequestHandler<ReviseBoundaryDraftHandler>()
             .AddRequestHandler<DiscardBoundaryDraftHandler>()
             .AddRequestHandler<GetBoundaryHandler>()

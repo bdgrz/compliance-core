@@ -457,12 +457,12 @@ sealed class OperationsFixture
             defaultSteps, testerIndependenceRequired);
     }
 
-    public Task<ControlEvaluationPlanVersionView> DefineEvaluationPlanAsync(long expectedVersion,
+    public async Task<ControlEvaluationPlanVersionView> DefineEvaluationPlanAsync(long expectedVersion,
         string objective, IReadOnlyList<EvaluationProcedureStep> steps,
         bool testerIndependenceRequired = false, Uuid? userId = null) =>
-        AsAsync(userId ?? LeadUserId, new DefineControlEvaluationPlan(TenantId, ProgramId,
+        (await AsAsync(userId ?? LeadUserId, new DefineControlEvaluationPlan(TenantId, ProgramId,
             ControlId, ControlVersionId, expectedVersion, objective, steps,
-            testerIndependenceRequired));
+            testerIndependenceRequired)).ConfigureAwait(false)).Value;
 
     public Task<ControlOperatingPlanView> ProposeAsync(long expectedRevision,
         OperatingHolder? owner = null, OperatingHolder? backup = null, Uuid? reviewer = null,

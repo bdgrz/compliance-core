@@ -13,7 +13,9 @@ public sealed class CommitmentControlLink : Aggregate
     public CommitmentControlLink(Uuid tenant, Uuid commitment, Uuid control) : base(IdFor(tenant, commitment, control),
         new EventStreamAddress(tenant.ToString(), Area, IdFor(tenant, commitment, control).ToString()))
     {
-        TenantId = tenant; CommitmentId = commitment; ControlId = control;
+        TenantId = tenant;
+        CommitmentId = commitment;
+        ControlId = control;
         On<CommitmentControlLinked>(value => Apply(value, value.TenantId, value.ProgramId, value.CommitmentId, value.ControlId,
             value.Revision, value.CommandId, value.IntentSha256, value.ActorId, value.CommitmentVersion, value.ControlVersion, value.Rationale, true));
         On<CommitmentControlLinkConfirmed>(value => Apply(value, value.TenantId, value.ProgramId, value.CommitmentId, value.ControlId,
@@ -80,8 +82,13 @@ public sealed class CommitmentControlLink : Aggregate
             fact is CommitmentControlLinkConfirmed && (commitmentVersion < CommitmentVersion || controlVersion < ControlVersion ||
                 commitmentVersion == CommitmentVersion && controlVersion == ControlVersion))
             throw new InvalidOperationException("The commitment/control link fact has no valid local transition.");
-        ProgramId = program; Revision = revision; IsLinked = linked; CommitmentVersion = commitmentVersion;
-        ControlVersion = controlVersion; Rationale = rationale; _accepted.Add(command, (digest, actor));
+        ProgramId = program;
+        Revision = revision;
+        IsLinked = linked;
+        CommitmentVersion = commitmentVersion;
+        ControlVersion = controlVersion;
+        Rationale = rationale;
+        _accepted.Add(command, (digest, actor));
     }
     static CommandFailure Invalid() => CommandFailure.StateConflict("The exact pair, lifecycle or version does not admit this link command.");
 }

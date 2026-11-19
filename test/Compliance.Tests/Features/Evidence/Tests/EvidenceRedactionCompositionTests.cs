@@ -349,7 +349,7 @@ public sealed partial class EvidenceRedactionCompositionTests
         var recorded = await DispatchAsync(fixture, fixture.UserId, new RecordSeparationOfDutiesWaiver(fixture.TenantId,
             scope, lead, "Exact independent exception", ArtifactMetadataAccessTests.Fixture.Now.AddHours(1)));
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
-        var waived = await DispatchAsync(fixture, approver, new ApproveSeparationOfDutiesWaiver(fixture.TenantId, recorded.Value.WaiverId));
+        var waived = await DispatchAsync(fixture, approver, new ApproveSeparationOfDutiesWaiver(fixture.TenantId, recorded.Value!.Value.WaiverId));
         Assert.True(waived.IsSuccess, waived.Error?.Message);
         if (fault == "approver_suspended")
             await ProgramManagementServices.SeedAsync(fixture.Provider, new Member(fixture.TenantId, approver),
@@ -360,7 +360,7 @@ public sealed partial class EvidenceRedactionCompositionTests
 
         // Act
         var approved = await DispatchAsync(fixture, lead, new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId,
-            prepared.Value.RedactionId, 1, preparation.PreparationId, 1, recorded.Value.WaiverId));
+            prepared.Value.RedactionId, 1, preparation.PreparationId, 1, recorded.Value!.Value.WaiverId));
         var after = await ProgramManagementServices.HydrateAsync(fixture.Provider, new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
 
         // Assert
@@ -369,7 +369,7 @@ public sealed partial class EvidenceRedactionCompositionTests
             Assert.True(approved.IsSuccess, approved.Error?.Message);
             Assert.True(approved.Value.ApprovalCurrent);
             Assert.True(approved.Value.Approvals[0].SeparationOfDutiesWaived);
-            Assert.Equal(recorded.Value.WaiverId, after.CurrentApproval!.SeparationOfDutiesWaiver!.WaiverId);
+            Assert.Equal(recorded.Value!.Value.WaiverId, after.CurrentApproval!.SeparationOfDutiesWaiver!.WaiverId);
             var events = await fixture.TenantEventsAsync();
             var preparedEvent = Assert.Single(events.OfType<EvidenceRedactionPreparedV2>(),
                 item => item.RedactionId == prepared.Value.RedactionId);
@@ -387,7 +387,7 @@ public sealed partial class EvidenceRedactionCompositionTests
             Assert.Equal(64, restoredPreparation.Preparation.Derived.IdentitySha256.Length);
             Assert.True(restoredApproval.Approval.DerivedSourcePosition >= 2);
             Assert.Equal(ArtifactMetadataAccessTests.Fixture.Now, restoredApproval.Approval.DerivedAvailableAt);
-            Assert.Equal(recorded.Value.WaiverId, restoredApproval.Approval.SeparationOfDutiesWaiver!.WaiverId);
+            Assert.Equal(recorded.Value!.Value.WaiverId, restoredApproval.Approval.SeparationOfDutiesWaiver!.WaiverId);
             restoredPreparation.AttachMetadata(preparedEvent.Metadata);
             restoredApproval.AttachMetadata(approvedEvent.Metadata);
             var replayHistory = await ReadGivenAsync(fixture.Provider, fixture.TenantId, prepared.Value.RedactionId,
@@ -468,19 +468,32 @@ public sealed partial class EvidenceRedactionCompositionTests
         {
             var recorded = await DispatchAsync(fixture, fixture.UserId, record, metadata: metadata);
             Assert.True(recorded.IsSuccess, recorded.Error?.Message);
-            waiverId = recorded.Value.WaiverId;
+            waiverId = recorded.Value!.Value.WaiverId;
         }
         var before = await ProgramManagementServices.HydrateAsync(fixture.Provider, new SeparationOfDutiesWaiver(fixture.TenantId, waiverId));
         fixture.Faults.OnArtifactRead = () => RbacPermissionFacts.RevokeAsync(fixture.Provider, fixture.TenantId, BuiltInRbac.TenantAdministrationRoleId(fixture.TenantId), RbacPermissions.TenantRbacManage);
 
         // Act
-        var result = approval ? await DispatchAsync(fixture, approver, new ApproveSeparationOfDutiesWaiver(fixture.TenantId, waiverId)) :
-            await DispatchAsync(fixture, fixture.UserId, record, metadata: metadata);
+        var success = true;
+        RequestError? failure = null;
+        if (approval)
+        {
+            var result = await DispatchAsync(fixture, approver,
+                new ApproveSeparationOfDutiesWaiver(fixture.TenantId, waiverId));
+            success = result.IsSuccess;
+            failure = result.Error;
+        }
+        else
+        {
+            var result = await DispatchAsync(fixture, fixture.UserId, record, metadata: metadata);
+            success = result.IsSuccess;
+            failure = result.Error;
+        }
         var after = await ProgramManagementServices.HydrateAsync(fixture.Provider, new SeparationOfDutiesWaiver(fixture.TenantId, waiverId));
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(RequestErrorKind.Forbidden, result.Error!.Kind);
+        Assert.False(success);
+        Assert.Equal(RequestErrorKind.Forbidden, failure!.Kind);
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
         Assert.Null(after.ApprovedAt);
     }
@@ -504,7 +517,8 @@ public sealed partial class EvidenceRedactionCompositionTests
             new SeparationOfDutiesWaiverScope("evidence_redaction", prepared.Value.RedactionId, preparation.PreparationId, 1, "approve"),
             lead, "Exact independent exception", ArtifactMetadataAccessTests.Fixture.Now.AddHours(1)));
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
-        Assert.True((await DispatchAsync(fixture, approver, new ApproveSeparationOfDutiesWaiver(fixture.TenantId, recorded.Value.WaiverId))).IsSuccess);
+        Assert.True((await DispatchAsync(fixture, approver,
+            new ApproveSeparationOfDutiesWaiver(fixture.TenantId, recorded.Value!.Value.WaiverId))).IsSuccess);
         var clock = new MutableClock { Now = ArtifactMetadataAccessTests.Fixture.Now };
         await using var provider = Compose(fixture, clock, approver);
         await using var scope = provider.CreateAsyncScope();
@@ -512,7 +526,7 @@ public sealed partial class EvidenceRedactionCompositionTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, prepared.Value.RedactionId, 1, preparation.PreparationId, 1, recorded.Value.WaiverId),
+            new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, prepared.Value.RedactionId, 1, preparation.PreparationId, 1, recorded.Value!.Value.WaiverId),
             new RequestDispatchContext(ProgramManagementServices.Actor(lead), new HttpInvocation("POST", "/test", "/test", "test")));
         var after = await ProgramManagementServices.HydrateAsync(fixture.Provider, new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
 

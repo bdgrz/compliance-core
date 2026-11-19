@@ -19,13 +19,14 @@ using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Hosting;
 namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 public sealed class RecordSeparationOfDutiesWaiverHandler(IAggregateExecutor executor,
     ITenantMembershipDirectoryReader memberships, TimeProvider clock)
-    : IRequestHandler<RecordSeparationOfDutiesWaiver, SeparationOfDutiesWaiverView>
+    : IRequestHandler<RecordSeparationOfDutiesWaiver, PortiaCreateOutcome<SeparationOfDutiesWaiverView>>
 {
-    public async ValueTask<Result<SeparationOfDutiesWaiverView>> HandleAsync(
+    public async ValueTask<Result<PortiaCreateOutcome<SeparationOfDutiesWaiverView>>> HandleAsync(
         IRequestContext<RecordSeparationOfDutiesWaiver> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -33,16 +34,18 @@ public sealed class RecordSeparationOfDutiesWaiverHandler(IAggregateExecutor exe
             request.BeneficiaryUserId, ct).ConfigureAwait(false);
         if (beneficiary is null || beneficiary.IsSuspended || beneficiary.IsDeprovisioned ||
             beneficiary.Affiliation == "firm_staff")
-            return Result<SeparationOfDutiesWaiverView>.Failure(new RequestError(
+            return Result<PortiaCreateOutcome<SeparationOfDutiesWaiverView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The waiver beneficiary must be an active tenant member."));
         if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var requesterUserId))
-            return Result<SeparationOfDutiesWaiverView>.Failure(new RequestError(
+            return Result<PortiaCreateOutcome<SeparationOfDutiesWaiverView>>.Failure(new RequestError(
                 RequestErrorKind.Unauthorized, "Waiver administration requires a Bdgrz user identity."));
         var requesterMemberId = RbacIds.Member(request.TenantId, requesterUserId);
         var now = clock.GetUtcNow();
-        return await executor.ExecuteAsync(new SeparationOfDutiesWaiver(request.TenantId,
+        var created = false;
+        var result = await executor.ExecuteAsync(new SeparationOfDutiesWaiver(request.TenantId,
                 context.RequestId), waiver =>
             {
+                created = !waiver.IsRecorded;
                 var failure = waiver.Record(request.Scope,
                     RbacIds.Member(request.TenantId, request.BeneficiaryUserId), requesterMemberId,
                     UserIdentityClaims.BdgrzDisplay(context.Actor, requesterUserId),
@@ -58,5 +61,6 @@ public sealed class RecordSeparationOfDutiesWaiverHandler(IAggregateExecutor exe
                             _ => RequestErrorKind.Forbidden,
                         }, failure.Message!)));
             }, context, ct).ConfigureAwait(false);
+        return PortiaCreateOutcomes.From(result, created);
     }
 }

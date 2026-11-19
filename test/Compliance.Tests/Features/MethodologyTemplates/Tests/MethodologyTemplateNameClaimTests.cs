@@ -206,10 +206,13 @@ public sealed class MethodologyTemplateNameClaimTests
         {
             "claim_event" => refusal.Proofs with { Claim = refusal.Proofs.Claim with { EventId = Uuid.CreateVersion4() } },
             "creation_event" => refusal.Proofs with { ExistingCreation = refusal.Proofs.ExistingCreation with { EventId = Uuid.CreateVersion4() } },
-            "realm" => refusal.Proofs with { ExistingCreation = refusal.Proofs.ExistingCreation with
+            "realm" => refusal.Proofs with
             {
-                Source = new EventStreamAddress("wrong-realm", MethodologyTemplate.Area, claim.Intent.TemplateId.ToString()),
-            } },
+                ExistingCreation = refusal.Proofs.ExistingCreation with
+                {
+                    Source = new EventStreamAddress("wrong-realm", MethodologyTemplate.Area, claim.Intent.TemplateId.ToString()),
+                }
+            },
             "payload" => refusal.Proofs with { ExistingCreation = refusal.Proofs.ExistingCreation with { PayloadSha256 = new string('0', 64) } },
             _ => refusal.Proofs,
         };

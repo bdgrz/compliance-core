@@ -177,7 +177,7 @@ public sealed class MethodologyTemplateNameClaim : NameClaim
         {
             NativeAcceptanceDecision.Replayed => Result.Success,
             NativeAcceptanceDecision.Conflict => Conflict("The operation identity is already bound to another creation intent."),
-            _ => null,
+            _ => (Result?)null,
         };
     }
 

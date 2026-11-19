@@ -33,6 +33,11 @@ sealed class FirmIndependenceReplayCut
             throw new ImmutableContentIntegrityException("The firm independence native history differs from the actual hydrated payload/metadata prefix.");
         (_verified, _version, _position) = (true, owner.Version, owner.CommittedStreamPosition);
     }
+
+    public bool Allows(Aggregate owner) =>
+        owner.Version == 0 && owner.CommittedStreamPosition == 0 && Digest == FirmIndependenceReplayDigest.Empty ||
+        _verified && _version == owner.Version && _position == owner.CommittedStreamPosition;
+
     public Result Require(Aggregate owner, NativeAcceptance acceptance, OperationProvenance operation)
     {
         if (owner.Version == 0 && owner.CommittedStreamPosition == 0 && Digest == FirmIndependenceReplayDigest.Empty)

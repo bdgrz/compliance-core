@@ -6,6 +6,9 @@ namespace Bdgrz.Compliance.Tests.Features.Readiness.Tests;
 
 public sealed class ReadinessCompletenessTests
 {
+    static readonly string[] ExpectedIncompleteFamilies = ["evidence", "workforce"];
+    static readonly string[] ExpectedIncompleteExplanations = ["Draft evidence", "Unknown roster"];
+
     [Theory]
     [InlineData("unknown")]
     [InlineData("draft")]
@@ -69,8 +72,8 @@ public sealed class ReadinessCompletenessTests
         var result = ReadinessCompletenessRules.Evaluate(inputs, []);
 
         // Assert
-        Assert.Equal(new[] { "evidence", "workforce" }, result.IncompleteInputs.Select(input => input.Family));
-        Assert.Equal(new[] { "Draft evidence", "Unknown roster" }, result.IncompleteInputs.Select(input => input.Explanation));
+        Assert.Equal(ExpectedIncompleteFamilies, result.IncompleteInputs.Select(input => input.Family));
+        Assert.Equal(ExpectedIncompleteExplanations, result.IncompleteInputs.Select(input => input.Explanation));
     }
 
     static ReadinessGapView Gap() => new(Uuid.CreateVersion4(), "unmet", "control", "rule", "Known unmet rule", []);

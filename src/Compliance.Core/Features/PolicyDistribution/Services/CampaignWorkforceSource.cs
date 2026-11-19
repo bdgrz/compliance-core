@@ -100,7 +100,10 @@ sealed class CampaignWorkforceSource(IDomainEventReader events, PersonReader peo
         if (match is not null)
             matches.Add(observed.PersonId, new(observed.PersonId, observed.DisplayName, match.WorkerType,
                 match.Department, match.StartDate));
-        return new(matches, present ? new HashSet<Uuid> { observed.PersonId } : new HashSet<Uuid>());
+        var currentPeople = new HashSet<Uuid>();
+        if (present)
+            currentPeople.Add(observed.PersonId);
+        return new(matches, currentPeople);
     }
 
     static (Uuid Tenant, Uuid Relationship, long Revision) Scope(DomainEvent fact) => fact switch

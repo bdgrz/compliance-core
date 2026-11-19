@@ -3,6 +3,8 @@ using Bdgrz.Compliance.Features.FirmServices.Commands;
 using Bdgrz.Compliance.Features.FirmServices.Events;
 using Bdgrz.Compliance.Features.FirmServices.Models;
 using Bdgrz.Compliance.Features.Kernel.Services;
+using RecordNonattestServiceRequest = Bdgrz.Compliance.Features.FirmServices.Commands.RecordNonattestService;
+using NonattestServiceRecordedEvent = Bdgrz.Compliance.Features.FirmServices.Events.NonattestServiceRecorded;
 namespace Bdgrz.Compliance.Features.FirmServices.Aggregates;
 
 /// <summary>One independently corrected advisory service; voiding preserves all recorded facts.</summary>
@@ -25,12 +27,12 @@ public sealed class NonattestServiceRecord : Aggregate
         _tenantId = tenantId;
         _selectedCommandId = selectedCommandId;
         _selectedRevision = selectedRevision;
-        On<NonattestServiceRecorded>(Apply);
+        On<NonattestServiceRecordedEvent>(Apply);
         On<NonattestServiceRevised>(Apply);
         On<NonattestServiceVoided>(Apply);
     }
 
-    public Result<NonattestServiceRecordView> Record(RecordNonattestService request, Uuid actorUserId,
+    public Result<NonattestServiceRecordView> Record(RecordNonattestServiceRequest request, Uuid actorUserId,
         DateTimeOffset occurredAt)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -45,7 +47,7 @@ public sealed class NonattestServiceRecord : Aggregate
             return Error(RequestErrorKind.Conflict, "The nonattest service identity is already recorded.");
         if (!ValidTerms(request.Terms))
             return Error(RequestErrorKind.Validation, "A known advisory service kind and ordered dates are required.");
-        RaiseEvent(new NonattestServiceRecorded(_tenantId, Id, 1, request.Terms,
+        RaiseEvent(new NonattestServiceRecordedEvent(_tenantId, Id, 1, request.Terms,
             new(request.CommandId, request.ExpectedRevision, digest, actorUserId, occurredAt)));
         return Result<NonattestServiceRecordView>.Success(View!);
     }
@@ -110,12 +112,12 @@ public sealed class NonattestServiceRecord : Aggregate
     }
 
     Result<NonattestServiceRecordView>? Replay(Uuid commandId, string digest, Uuid actorUserId) =>
-        _selectedReceipt is not { } receipt || receipt.CommandId != commandId ? null :
+        _selectedReceipt is not { } receipt || receipt.CommandId != commandId ? (Result<NonattestServiceRecordView>?)null :
         receipt.AuthoredIntentSha256 == digest && receipt.ActorUserId == actorUserId
             ? Result<NonattestServiceRecordView>.Success(_selectedView!)
             : Error(RequestErrorKind.Conflict, "The command identity already records another actor or intent.");
 
-    void Apply(NonattestServiceRecorded fact)
+    void Apply(NonattestServiceRecordedEvent fact)
     {
         RequireFact(fact.TenantId, fact.RecordId, fact.Revision, fact.Receipt);
         if (View is not null || !ValidTerms(fact.Terms))
@@ -142,8 +144,14 @@ public sealed class NonattestServiceRecord : Aggregate
         RequireFact(fact.TenantId, fact.RecordId, fact.Revision, fact.Receipt);
         if (View is null || View.IsVoided || !ValidReason(fact.Reason) || fact.Reason.Trim() != fact.Reason)
             throw new InvalidOperationException("The nonattest service void history is invalid.");
-        View = View with { Revision = fact.Revision, IsVoided = true, Reason = fact.Reason,
-            ActorUserId = fact.Receipt.ActorUserId, RecordedAt = fact.Receipt.OccurredAt };
+        View = View with
+        {
+            Revision = fact.Revision,
+            IsVoided = true,
+            Reason = fact.Reason,
+            ActorUserId = fact.Receipt.ActorUserId,
+            RecordedAt = fact.Receipt.OccurredAt
+        };
         Capture(fact.Receipt);
     }
 

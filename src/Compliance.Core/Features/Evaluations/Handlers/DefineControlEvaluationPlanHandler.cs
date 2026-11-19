@@ -37,27 +37,28 @@ using Bdgrz.Compliance.Features.Evaluations.Readers;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Handlers;
+using Bdgrz.Compliance.Hosting;
 namespace Bdgrz.Compliance.Features.Evaluations.Handlers;
 
 /// <summary>Accepts an immutable plan version; exact retries resolve before mutable control guards and retain the original result.</summary>
 public sealed class DefineControlEvaluationPlanHandler(NativeOperationExecutor operations,
     ControlReader controlSources, OperatingAuthority authority, IImmutableContentStore content, TimeProvider clock)
-    : IRequestHandler<DefineControlEvaluationPlan, ControlEvaluationPlanVersionView>
+    : IRequestHandler<DefineControlEvaluationPlan, PortiaCreateOutcome<ControlEvaluationPlanVersionView>>
 {
-    public ValueTask<Result<ControlEvaluationPlanVersionView>> HandleAsync(
+    public ValueTask<Result<PortiaCreateOutcome<ControlEvaluationPlanVersionView>>> HandleAsync(
         IRequestContext<DefineControlEvaluationPlan> context, CancellationToken ct) =>
         ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
 
-    async ValueTask<Result<ControlEvaluationPlanVersionView>> HandleCoreAsync(
+    async ValueTask<Result<PortiaCreateOutcome<ControlEvaluationPlanVersionView>>> HandleCoreAsync(
         IRequestContext<DefineControlEvaluationPlan> context, CancellationToken ct)
     {
         var request = context.Request;
         if (request.ExpectedVersion < 0 || request.ControlId == Uuid.Empty || request.ProgramId == Uuid.Empty)
-            return Result<ControlEvaluationPlanVersionView>.Failure(new RequestError(RequestErrorKind.Validation,
+            return Result<PortiaCreateOutcome<ControlEvaluationPlanVersionView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A plan definition requires its owner and a non-negative original version."));
         var actor = OperationsActor.From(context.Actor, request.TenantId);
         if (!await authority.ManagesProgramAsync(request.TenantId, actor, request.ProgramId, ct).ConfigureAwait(false))
-            return Result<ControlEvaluationPlanVersionView>.Failure(new RequestError(RequestErrorKind.Forbidden,
+            return Result<PortiaCreateOutcome<ControlEvaluationPlanVersionView>>.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Only a program manager may define a control evaluation plan."));
         var now = clock.GetUtcNow();
         var logicalId = ControlEvaluationPlan.OperationId(request.TenantId, request.ProgramId, request.ControlId,
@@ -116,7 +117,9 @@ public sealed class DefineControlEvaluationPlanHandler(NativeOperationExecutor o
             owner => owner.Acceptance, PrepareAsync,
             (ControlEvaluationPlan owner, ImmutableContentRef first) => owner.Define(provenance, request.ControlVersionId,
                 body!, first, result!)), context, ct).ConfigureAwait(false);
-        return await NativeContent.ResponseAsync<ControlEvaluationPlanVersionView>(content, request.TenantId, outcome, ct)
-            .ConfigureAwait(false);
+        var response = await NativeContent.ResponseAsync<ControlEvaluationPlanVersionView>(content,
+            request.TenantId, outcome, ct).ConfigureAwait(false);
+        return PortiaCreateOutcomes.From(response,
+            outcome.IsSuccess && outcome.Value is AcceptedAppendResult.Committed);
     }
 }

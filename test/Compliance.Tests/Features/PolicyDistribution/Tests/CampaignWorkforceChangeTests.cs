@@ -19,7 +19,7 @@ public sealed class CampaignWorkforceChangeTests
         var audience = new RosterAudience(new Dictionary<Uuid, RosterMatch>
         {
             [person] = new(person, "Worker", "employee", "Engineering", today),
-        }, new HashSet<Uuid> { person });
+        }, new HashSet<Uuid>([person]));
 
         // Act
         var amendment = CampaignWorkforceChangeRules.Plan(person, "Worker", null, audience,
@@ -42,8 +42,8 @@ public sealed class CampaignWorkforceChangeTests
         var participant = new CampaignParticipant(person, "Worker", "employee", "Engineering", true,
             "launch", Uuid.CreateVersion4(), today, new NativeFactReference(
                 new EventStreamAddress("tenant", "campaign", "id"), Uuid.CreateVersion4(), 1));
-        var audience = new RosterAudience(new Dictionary<Uuid, RosterMatch>(),
-            stillPresent ? new HashSet<Uuid> { person } : new HashSet<Uuid>());
+        HashSet<Uuid> present = stillPresent ? [person] : [];
+        var audience = new RosterAudience(new Dictionary<Uuid, RosterMatch>(), present);
 
         // Act
         var amendment = CampaignWorkforceChangeRules.Plan(person, "Worker", participant, audience,
@@ -66,7 +66,7 @@ public sealed class CampaignWorkforceChangeTests
         var audience = new RosterAudience(new Dictionary<Uuid, RosterMatch>
         {
             [person] = new(person, "Worker", "employee", "Engineering", today),
-        }, new HashSet<Uuid> { person });
+        }, new HashSet<Uuid>([person]));
 
         // Act
         var amendment = CampaignWorkforceChangeRules.Plan(person, "Worker", participant, audience,

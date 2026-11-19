@@ -51,6 +51,10 @@ public sealed class ProgramOperations(NativeOperationExecutor operations, IImmut
         ExecuteAsync<CreateProgram, ProgramRegistration>(context, context.Request.ProgramId, nameof(CreateProgram), null,
             context.Request with { Name = context.Request.Name?.Trim()! }, ct);
 
+    public ValueTask<Result<ProgramRegistration>> CreateAsync(IRequestContext<CreateProgramV3> context, CancellationToken ct) =>
+        ExecuteAsync<CreateProgramV3, ProgramRegistration>(context, context.Request.ProgramId, nameof(CreateProgram), null,
+            context.Request with { Name = context.Request.Name?.Trim()! }, ct);
+
     public async ValueTask<Result> ReviseAsync(IRequestContext<ReviseProgram> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -74,6 +78,7 @@ public sealed class ProgramOperations(NativeOperationExecutor operations, IImmut
         var tenant = intent switch
         {
             CreateProgram value => value.TenantId,
+            CreateProgramV3 value => value.TenantId,
             ReviseProgram value => value.TenantId,
             SelectProgramCriteriaEdition value => value.TenantId,
             _ => throw new InvalidOperationException("Another program command.")
@@ -81,17 +86,24 @@ public sealed class ProgramOperations(NativeOperationExecutor operations, IImmut
         var program = intent switch
         {
             CreateProgram value => value.ProgramId,
+            CreateProgramV3 value => value.ProgramId,
             ReviseProgram value => value.ProgramId,
             SelectProgramCriteriaEdition value => value.ProgramId,
             _ => throw new InvalidOperationException("Another program command.")
         };
         if (tenant == Uuid.Empty || program == Uuid.Empty || logicalId == Uuid.Empty)
             return Result<TOut>.Failure(new RequestError(RequestErrorKind.Validation, "A program command requires its authored identities."));
+        var creation = intent switch
+        {
+            CreateProgram value => value,
+            CreateProgramV3 value => new CreateProgram(value.ProgramId, value.TenantId, value.Name, value.Plan, value.EditionId),
+            _ => null,
+        };
         if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId) || RequestActor.IsSystem(context.Actor))
             throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
         var owner = new ComplianceProgram(tenant, program);
         ComplianceProgram? initialCreation = null;
-        if (intent is CreateProgram)
+        if (creation is not null)
         {
             if (creationReader is null || creationExecutor is null)
                 return Result<TOut>.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -108,19 +120,19 @@ public sealed class ProgramOperations(NativeOperationExecutor operations, IImmut
             }
         }
         AccessAdmissionEvidence? admission = null;
-        if (intent is CreateProgram or SelectProgramCriteriaEdition)
+        if (creation is not null || intent is SelectProgramCriteriaEdition)
         {
             if (admissionAuthority is null)
                 return Result<TOut>.Failure(new RequestError(RequestErrorKind.Conflict,
                     "Source-authoritative program access is unavailable.", true));
             var authoredDigest = IntentDigest(intent);
-            var digest = intent is CreateProgram
+            var digest = creation is not null
                 ? ProgramAdmissionEvidence.CreationDigest(authoredDigest, initialCreation!.IsCreated
                     ? initialCreation.CreationGeneration : checked(initialCreation.CreationGeneration + 1))
                 : authoredDigest;
             try
             {
-                admission = intent is CreateProgram
+                admission = creation is not null
                     ? await admissionAuthority.AdmitProgramCreationAsync(context, tenant, program,
                         owner.Stream.ToString(), digest, ct).ConfigureAwait(false)
                     : await admissionAuthority.AdmitProgramSelectionAsync(context, tenant, program, logicalId,
@@ -159,7 +171,7 @@ public sealed class ProgramOperations(NativeOperationExecutor operations, IImmut
         var creationGeneration = initialCreation?.CreationGeneration ?? 0;
         try
         {
-            if (intent is CreateProgram creation && initialCreation is { IsCreated: false })
+            if (creation is not null && initialCreation is { IsCreated: false })
             {
                 var failure = ProgramRules.Validate(new ProgramContent(creation.Name, creation.Plan));
                 if (failure is not null)
@@ -196,17 +208,17 @@ public sealed class ProgramOperations(NativeOperationExecutor operations, IImmut
                     preparedCut = NativePreparedCut.Of(current, current.NativeCut.Digest, current.NativeCut.MetadataDigest);
                     Result ready;
                     ProgramContent? value = null;
-                    if (intent is CreateProgram create)
+                    if (creation is not null)
                     {
                         ready = current.PrepareCreate(creationGeneration, operation);
                         if (ready.IsSuccess && publication is null)
                         {
-                            var published = await ReadPublicationAsync(create.EditionId, token).ConfigureAwait(false);
+                            var published = await ReadPublicationAsync(creation.EditionId, token).ConfigureAwait(false);
                             if (!published.IsSuccess)
                                 return Result<FirstResponseDescriptor>.Failure(published.Error!);
                             publication = published.Value;
                         }
-                        value = new ProgramContent(create.Name, create.Plan);
+                        value = new ProgramContent(creation.Name, creation.Plan);
                     }
                     else if (intent is ReviseProgram revise)
                     {
@@ -235,7 +247,7 @@ public sealed class ProgramOperations(NativeOperationExecutor operations, IImmut
                             return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
                         authored = await NativeContent.WriteAsync(content, tenant, ProgramContent.Schema, value, token).ConfigureAwait(false);
                     }
-                    var frozen = intent is CreateProgram
+                    var frozen = creation is not null
                         ? await NativeContent.FreezeAsync(content, tenant, RegistrationSchema, new ProgramRegistration(program), token).ConfigureAwait(false)
                         : await NativeContent.FreezeUnitAsync(content, tenant, token).ConfigureAwait(false);
                     result = frozen.Result;
@@ -247,7 +259,7 @@ public sealed class ProgramOperations(NativeOperationExecutor operations, IImmut
                             "The exact program prefix changed during preparation; reload and retry.", true));
                     return intent switch
                     {
-                        CreateProgram => current.Create(operation, authored!, first, result!, publication!, admission!, creationGeneration),
+                        CreateProgram or CreateProgramV3 => current.Create(operation, authored!, first, result!, publication!, admission!, creationGeneration),
                         ReviseProgram => current.Revise(operation, authored!, first, result!),
                         SelectProgramCriteriaEdition selection => current.SelectCriteriaEdition(operation, selection.EditionId, first, result!, publication!, admission!),
                         _ => throw new InvalidOperationException("Another program command."),
@@ -263,7 +275,7 @@ public sealed class ProgramOperations(NativeOperationExecutor operations, IImmut
             };
             if (descriptor is null)
                 return Result<TOut>.Failure(AcceptedAppendResult.ConflictError);
-            var schema = intent is CreateProgram ? RegistrationSchema : UnitResult.Schema;
+            var schema = creation is not null ? RegistrationSchema : UnitResult.Schema;
             if (descriptor.HttpStatus != 200 || descriptor.ContentType != ImmutableContentStoreExtensions.JsonMediaType ||
                 descriptor.ResultSchema != schema || descriptor.Body is not StandardResponseBody body || body.Content.Schema != schema)
                 throw new ImmutableContentIntegrityException("The program original response has another status, schema or body kind.");
@@ -299,6 +311,8 @@ public sealed class ProgramOperations(NativeOperationExecutor operations, IImmut
     static string IntentDigest(object intent) => intent switch
     {
         CreateProgram value => AuthoredIntentDigest.Compute(value),
+        CreateProgramV3 value => AuthoredIntentDigest.Compute(new CreateProgram(value.ProgramId, value.TenantId,
+            value.Name, value.Plan, value.EditionId)),
         ReviseProgram value => AuthoredIntentDigest.Compute(value),
         SelectProgramCriteriaEdition value => AuthoredIntentDigest.Compute(value),
         _ => throw new InvalidOperationException("Another program authored intent."),

@@ -27,7 +27,7 @@ public sealed class MethodologyTemplateCreationWorkflowTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var request = fixture.Request("Firm methodology");
+        var request = Fixture.Request("Firm methodology");
 
         // Act
         var admitted = await fixture.SendAsync(request);
@@ -59,9 +59,9 @@ public sealed class MethodologyTemplateCreationWorkflowTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var first = fixture.Request("Firm methodology");
+        var first = Fixture.Request("Firm methodology");
         Assert.True((await fixture.SendAsync(first)).IsSuccess);
-        var second = fixture.Request(" FIRM METHODOLOGY ");
+        var second = Fixture.Request(" FIRM METHODOLOGY ");
 
         // Act
         var refused = await fixture.SendAsync(second);
@@ -80,8 +80,8 @@ public sealed class MethodologyTemplateCreationWorkflowTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var winner = fixture.Request("Original name");
-        var loser = fixture.Request("Losing name") with { TemplateId = winner.TemplateId };
+        var winner = Fixture.Request("Original name");
+        var loser = Fixture.Request("Losing name") with { TemplateId = winner.TemplateId };
         Assert.True((await fixture.SendAsync(winner)).IsSuccess);
         Assert.True((await fixture.SendAsync(loser)).IsSuccess);
         var winningClaim = await fixture.ClaimAsync(winner.Name);
@@ -91,7 +91,7 @@ public sealed class MethodologyTemplateCreationWorkflowTests
         var created = await fixture.CreateAsync(winningClaim);
         var refused = await fixture.CreateAsync(losingClaim);
         var free = await fixture.NameAsync(loser.Name);
-        var next = fixture.Request(loser.Name);
+        var next = Fixture.Request(loser.Name);
         var reacquired = await fixture.SendAsync(next);
         var delayed = await fixture.CreateAsync(losingClaim);
         var oldAdmission = await fixture.SendAsync(loser);
@@ -117,7 +117,7 @@ public sealed class MethodologyTemplateCreationWorkflowTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var first = fixture.Request("Firm methodology");
+        var first = Fixture.Request("Firm methodology");
         Assert.True((await fixture.SendAsync(first)).IsSuccess);
         Assert.True((await fixture.CreateAsync(await fixture.ClaimAsync(first.Name))).IsSuccess);
         var changed = first with { CommandId = Uuid.CreateVersion4(), Purpose = "Another purpose" };
@@ -140,7 +140,7 @@ public sealed class MethodologyTemplateCreationWorkflowTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var request = fixture.Request("Unused new name");
+        var request = Fixture.Request("Unused new name");
         var legacy = new MethodologyTemplateContent("Legacy name", "Original legacy", "soc2",
             [new("access-review", "control", "Access review", "Review quarterly.", [])]);
         Assert.True((await fixture.Source.CreateAsync(new CreateMethodologyTemplate(request.TemplateId, legacy, "Create"), fixture.Operator)).IsSuccess);
@@ -170,7 +170,7 @@ public sealed class MethodologyTemplateCreationWorkflowTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var request = fixture.Request("Firm methodology");
+        var request = Fixture.Request("Firm methodology");
         Assert.True((await fixture.SendAsync(request)).IsSuccess);
         var claim = await fixture.ClaimAsync(request.Name);
         var create = Fixture.Creation(claim);
@@ -207,7 +207,7 @@ public sealed class MethodologyTemplateCreationWorkflowTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var request = fixture.Request("Firm methodology");
+        var request = Fixture.Request("Firm methodology");
         Assert.True((await fixture.SendAsync(request)).IsSuccess);
         var claim = await fixture.ClaimAsync(request.Name);
         var create = Fixture.Creation(claim);
@@ -234,8 +234,8 @@ public sealed class MethodologyTemplateCreationWorkflowTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var winner = fixture.Request("Original name");
-        var loser = fixture.Request("Losing name") with { TemplateId = winner.TemplateId };
+        var winner = Fixture.Request("Original name");
+        var loser = Fixture.Request("Losing name") with { TemplateId = winner.TemplateId };
         Assert.True((await fixture.SendAsync(winner)).IsSuccess);
         Assert.True((await fixture.SendAsync(loser)).IsSuccess);
         Assert.True((await fixture.CreateAsync(await fixture.ClaimAsync(winner.Name))).IsSuccess);
@@ -271,7 +271,7 @@ public sealed class MethodologyTemplateCreationWorkflowTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var request = fixture.Request("Firm methodology");
+        var request = Fixture.Request("Firm methodology");
         var actor = system ? RequestActor.System : Person(Uuid.CreateVersion4());
 
         // Act
@@ -289,7 +289,7 @@ public sealed class MethodologyTemplateCreationWorkflowTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var first = fixture.Request("Original name");
+        var first = Fixture.Request("Original name");
         Assert.True((await fixture.SendAsync(first)).IsSuccess);
 
         // Act
@@ -331,7 +331,7 @@ public sealed class MethodologyTemplateCreationWorkflowTests
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
         }
-        public CreateMethodologyTemplateV3 Request(string name) => new(Uuid.CreateVersion4(), Uuid.CreateVersion4(), name, "Original firm purpose");
+        public static CreateMethodologyTemplateV3 Request(string name) => new(Uuid.CreateVersion4(), Uuid.CreateVersion4(), name, "Original firm purpose");
         public ValueTask<Result> SendAsync(CreateMethodologyTemplateV3 request) => Bus.DispatchAsync(request,
             new RequestDispatchContext(Person(Operator), new McpInvocation("methodology.create")));
         public static CreateMethodologyTemplateLine Creation(ClaimedName claim) => new(Uuid.Parse(claim.Fact.Owner.Resource,

@@ -4,6 +4,7 @@ using Bdgrz.Compliance.Features.FirmServices.Aggregates;
 using Bdgrz.Compliance.Features.FirmServices.Commands;
 using Bdgrz.Compliance.Features.FirmServices.Models;
 using Bdgrz.Compliance.Tests.Testing;
+using RecordNonattestServiceRequest = Bdgrz.Compliance.Features.FirmServices.Commands.RecordNonattestService;
 namespace Bdgrz.Compliance.Tests.Features.FirmServices.Tests;
 
 public sealed class NonattestServiceRecordTests
@@ -13,7 +14,7 @@ public sealed class NonattestServiceRecordTests
     static readonly Uuid UserId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = new(2026, 11, 4, 12, 0, 0, TimeSpan.Zero);
     static NonattestServiceTerms Terms => new("control_design", new DateOnly(2026, 1, 1), null);
-    static RecordNonattestService Record() => new(Uuid.CreateVersion4(), TenantId, RecordId, 0, Terms);
+    static RecordNonattestServiceRequest Record() => new(Uuid.CreateVersion4(), TenantId, RecordId, 0, Terms);
 
     [Fact]
     public void ShouldRetainReasonAndOriginalFactsGivenRevisionThenVoid()
@@ -97,8 +98,11 @@ public sealed class NonattestServiceRecordTests
         var accepted = owner.View;
 
         // Act
-        var competing = owner.Revise(first with { CommandId = Uuid.CreateVersion4(),
-            Terms = Terms with { ServiceKind = "control_implementation" } }, UserId, Now.AddDays(2));
+        var competing = owner.Revise(first with
+        {
+            CommandId = Uuid.CreateVersion4(),
+            Terms = Terms with { ServiceKind = "control_implementation" }
+        }, UserId, Now.AddDays(2));
 
         // Assert
         Assert.False(competing.IsSuccess);

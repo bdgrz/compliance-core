@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Persistence;
 using Bdgrz.Compliance.Features.Controls.Aggregates;

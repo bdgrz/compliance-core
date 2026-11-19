@@ -1,3 +1,4 @@
+using System.Globalization;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -38,7 +39,7 @@ public sealed class ExaminationSetupHandler(IAggregateReader reader, IAggregateE
                 return admission;
         }
         return await executor.ExecuteAsync(new Examination(request.TenantId, request.ExaminationId), owner =>
-            CommandFailureRequestAdapter.ToOutcome(owner.Open(request, Uuid.Parse(actor.Value.Id), actor.Value.Display,
+            CommandFailureRequestAdapter.ToOutcome(owner.Open(request, Uuid.Parse(actor.Value.Id, CultureInfo.InvariantCulture), actor.Value.Display,
                 clock.GetUtcNow())), context, ct).ConfigureAwait(false);
     }
 
@@ -61,7 +62,7 @@ public sealed class ExaminationSetupHandler(IAggregateReader reader, IAggregateE
                 return admission;
         }
         return await executor.ExecuteAsync(new Examination(request.TenantId, request.ExaminationId), owner =>
-            CommandFailureRequestAdapter.ToOutcome(owner.ChangeAuditor(request, Uuid.Parse(actor.Value.Id), actor.Value.Display,
+            CommandFailureRequestAdapter.ToOutcome(owner.ChangeAuditor(request, Uuid.Parse(actor.Value.Id, CultureInfo.InvariantCulture), actor.Value.Display,
                 clock.GetUtcNow())), context, ct).ConfigureAwait(false);
     }
 
@@ -75,7 +76,7 @@ public sealed class ExaminationSetupHandler(IAggregateReader reader, IAggregateE
         if (!actor.IsSuccess)
             return Result.Failure(actor.Error);
         return await executor.ExecuteAsync(new Examination(request.TenantId, request.ExaminationId), owner =>
-            CommandFailureRequestAdapter.ToOutcome(owner.SetTargetDates(request, Uuid.Parse(actor.Value.Id), actor.Value.Display,
+            CommandFailureRequestAdapter.ToOutcome(owner.SetTargetDates(request, Uuid.Parse(actor.Value.Id, CultureInfo.InvariantCulture), actor.Value.Display,
                 clock.GetUtcNow())), context, ct).ConfigureAwait(false);
     }
 
@@ -89,7 +90,7 @@ public sealed class ExaminationSetupHandler(IAggregateReader reader, IAggregateE
         if (!actor.IsSuccess)
             return Result.Failure(actor.Error);
         return await executor.ExecuteAsync(new Examination(request.TenantId, request.ExaminationId), owner =>
-            CommandFailureRequestAdapter.ToOutcome(owner.ConfirmDates(request, Uuid.Parse(actor.Value.Id), actor.Value.Display,
+            CommandFailureRequestAdapter.ToOutcome(owner.ConfirmDates(request, Uuid.Parse(actor.Value.Id, CultureInfo.InvariantCulture), actor.Value.Display,
                 clock.GetUtcNow())), context, ct).ConfigureAwait(false);
     }
 
@@ -119,7 +120,7 @@ public sealed class ExaminationSetupHandler(IAggregateReader reader, IAggregateE
             }
         }
         return await executor.ExecuteAsync(new Examination(request.TenantId, request.ExaminationId), owner =>
-            CommandFailureRequestAdapter.ToOutcome(owner.NameSigners(request, Uuid.Parse(actor.Value.Id), actor.Value.Display,
+            CommandFailureRequestAdapter.ToOutcome(owner.NameSigners(request, Uuid.Parse(actor.Value.Id, CultureInfo.InvariantCulture), actor.Value.Display,
                 clock.GetUtcNow())), context, ct).ConfigureAwait(false);
     }
 

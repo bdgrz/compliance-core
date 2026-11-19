@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Features.TechnologyInventory.Events;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
 
@@ -26,7 +27,7 @@ public sealed class InformationAssetNamedChangeTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        var fact = Assert.IsType<InformationAssetClassified>(new AggregateScenario<InformationAsset>(asset).PendingEvents.Last());
+        var fact = Assert.IsType<InformationAssetClassified>(new AggregateScenario<InformationAsset>(asset).PendingEvents[^1]);
         Assert.Equal("internal", fact.PreviousClassification);
         Assert.Equal("confidential", fact.Classification);
         Assert.Equal(original with { Classification = "confidential" }, asset.Content);
@@ -62,7 +63,7 @@ public sealed class InformationAssetNamedChangeTests
         var retirement = Operation(asset, "RetireInformationAsset", 1);
         Assert.False(asset.Retire(retirement, NativeFacts.Ref(), 1, " ", At, Actor, At).IsSuccess);
         Assert.True(asset.Retire(retirement, NativeFacts.Ref(), 1, "No longer held", At, Actor, At).IsSuccess);
-        var fact = Assert.IsType<InformationAssetRetired>(new AggregateScenario<InformationAsset>(asset).PendingEvents.Last());
+        var fact = Assert.IsType<InformationAssetRetired>(new AggregateScenario<InformationAsset>(asset).PendingEvents[^1]);
         var replayed = NativeFacts.Replay(new InformationAsset(Tenant(asset), asset.Id), NativeFacts.Raised(asset));
 
         // Act

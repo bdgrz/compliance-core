@@ -1433,6 +1433,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Page<TypeIEntryDecisionView>))]
 [JsonSerializable(typeof(TypeIEntryUnresolvedItemView))]
 [JsonSerializable(typeof(TypeIEntryDecisionRecorded))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Readiness.Commands.RunDailyReadinessAssessments))]
 [JsonSerializable(typeof(AnnotateReadinessGap))]
 [JsonSerializable(typeof(ListReadinessAnnotations))]
 [JsonSerializable(typeof(ReadinessAnnotationView))]

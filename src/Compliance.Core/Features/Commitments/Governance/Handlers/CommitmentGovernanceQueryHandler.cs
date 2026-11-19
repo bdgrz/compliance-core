@@ -20,7 +20,7 @@ public sealed class CommitmentGovernanceQueryHandler(IAggregateReader reader, Co
         var owner = await reader.HydrateAsync(new Commitment(request.TenantId, request.CommitmentId), ct).ConfigureAwait(false);
         if (owner.Revision == 0 || owner.ProgramId != request.ProgramId)
             return Result<CommitmentStatus>.Failure(new RequestError(RequestErrorKind.NotFound, "The commitment was not found in this program."));
-        var terms = owner.Versions.LastOrDefault()?.Terms ?? owner.OpenDraft;
+        var terms = owner.Versions.Count == 0 ? owner.OpenDraft : owner.Versions[^1].Terms;
         IReadOnlyList<string> categories = [];
         if (terms is not null)
         {

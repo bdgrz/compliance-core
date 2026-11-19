@@ -34,7 +34,7 @@ public sealed class ArtifactHandlingClassChangeTests
         Assert.Equal(original.ContentSha256, owner.ContentSha256);
         Assert.Equal(original.ContentLength, owner.ContentLength);
         Assert.Equal(2, owner.Revision);
-        var change = Assert.IsType<ArtifactHandlingClassChanged>(new AggregateScenario<EvidenceArtifact>(owner).PendingEvents.Last());
+        var change = Assert.IsType<ArtifactHandlingClassChanged>(new AggregateScenario<EvidenceArtifact>(owner).PendingEvents[^1]);
         Assert.Equal("internal", change.PreviousClass);
         Assert.Equal("Personal information", change.Rationale);
         Assert.Equal(Actor, change.ChangedBy);
@@ -145,8 +145,12 @@ public sealed class ArtifactHandlingClassChangeTests
         var owner = Registered();
         var first = Request(owner);
         Assert.Null(owner.ChangeHandlingClass(first, Actor, Now));
-        Assert.Null(owner.ChangeHandlingClass(first with { CommandId = Uuid.CreateVersion4(), ExpectedRevision = 2,
-            HandlingClass = "confidential" }, Actor, Now.AddHours(1)));
+        Assert.Null(owner.ChangeHandlingClass(first with
+        {
+            CommandId = Uuid.CreateVersion4(),
+            ExpectedRevision = 2,
+            HandlingClass = "confidential"
+        }, Actor, Now.AddHours(1)));
         var facts = new AggregateScenario<EvidenceArtifact>(owner).PendingEvents.Select((fact, index) =>
             DomainEventSeed.Attach(fact, owner.Id, (ulong)index + 1)).ToArray();
         var replay = new AggregateScenario<EvidenceArtifact>(new EvidenceArtifact(first.TenantId, owner.Id, first.CommandId))

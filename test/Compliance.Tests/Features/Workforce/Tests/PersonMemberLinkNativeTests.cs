@@ -115,8 +115,7 @@ public sealed class PersonMemberLinkNativeTests
     }
 
     static RequestContext<T> Context<T>(AttestWorkforceManagementWallTests.Fixture fixture, T request) where T : IRequestBase =>
-        new(request, new RequestDispatchContext(ProgramManagementServices.Actor(fixture.UserId),
-            new HttpInvocation("PUT", "/synthetic/person/members", "/synthetic/person/members", "synthetic")));
+        new(request, ProgramManagementServices.Actor(fixture.UserId));
 
     static async Task<IReadOnlyList<DomainEvent>> PersonFactsAsync(AttestWorkforceManagementWallTests.Fixture fixture)
     {

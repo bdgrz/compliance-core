@@ -253,8 +253,15 @@ public sealed class WaiverManagementIndependenceTests
             return fixture;
         }
 
-        public Task<Result<SeparationOfDutiesWaiverView>> RecordAsync() => SendAsync(new RecordSeparationOfDutiesWaiver(
-            Tenant, Scope, Beneficiary, "Small operational team exception", DateTimeOffset.UtcNow.AddDays(7)), Requester);
+        public async Task<Result<SeparationOfDutiesWaiverView>> RecordAsync()
+        {
+            var recorded = await SendAsync(new RecordSeparationOfDutiesWaiver(Tenant, Scope,
+                Beneficiary, "Small operational team exception", DateTimeOffset.UtcNow.AddDays(7)), Requester)
+                .ConfigureAwait(false);
+            return recorded.IsSuccess
+                ? Result<SeparationOfDutiesWaiverView>.Success(recorded.Value!.Value)
+                : Result<SeparationOfDutiesWaiverView>.Failure(recorded.Error!);
+        }
 
         public async Task<Result<T>> SendAsync<T>(IRequest<T> request, Uuid user, bool mcp = false)
         {

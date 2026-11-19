@@ -287,8 +287,11 @@ public sealed class MethodologyTemplateDestinationCommandsTests
         // Act
         var frozen = MethodologyTemplateDestinationCommands.Freeze(entry);
         evidence[0] = "Mutated evidence specification";
-        var revised = frozen with { Control = frozen.Control! with
-        { Content = frozen.Control!.Content with { Objective = "A different objective" } } };
+        var revised = frozen with
+        {
+            Control = frozen.Control! with
+            { Content = frozen.Control!.Content with { Objective = "A different objective" } }
+        };
 
         // Assert
         Assert.Equal("Evidence specification", Assert.Single(frozen.Control!.Content.ExpectedEvidenceDescriptions));

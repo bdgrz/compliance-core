@@ -98,7 +98,7 @@ public sealed class IndependenceRuleSet : Aggregate
     }
 
     Result<IndependenceRuleSetView>? Replay(Uuid commandId, string digest, Uuid actorUserId) =>
-        _selectedReceipt is not { } receipt || receipt.CommandId != commandId ? null :
+        _selectedReceipt is not { } receipt || receipt.CommandId != commandId ? (Result<IndependenceRuleSetView>?)null :
         receipt.ActorUserId == actorUserId && receipt.AuthoredIntentSha256 == digest
             ? Result<IndependenceRuleSetView>.Success(_selectedView!)
             : Error(RequestErrorKind.Conflict, "The command already records another actor or intent.");

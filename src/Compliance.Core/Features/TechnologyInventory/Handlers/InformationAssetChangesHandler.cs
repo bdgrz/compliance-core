@@ -63,7 +63,9 @@ public sealed class InformationAssetChangesHandler(NativeOperationExecutor opera
                     ClassifyInformationAsset classified => value with { Classification = classified.Classification },
                     ChangeInformationAssetDetails details => value with
                     {
-                        Name = details.Name, RetentionReference = details.RetentionReference, Description = details.Description
+                        Name = details.Name,
+                        RetentionReference = details.RetentionReference,
+                        Description = details.Description
                     },
                     ChangeInformationAssetOwner changed => value with { OwnerPersonId = changed.OwnerPersonId },
                     RetireInformationAsset => value with { Lifecycle = "retired" },

@@ -84,7 +84,7 @@ sealed class CampaignRoster
         {
             var workforce = change as PolicyCampaignWorkforceAudienceAmended;
             var snapshot = change as PolicyCampaignAudienceAmended;
-            IReadOnlyList<CampaignAudienceAmendment> amendments = workforce is not null ? [workforce.Amendment] :
+            var amendments = workforce is not null ? new[] { workforce.Amendment } :
                 await content.ReadJsonAsync<IReadOnlyList<CampaignAudienceAmendment>>(realm,
                     snapshot!.AmendmentsManifest, ct).ConfigureAwait(false);
             var fact = NativeFactReference.Of(campaign.Stream, change);

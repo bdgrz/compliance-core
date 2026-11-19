@@ -7,13 +7,16 @@ using Bdgrz.Compliance.Features.Commitments.Governance.Services;
 using Bdgrz.Compliance.Features.Independence.Contracts;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Services;
+using ReviseCommitmentDraftRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.ReviseCommitmentDraft;
+using ReviewCommitmentDraftRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.ReviewCommitmentDraft;
+using RetireCommitmentRequest = Bdgrz.Compliance.Features.Commitments.Governance.Commands.RetireCommitment;
 namespace Bdgrz.Compliance.Features.Commitments.Governance.Handlers;
 
 public sealed class CommitmentGovernanceHandler(IAggregateReader reader, IAggregateExecutor executor,
     CommitmentGovernanceAccess access, CommitmentGovernanceSources sources, ISeparationOfDutiesWaiverProofResolver waivers,
     TimeProvider clock) : IRequestHandler<DraftCommitment>, IRequestHandler<ProposeCommitmentChange>,
-    IRequestHandler<ReviseCommitmentDraft>, IRequestHandler<DiscardCommitmentDraft>,
-    IRequestHandler<ReviewCommitmentDraft>, IRequestHandler<RetireCommitment>
+    IRequestHandler<ReviseCommitmentDraftRequest>, IRequestHandler<DiscardCommitmentDraft>,
+    IRequestHandler<ReviewCommitmentDraftRequest>, IRequestHandler<RetireCommitmentRequest>
 {
     public ValueTask<Result> HandleAsync(IRequestContext<DraftCommitment> context, CancellationToken ct) =>
         ExecuteAsync(context, context.Request.TenantId, context.Request.ProgramId, context.Request.CommitmentId,
@@ -23,7 +26,7 @@ public sealed class CommitmentGovernanceHandler(IAggregateReader reader, IAggreg
         ExecuteAsync(context, context.Request.TenantId, context.Request.ProgramId, context.Request.CommitmentId,
             context.Request.CommandId, "commitments.write", null, context.Request.Terms,
             (owner, actor, _, _, at) => owner.Propose(context.Request, actor, at), ct);
-    public ValueTask<Result> HandleAsync(IRequestContext<ReviseCommitmentDraft> context, CancellationToken ct) =>
+    public ValueTask<Result> HandleAsync(IRequestContext<ReviseCommitmentDraftRequest> context, CancellationToken ct) =>
         ExecuteAsync(context, context.Request.TenantId, context.Request.ProgramId, context.Request.CommitmentId,
             context.Request.CommandId, "commitments.write", null, context.Request.Terms,
             (owner, actor, _, _, at) => owner.Revise(context.Request, actor, at), ct);
@@ -43,19 +46,19 @@ public sealed class CommitmentGovernanceHandler(IAggregateReader reader, IAggreg
         return await executor.ExecuteAsync(new Commitment(request.TenantId, request.CommitmentId),
             value => CommandFailureRequestAdapter.ToOutcome(value.Discard(request, actor.Value, clock.GetUtcNow())), context, ct).ConfigureAwait(false);
     }
-    public ValueTask<Result> HandleAsync(IRequestContext<ReviewCommitmentDraft> context, CancellationToken ct) =>
+    public ValueTask<Result> HandleAsync(IRequestContext<ReviewCommitmentDraftRequest> context, CancellationToken ct) =>
         ExecuteAsync(context, context.Request.TenantId, context.Request.ProgramId, context.Request.CommitmentId,
             context.Request.CommandId, "commitments.approve", null, null,
             (owner, actor, boundary, waiver, at) => owner.Review(context.Request, actor, boundary, waiver, at), ct,
-            context.Request.SeparationOfDutiesWaiverId);
-    public ValueTask<Result> HandleAsync(IRequestContext<RetireCommitment> context, CancellationToken ct) =>
+            context.Request.SeparationOfDutiesWaiverId, isReview: true);
+    public ValueTask<Result> HandleAsync(IRequestContext<RetireCommitmentRequest> context, CancellationToken ct) =>
         ExecuteAsync(context, context.Request.TenantId, context.Request.ProgramId, context.Request.CommitmentId,
             context.Request.CommandId, "commitments.approve", null, null,
             (owner, actor, _, _, at) => owner.Retire(context.Request, actor, at), ct);
     async ValueTask<Result> ExecuteAsync(IRequestContext context, Uuid tenant, Uuid program, Uuid id, Uuid command,
         string permission, string? kind, CommitmentTerms? proposed,
         Func<Commitment, ActorReference, Uuid, SeparationOfDutiesWaiverProof?, DateTimeOffset, CommandFailure?> apply,
-        CancellationToken ct, Uuid? waiverId = null)
+        CancellationToken ct, Uuid? waiverId = null, bool isReview = false)
     {
         var actor = await access.RequireAsync(context, tenant, permission, ct).ConfigureAwait(false);
         if (!actor.IsSuccess)
@@ -68,7 +71,7 @@ public sealed class CommitmentGovernanceHandler(IAggregateReader reader, IAggreg
         SeparationOfDutiesWaiverProof? waiver = null;
         if (!owner.HasAccepted(command))
         {
-            var terms = proposed ?? (permission == "commitments.approve" && context.Request is ReviewCommitmentDraft ? owner.OpenDraft : null);
+            var terms = proposed ?? (permission == "commitments.approve" && isReview ? owner.OpenDraft : null);
             if (terms is not null)
             {
                 var source = await sources.RequireAsync(tenant, program, kind ?? owner.Kind, terms, ct).ConfigureAwait(false);

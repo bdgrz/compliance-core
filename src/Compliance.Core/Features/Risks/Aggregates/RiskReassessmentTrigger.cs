@@ -3,6 +3,8 @@ using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Risks.Commands;
 using Bdgrz.Compliance.Features.Risks.Events;
 using Bdgrz.Compliance.Features.Versioning.Services;
+using Bdgrz.Compliance.Features.Versioning.Models;
+using Bdgrz.Compliance.Features.Kernel.Services;
 
 namespace Bdgrz.Compliance.Features.Risks.Aggregates;
 

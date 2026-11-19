@@ -306,7 +306,7 @@ public sealed class MethodologyTemplateContributionNativeTests
     // These direct operation calls exercise retained historical fact/receipt decoding.
     // The live command handlers are retired and never invoke these services.
     static ValueTask<Result> HistoricalProposeAsync(MethodologyTemplateContributionOperations operations,
-        IRequestContext<ProposeDeidentifiedTemplateContribution> context, CancellationToken ct)
+        RequestContext<ProposeDeidentifiedTemplateContribution> context, CancellationToken ct)
     {
         var request = context.Request;
         return operations.ExecuteAsync(context, request.TenantId, request.ContributionId, request.ContributionId,
@@ -318,7 +318,7 @@ public sealed class MethodologyTemplateContributionNativeTests
     }
 
     static ValueTask<Result> HistoricalReviewAsync(MethodologyTemplateContributionOperations operations,
-        IRequestContext<ReviewTemplateContribution> context, CancellationToken ct)
+        RequestContext<ReviewTemplateContribution> context, CancellationToken ct)
     {
         var request = context.Request;
         return operations.ExecuteAsync(context, request.TenantId, request.ContributionId, request.CommandId,
@@ -330,7 +330,7 @@ public sealed class MethodologyTemplateContributionNativeTests
     }
 
     static ValueTask<Result> HistoricalAcceptAsync(MethodologyTemplateContributionOperations operations,
-        IRequestContext<AcceptTemplateContribution> context, CancellationToken ct)
+        RequestContext<AcceptTemplateContribution> context, CancellationToken ct)
     {
         var request = context.Request;
         return operations.ExecuteAsync(context, request.TenantId, request.ContributionId, request.CommandId,

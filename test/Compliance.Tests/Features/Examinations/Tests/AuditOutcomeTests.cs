@@ -152,26 +152,29 @@ public sealed class AuditOutcomeTests
     }
 
     [Fact]
-    public void ShouldRetainTypedProfessionalActorGivenAssignedAttestRecorder()
+    public void ShouldRetainMemberAttributionAndReportBindingGivenAssignedAttestRecorder()
     {
         // Arrange
         var outcome = new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId);
-        var actor = ActorReference.ForFirmStaff(Uuid.CreateVersion4(), "Assigned attest staff");
-        var content = Content() with { RepresentationLetterId = Uuid.CreateVersion4(),
-            SupersedesOutcomeId = Uuid.CreateVersion4() };
+        var content = Content() with
+        {
+            ReportArtifactId = Uuid.CreateVersion4(),
+            ReportArtifactSha256 = new string('d', 64)
+        };
 
         // Act
-        var failure = outcome.Record(content, actor, Now);
+        var failure = outcome.Record(content, RecorderId, "Assigned attest staff", Now);
         var replay = new AggregateScenario<AuditOutcomeAggregate>(new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId))
             .Given(new AggregateScenario<AuditOutcomeAggregate>(outcome).PendingEvents.ToArray()).Aggregate;
 
         // Assert
         Assert.Null(failure);
-        Assert.Equal(actor, outcome.Current!.RecordedBy);
-        Assert.Equal(Uuid.Empty, outcome.Current.RecordedByMemberId);
-        Assert.Equal(content.RepresentationLetterId, replay.Current!.Content.RepresentationLetterId);
-        Assert.Equal(content.SupersedesOutcomeId, replay.Current.Content.SupersedesOutcomeId);
-        Assert.Equal(actor, replay.Current.RecordedBy);
+        Assert.Equal(RecorderId, outcome.Current!.RecordedByMemberId);
+        Assert.Equal("Assigned attest staff", outcome.Current.RecordedByDisplay);
+        var replayed = Assert.IsType<AuditOutcomeView>(replay.Current);
+        Assert.Equal(content.ReportArtifactId, replayed.Content.ReportArtifactId);
+        Assert.Equal(content.ReportArtifactSha256, replayed.Content.ReportArtifactSha256);
+        Assert.Equal(RecorderId, replayed.RecordedByMemberId);
     }
 
     static AuditOutcomeContent Content() => new(ExaminationId, "type_i",

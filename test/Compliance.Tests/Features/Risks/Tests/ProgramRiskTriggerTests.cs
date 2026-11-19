@@ -1,5 +1,6 @@
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Risks.Aggregates;
 using Bdgrz.Compliance.Features.Risks.Commands;
@@ -77,11 +78,9 @@ public sealed class ProgramRiskTriggerTests
         Assert.Null(owner.Raise(new(owner.Id, tenant, program, owner.Id, "manual", "Annual change", null), actor, Now));
         Assert.Null(owner.Triage(new(Uuid.CreateVersion4(), tenant, program, owner.Id, 1, [Uuid.CreateVersion4()], null), actor, Now.AddMinutes(1)));
         var facts = new AggregateScenario<RiskReassessmentTrigger>(owner).PendingEvents.ToArray();
-        var replay = new RiskReassessmentTrigger(tenant, owner.Id);
+        var replay = NativeFacts.Replay(new RiskReassessmentTrigger(tenant, owner.Id), facts);
 
         // Act
-        replay.Load(facts);
-
         // Assert
         Assert.Equal(owner.Raised, replay.Raised);
         Assert.Equal(owner.Triaged, replay.Triaged);

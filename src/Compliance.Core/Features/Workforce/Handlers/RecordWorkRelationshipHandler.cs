@@ -26,14 +26,15 @@ using Bdgrz.Compliance.Features.Workforce.Authorizers;
 using Bdgrz.Compliance.Features.Workforce.Commands;
 using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Workforce.Readers;
+using Bdgrz.Compliance.Hosting;
 namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class RecordWorkRelationshipHandler(IAggregateExecutor executor,
     IAggregateReader reader, IPermissionAuthorizer permissions, IWorkforceObservationDirectoryReader roster,
     WorkforceObservationReadConsistency consistency, TimeProvider clock)
-    : IRequestHandler<RecordWorkRelationship, WorkRelationshipRegistration>
+    : IRequestHandler<RecordWorkRelationship, PortiaCreateOutcome<WorkRelationshipRegistration>>
 {
-    public async ValueTask<Result<WorkRelationshipRegistration>> HandleAsync(
+    public async ValueTask<Result<PortiaCreateOutcome<WorkRelationshipRegistration>>> HandleAsync(
         IRequestContext<RecordWorkRelationship> context, CancellationToken ct)
     {
         var actor = WorkforceActor.From(context);
@@ -44,7 +45,7 @@ public sealed class RecordWorkRelationshipHandler(IAggregateExecutor executor,
         var invalid = await WorkRelationshipReferences.ValidateAsync(reader, request.TenantId,
             request.PersonId, terms, ct).ConfigureAwait(false);
         if (invalid is not null)
-            return Result<WorkRelationshipRegistration>.Failure(invalid);
+            return Result<PortiaCreateOutcome<WorkRelationshipRegistration>>.Failure(invalid);
         var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
             ? subject
             : throw new InvalidOperationException("WorkforceAuthorizer must reject this actor.");
@@ -63,9 +64,11 @@ public sealed class RecordWorkRelationshipHandler(IAggregateExecutor executor,
                     "The sponsor must have an active employee or contractor relationship.");
         }
         var relationshipId = WorkRelationship.IdFor(request.TenantId, request.SourceWorkerId ?? "");
-        return await executor.ExecuteAsync(new WorkRelationship(request.TenantId, relationshipId),
+        var created = false;
+        var result = await executor.ExecuteAsync(new WorkRelationship(request.TenantId, relationshipId),
             relationship =>
             {
+                created = !relationship.IsCreated;
                 // Decide from the executor's hydrated state so a concurrent first record cannot
                 // bypass this gate through an earlier missing-record read.
                 if (relationship.IsCreated && (!managerChain.CanRead || !personalDetails.CanRead))
@@ -80,5 +83,6 @@ public sealed class RecordWorkRelationshipHandler(IAggregateExecutor executor,
                     request.SourceWorkerId ?? "", terms, actor, clock.GetUtcNow(), request.Source));
             }, context, ct)
             .ConfigureAwait(false);
+        return PortiaCreateOutcomes.From(result, created);
     }
 }

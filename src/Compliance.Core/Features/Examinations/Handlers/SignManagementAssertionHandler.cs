@@ -1,3 +1,4 @@
+using System.Globalization;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AuditPackages.Readers;
@@ -28,7 +29,7 @@ public sealed class SignManagementAssertionHandler(IAggregateReader reader, IAgg
             RbacPermissions.TenantAccess, ct).ConfigureAwait(false);
         if (!actor.IsSuccess)
             return Result.Failure(actor.Error);
-        var memberId = Uuid.Parse(actor.Value.Id);
+        var memberId = Uuid.Parse(actor.Value.Id, CultureInfo.InvariantCulture);
         var examination = await reader.HydrateAsync(new Examination(request.TenantId, request.ExaminationId), ct).ConfigureAwait(false);
         if (examination.Current is not { } setup || setup.ProgramId != request.ProgramId || !examination.IsNamedSigner(memberId))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
@@ -40,8 +41,13 @@ public sealed class SignManagementAssertionHandler(IAggregateReader reader, IAgg
         ManagementAssertionSignatureView signature;
         if (state.Signature is { } prior)
         {
-            signature = prior with { AssertionVersion = request.AssertionVersion, PackageId = request.PackageId,
-                PackageVersion = request.PackageVersion, SignerMemberId = memberId };
+            signature = prior with
+            {
+                AssertionVersion = request.AssertionVersion,
+                PackageId = request.PackageId,
+                PackageVersion = request.PackageVersion,
+                SignerMemberId = memberId
+            };
         }
         else
         {
@@ -54,7 +60,7 @@ public sealed class SignManagementAssertionHandler(IAggregateReader reader, IAgg
             if (!package.IsSuccess)
                 return Result.Failure(package.Error);
             var version = package.Value.View?.Versions.SingleOrDefault(item => item.PackageVersion == request.PackageVersion);
-            var validation = version?.Validations.LastOrDefault();
+            var validation = version is null || version.Validations.Count == 0 ? null : version.Validations[^1];
             if (package.Value.View is not { } packageView || packageView.ExaminationId != request.ExaminationId ||
                 packageView.PackageKind != setup.ExaminationType || version is null ||
                 version.Status is not ("validated" or "validated_with_overrides" or "disclosure_approved" or "delivered") ||

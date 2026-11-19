@@ -47,6 +47,9 @@ public sealed class TypeIEntryDecisionReader(IAggregateReader reader, IDomainEve
     }
 
     public async ValueTask<TypeIEntryDecisionRecord?> CurrentAsync(Uuid tenantId, Uuid programId,
-        CancellationToken ct = default) =>
-        (await ListAsync(tenantId, programId, ct).ConfigureAwait(false)).FirstOrDefault();
+        CancellationToken ct = default)
+    {
+        var decisions = await ListAsync(tenantId, programId, ct).ConfigureAwait(false);
+        return decisions.Count == 0 ? null : decisions[0];
+    }
 }

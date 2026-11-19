@@ -2,6 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.Evidence.Events;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Content.Services;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -50,9 +51,11 @@ public sealed class EvidenceRedactionDecisionTests
             PreparedAt = Now.AddMinutes(10)
         };
 
-        // Act / Assert
-        Assert.Throws<ImmutableContentIntegrityException>(() => Replay(id, Prepared(id, 0, first),
-            Approved(id, 1, approval), Prepared(id, 2, second)));
+        // Act
+        var replay = () => Replay(id, Prepared(id, 0, first), Approved(id, 1, approval), Prepared(id, 2, second));
+
+        // Assert
+        Assert.Throws<ImmutableContentIntegrityException>(replay);
     }
 
     [Fact]

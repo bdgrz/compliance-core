@@ -111,10 +111,10 @@ public sealed class OrganizationBootstrapAcceptanceTests
 
         // Assert
         Assert.True(exact.IsSuccess, exact.Error?.Message);
-        Assert.Equal(first.Value, exact.Value);
+        Assert.Equal(first.Value!.Value, exact.Value!.Value);
         Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
         Assert.Equal(before.Version, after.Version);
-        Assert.Equal(tenant, exact.Value.TenantId);
+        Assert.Equal(tenant, exact.Value!.Value.TenantId);
     }
 
     [Fact]
@@ -292,7 +292,7 @@ public sealed class OrganizationBootstrapAcceptanceTests
         {
             var result = await SendAsync(new RegisterTenant(Uuid.CreateVersion4(), "Acme", $"bootstrap-{Creator.ToString()[..8]}", "Acme LLC"), Actor);
             Assert.True(result.IsSuccess, result.Error?.Message);
-            return result.Value.TenantId;
+            return result.Value!.Value.TenantId;
         }
 
         public async Task BootstrapAsync(Uuid tenant, bool replay = false)

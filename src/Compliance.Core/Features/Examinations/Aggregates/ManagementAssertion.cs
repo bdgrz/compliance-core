@@ -188,14 +188,19 @@ public sealed class ManagementAssertion : Aggregate
             return CommandFailure.MissingRecord("The management assertion was not found.");
         if (current.Signature is { } original)
             return expectedRevision == Revision - 1 && (signature with
-                { SignerDisplay = original.SignerDisplay, SignedAt = original.SignedAt }) == original
+            { SignerDisplay = original.SignerDisplay, SignedAt = original.SignedAt }) == original
                 ? null : CommandFailure.StateConflict("The assertion already has a different terminal signature.");
         if (expectedRevision != Revision)
             return StaleRevision();
         if (!ValidSignature(current, signature))
             return Invalid("Assertion signing requires its exact current version and validated examination package.");
-        var state = current with { Signature = signature, Status = "signed", Revision = Revision + 1,
-            UpdatedAt = signature.SignedAt };
+        var state = current with
+        {
+            Signature = signature,
+            Status = "signed",
+            Revision = Revision + 1,
+            UpdatedAt = signature.SignedAt
+        };
         return Emit(state, signature.SignerMemberId, signature.SignedAt,
             static (tenant, subject, revision, actor, snapshot, at) =>
                 new ManagementAssertionSigned(tenant, subject, revision, actor!.Value, snapshot, at));

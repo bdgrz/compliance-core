@@ -24,7 +24,7 @@ public sealed class IndependenceRuleSetTests
         // Act
         var ratified = owner.Ratify(new(Uuid.CreateVersion4(), 1, 1), UserId, Now.AddDays(1));
         var revised = owner.Revise(new(Uuid.CreateVersion4(), 1, 2, IndependenceRuleSetTerms.Initial with
-            { LookBackMonths = 24 }), UserId, Now.AddDays(2));
+        { LookBackMonths = 24 }), UserId, Now.AddDays(2));
 
         // Assert
         Assert.True(ratified.IsSuccess);
@@ -76,7 +76,7 @@ public sealed class IndependenceRuleSetTests
         var source = new IndependenceRuleSet(1);
         Assert.True(source.Draft(request, null, UserId, Now).IsSuccess);
         Assert.True(source.Revise(new(Uuid.CreateVersion4(), 1, 1, IndependenceRuleSetTerms.Initial with
-            { LookBackMonths = 24 }), UserId, Now.AddDays(1)).IsSuccess);
+        { LookBackMonths = 24 }), UserId, Now.AddDays(1)).IsSuccess);
         Assert.True(source.Ratify(new(Uuid.CreateVersion4(), 1, 2), UserId, Now.AddDays(2)).IsSuccess);
         var owner = NativeFacts.Replay(new IndependenceRuleSet(1, request.CommandId), NativeFacts.Raised(source));
 

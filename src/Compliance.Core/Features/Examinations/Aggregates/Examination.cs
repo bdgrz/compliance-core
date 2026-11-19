@@ -4,6 +4,7 @@ using Bdgrz.Compliance.Features.Examinations.Contracts;
 using Bdgrz.Compliance.Features.Examinations.Events;
 using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.Versioning.Models;
 
 namespace Bdgrz.Compliance.Features.Examinations.Aggregates;
 
