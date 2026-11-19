@@ -14,4 +14,7 @@ public sealed record ManagementAssertionView(
     ManagementAssertionVersionView? CurrentVersion,
     IReadOnlyList<ManagementAssertionVersionView> Versions,
     IReadOnlyList<ManagementAssertionApprovalView> Approvals,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt)
+{
+    public ManagementAssertionSignatureView? Signature { get; init; }
+}

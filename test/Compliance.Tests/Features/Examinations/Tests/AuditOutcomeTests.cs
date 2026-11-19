@@ -136,6 +136,44 @@ public sealed class AuditOutcomeTests
         Assert.Equal("report-ref-2026-09", replay.Current.Content.ReportReference);
     }
 
+    [Fact]
+    public void ShouldRetainAuditorWordingExactlyGivenReceivedWhitespace()
+    {
+        // Arrange
+        var outcome = new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId);
+        var content = Content() with { OutcomeSummary = "  Auditor wording\nsecond line  " };
+
+        // Act
+        var failure = outcome.Record(content, RecorderId, "Lead", Now);
+
+        // Assert
+        Assert.Null(failure);
+        Assert.Equal(content.OutcomeSummary, outcome.Current!.Content.OutcomeSummary);
+    }
+
+    [Fact]
+    public void ShouldRetainTypedProfessionalActorGivenAssignedAttestRecorder()
+    {
+        // Arrange
+        var outcome = new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId);
+        var actor = ActorReference.ForFirmStaff(Uuid.CreateVersion4(), "Assigned attest staff");
+        var content = Content() with { RepresentationLetterId = Uuid.CreateVersion4(),
+            SupersedesOutcomeId = Uuid.CreateVersion4() };
+
+        // Act
+        var failure = outcome.Record(content, actor, Now);
+        var replay = new AggregateScenario<AuditOutcomeAggregate>(new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId))
+            .Given(new AggregateScenario<AuditOutcomeAggregate>(outcome).PendingEvents.ToArray()).Aggregate;
+
+        // Assert
+        Assert.Null(failure);
+        Assert.Equal(actor, outcome.Current!.RecordedBy);
+        Assert.Equal(Uuid.Empty, outcome.Current.RecordedByMemberId);
+        Assert.Equal(content.RepresentationLetterId, replay.Current!.Content.RepresentationLetterId);
+        Assert.Equal(content.SupersedesOutcomeId, replay.Current.Content.SupersedesOutcomeId);
+        Assert.Equal(actor, replay.Current.RecordedBy);
+    }
+
     static AuditOutcomeContent Content() => new(ExaminationId, "type_i",
         Uuid.CreateVersion4(), new string('a', 64), Uuid.CreateVersion4(), 1,
         Uuid.CreateVersion4(), new string('b', 64), "auditor", "qualified",
