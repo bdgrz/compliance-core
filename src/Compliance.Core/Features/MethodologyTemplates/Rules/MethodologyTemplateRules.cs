@@ -402,7 +402,7 @@ public sealed class MethodologyTemplateRules
             Name = content.Name.Trim(),
             Description = content.Description.Trim(),
             TemplateKind = kind,
-            Records = Freeze(content.Records.Select(item => item with
+            Records = Freeze(content.Records.Select(item => MethodologyTemplateDestinationCommands.Freeze(item) with
             {
                 EntryKey = item.EntryKey.Trim(),
                 RecordKind = item.RecordKind.Trim().ToLowerInvariant(),
@@ -469,10 +469,7 @@ public sealed class MethodologyTemplateRules
 
     static MethodologyTemplateContent FreezeContent(MethodologyTemplateContent content) => content with
     {
-        Records = Freeze(content.Records.Select(item => item with
-        {
-            CriteriaReferences = Freeze(item.CriteriaReferences.ToArray()),
-        }).ToArray()),
+        Records = Freeze(content.Records.Select(MethodologyTemplateDestinationCommands.Freeze).ToArray()),
     };
 
     static bool ValidContributionShare(MethodologyTemplateContributionShareView contribution) =>
