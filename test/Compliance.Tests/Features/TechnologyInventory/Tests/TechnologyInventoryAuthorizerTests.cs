@@ -61,10 +61,52 @@ using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.TechnologyInventory.Authorizers;
 using Bdgrz.Compliance.Features.TechnologyInventory.Queries;
+using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 namespace Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
 
 public sealed class TechnologyInventoryAuthorizerTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldRequireCurrentOrganizationLeadGivenInformationAssetClassification(bool lead)
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
+        var roles = new OrganizationRoles(lead);
+        var authorizer = new TechnologyInventoryAuthorizer(new FixedMembershipDirectory(true), new ActiveTenant(),
+            new RecordingPermissionAuthorizer(true), rolePermissions: roles);
+        var request = new ClassifyInformationAsset(Uuid.CreateVersion4(), tenant, Uuid.CreateVersion4(), 1, "restricted");
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(new RequestContext<ITechnologyInventoryRequest>(request,
+            BdgrzActor(user)), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(lead, result.IsSuccess);
+        Assert.Equal(BuiltInRbac.ComplianceManagementRoleId(tenant), roles.RoleId);
+        Assert.Equal(RbacPermissions.TechnologyInventoryManage, roles.Permission);
+    }
+
+    sealed class OrganizationRoles(bool allowed) : IAccessGrantRolePermissionAuthorizer
+    {
+        public Uuid RoleId { get; private set; }
+        public string? Permission { get; private set; }
+
+        public ValueTask<bool> IsAllowedAsOrganizationRoleAsync(Uuid tenantId, Uuid userId, Uuid memberId,
+            Uuid roleId, string permission, CancellationToken ct = default)
+        {
+            RoleId = roleId;
+            Permission = permission;
+            Assert.Equal(RbacIds.Member(tenantId, userId), memberId);
+            return ValueTask.FromResult(allowed);
+        }
+
+        public ValueTask<bool> IsAllowedAsRoleAsync(Uuid tenantId, Uuid userId, Uuid memberId, Uuid programId,
+            Uuid roleId, string permission, CancellationToken ct = default) => ValueTask.FromResult(false);
+    }
+
     [Fact]
     public async Task ShouldRequireTechnologyInventoryPermissionGivenActiveTenantMember()
     {

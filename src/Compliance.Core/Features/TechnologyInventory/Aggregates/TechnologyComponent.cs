@@ -77,6 +77,11 @@ public sealed class TechnologyComponent : Aggregate
             _content = ev.Content;
         });
         On<InformationAssetRevisionRecorded>(_ => _foreign = true);
+        On<InformationAssetRecorded>(_ => _foreign = true);
+        On<InformationAssetDetailsChanged>(_ => _foreign = true);
+        On<InformationAssetClassified>(_ => _foreign = true);
+        On<InformationAssetOwnerChanged>(_ => _foreign = true);
+        On<InformationAssetRetired>(_ => _foreign = true);
         On<DataFlowRevisionRecorded>(_ => _foreign = true);
     }
 

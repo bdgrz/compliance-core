@@ -81,6 +81,9 @@ static class AccessReviewRules
         if (reason is "not_found" or "not_assigned")
             return new RequestError(RequestErrorKind.NotFound,
                 "The review item was not found among the reviewer's assignments.");
+        if (state.Verification is not null)
+            return new RequestError(RequestErrorKind.Conflict,
+                "A verified access review item cannot revise its decision.");
         if (reason == "self_review")
         {
             var scope = new SeparationOfDutiesWaiverScope(SeparationOfDutiesRecordTypes.AccessReviewItem,

@@ -1,4 +1,5 @@
 using Cntryl.Fitz;
+using Bdgrz.Compliance.Features.TechnologyInventory.Contracts;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -42,7 +43,7 @@ sealed class FitzTechnologyInventoryDirectory(IKvClient client)
                         ev.ChangedAt), static view => (view.TenantId, view.Revision), ct)
                     .ConfigureAwait(false);
                 break;
-            case InformationAssetRevisionRecorded ev:
+            case IInformationAssetFact ev:
                 await ApplyAsync(TechnologyInventoryDirectorySchema.Assets,
                     TechnologyInventoryDirectorySchema.AssetRevisions, ev.InformationAssetId,
                     new InformationAssetView(ev.TenantId, ev.InformationAssetId, ev.Revision,
