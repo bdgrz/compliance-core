@@ -43,7 +43,7 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution.Models;
 ///     operation, so an exact retry replays the original registration even after the policy, the requirement or the
 ///     roster changed. The launch has no caller revision to compare.
 /// </summary>
-sealed class CampaignLaunch(NativeOperationExecutor operations, IImmutableContentStore content, TimeProvider clock)
+sealed class CampaignLaunch(NativeOperationExecutor operations, IImmutableContentStore content, TimeProvider clock, IAggregateReader? reader = null)
 {
     public async ValueTask<Result<CampaignRegistration>> LaunchAsync<TRequest>(IRequestContext<TRequest> context,
         Uuid tenantId, Uuid programId, Uuid campaignId, string commandKind, TRequest request, DateOnly dueOn,
@@ -65,6 +65,7 @@ sealed class CampaignLaunch(NativeOperationExecutor operations, IImmutableConten
         var launchedOn = DateOnly.FromDateTime(now.UtcDateTime);
         string? trimmed = null;
         var count = 0;
+        string? wording = null;
         var outcome = await operations.ExecuteAsync(new NativeOperation<PolicyDistributionCampaign>(binding,
             () => new PolicyDistributionCampaign(tenantId, campaignId, campaignId), owner => owner.Acceptance,
             async (owner, token) =>
@@ -76,6 +77,9 @@ sealed class CampaignLaunch(NativeOperationExecutor operations, IImmutableConten
                 if (!resolved.IsSuccess)
                     return Result<FirstResponseDescriptor>.Failure(resolved.Error!);
                 terms = resolved.Value!;
+                if (terms.Subject.Kind == "policy")
+                    wording = reader is null ? PolicyDistributionCampaign.DefaultAcknowledgementText :
+                        (await reader.HydrateAsync(new AcknowledgementWording(tenantId), token).ConfigureAwait(false)).Wording;
                 if (CampaignRules.CheckLaunch(dueOn, launchedOn, instructions) is { } failure)
                     return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
                 trimmed = string.IsNullOrWhiteSpace(instructions) ? null : instructions.Trim();
@@ -96,7 +100,7 @@ sealed class CampaignLaunch(NativeOperationExecutor operations, IImmutableConten
             (PolicyDistributionCampaign owner, ImmutableContentRef frozen) => owner.LaunchCampaign(provenance,
                 programId, terms!.Subject, terms.AudienceKind, teams!, terms.RosterSnapshotId,
                 terms.RosterContentSha256, launchedOn, dueOn, trimmed, count, actor.Reference, actor.MemberId, now,
-                entriesContent!, frozen, result!)), context, ct).ConfigureAwait(false);
+                entriesContent!, frozen, result!, wording)), context, ct).ConfigureAwait(false);
         return await PolicyCampaignContent.ResponseAsync<CampaignRegistration>(content, tenantId, outcome, ct)
             .ConfigureAwait(false);
     }

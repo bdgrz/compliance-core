@@ -139,6 +139,20 @@ public sealed class PolicyDistributionCampaign : Aggregate
             LatestRosterSnapshotId = ev.RosterSnapshotId;
             _revision++;
         });
+        On<PolicyCampaignWorkforceAudienceAmended>(ev =>
+        {
+            if (ev.Operation is null || ev.TenantId != _tenantId || ev.CampaignId != Id ||
+                _frozen is null || IsSealed || ev.Revision != _revision + 1 ||
+                ev.Reconciliation != _reconciliations + 1 || ev.Operation.Owner != Stream ||
+                ev.WorkforceFact.Stream.Realm != Stream.Realm || ev.WorkforceFact.Stream.Area != "work-relationships" ||
+                ev.WorkforceFact.EventId == Uuid.Empty || ev.WorkforceFact.AggregateVersion == 0 ||
+                ev.Operation.CausationEventId != ev.WorkforceFact.EventId || ev.FirstResponse is null ||
+                ev.Amendment.PersonId == Uuid.Empty || ev.Amendment.Reason is not ("joiner" or "mover_in" or "mover_out" or "leaver"))
+                throw new ImmutableContentIntegrityException("A workforce audience amendment requires its exact open campaign and source.");
+            Acceptance.Observe(ev);
+            _revision = ev.Revision;
+            _reconciliations = ev.Reconciliation;
+        });
         On<PolicyParticipantResultAdmitted>(ev =>
         {
             if (ev.Operation is null)
@@ -279,13 +293,17 @@ public sealed class PolicyDistributionCampaign : Aggregate
         string audienceKind, ImmutableContentRef audienceTeams, Uuid rosterSnapshotId, string rosterContentSha256,
         DateOnly launchedOn, DateOnly dueOn, string? instructions, int audienceCount, ActorReference actor,
         Uuid actorMemberId, DateTimeOffset launchedAt, ImmutableContentRef entries, ImmutableContentRef firstResponse,
-        ImmutableContentRef operationResult)
+        ImmutableContentRef operationResult, string? acknowledgementText = null)
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(subject);
         if (operation.Owner != Stream || operation.LogicalId != Id)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A launch is the root operation of its own campaign."));
+        if (subject.Kind == "policy" && acknowledgementText is not null &&
+            (string.IsNullOrWhiteSpace(acknowledgementText) || acknowledgementText.Length > 4000))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A policy campaign requires its exact acknowledgement wording of 1 to 4000 characters."));
         var prepared = PrepareLaunch();
         if (!prepared.IsSuccess)
             return prepared;
@@ -294,7 +312,7 @@ public sealed class PolicyDistributionCampaign : Aggregate
             return append;
         RaiseEvent(new PolicyCampaignLaunched(_tenantId, programId, Id, subject, audienceKind, audienceTeams,
             rosterSnapshotId, rosterContentSha256, launchedOn, dueOn, instructions,
-            subject.Kind == "policy" ? DefaultAcknowledgementText : null, audienceCount, actor, actorMemberId,
+            subject.Kind == "policy" ? acknowledgementText ?? DefaultAcknowledgementText : null, audienceCount, actor, actorMemberId,
             launchedAt, operation, firstResponse, operationResult));
         // The frozen audience is part of the launch: its own logical id keeps one root fact per logical id.
         RaiseEvent(new PolicyCampaignAudienceFrozen(_tenantId, Id, 1, entries,
@@ -338,6 +356,25 @@ public sealed class PolicyDistributionCampaign : Aggregate
         RaiseEvent(new PolicyCampaignAudienceAmended(_tenantId, Id, _reconciliations + 1, 1, rosterSnapshotId,
             rosterContentSha256, observedOn, amendments, actor, amendedAt, operation, firstResponse,
             operationResult));
+        return Result.Success;
+    }
+
+    /// <summary>Applies one source-backed audience change without replacing the immutable launch roster.</summary>
+    public Result AmendFromWorkforce(OperationProvenance operation, NativeFactReference source,
+        CampaignAudienceAmendment amendment, DateTimeOffset amendedAt, ImmutableContentRef firstResponse)
+    {
+        if (operation.Owner != Stream || operation.CommandKind != nameof(ApplyCampaignWorkforceChange) ||
+            operation.OriginalExpectedRevision is not null || operation.CausationEventId != source.EventId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "The workforce amendment requires its exact source-bound operation."));
+        var prepared = PrepareOpenAdmission(Revision);
+        if (!prepared.IsSuccess)
+            return prepared;
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
+        RaiseEvent(new PolicyCampaignWorkforceAudienceAmended(_tenantId, Id, Revision + 1,
+            _reconciliations + 1, source, amendment, operation.Actor, amendedAt, operation, firstResponse));
         return Result.Success;
     }
 

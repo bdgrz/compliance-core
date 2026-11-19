@@ -160,6 +160,25 @@ static class PolicyCampaignHistory
                     revision++;
                     latestRoster = value.RosterSnapshotId;
                     break;
+                case PolicyCampaignWorkforceAudienceAmended value:
+                    if (!open || value.TenantId != owner.TenantId || value.CampaignId != owner.Id ||
+                        value.Revision != revision + 1 || value.Reconciliation != reconciliation + 1 ||
+                        value.WorkforceFact.Stream.Realm != owner.Stream.Realm || value.WorkforceFact.Stream.Area != "work-relationships" ||
+                        value.WorkforceFact.EventId == Uuid.Empty || value.WorkforceFact.AggregateVersion == 0 ||
+                        value.Operation.CommandKind != nameof(ApplyCampaignWorkforceChange) ||
+                        value.Operation.CausationEventId != value.WorkforceFact.EventId ||
+                        value.Operation.LogicalId != CampaignWorkforceChangeRules.CommandId(value.WorkforceFact.EventId, owner.Id) ||
+                        value.Operation.RootOperationId != value.Operation.LogicalId || value.Operation.Owner != owner.Stream ||
+                        value.Operation.AffectedOwner != owner.Stream || value.Operation.ExpectedRevisionOwner != owner.Stream ||
+                        value.Operation.OriginalExpectedRevision is not null || value.Operation.Actor != value.Actor ||
+                        value.Operation.AcceptedAt != value.AmendedAt || !Reference(value.FirstResponse, FirstResponses.Schema) ||
+                        value.Amendment.PersonId == Uuid.Empty || string.IsNullOrWhiteSpace(value.Amendment.DisplayName) ||
+                        value.Amendment.Reason is not ("joiner" or "mover_in" or "mover_out" or "leaver") ||
+                        (value.Amendment.Reason is "joiner" or "mover_in") != (value.Amendment.DueOn is not null))
+                        throw Invalid("A workforce amendment must bind its exact source and open campaign cut.");
+                    reconciliation++;
+                    revision++;
+                    break;
                 case PolicyParticipantResultAdmitted value:
                     if (!open || value.Owner != owner.Stream || value.Revision != revision + 1 || value.Generation != generation ||
                         value.Operation.CommandKind is not (nameof(AcknowledgePolicy) or nameof(RecordTrainingCompletion) or nameof(ApproveCampaignWaiver)) ||
