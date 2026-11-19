@@ -1,0 +1,42 @@
+{
+  "model": "jev-latest",
+  "state": "A finding has independently owned corrective actions. A reviewer can record a resolution approval without reading action records. A read-side projection consumes the finding and action facts and displays closed only when approval is effective, admission for that review round is sealed, and every admitted action in the round is completed or cancelled. Existing policy requires both closure proposal and its review to wait until all actions are terminal, and requires a durable FindingClosed event. The daily queue appears only after at least one action exists and every action is completed; cancellation alone is not completion. A proposed ordered admission marker may reject action requests ordered after it; each accepted action owns its own event stream. No finding event records an action outcome. Projection data is asynchronously updated and can lag. An approved closed finding may later be reopened for a new round.",
+  "questions": {
+    "projection_lag_false_closed": {
+      "type": "noul",
+      "instructions": "If a projection has not yet observed an admitted open action, can it display closed incorrectly despite the stated rule?"
+    },
+    "review_order_changed": {
+      "type": "noul",
+      "instructions": "Does approving resolution before an admitted action is terminal change the existing policy that review must wait for all actions to be terminal?"
+    },
+    "close_event_changed": {
+      "type": "noul",
+      "instructions": "Is a computed closed display alone equivalent to a durable authoritative FindingClosed event for downstream consumers that require that event?"
+    },
+    "sealed_alone": {
+      "type": "noul",
+      "instructions": "Does merely recording a seal marker prove all accepted actions are terminal?"
+    },
+    "queue_cancel": {
+      "type": "noul",
+      "instructions": "If the only action was cancelled rather than completed, does the stated daily closure review queue rule require an item?"
+    },
+    "one_round": {
+      "type": "noul",
+      "instructions": "If an action from an earlier round remains open and the candidate only considers actions admitted in the latest round, can closed be displayed while an action associated with the finding remains open?"
+    },
+    "independent_action": {
+      "type": "noul",
+      "instructions": "Can each action record its own terminal outcome without appending an outcome to the Finding stream?"
+    },
+    "review_without_collection": {
+      "type": "noul",
+      "instructions": "Can the reviewer record a resolution approval without reading the whole collection if that approval is expressly not yet a finding closure?"
+    },
+    "all_terminal_projection": {
+      "type": "noul",
+      "instructions": "Can an up-to-date complete projection compute whether all admitted actions are terminal for a display without an aggregate-owned action roster?"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "triage_settled": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "triage_change": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "extract_complete": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "witness_exists": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "witness_all": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "current_requirement": {
+      "type": "noul",
+      "noul": 0.31
+    },
+    "historical_claim": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "zero_safe": {
+      "type": "noul",
+      "noul": 0.04
+    }
+  },
+  "usage": {
+    "input_tokens": 857,
+    "output_tokens": 150
+  }
+}

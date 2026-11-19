@@ -1,0 +1,25 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "late_fact": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "fence_prevents": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "source_active": {
+      "type": "noul",
+      "noul": 0.14
+    },
+    "post_retirement": {
+      "type": "noul",
+      "noul": 0.04
+    }
+  },
+  "usage": {
+    "input_tokens": 532,
+    "output_tokens": 76
+  }
+}

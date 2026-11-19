@@ -2,41 +2,44 @@ using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using Bdgrz.Compliance.Tests.E2E;
-using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Commands;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
+using Bdgrz.Compliance.Tests.E2E;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -68,14 +71,12 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Commands;
-using Bdgrz.Compliance.Features.UserIdentities.Readers;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
 [Trait("Category", "WebIntegration")]
@@ -210,8 +211,11 @@ public sealed class ProfessionalDutyTransportTests
         var actor = Uuid.Parse(await TenantInvitationE2ETests.LoginAsync(client, "professional-duty-transport@example.com"),
             CultureInfo.InvariantCulture);
         await using var scope = factory.Services.CreateAsyncScope();
-        Assert.True((await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(
-            new SeedPlatformOperatorRoster(PlatformOperatorRoster.CreationId, [actor]), RequestActor.System)).IsSuccess);
+        var operation = Uuid.CreateVersion4();
+        var context = new RequestDispatchContext(RequestActor.System);
+        Assert.True((await scope.ServiceProvider.GetRequiredService<IAggregateExecutor>().ExecuteAsync(
+            new PlatformOperator(actor, operation), owner => AggregateOutcome.CommitOnSuccess(owner.GrantBootstrap(
+                operation, 0, Uuid.CreateVersion4(), new ActorAttribution("portia:system", "Portia"))), context)).IsSuccess);
     }
 
     sealed class ExistingUsers : IPlatformUserDirectoryReader

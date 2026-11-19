@@ -1,16 +1,20 @@
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Criteria.Aggregates;
+using Bdgrz.Compliance.Features.Criteria.Commands;
 using Bdgrz.Compliance.Features.Criteria.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Criteria.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
@@ -20,20 +24,16 @@ using Bdgrz.Compliance.Features.NativeOperations.Services;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Criteria.Aggregates;
-using Bdgrz.Compliance.Features.Criteria.Commands;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Criteria.Handlers;
 
 /// <summary>
@@ -42,7 +42,8 @@ namespace Bdgrz.Compliance.Features.Criteria.Handlers;
 ///     first response, so an exact retry returns the original revision even after later edits and a changed intent
 ///     under the same command id conflicts.
 /// </summary>
-public sealed class SetCriteriaTextOverlayHandler(NativeOperationExecutor operations, ICriteriaCatalog catalog, IImmutableContentStore content, TimeProvider clock)
+public sealed class SetCriteriaTextOverlayHandler(NativeOperationExecutor operations, ICriteriaEntryAuthority entryAuthority,
+    IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<SetCriteriaTextOverlay, CriteriaTextOverlayRegistration>
 {
     const string CommandKind = "SetCriteriaTextOverlay";
@@ -54,8 +55,17 @@ public sealed class SetCriteriaTextOverlayHandler(NativeOperationExecutor operat
         if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
             return Failure(RequestErrorKind.Validation,
                 "An overlay requires a command id and a non-negative expected revision.");
-        if (catalog.GetEntry(request.EditionId, request.Identifier) is not { } entry)
+        var authoritative = await entryAuthority.ReadAsync(request.EditionId, request.Identifier, ct).ConfigureAwait(false);
+        if (!authoritative.IsSuccess)
+            return Result<CriteriaTextOverlayRegistration>.Failure(authoritative.Error!);
+        if (authoritative.Value is null || authoritative.Value.Status == CriteriaEntryAuthorityStatus.Pending)
+            return Pending();
+        if (authoritative.Value.Status == CriteriaEntryAuthorityStatus.NotMember)
             return Failure(RequestErrorKind.NotFound, "The criterion was not found.");
+        if (authoritative.Value.Status != CriteriaEntryAuthorityStatus.Accepted ||
+            authoritative.Value.Proof?.Entry is not { } entry || entry.EditionId != request.EditionId ||
+            entry.Identifier != request.Identifier)
+            return Pending();
 
         var actor = OperationsActor.From(context.Actor, request.TenantId);
         var now = clock.GetUtcNow();
@@ -97,4 +107,8 @@ public sealed class SetCriteriaTextOverlayHandler(NativeOperationExecutor operat
 
     static Result<CriteriaTextOverlayRegistration> Failure(RequestErrorKind kind, string message) =>
         Result<CriteriaTextOverlayRegistration>.Failure(new RequestError(kind, message));
+
+    static Result<CriteriaTextOverlayRegistration> Pending() =>
+        Result<CriteriaTextOverlayRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
+            "The criterion publication is not available yet.", true));
 }

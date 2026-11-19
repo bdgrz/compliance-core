@@ -1,45 +1,50 @@
-using Bdgrz.Compliance.Hosting.Persistence;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using Cntryl.Fitz;
-using Cntryl.Portia;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Events;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Events;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -73,12 +78,10 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance;
-using Bdgrz.Compliance.Features.Incidents.Commands;
-using Bdgrz.Compliance.Features.Responsibilities.Events;
-using Bdgrz.Compliance.Features.SourceFacts.Readers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Events;
+using Cntryl.Fitz;
+using Cntryl.Portia;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 namespace Bdgrz.Compliance.Tests.Hosting.Persistence;
 
 public sealed class EventPersistenceFrameTests
@@ -172,6 +175,119 @@ public sealed class EventPersistenceFrameTests
         // Assert
         Assert.IsType<EventFrameSizeException>(failure);
         Assert.Equal(0, streams.Begins);
+    }
+
+    [Fact]
+    public async Task ShouldRejectCriteriaEnvelopeBeforeAppendGivenOversizedAttribution()
+    {
+        // Arrange
+        using var provider = Compose();
+        var serializer = provider.GetRequiredService<IDomainEventSerializer>();
+        var streams = new RecordingStreamClient();
+        var store = Guard(new FitzEventStore(streams, serializer), serializer);
+        var ev = new EditionLabelReservationFenced("2017_tsc", Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), "cancelled");
+        ev.AttachMetadata(Event("metadata", 1, new string('a', 20_000)).Metadata);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => await store.AppendAsync(Stream, 0, [ev]));
+
+        // Assert
+        var size = Assert.IsType<EventFrameSizeException>(failure);
+        Assert.Equal(FitzFrameLimits.SmallEventMaximumBytes, size.MaximumBytes);
+        Assert.Equal(0, streams.Begins);
+        Assert.Empty(streams.Bodies);
+    }
+
+    [Fact]
+    public async Task ShouldRejectPlatformOperatorEnvelopeBeforeAppendGivenOversizedAttribution()
+    {
+        // Arrange
+        using var provider = Compose();
+        var serializer = provider.GetRequiredService<IDomainEventSerializer>();
+        var streams = new RecordingStreamClient();
+        var store = Guard(new FitzEventStore(streams, serializer), serializer);
+        var actor = Uuid.CreateVersion4();
+        var ev = new PlatformOperatorAccessGranted(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 0,
+            actor, new ActorAttribution(actor.ToString(), "bdgrz"), "approved");
+        ev.AttachMetadata(Event("metadata", 1, new string('a', 20_000)).Metadata);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => await store.AppendAsync(Stream, 0, [ev]));
+
+        // Assert
+        var size = Assert.IsType<EventFrameSizeException>(failure);
+        Assert.Equal(FitzFrameLimits.SmallEventMaximumBytes, size.MaximumBytes);
+        Assert.Equal(0, streams.Begins);
+        Assert.Empty(streams.Bodies);
+    }
+
+    [Fact]
+    public async Task ShouldRejectPrimaryOperatorEnvelopeBeforeAppendGivenOversizedAttribution()
+    {
+        // Arrange
+        using var provider = Compose();
+        var serializer = provider.GetRequiredService<IDomainEventSerializer>();
+        var streams = new RecordingStreamClient();
+        var store = Guard(new FitzEventStore(streams, serializer), serializer);
+        var actor = Uuid.CreateVersion4();
+        var ev = new PrimaryPlatformOperatorSeatReserved(Uuid.CreateVersion4(), 0, Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, false, Uuid.Empty,
+            actor, new ActorAttribution(actor.ToString(), "bdgrz"));
+        ev.AttachMetadata(Event("metadata", 1, new string('a', 20_000)).Metadata);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => await store.AppendAsync(Stream, 0, [ev]));
+
+        // Assert
+        var size = Assert.IsType<EventFrameSizeException>(failure);
+        Assert.Equal(FitzFrameLimits.SmallEventMaximumBytes, size.MaximumBytes);
+        Assert.Equal(0, streams.Begins);
+        Assert.Empty(streams.Bodies);
+    }
+
+    [Fact]
+    public async Task ShouldRejectAccessPolicyEnvelopeBeforeAppendGivenOversizedAttribution()
+    {
+        // Arrange
+        using var provider = Compose();
+        var serializer = provider.GetRequiredService<IDomainEventSerializer>();
+        var streams = new RecordingStreamClient();
+        var store = Guard(new FitzEventStore(streams, serializer), serializer);
+        var content = new ImmutableContentRef(Uuid.CreateVersion4(), new string('a', 64), 10,
+            "application/json", "access-policy-v1");
+        var ev = new AccessPolicyActivated(Uuid.CreateVersion4(), 0, 1, content,
+            new ActorAttribution("portia:system", "Portia"));
+        ev.AttachMetadata(Event("metadata", 1, new string('a', 20_000)).Metadata);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => await store.AppendAsync(Stream, 0, [ev]));
+
+        // Assert
+        var size = Assert.IsType<EventFrameSizeException>(failure);
+        Assert.Equal(FitzFrameLimits.SmallEventMaximumBytes, size.MaximumBytes);
+        Assert.Equal(0, streams.Begins);
+        Assert.Empty(streams.Bodies);
+    }
+
+    [Fact]
+    public async Task ShouldPersistCriteriaEnvelopeGivenSmallAttributedFact()
+    {
+        // Arrange
+        using var provider = Compose();
+        var serializer = provider.GetRequiredService<IDomainEventSerializer>();
+        var streams = new RecordingStreamClient();
+        var store = Guard(new FitzEventStore(streams, serializer), serializer);
+        var ev = new EditionLabelReservationFenced("2017_tsc", Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), "cancelled");
+        ev.AttachMetadata(Event("metadata", 1).Metadata);
+
+        // Act
+        await store.AppendAsync(Stream, 0, [ev]);
+
+        // Assert
+        Assert.Equal(1, streams.Begins);
+        Assert.Single(streams.Bodies);
     }
 
     [Theory]

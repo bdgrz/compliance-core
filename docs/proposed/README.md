@@ -8,8 +8,17 @@ Implementation resumed on 2026-11-05. Read the [latest restart checkpoint](resta
 for verified state and the [implementation order](implementation-order.md) for the
 recommended remaining queue. Source checkpoints and audits are not completed domain acceptance.
 
+The [domain boundary refinement](reviews/domain-boundaries-review.md) reopens
+prior context locks where child collections, source authority or stream replay
+need redesign. Product decisions remain in force. The selected criteria and
+program-creation design can guide implementation; its stated source, recovery
+and provider guarantees are acceptance gates, not established capabilities.
+Other context alternatives remain provisional where their docs say so.
+
 - [Domain model](domain-model.md): modeling rules, process spine and context map.
 - [Context conventions](contexts/conventions.md): rules every context cites.
+- [Local write invariants](local-invariants.md): patterns for focused decisions,
+  cross-owner authority, and derived status.
 - [Decisions](decisions): product decisions the contexts apply.
 - [Read models](read-models.md): the read-layer plan. Where its names differ
   from a context doc, the context doc wins.
@@ -24,30 +33,30 @@ Mermaid flow diagrams, its decisions with Jev evidence, and its open questions.
 
 | Context | Status |
 | --- | --- |
-| [Platform access](contexts/platform-access.md) | Locked 2026-11-03 |
-| [Firm services](contexts/firm-services.md) | Locked 2026-11-03 |
-| [Program and scope](contexts/program-and-scope.md) | Locked 2026-11-03 |
-| [Workforce assurance](contexts/workforce-assurance.md) | Locked 2026-11-03 |
-| [Application inventory](contexts/application-inventory.md) | Locked 2026-11-03 |
-| [Technology and information inventory](contexts/technology-and-information-inventory.md) | Locked 2026-11-03 |
-| [Examinations](contexts/examinations.md) | Locked 2026-11-03 |
-| [Auditor collaboration](contexts/auditor-collaboration.md) | Locked 2026-11-03 |
-| [Commitments](contexts/commitments.md) | Locked 2026-11-03 |
-| [Criteria](contexts/criteria.md) | Locked; authority revised 2026-11-05 |
-| [Control environment](contexts/control-environment.md) | Locked 2026-11-03 |
-| [Evidence](contexts/evidence.md) | Locked 2026-11-03 |
-| [Retention](contexts/retention.md) | Locked 2026-11-03 |
-| [Assurance work](contexts/assurance-work.md) | Locked 2026-11-03 |
-| [Policies](contexts/policies.md) | Locked 2026-11-03 |
-| [Risk and provider oversight](contexts/risk-and-provider-oversight.md) | Locked 2026-11-03 |
-| [External access governance](contexts/external-access-governance.md) | Locked 2026-11-03 |
-| [Change and incident oversight](contexts/change-and-incident-oversight.md) | Locked 2026-11-03 |
-| [System description](contexts/system-description.md) | Locked 2026-11-03 |
-| [Readiness](contexts/readiness.md) | Locked 2026-11-03 |
-| [Advisor collaboration](contexts/advisor-collaboration.md) | Locked 2026-11-03 |
-| [Exports](contexts/exports.md) | Locked 2026-11-03 |
-| [Firm methodology](contexts/firm-methodology.md) | Locked 2026-11-03 |
-| [Work queue](contexts/work-queue.md) | Locked 2026-11-03 |
+| [Platform access](contexts/platform-access.md) | Refining boundaries |
+| [Firm services](contexts/firm-services.md) | Refining boundaries |
+| [Program and scope](contexts/program-and-scope.md) | Refining boundaries |
+| [Workforce assurance](contexts/workforce-assurance.md) | Refining boundaries |
+| [Application inventory](contexts/application-inventory.md) | Refining boundaries |
+| [Technology and information inventory](contexts/technology-and-information-inventory.md) | Refining boundaries |
+| [Examinations](contexts/examinations.md) | Refining boundaries |
+| [Auditor collaboration](contexts/auditor-collaboration.md) | Refining boundaries |
+| [Commitments](contexts/commitments.md) | Refining boundaries |
+| [Criteria](contexts/criteria.md) | Product behavior selected; authority qualification pending |
+| [Control environment](contexts/control-environment.md) | Refining boundaries |
+| [Evidence](contexts/evidence.md) | Refining boundaries |
+| [Retention](contexts/retention.md) | Refining boundaries |
+| [Assurance work](contexts/assurance-work.md) | Refining boundaries |
+| [Policies](contexts/policies.md) | Refining boundaries |
+| [Risk and provider oversight](contexts/risk-and-provider-oversight.md) | Refining boundaries |
+| [External access governance](contexts/external-access-governance.md) | Refining boundaries |
+| [Change and incident oversight](contexts/change-and-incident-oversight.md) | Refining boundaries |
+| [System description](contexts/system-description.md) | Refining boundaries |
+| [Readiness](contexts/readiness.md) | Refining boundaries |
+| [Advisor collaboration](contexts/advisor-collaboration.md) | Refining boundaries |
+| [Exports](contexts/exports.md) | Refining boundaries |
+| [Firm methodology](contexts/firm-methodology.md) | Refining boundaries |
+| [Work queue](contexts/work-queue.md) | Refining boundaries |
 
 Every context doc follows the shared [context conventions](contexts/conventions.md)
 (diagram notation, reactor rules, guards and reviews). The
@@ -71,7 +80,7 @@ work.
 
 | Owner | Implementation status | Evidence |
 | --- | --- | --- |
-| Organization creation and primary administration | Implemented in source across API/MCP/write/read; 152 focused and 8 transport cases pass; native/full acceptance blocked | [Review](reviews/organization-bootstrap.md) |
+| Organization creation and primary administration | Implemented in source across API/MCP/write/read; 152 focused and 8 transport cases pass; native/full acceptance blocked | [Review](reviews/organization-bootstrap.md), [platform access](contexts/platform-access.md) |
 | Scoped team access | Partial: source-backed scoped permissions, custom roles, guest caps and public cutover; native/full acceptance and primary continuity remain | [Review](reviews/scoped-team-access.md) |
 | Program | Partial: all-present target-date ordering passes focused/native tests; full gate and canonical Program workflow remain | [Date invariant](reviews/program-target-date-ordering.md) |
 | Person | Partial: named details and generic-writer retirement locally qualified; member linkage and accepted HRIS application remain | [Writer cutover](reviews/person-named-writer-cutover.md) |
@@ -79,4 +88,4 @@ work.
 | WorkRelationship | Partial: named lifecycle/changes and computed sponsorship; initial/source conformance and whole-owner qualification remain | [Terminal review](reviews/work-relationship-terminal-status.md), [named changes and sponsorship](reviews/workforce-named-and-sponsorship.md) |
 | ServiceIdentity | Partial: named owner/purpose/review/lifecycle operations assembled; full proposed owner and workflow qualification remain | [Review](reviews/service-identity-retirement.md), [assembled evidence](implementation-progress.md) |
 | MethodologyTemplateDraft | Partial: source-bound draft, personal review and published line reads assembled; name admission, ordered applications and full qualification remain | [Review](reviews/methodology-template-draft.md), [assembled evidence](implementation-progress.md) |
-| CorrectiveAction / Finding | Partial: cancellation and severity vocabulary; finding-owned outcomes and proposed closure migration remain | [Review](reviews/corrective-action-cancellation.md) |
+| CorrectiveAction / Finding | Partial: cancellation and severity vocabulary; closure semantics and independent action authority are being refined | [Review](reviews/corrective-action-cancellation.md), [boundary review](reviews/finding-boundaries-review.md) |

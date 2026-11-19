@@ -1,0 +1,56 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "operators": "The platform permits any number of operators, but at least one must remain. Existing design stores all grants and revocations as events on one PlatformOperators aggregate. Alternative: independent per-user operator records; one small designation record has up to two protected primary operator seats. A member must first accept a primary mark on their operator record; this prevents revocation of that user until that seat is released after another primary mark is confirmed. Nonprimary operators can be revoked independently. Changing the sole primary requires designating another active operator first.",
+    "invites": "An invitation may select any number of teams and guest programs. The guest must have at least one authorized program. The current invitation event includes all teams and programs. The member episode event also includes all programs. Separate invitation-selection records and per-episode program grants are proposed. The invitation owner will not track every item outcome.",
+    "request": "A request is fulfilled when it has at least one available artifact. Today its fulfilment event carries an unbounded array of artifact IDs; individual EvidenceSupport records link artifacts to a target.",
+    "retention": "A clean artifact may be disposed after a retention decision. A download is authorized by reading that the artifact is available, then starts later; availability can change between the read and disclosure.",
+    "offboarding": "An organization must not complete offboarding until all accepted engagements close and every required attest package is delivered. Independent engagement records can change concurrently and projections can lag."
+  },
+  "questions": {
+    "operator_churn": {
+      "type": "noul",
+      "instructions": "Can the existing single PlatformOperators event stream grow with every independent operator grant and revocation?"
+    },
+    "operator_safety": {
+      "type": "noul",
+      "instructions": "If both primary seats can only be released after another active marked primary exists, can at least one operator remain even while ordinary operators are revoked independently?"
+    },
+    "operator_workflow": {
+      "type": "noul",
+      "instructions": "Can protecting the sole designated primary require an extra designation step even when other ordinary operators already exist?"
+    },
+    "offer_event": {
+      "type": "noul",
+      "instructions": "Can including an unrestricted team and program selection in one invitation event make that one event grow with the number of selections?"
+    },
+    "guest_pair": {
+      "type": "noul",
+      "instructions": "Can an exact per-episode per-program grant enforce that a guest may access a particular program, if authorization also confirms the correct active episode?"
+    },
+    "guest_minimum": {
+      "type": "noul",
+      "instructions": "Does splitting programs into independent grants alone ensure that every guest offer has at least one program under concurrent removal?"
+    },
+    "fulfil_array": {
+      "type": "noul",
+      "instructions": "Can one fulfilment event listing all artifact IDs become large when the number of artifacts is unrestricted?"
+    },
+    "anchor": {
+      "type": "noul",
+      "instructions": "Would a fulfilment referencing one independently verified available artifact plus separately owned support links avoid collecting all artifact IDs on the request?"
+    },
+    "artifact_race": {
+      "type": "noul",
+      "instructions": "Can an availability read become stale before a later disclosure if the artifact may be disposed or reclassified concurrently?"
+    },
+    "projected_zero": {
+      "type": "noul",
+      "instructions": "Does a projection showing no accepted open engagements prove all engagements have closed when the projection can lag?"
+    },
+    "racing_offboarding": {
+      "type": "noul",
+      "instructions": "Can an engagement acceptance that races offboarding invalidate a completion based only on a previous read of tenant status?"
+    }
+  }
+}

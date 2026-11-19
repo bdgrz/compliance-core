@@ -3,26 +3,24 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Bdgrz.Compliance;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Incidents.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -42,17 +40,21 @@ using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.Tenants.Services;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -84,12 +86,11 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.Incidents.Commands;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Authorizers;
-using Bdgrz.Compliance.Features.UserIdentities.Readers;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 namespace Bdgrz.Compliance.Tests.E2E;
 
 [Collection(BrokerCollectionDefinition.Name)]
@@ -104,7 +105,7 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
     {
         // Arrange
         var applicationName = $"compliance-operator-portfolio-{Guid.NewGuid():N}";
-        // Both theory cases share the class broker and its fixed platform roster stream.
+        // Both theory cases share the class broker and platform operator streams.
         const string operatorEmail = "operator-portfolio-e2e@example.com";
         const string ordinaryEmail = "ordinary-portfolio-e2e@example.com";
         IHost? worker = null;
@@ -159,8 +160,8 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                 var seedDeadline = DateTimeOffset.UtcNow.AddSeconds(15);
                 while (DateTimeOffset.UtcNow < seedDeadline)
                 {
-                    var roster = await reader.HydrateAsync(new PlatformOperatorRoster());
-                    if ((await PlatformOperatorRosterContent.ReadAsync(scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), roster)).Operators.Any(item => item.UserId == operatorId))
+                    var owner = await reader.HydrateAsync(new PlatformOperator(operatorId));
+                    if (owner.IsActive)
                     {
                         seeded = true;
                         break;
@@ -170,11 +171,9 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                 if (!seeded)
                 {
                     await using var apiScope = factory.Services.CreateAsyncScope();
-                    var apiRoster = await apiScope.ServiceProvider.GetRequiredService<IAggregateReader>()
-                        .HydrateAsync(new PlatformOperatorRoster());
-                    var apiAuthority = await PlatformOperatorRosterContent.ReadAsync(apiScope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), apiRoster);
-                    Assert.Fail($"The worker did not read the operator seed; API initialized={apiRoster.IsInitialized}, " +
-                                $"API operator={apiAuthority.Operators.Any(item => item.UserId == operatorId)}.");
+                    var apiOwner = await apiScope.ServiceProvider.GetRequiredService<IAggregateReader>()
+                        .HydrateAsync(new PlatformOperator(operatorId));
+                    Assert.Fail($"The worker did not read the operator bootstrap; API operator active={apiOwner.IsActive}.");
                 }
             }
             const string path = "/api/v1/platform/tenants";
@@ -241,13 +240,14 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
             _ = await ordinaryMcp.When("bdgrz.platform.tenant.list",
                 new Dictionary<string, object?>()).ExpectFailure();
 
-            var initialRoster = await ReadRosterAsync(operatorClient);
+            var initialOperator = await ReadOperatorStateAsync(operatorClient, operatorId);
+            var initialOrdinary = await ReadOperatorStateAsync(operatorClient, ordinaryId);
             using var deniedGrant = await ordinaryClient.PutAsJsonAsync(
                 $"/api/v1/platform/operator-grants/{Guid.NewGuid()}", new
                 {
                     user_id = operatorId.ToString(),
                     reason = "Attempt without platform access",
-                    expected_revision = initialRoster.GetProperty("revision").GetUInt64(),
+                    expected_revision = initialOperator.GetProperty("operator_revision").GetUInt64(),
                 });
             Assert.Equal(HttpStatusCode.Forbidden, deniedGrant.StatusCode);
             _ = await ordinaryMcp.When("bdgrz.platform.operator.list",
@@ -256,8 +256,8 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                 $"/api/v1/platform/operator-grants/{Guid.NewGuid()}", new
                 {
                     user_id = Uuid.CreateVersion4().ToString(),
-                    reason = "Unknown user must not become the last operator",
-                    expected_revision = initialRoster.GetProperty("revision").GetUInt64(),
+                    reason = "Unknown user cannot receive access",
+                    expected_revision = 0,
                 });
             Assert.Equal(HttpStatusCode.Conflict, unknownUserGrant.StatusCode);
 
@@ -265,8 +265,7 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
             {
                 var users = scope.ServiceProvider.GetRequiredService<IPlatformUserDirectoryReader>();
                 var userDeadline = DateTimeOffset.UtcNow.AddSeconds(15);
-                while (DateTimeOffset.UtcNow < userDeadline &&
-                       !await users.ExistsAsync(ordinaryId))
+                while (DateTimeOffset.UtcNow < userDeadline && !await users.ExistsAsync(ordinaryId))
                     await Task.Delay(100);
                 Assert.True(await users.ExistsAsync(ordinaryId));
             }
@@ -277,47 +276,54 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                     ["user_id"] = ordinaryId.ToString(),
                     ["reason"] = "Rotate platform operations",
                     ["command_id"] = Guid.NewGuid().ToString(),
-                    ["expected_revision"] = initialRoster.GetProperty("revision").GetUInt64(),
+                    ["expected_revision"] = initialOrdinary.GetProperty("operator_revision").GetUInt64(),
                 }).ExpectSuccess();
-            using var grantedRoster = await ordinaryClient.GetAsync("/api/v1/platform/operators");
-            Assert.Equal(HttpStatusCode.OK, grantedRoster.StatusCode);
-            using var grantedDocument = JsonDocument.Parse(await grantedRoster.Content.ReadAsStreamAsync());
-            Assert.Contains(grantedDocument.RootElement.GetProperty("operators").EnumerateArray(),
-                item => item.GetProperty("user_id").GetString() == ordinaryId.ToString());
             if (worker is not null)
             {
                 await using var scope = worker.Services.CreateAsyncScope();
-                var roster = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-                    .HydrateAsync(new PlatformOperatorRoster());
-                var authority = await PlatformOperatorRosterContent.ReadAsync(scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), roster);
-                Assert.Contains(authority.Operators, item => item.UserId == ordinaryId);
+                var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+                    .HydrateAsync(new PlatformOperator(ordinaryId));
+                Assert.True(owner.IsActive);
             }
             _ = await ordinaryMcp.When("bdgrz.platform.operator.list",
                 new Dictionary<string, object?>()).ExpectSuccess();
 
+            // Establish a confirmed replacement before releasing the original primary.
+            var current = await ReadOperatorStateAsync(ordinaryClient, ordinaryId);
+            await RetryPrimaryAsync(ordinaryClient,
+                $"/api/v1/platform/operators/{ordinaryId}/primary-designations/{Guid.NewGuid()}",
+                new { expected_revision = current.GetProperty("primary_revision").GetUInt64() });
+            current = await ReadOperatorStateAsync(ordinaryClient, operatorId);
+            await RetryPrimaryAsync(ordinaryClient,
+                $"/api/v1/platform/operators/{operatorId}/primary-releases/{Guid.NewGuid()}",
+                new
+                {
+                    generation = current.GetProperty("seat_generation").GetUInt64(),
+                    expected_revision = current.GetProperty("primary_revision").GetUInt64(),
+                    reason = "Transfer platform operations"
+                });
+            current = await ReadOperatorStateAsync(ordinaryClient, operatorId);
             _ = await ordinaryMcp.When("bdgrz.platform.operator.revoke",
                 new Dictionary<string, object?>
                 {
                     ["user_id"] = operatorId.ToString(),
                     ["reason"] = "Transfer platform operations",
                     ["command_id"] = Guid.NewGuid().ToString(),
-                    ["expected_revision"] = grantedDocument.RootElement.GetProperty("revision").GetUInt64(),
-                    ["assignment_id"] = grantedDocument.RootElement.GetProperty("operators").EnumerateArray()
-                        .Single(item => item.GetProperty("user_id").GetString() == operatorId.ToString())
-                        .GetProperty("assignment_id").GetString(),
+                    ["expected_revision"] = current.GetProperty("operator_revision").GetUInt64(),
+                    ["assignment_id"] = current.GetProperty("grant_episode_id").GetString(),
                 }).ExpectSuccess();
             using var revokedAccess = await operatorClient.GetAsync("/api/v1/platform/operators");
             Assert.Equal(HttpStatusCode.Forbidden, revokedAccess.StatusCode);
             _ = await operatorMcp.When("bdgrz.platform.operator.list",
                 new Dictionary<string, object?>()).ExpectFailure();
-            var soleRoster = await ReadRosterAsync(ordinaryClient);
+            var sole = await ReadOperatorStateAsync(ordinaryClient, ordinaryId);
             using var lastOperator = await ordinaryClient.PutAsJsonAsync(
                 $"/api/v1/platform/operator-revocations/{Guid.NewGuid()}", new
                 {
                     user_id = ordinaryId.ToString(),
-                    reason = "Would leave no operator",
-                    expected_revision = soleRoster.GetProperty("revision").GetUInt64(),
-                    assignment_id = soleRoster.GetProperty("operators")[0].GetProperty("assignment_id").GetString(),
+                    reason = "Would leave no primary",
+                    expected_revision = sole.GetProperty("operator_revision").GetUInt64(),
+                    assignment_id = sole.GetProperty("grant_episode_id").GetString(),
                 });
             Assert.Equal(HttpStatusCode.Conflict, lastOperator.StatusCode);
 
@@ -329,25 +335,37 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
             using var stillRevoked = await restartedOperator.GetAsync("/api/v1/platform/operators");
             Assert.Equal(HttpStatusCode.Forbidden, stillRevoked.StatusCode);
 
+            current = await ReadOperatorStateAsync(ordinaryClient, operatorId);
             _ = await ordinaryMcp.When("bdgrz.platform.operator.grant",
                 new Dictionary<string, object?>
                 {
                     ["user_id"] = operatorId.ToString(),
-                    ["reason"] = "Complete roster rotation test",
+                    ["reason"] = "Complete operator rotation test",
                     ["command_id"] = Guid.NewGuid().ToString(),
-                    ["expected_revision"] = soleRoster.GetProperty("revision").GetUInt64(),
+                    ["expected_revision"] = current.GetProperty("operator_revision").GetUInt64(),
                 }).ExpectSuccess();
-            var restoredRoster = await ReadRosterAsync(operatorClient);
+            current = await ReadOperatorStateAsync(ordinaryClient, operatorId);
+            await RetryPrimaryAsync(ordinaryClient,
+                $"/api/v1/platform/operators/{operatorId}/primary-designations/{Guid.NewGuid()}",
+                new { expected_revision = current.GetProperty("primary_revision").GetUInt64() });
+            current = await ReadOperatorStateAsync(operatorClient, ordinaryId);
+            await RetryPrimaryAsync(operatorClient,
+                $"/api/v1/platform/operators/{ordinaryId}/primary-releases/{Guid.NewGuid()}",
+                new
+                {
+                    generation = current.GetProperty("seat_generation").GetUInt64(),
+                    expected_revision = current.GetProperty("primary_revision").GetUInt64(),
+                    reason = "Restore initial primary"
+                });
+            current = await ReadOperatorStateAsync(operatorClient, ordinaryId);
             _ = await operatorMcp.When("bdgrz.platform.operator.revoke",
                 new Dictionary<string, object?>
                 {
                     ["user_id"] = ordinaryId.ToString(),
                     ["reason"] = "Restore initial operator for the next host mode",
                     ["command_id"] = Guid.NewGuid().ToString(),
-                    ["expected_revision"] = restoredRoster.GetProperty("revision").GetUInt64(),
-                    ["assignment_id"] = restoredRoster.GetProperty("operators").EnumerateArray()
-                        .Single(item => item.GetProperty("user_id").GetString() == ordinaryId.ToString())
-                        .GetProperty("assignment_id").GetString(),
+                    ["expected_revision"] = current.GetProperty("operator_revision").GetUInt64(),
+                    ["assignment_id"] = current.GetProperty("grant_episode_id").GetString(),
                 }).ExpectSuccess();
         }
         finally
@@ -360,12 +378,26 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
         }
     }
 
-    static async Task<JsonElement> ReadRosterAsync(HttpClient client)
+    static async Task<JsonElement> ReadOperatorStateAsync(HttpClient client, Uuid userId)
     {
-        using var response = await client.GetAsync("/api/v1/platform/operators");
+        using var response = await client.GetAsync($"/api/v1/platform/operators/{userId}");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var document = JsonDocument.Parse(await response.Content.ReadAsStreamAsync());
         return document.RootElement.Clone();
+    }
+
+    static async Task RetryPrimaryAsync<T>(HttpClient client, string path, T request)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            using var response = await client.PutAsJsonAsync(path, request);
+            if (response.IsSuccessStatusCode)
+                return;
+            Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+            await Task.Delay(100);
+        }
+        Assert.Fail($"Primary transition did not settle: {path}");
     }
 
     static HttpClient CreateClient(Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> factory,

@@ -1,0 +1,29 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "empty_fence": {
+      "type": "noul",
+      "noul": 0.54
+    },
+    "late_proposal": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "duplicate_count": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "checker_late": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "fixed_chain": {
+      "type": "noul",
+      "noul": 0.13
+    }
+  },
+  "usage": {
+    "input_tokens": 661,
+    "output_tokens": 92
+  }
+}

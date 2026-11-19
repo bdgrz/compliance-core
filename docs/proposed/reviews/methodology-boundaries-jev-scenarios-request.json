@@ -1,0 +1,22 @@
+{
+  "model": "jev-1.14.0",
+  "state": "Evaluate each independent scenario in its question.",
+  "questions": {
+    "skipped_change": {
+      "type": "noul",
+      "instructions": "A customer last applied template v1 with control A containing \"old\" and control B containing \"old\". Template v2 changes A to \"new\". Template v3 retains A=\"new\" and changes B to \"new\". The customer selects v3 without applying v2. Would comparing v3 only with v2 omit a needed proposal for A?"
+    },
+    "review_race": {
+      "type": "noul",
+      "instructions": "A reviewer accepts a draft cut with an entry text \"old\". An author then changes that entry to \"new\" without invalidating the draft review. An approver approves by checking only that the earlier review is accepted. Could the approver approve \"new\" even though the reviewer only accepted \"old\"?"
+    },
+    "author_cut": {
+      "type": "noul",
+      "instructions": "Every accepted revision is durably recorded with its author in a complete, sealed source chain. To test whether candidate Sam authored any revision, a verifier walks the chain once, keeping just a boolean which starts false and becomes true upon seeing author Sam. Does this determine whether Sam authored any accepted revision without maintaining an author roster?"
+    },
+    "unfenced_freeze": {
+      "type": "noul",
+      "instructions": "An edit was admitted but its request to the entry is delayed. The draft declares its source cut frozen without waiting for acceptance or recording a fence at the entry. The entry later accepts that original request. Can the accepted entry change fall outside the allegedly frozen source cut?"
+    }
+  }
+}

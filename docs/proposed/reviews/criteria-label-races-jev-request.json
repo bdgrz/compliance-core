@@ -1,0 +1,41 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "back_rename": "Edition E completed X to Y. X remains reserved for E under old token A solely because the release has not run. E starts a new Y to X rename under token B. The design says the new rename remains pending while A is released, then X is reserved using B.",
+    "cancel": "E creation operation T is pending. A durable E cancellation event commits at version 5. A paused creation-complete worker previously read version 4 and then attempts to append at version 4. All writers use expected-position append.",
+    "confirm": "E creation T was durably cancelled. Its matching claim later confirms based on an earlier committed label acceptance. The delayed completion handler reloads the E stream and requires T still be pending and uncancelled.",
+    "publish_refused": "E recorded publication attempt P, and rename is blocked while P is pending. P then records a durable refusal on E. E remains a draft with the same confirmed label and no other pending operation.",
+    "scoped": "Operation identity is the pair (edition ID, operation ID). Edition E1 uses token T for label alpha. Another edition E2 uses the same raw token T for label beta.",
+    "source": "The current implementation has a fixed platform catalog with a fixed edition ID. It has no CriteriaEditionDrafted source event."
+  },
+  "questions": {
+    "back_needs_old": {
+      "type": "noul",
+      "instructions": "In back_rename, should operation B reuse token A as its reservation generation?"
+    },
+    "back_pending": {
+      "type": "noul",
+      "instructions": "In back_rename, can E retry its new rename while old-token cleanup is pending?"
+    },
+    "stale_commit": {
+      "type": "noul",
+      "instructions": "In cancel, can the paused append at the old expected version commit after the cancellation?"
+    },
+    "confirm_activates": {
+      "type": "noul",
+      "instructions": "In confirm, does the delayed confirmation allow the edition to become a usable draft?"
+    },
+    "refusal_allows_rename": {
+      "type": "noul",
+      "instructions": "In publish_refused, is a later rename excluded merely because P was once attempted?"
+    },
+    "scoped_collision": {
+      "type": "noul",
+      "instructions": "In scoped, are E1/T and E2/T the same operation identity?"
+    },
+    "seed_event_exists": {
+      "type": "noul",
+      "instructions": "In source, is a CriteriaEditionDrafted event already present in the current implementation?"
+    }
+  }
+}

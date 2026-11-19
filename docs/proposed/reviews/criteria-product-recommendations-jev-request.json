@@ -1,0 +1,57 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "removal": "Point of focus F refers to exact parent criterion C incarnation 1. C1 is removed. C is later re-added with incarnation 2. F has not been revised. F is effective only while its exact parent incarnation is included. Each point of focus is separately owned.",
+    "program": "A program selects a durably and irreversibly published edition. The outcome for unrelated criterion K has not settled and is pending. Other accepted criteria are independently addressable. No complete coverage is claimed.",
+    "witness": "Publisher reads criterion W as included. Another writer removes W. Publisher then publishes using only the old read, with no authoritative ordering or fence.",
+    "pin": "Criterion W owner has accepted a publication pin on its exact currently included incarnation. Its removal guard rejects removal while that pin remains active. The publisher sent publication but its reply was lost; the commit result is unknown.",
+    "retry": "Operation ID X was first sent to link F to parent C incarnation 1. A later request reuses operation ID X to link F to C incarnation 2.",
+    "seed": "Deployments A and B each report the same fixed edition ID, but source code in B may contain different seed entries. No durable content binding or compatibility check exists."
+  },
+  "questions": {
+    "old_ref_reactivate": {
+      "type": "noul",
+      "instructions": "In removal, does re-adding C make F effective without a new decision?"
+    },
+    "child_fanout": {
+      "type": "noul",
+      "instructions": "In removal, must the system write to every dependent point of focus when C1 is removed?"
+    },
+    "valid_pof": {
+      "type": "noul",
+      "instructions": "In removal, can F be treated as included in the published edition while its exact C1 parent is absent?"
+    },
+    "unsettled_is_absent": {
+      "type": "noul",
+      "instructions": "In program, does a pending outcome for K prove K is absent from the edition?"
+    },
+    "unrelated_gate": {
+      "type": "noul",
+      "instructions": "In program, does a pending outcome for K by itself prove a program cannot select the already published edition?"
+    },
+    "ready_complete": {
+      "type": "noul",
+      "instructions": "In program, may readiness claim it has complete criterion coverage while K is pending?"
+    },
+    "prior_read": {
+      "type": "noul",
+      "instructions": "In witness, does reading a witness before a concurrent removal prove it is included at publication?"
+    },
+    "pin_protects": {
+      "type": "noul",
+      "instructions": "In pin, can the criterion owner accept removal of its currently pinned incarnation while the pin remains active?"
+    },
+    "unknown_fence": {
+      "type": "noul",
+      "instructions": "In pin, does a missing publication reply prove it is safe to release the pin?"
+    },
+    "unchanged_intent": {
+      "type": "noul",
+      "instructions": "In retry, are two requests with the same operation ID but different parent incarnations exact retries?"
+    },
+    "seed_rolling": {
+      "type": "noul",
+      "instructions": "In seed, does reusing the same edition ID prove two deployments have identical edition contents?"
+    }
+  }
+}

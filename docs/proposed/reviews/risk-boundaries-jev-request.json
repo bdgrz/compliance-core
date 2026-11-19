@@ -1,0 +1,40 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "trigger": "A trigger represents one incident. A lead records one disposition per affected risk as a distinct owner. Closing triage requires proof every intended selection was durably admitted and every risk owner accepted the reassessment or an explicit retirement disposition. No source defines a finite selected set or fences new selections before close.",
+    "report": "An assurance report has one immutable source artifact version and scalar metadata. Covered services, exceptions and CUECs are independent source-bound records, one item per record. The reviewer independently records one adoption or gap per item; no report or review stores an item list.",
+    "assessment": "A residual assessment records immutable exact versions of the risk treatment, inherent assessment, method and at least one accepted treatment when mitigating. A concurrent control retirement may happen immediately after those versions are read. There is no admission or fence, and the assessment claims all were current when recorded.",
+    "history": "A historical assessment explicitly states only that particular source versions existed and were accepted at their recorded times, and carries no claim that they remained current when assessment was committed. Later changes cause currentness to be separately re-evaluated.",
+    "bounded": "A risk method revision contains exactly five likelihood level descriptions and exactly five impact descriptions, with a fixed 5 by 5 score calculation. No references to variable numbers of risks or other children are stored."
+  },
+  "questions": {
+    "trigger_complete": {
+      "type": "noul",
+      "instructions": "Does the trigger design establish that no affected-risk selection can be missed when triage is closed?"
+    },
+    "trigger_race": {
+      "type": "noul",
+      "instructions": "Can a new risk selection race with closure in the trigger design?"
+    },
+    "report_small": {
+      "type": "noul",
+      "instructions": "Does the report design avoid storing all exceptions or CUECs on a single report record?"
+    },
+    "report_complete": {
+      "type": "noul",
+      "instructions": "Does the report design prove that every item in the source report was captured and reviewed?"
+    },
+    "assessment_current": {
+      "type": "noul",
+      "instructions": "Does the assessment design guarantee the claimed source versions are current when the assessment is committed?"
+    },
+    "history_truth": {
+      "type": "noul",
+      "instructions": "Does the historical assessment avoid claiming the source versions remain current at assessment commit?"
+    },
+    "bounded_matrix": {
+      "type": "noul",
+      "instructions": "Is the number of likelihood and impact entries in the risk method fixed independently of the number of risks?"
+    }
+  }
+}

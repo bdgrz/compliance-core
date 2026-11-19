@@ -1,0 +1,23 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "fence_first": "A single witness criterion W uses one event stream for exact publication pin token T. The edition commits an abort for T. W durably commits an abort fence for T while no pin exists. A delayed request to pin W with T arrives later. W's rule refuses any pin for a terminally fenced T.",
+    "pin_first": "W accepted a pin for T. The edition later committed an abort for T. The abort's target command is delayed or lost. W's accepted pin remains active until W durably accepts the abort fence for T; retries are idempotent.",
+    "bad_release": "W accepted a pin for T. The edition committed a successful publication using W. A handler removes W's pin and does not place any permanent publication fence on W. A delayed removal then asks W to remove the same criterion.",
+    "good_seal": "W accepted a pin for T. The edition committed successful publication using W. W keeps its pin until its own stream atomically changes that same protection into a permanent structural publication fence. A delayed criterion removal arrives before or after that conversion.",
+    "retry": "W accepted a pin for exact token T and intended criterion W. Later an abort fence for T committed. A duplicate original pin request with identical intent arrives. The handler returns the historical pin outcome and current aborted attempt state and never reacquires the pin.",
+    "conflict": "A publisher loaded edition revision 10 for attempt T. An abort for that attempt committed at revision 11. The old publisher's append against revision 10 is refused. It retries the old publish at revision 11 without checking the attempt's committed status.",
+    "late_outcome": "An entry intent P is committed before publication cut C. Its deterministic participant outcome accepts P, but that outcome event is recorded after C. A catalog reader reads events only through C and declares P absent without reconciling the later outcome.",
+    "scope_proof": "A design assumes an ordered scope, but deployment routing, retention, same-scope event ordering, exact cut mapping and crash recovery are not verified."
+  },
+  "questions": {
+    "delayed_pin": {"type":"noul","instructions":"In fence_first, is the delayed pin for T accepted?"},
+    "lost_abort": {"type":"noul","instructions":"In pin_first, does the delayed target command by itself make W removable?"},
+    "unprotected": {"type":"noul","instructions":"In bad_release, can the delayed removal be accepted by W if it is otherwise valid on W's stream?"},
+    "sealed": {"type":"noul","instructions":"In good_seal, do the stated rules prevent the delayed structural removal?"},
+    "reacquire": {"type":"noul","instructions":"In retry, does the duplicate request reacquire W's pin?"},
+    "cas_safety": {"type":"noul","instructions":"In conflict, is retrying the old publication at the newer revision without checking the committed abort a safe application of the original compare-and-append decision?"},
+    "missing_outcome": {"type":"noul","instructions":"In late_outcome, has the catalog reader proved P is absent?"},
+    "scope": {"type":"noul","instructions":"In scope_proof, do the assumptions themselves prove that the deployed provider supplies the required scope semantics?"}
+  }
+}

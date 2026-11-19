@@ -1,7 +1,11 @@
 # Retention
 
-Status: **locked**, 2026-11-03. Hand-authored source of truth for this context.
-It follows the [context conventions](conventions.md).
+Status: **boundary revision required**, 2026-11-05. Business invariants remain in
+force. The tenant-lifetime hold register and list-bearing 2026-11-03 event
+shapes are withdrawn; the independent owners below are candidates, and their
+cross-owner authority is unqualified. See the [retention boundary review](../reviews/retention-boundaries-review.md)
+for concrete alternatives, Jev evidence and unresolved proof obligations. It
+follows the [context conventions](conventions.md).
 
 ## Purpose
 
@@ -10,9 +14,9 @@ retention date, the legal and engagement holds that protect it, and the approved
 dispositions that remove its content. Nothing is disposed of automatically
 (M0-D16).
 
-**Owns:** artifact retention, the organization's hold register (legal holds,
-engagement holds and the final authorization of each disposal) and artifact
-dispositions.
+**Owns:** per-artifact retention and disposition decisions, independent legal
+and engagement holds, and hold coverage. Cross-owner authorization remains
+under qualification.
 
 **Does not own:**
 
@@ -30,9 +34,9 @@ dispositions.
 | Retention date | The date until which an artifact is kept: 7 years after the end of the latest period it supports, or after its as-of date for point-in-time evidence. |
 | Legal hold | An Org Admin's hold over the whole organization's evidence or a listed set of artifacts, until the Org Admin releases it. |
 | Engagement hold | The hold over evidence disclosed for one examination, until one year after its report is issued and, when our firm is the auditor, until the attest record package is delivered. |
-| Hold register | The organization's one record of every hold and every disposal authorization, so that a hold and a disposal of the same artifact are never decided apart (RT-06). |
+| Hold authority | The not-yet-qualified ordering needed to decide whether a hold or one artifact's authorization wins. It must not be an aggregate roster or an eventually consistent projection. |
 | Eligible | Retention date passed and no active hold covers the artifact. |
-| Disposition | An approved decision to dispose of a set of eligible artifacts, with a rationale, and the recorded outcome for each artifact. |
+| Disposition | An approved decision for one eligible artifact, with a rationale and its recorded outcome. The proposed replacement of RT-05 batch completion is not yet approved. |
 
 ## Aggregates
 
@@ -46,9 +50,10 @@ dispositions.
 - It is set from the artifact's as-of date or covered period when captured, and
   extended when the artifact comes to support a later period.
 - A rejected artifact has no retention; only its tombstone remains.
-- The hold register reads the date as advice when it authorizes a disposal. An
-  extension that lands after that authorization is recorded and shown on the
-  disposition as `disposed_before_extension` (RT-07).
+- RT-07 treats the date as advice and records an extension after authorization
+  as `disposed_before_extension`. M0-D16 also requires retention to have elapsed
+  at eligibility; whether an extension already committed before authorization
+  may be missed by an advisory read is unresolved and must not be assumed safe.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
@@ -60,86 +65,157 @@ dispositions.
 | ArtifactRetentionSet | tenant, artifact, basis (as-of date or period end), retained until |
 | ArtifactRetentionExtended | tenant, artifact, basis, previous date, retained until |
 
-### HoldRegister
+### LegalHold
 
-**Identity:** `TenantId`.
+**Identity:** `TenantId` + `HoldId`.
 
-**Invariant:** no artifact is authorized for disposal while an active hold
-covers it. Holds and disposal authorizations are decided in this one stream, so
-a hold placed and a disposal authorized at the same moment are ordered: whichever
-commits first wins, and a hold is never refused (RT-06, CV-11).
+**Invariant:** one legal hold has its own scope mode, lifecycle, reason and
+release authority. Placement is never refused merely because an artifact was
+already authorized for disposal; that outcome remains visible. A hold does not
+store a collection of covered artifact IDs. The disposal-ordering guarantee
+below is a required cross-owner rule and is not established by this aggregate
+alone.
 
-- **Legal holds.** Each covers the whole organization or a listed set of
-  artifacts, from placement until an Org Admin releases it. Holds are
-  independent: releasing one never releases another (RT-02).
-- **Engagement holds.** One per examination. The register adds the artifacts
-  of each delivery or firm-staff download for the examination to the hold's
-  coverage, once per delivery, not once per artifact (RT-08). The hold is released by the engagement partner when our firm is the
-  auditor, or by an Org Admin for an external auditor, and only once the report
-  was issued more than one year ago and, for our firm, the attest record package
-  is delivered (M0-D16, M0-D27, RT-03).
-- **Authorization.** The register answers each approved disposition in one
-  recorded decision that lists the authorized artifacts and the refused ones
-  with their reasons ([CV-10](conventions.md#reactors), RT-08). An artifact is
-  refused while a hold covers it or its retention date (read as advice) has not
-  passed.
-- The stream grows only with holds, auditor deliveries and dispositions: a few
-  dozen events a year, never one per artifact, so it stays short enough to
-  replay for the organization's life ([CV-13](conventions.md#stream-growth), RT-06, RT-08).
+An organization-wide hold is a single hold fact. A selected-artifact hold uses
+individual `HoldCoverage` records. Until an authoritative scope-admission and
+activation protocol is proven, do not report the whole selected hold as active
+when some requested memberships are still pending. Whether an organization-wide
+protective pending state is needed during staging is an open product decision.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| PlaceLegalHold | Org Admin | `HoldId` is new; scope and reason given | LegalHoldPlaced |
-| ChangeLegalHoldScope | Org Admin | Active; reason given | LegalHoldScopeChanged |
-| ReleaseLegalHold | Org Admin | Active; reason given | LegalHoldReleased |
-| PlaceEngagementHold | Reactor on ArtifactDisclosed naming an examination | No hold for the examination; a repeat is a no-op | EngagementHoldPlaced |
-| CoverDeliveredArtifacts | Reactor on ArtifactDisclosed naming an examination, grouped by its delivery or download | Hold for the examination active; artifacts already covered are skipped; a repeat for the delivery is a no-op | EngagementHoldCoverageAdded |
-| RecordEngagementReportIssued | Reactor on AuditOutcomeRecorded | Hold active; a reissue moves the date later only | EngagementReportIssueRecorded |
-| RecordEngagementPackageDelivered | Reactor on AttestEngagementRecordPackageDelivered | Hold active; our firm is the auditor | EngagementPackageDeliveryRecorded |
-| ReleaseEngagementHold | Engagement partner (our firm), or Org Admin (external auditor) | Active; report issued more than a year ago; package delivered when our firm is the auditor | EngagementHoldReleased |
-| DecideDisposition | Reactor on ArtifactDispositionApproved | Always answers for every listed artifact; a repeat for the disposition is a no-op | DispositionDecided |
+| PlaceLegalHold | Org Admin | Hold ID new; scope mode and reason provided; ordering outcome established | LegalHoldPlaced |
+| ReleaseLegalHold | Org Admin | Active; reason given; ordering outcome established | LegalHoldReleased |
 
 | Event | Carries |
 | --- | --- |
-| LegalHoldPlaced | tenant, hold, scope (`organization` or artifacts), reason, placed by |
-| LegalHoldScopeChanged | tenant, hold, previous scope, new scope, reason, changed by |
-| LegalHoldReleased | tenant, hold, reason, released by |
-| EngagementHoldPlaced | tenant, examination, auditor kind, engagement (if our firm) |
-| EngagementHoldCoverageAdded | tenant, examination, delivery or download, artifacts newly covered |
+| LegalHoldPlaced | tenant, hold, scope mode, reason, actor, operation identity and authoritative decision reference |
+| LegalHoldReleased | tenant, hold, reason, actor, operation identity and authoritative decision reference |
+
+Scope changes and staged activation remain unqualified; do not implement a
+whole-set command or an arbitrary list in these events.
+
+### EngagementHold
+
+**Identity:** `TenantId` + `ExaminationId`.
+
+**Invariant:** one engagement hold has its own lifecycle and cannot be released
+before the report-age and, when required, attest-package conditions are met
+(RT-03). Delivery-specific artifact coverage is owned separately. Report reissue,
+package delivery, release and their source-ordering protocol need qualification.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| PlaceEngagementHold | Reactor on the first relevant disclosure | Not placed; a repeat is a no-op | EngagementHoldPlaced |
+| RecordEngagementReportIssued | Reactor on AuditOutcomeRecorded | Active; reissue extends the date | EngagementReportIssueRecorded |
+| RecordEngagementPackageDelivered | Reactor on AttestEngagementRecordPackageDelivered | Active; our firm is the auditor | EngagementPackageDeliveryRecorded |
+| ReleaseEngagementHold | Engagement partner, or Org Admin for an external auditor | Report-age and package conditions hold; actor authorized | EngagementHoldReleased |
+
+| Event | Carries |
+| --- | --- |
+| EngagementHoldPlaced | tenant, examination, auditor kind, engagement if applicable |
 | EngagementReportIssueRecorded | tenant, examination, outcome, issued at |
 | EngagementPackageDeliveryRecorded | tenant, examination, package, delivered at |
-| EngagementHoldReleased | tenant, examination, released by |
-| DispositionDecided | tenant, disposition, authorized artifacts (each with retained until, as read), refused artifacts (each with reason: `held` with the holds, or `retention_not_elapsed`) |
+| EngagementHoldReleased | tenant, examination, actor, reason |
+
+### HoldCoverage
+
+**Identity:** `TenantId` + `HoldId` + hold generation + `ArtifactId`.
+
+**Invariant:** one record represents one artifact's admitted coverage under one
+hold generation; an exact retry cannot create a second coverage fact. Its
+acceptance and release must participate in the same proven order as disposition
+for that artifact. A projection or a prior membership read is not that order.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| CoverArtifactUnderHold | Authorized hold operation or reactor | The exact hold generation and artifact are admitted by the qualified authority | ArtifactHoldCoverageAdded |
+| EndArtifactHoldCoverage | Authorized hold operation or reactor | Coverage active; ordering outcome established | ArtifactHoldCoverageEnded |
+
+| Event | Carries |
+| --- | --- |
+| ArtifactHoldCoverageAdded | tenant, hold, generation, artifact, source, operation identity and decision reference |
+| ArtifactHoldCoverageEnded | tenant, hold, generation, artifact, reason, operation identity and decision reference |
+
+A new generation does not silently resurrect coverage from an earlier one.
+Protection for an engagement disclosure must precede exposing that artifact's
+bytes; the interaction with an earlier disposal authorization is unresolved.
+Previously external disclosures are recorded as truth. Changing the prior
+whole-delivery ordering to per-artifact admission is a product tradeoff, not
+yet approved.
 
 ### ArtifactDisposition
 
-**Identity:** `TenantId` + `DispositionId`.
+**Identity:** `TenantId` + `DispositionId` + `ArtifactId`.
 
-**Invariant:** one disposition approves disposing of a listed set of artifacts,
-with a rationale, by an Org Admin, or by a platform operator once the tenant is
-offboarded (RT-04). Its eligibility check at approval is advice; the hold
-register decides each artifact. The disposition records every artifact's outcome
-and completes only when each one is `disposed` or `refused`
-([CV-12](conventions.md#guards-and-reviews), RT-05).
+**Invariant:** one independently approved artifact disposition has one
+idempotent authorization or refusal and one attributable removal outcome.
+Authorization must not occur while an active covering hold has won the
+specified order. This required invariant is **not yet qualified** across owners.
+Evidence remains the authority for physical content removal. An unknown result
+is pending until reconciled; it is never converted into refusal or success by a
+timeout. An authorization is a decision, not proof that bytes have been removed.
+A hold may become active after authorization but before deletion. Whether the
+old authorization still permits later deletion conflicts with the reading of
+M0-D16 that an active hold blocks disposition; that product meaning is open.
+Until resolved and proven, do not issue or continue deletion while such a hold
+is known active. This is a conservative design requirement, not a claim that
+the existing runtime can stop a deletion already in flight.
 
-```mermaid
-stateDiagram-v2
-    [*] --> approved: ApproveArtifactDisposition
-    approved --> approved: RecordArtifactDisposalOutcome
-    approved --> completed: RecordArtifactDisposalOutcome (last)
-    completed --> [*]
-```
+An interface may submit several independent per-artifact requests with the same
+batch reference and rationale. A batch is not an aggregate roster. Showing
+progress from item outcomes is a read concern; a projected status is not the
+existing RT-05 authoritative all-items completion guarantee. Whether to replace
+that guarantee with per-item outcomes is an open product decision.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| ApproveArtifactDisposition | Org Admin; platform operator after offboarding | `DispositionId` is new; every artifact eligible (advice); rationale given | ArtifactDispositionApproved |
-| RecordArtifactDisposalOutcome | Reactor on DispositionDecided (each refused artifact), EvidenceArtifactDisposed, or ArtifactRetentionExtended after disposal | Artifact listed; a repeat is a no-op | ArtifactDisposalOutcomeRecorded, and ArtifactDispositionCompleted with the last outcome |
+| ApproveArtifactDisposition | Org Admin; platform operator after offboarding | New exact item intent; rationale given; qualified authority decides retention and hold eligibility | ArtifactDispositionApproved |
+| RecordArtifactDispositionRefusal | Reactor on an authoritative refusal | Exact matching item decision; identical retry no-op; changed intent under same identity conflicts | ArtifactDispositionRefused |
+| RecordArtifactDisposalOutcome | Reactor on EvidenceArtifactDisposed | Exact matching item decision; identical retry no-op; changed intent under same identity conflicts | ArtifactDisposalOutcomeRecorded |
 
 | Event | Carries |
 | --- | --- |
-| ArtifactDispositionApproved | tenant, disposition, artifacts, retention bases, rationale, approved by |
-| ArtifactDisposalOutcomeRecorded | tenant, disposition, artifact, outcome (`disposed`, `refused` with reason, or `disposed_before_extension`) |
-| ArtifactDispositionCompleted | tenant, disposition, counts by outcome |
+| ArtifactDispositionApproved | tenant, disposition, artifact, rationale, approver, retention basis, operation identity and authoritative eligibility decision reference |
+| ArtifactDispositionRefused | tenant, disposition, artifact, refusal reason, exact authority decision |
+| ArtifactDisposalOutcomeRecorded | tenant, disposition, artifact, outcome (`disposed` or `disposed_before_extension`), exact source outcome |
+
+## Cross-owner hold and disposition authority
+
+The desired decision for **one** artifact asks whether an active organization-
+wide hold or an active coverage fact for that artifact exists. A qualified
+indexed existence check could return one blocking hold or prove the relevant
+index ranges empty; it does not load, sort, or settle all artifacts or all hold
+records as an aggregate. The authority must order hold placement, coverage,
+release and this artifact's authorization, including concurrent insertion into
+an empty range. A stale projection or eventually consistent index cannot prove
+absence.
+
+One candidate is a serializable transaction that atomically reads the relevant
+hold predicates and durably records the authorization or refusal, including
+phantom protection and exact-retry identity. Another is an authoritative
+ordered processor whose durable index, operation outcomes, checkpoint and
+outbox are updated atomically. The latter is a **new, centralized substrate**,
+not a normal eventually consistent projection. Neither is established by the
+current Portia per-stream expected-position append. Index/event dual writes,
+ordering, acknowledgment, source routing, retention, scope resets, crash
+recovery and fencing all require proof. A command is pending until its own
+outcome is durable; a missing or uncertain response is not an authorization.
+
+If M0-D16 protects content until its physical deletion, the authority must also
+order hold activation against the irreversible Evidence-side deletion boundary.
+The target needs a durable, atomic acceptance/fence or a provider-enforced
+equivalent: a second pre-delete read can race a hold, and a prior authorization
+or best-effort cancellation cannot stop a deletion already accepted elsewhere.
+Until that protocol is proven, an in-flight or ambiguous delete remains pending
+and the system cannot claim a later hold has protected those bytes. Reconcile
+the actual storage outcome; never hide a deletion that already happened.
+
+The prior tenant-window chain and source-history scan are withdrawn: together
+they are a distributed per-operation ledger and require growing traversal.
+RT-06's singleton register and RT-08's whole-batch event are historical designs,
+not approved replacement boundaries. No implementation may claim the hold
+invariant until one concrete authority is qualified.
 
 ## Flows
 
@@ -160,31 +236,30 @@ flowchart LR
 ```mermaid
 flowchart LR
     C1[/PlaceLegalHold/] --> E1([LegalHoldPlaced])
-    X1[[Evidence: ArtifactDisclosed for an examination]] --> R1{{"Place hold, add coverage (IDs from examination and delivery)"}}
-    R1 --> C2[/PlaceEngagementHold/] --> E2([EngagementHoldPlaced])
-    R1 --> C3[/CoverDeliveredArtifacts/] --> E3([EngagementHoldCoverageAdded])
-    X2[[Examinations: AuditOutcomeRecorded]] --> R2{{Record issue date}} --> C4[/RecordEngagementReportIssued/] --> E4([EngagementReportIssueRecorded])
-    X3[[Firm services: AttestEngagementRecordPackageDelivered]] --> R3{{Record delivery}} --> C5[/RecordEngagementPackageDelivered/] --> E5([EngagementPackageDeliveryRecorded])
-    E4 -. "issued over a year ago" .-> C6[/ReleaseEngagementHold/]
-    E5 -. "our firm: delivered" .-> C6
-    C6 --> E6([EngagementHoldReleased])
+    C2[/CoverArtifactUnderHold/] --> E2([ArtifactHoldCoverageAdded])
+    X1[[Evidence: ArtifactDisclosed for one artifact]] --> R1{{Establish engagement coverage}} --> C2
+    X2[[Examinations: AuditOutcomeRecorded]] --> R2{{Record issue date}} --> C3[/RecordEngagementReportIssued/] --> E3([EngagementReportIssueRecorded])
+    X3[[Firm services: AttestEngagementRecordPackageDelivered]] --> R3{{Record delivery}} --> C4[/RecordEngagementPackageDelivered/] --> E4([EngagementPackageDeliveryRecorded])
+    C5[/ReleaseEngagementHold/] --> E5([EngagementHoldReleased])
 ```
 
-All of these commands are on the one `HoldRegister` stream.
+The individual-coverage path is a candidate. Protection must be admitted
+before artifact disclosure if it is meant to guard that disclosure; the
+ordering authority and any change from whole-delivery semantics remain open.
 
 ### Disposition
 
 ```mermaid
 flowchart LR
-    RD([Retention date passed]) -. "advice" .-> C1
-    C1[/ApproveArtifactDisposition/] --> E1([ArtifactDispositionApproved])
-    E1 --> R1{{"Ask the register (ID from disposition)"}} --> C2[/DecideDisposition/] --> E2([DispositionDecided])
-    E2 --> R2{{"Remove each authorized artifact"}} --> X1[[Evidence: DisposeArtifact]] --> E4([EvidenceArtifactDisposed])
-    E2 --> R3{{"Record each refused artifact"}} --> C3[/RecordArtifactDisposalOutcome/]
-    E4 --> R3
-    C3 --> E5([ArtifactDisposalOutcomeRecorded])
-    C3 --> E6([ArtifactDispositionCompleted])
+    RD([Retention eligibility]) -. "authority to qualify" .-> C1
+    C1[/ApproveArtifactDisposition for one artifact/] --> E1([ArtifactDispositionApproved])
+    E1 --> R1{{Request deletion with qualified hold fence}} --> X1[[Evidence: DisposeArtifact]] --> E2([EvidenceArtifactDisposed])
+    E2 --> R2{{Record exact removal outcome}} --> C2[/RecordArtifactDisposalOutcome/] --> E3([ArtifactDisposalOutcomeRecorded])
 ```
+
+`ArtifactDispositionApproved` requires the qualified, authoritative hold
+ordering described above. This diagram does not claim it already exists.
+Refusals remain explicit per-item decisions and cannot be inferred from silence.
 
 ### Offboarding
 
@@ -201,22 +276,25 @@ block disposal, and a platform operator approves each later disposition
 
 ## Disagreement and replay
 
-Cases required by [CV-12](conventions.md#guards-and-reviews).
-
-| Case | Outcome |
+| Case | Required outcome or open issue |
 | --- | --- |
-| Disposition approved as eligible; a legal hold is placed before the register answers | The register refuses that artifact (`held`); the disposition records `refused` |
-| Disposal authorized; a hold is placed afterwards | The authorization committed first and stands, and the content is removed. The hold's coverage shows the artifact as already authorized for disposal |
-| Retention extended after authorization | The content is removed; the disposition records `disposed_before_extension` (RT-07) |
-| `ArtifactDispositionApproved` delivered twice | The repeated `DecideDisposition` is a no-op (ID from the disposition) |
-| Evidence removal still retrying | The disposition stays `approved` with the artifact pending; an operational alert shows the failing reactor (CV-03) |
-| Artifact disclosed for an examination while its disposal is in flight | Whichever reaches the register first wins; coverage added after the decision is shown on the hold |
-| Many artifacts delivered to the auditor at once | One coverage event for the delivery; the register's stream does not grow per artifact |
+| Legal hold committed before an artifact's authorization decision | Authorization is refused as held; independent streams and a stale read do not establish this order. |
+| Authorization committed; covering hold activates before physical deletion | The historical RT-06 rule and M0-D16's active-hold protection have an unresolved interpretation. Keep deletion pending under the conservative candidate; an already in-flight delete needs a real target-side fence and outcome reconciliation. |
+| Content was irreversibly deleted before a covering hold activated | Record the deletion and later hold as facts; a hold cannot restore removed bytes. |
+| Two overlapping holds cover the artifact; one is released | The other continues to block authorization. Retry cannot debit a shared counter twice. |
+| Authorization or hold outcome is unknown | Remain pending and reconcile the exact operation; a timeout is neither a refusal nor a fence. |
+| Exact retry after hold release | Return the originally committed decision, not a new answer based on the later hold state. Changed intent under the same operation identity conflicts. |
+| Hold scope contains A and B; only A coverage is confirmed | B is not shown protected by the confirmed membership; do not claim the entire selected scope active. Atomic group activation versus visible per-artifact activation is unresolved. |
+| Concurrent hold insertion follows an empty hold lookup | The authority must prevent a phantom and produce a valid ordered decision. A normal empty projection query cannot establish this. |
+| Evidence removal acknowledgement is lost | Query/reconcile the exact Evidence outcome; do not claim failure or repeat a non-idempotent physical effect blindly. |
+| Retention extension arrives after authorization | Record `disposed_before_extension` under RT-07. Whether a previously committed extension may be missed at authorization remains an open M0-D16/RT-07 interpretation. |
+| Approval is given through one bulk user action | Each artifact has its own durable outcome. A derived worklist can be pending or stale; it does not itself prove the old RT-05 authoritative batch completion. |
 
 ## Decisions
 
-Jev answers are from `jev-1.14.0`, 2026-11-03. A yes is ≥ 0.8 and a no is ≤ 0.2.
-Anything in between is settled by common sense, with the reasoning stated.
+Jev answers below are historical `jev-1.14.0` judgments from 2026-11-03.
+Historical triage thresholds were not proof of correct design or provider behavior.
+The revised boundaries and conflicting assumptions remain unqualified.
 
 | ID | Decision | Evidence |
 | --- | --- | --- |
@@ -224,22 +302,32 @@ Anything in between is settled by common sense, with the reasoning stated.
 | RT-02 | A legal hold covers the whole organization or listed artifacts; holds are independent. | 0.78. M0-D16. |
 | RT-03 | An engagement hold is released explicitly, by the engagement partner when our firm is the auditor and by an Org Admin otherwise, only once its conditions hold. | Partner releases: 0.87. Ending on its own: 0.28. |
 | RT-04 | After offboarding, evidence follows the normal schedule, and a platform operator approves each later disposition. | Keep the schedule: 0.72. Operator approves: 0.80 among the choices (firm quality partner 0.17). A disposal decision made by the client before leaving: 0.15. |
-| RT-05 | A disposition completes only from each artifact's recorded outcome; artifacts the register refuses are recorded and shown. | 0.88. CV-12. |
-| RT-06 | One hold register per organization owns every hold and the final authorization of each disposal. | Register: 0.82. Acceptable bottleneck: 0.77. Fanning holds out to each artifact and accepting the window: 0.29. A recoverable grace period instead: 0.15. Replaces the separate `LegalHold` and `EngagementHold` aggregates. |
-| RT-07 | The retention date is advice to the register; an extension after authorization is recorded as `disposed_before_extension`. | Reserving on the retention record first: 0.33. Common sense: the date only moves later, extensions of long-expired evidence are rare, and holds are the legal protection. |
-| RT-08 | The register records coverage once per delivery and decides a whole disposition in one event, so its stream grows with business occasions, not with artifacts. | One decision per disposition: 0.69. Yearly register streams carrying holds forward: 0.23 (no). Common sense: with no aggregate snapshots, a stream that grows per artifact would slow every hold decision for the organization's life. |
+| RT-05 | Historical rule: a disposition completes only from every artifact's recorded outcome. An independent-item worklist changes that completion claim and needs a product decision. | 0.88. CV-12. |
+| RT-06 | The hold-versus-authorization ordering is required; the old tenant-lifetime hold register is withdrawn. Independent owners and the cross-owner authority remain unqualified. | Historical register: 0.82, not proof of acceptable replay or a working replacement. |
+| RT-07 | Historical rule: the retention date was read as advice; an extension after authorization is recorded as `disposed_before_extension`. Whether that also permits missing an extension committed earlier remains unresolved against M0-D16. | Historical reservation: 0.33; it does not establish correct source ordering. |
+| RT-08 | The former whole-delivery coverage and whole-disposition event shapes are withdrawn; independently admitted coverage and item decisions need ordering and product-semantic qualification. | Historical one decision per disposition: 0.69; it did not establish a bounded payload. |
 
 ## Open questions
 
-None at this time.
+1. Qualify an actual authoritative hold/authorization order, predicate phantom
+   protection, durable decision, exact retry, dual-write recovery and fencing.
+2. Resolve selected-scope staging and engagement delivery semantics without
+   pretending pending artifacts are protected or an entire set was admitted.
+3. Decide whether independent item outcomes and a projected worklist can replace
+   RT-05's authoritative all-items batch completion. M0-D16 allows batching but
+   does not itself require a batch-completion event.
+4. Resolve the tension between M0-D16 eligibility and RT-07's advisory date read,
+   especially an extension committed before authorization but not yet visible.
+5. Resolve whether an authorization survives a hold activated before physical
+   deletion, and prove the Evidence/storage hold fence if it does not. Verify
+   actual deletion, unknown outcomes, idempotency and late-extension reporting
+   through crash and retry; see the [boundary review](../reviews/retention-boundaries-review.md).
 
 ## Superseded owners
 
-| Old owner | Becomes |
+| Old owner | Candidate direction |
 | --- | --- |
-| ArtifactRetentionBasis | ArtifactRetention (RT-01) |
-| ArtifactLegalHold, LegalHold | HoldRegister legal holds (RT-02, RT-06) |
-| ArtifactEngagementHold, EngagementHold | HoldRegister engagement holds (RT-03, RT-06) |
-| ArtifactDisposition | ArtifactDisposition (approval and outcomes; removal is `DisposeArtifact` in Evidence) |
-| ArtifactLegalHoldReactor, ProtectArtifactsUnderLegalHoldReactor | `DecideDisposition` on the register |
-| KeepEngagementEvidenceProtectedAfterDeliveryReactor | HoldRegister engagement hold reactions |
+| HoldRegister | Independent LegalHold, EngagementHold and HoldCoverage; authoritative ordering unqualified |
+| ArtifactDisposition with an artifact roster | One ArtifactDisposition per artifact; RT-05 completion semantics remain open |
+| ArtifactLegalHoldReactor, ProtectArtifactsUnderLegalHoldReactor | Per-artifact coverage with a qualified ordered admission |
+| KeepEngagementEvidenceProtectedAfterDeliveryReactor | Per-artifact disclosure protection with source ordering still to qualify |

@@ -1,20 +1,22 @@
-using Cntryl.Fitz.Testing;
-using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Fitz.Extensions;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Content.Persistence;
+using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
+using Bdgrz.Compliance.Features.ControlMappings.Commands;
+using Bdgrz.Compliance.Features.ControlMappings.Events;
 using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
 using Bdgrz.Compliance.Features.ControlMappings.Rules;
 using Bdgrz.Compliance.Features.ControlMappings.Services;
 using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Criteria.Services;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Examinations.Models;
@@ -25,24 +27,29 @@ using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -76,16 +83,11 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Commands;
-using Bdgrz.Compliance.Features.ControlMappings.Events;
-using Bdgrz.Compliance.Features.ControlMappings.Models;
-using Bdgrz.Compliance.Features.ControlMappings.Readers;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Authorizers;
-using Bdgrz.Compliance.Tests;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Extensions;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
 namespace Bdgrz.Compliance.Tests.Features.Examinations.Tests;
 
 public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
@@ -257,9 +259,24 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
             difference => difference.Contains("requires remapping", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public async Task ShouldRejectPendingCriterionGivenMappingBaseline()
+    {
+        // Arrange
+        var fixture = await Fixture(criteriaStatus: CriteriaEntryAuthorityStatus.Pending);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
+    }
+
     static async Task<FixtureState> Fixture(bool includeFutureSuccessor = false,
         bool approveInitial = true, bool includeControlSource = true,
-        Uuid? capturedControlVersionId = null, bool successorBeforePeriod = false, Uuid? firstMappingId = null)
+        Uuid? capturedControlVersionId = null, bool successorBeforePeriod = false, Uuid? firstMappingId = null,
+        CriteriaEntryAuthorityStatus? criteriaStatus = null)
     {
         var line = new ControlCriterionMappingRules(TenantId, ProgramId, ControlId, Edition.EditionId,
             Criterion.Identifier);
@@ -307,7 +324,7 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
                 capturedControlVersionId ?? ControlVersionId, 1, new string('b', 64)));
         var context = new TypeIBaselineSourceReadContext(Uuid.Empty, references);
         var contributor = new ControlCriterionMappingTypeIBaselineSourceContributor(mappingReader, consistency,
-            Catalog);
+            new TestCriteriaEntryAuthority(Catalog, criteriaStatus), new TestPublicationAuthority());
         return new FixtureState(mappingId, contributor, context, events);
     }
 
@@ -329,6 +346,13 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
     sealed record FixtureState(Uuid MappingId,
         ControlCriterionMappingTypeIBaselineSourceContributor Contributor,
         TypeIBaselineSourceReadContext Context, InMemoryEventStore Events);
+
+    sealed class TestPublicationAuthority : ICriteriaPublicationAuthority
+    {
+        public ValueTask<Result<CriteriaPublicationProof>> ReadPublishedAsync(Uuid editionId,
+            CancellationToken ct = default) => ValueTask.FromResult(Result<CriteriaPublicationProof>.Success(
+                new CriteriaPublicationProof(editionId, Uuid.CreateVersion5(editionId, "test-criteria-publication:"), 1)));
+    }
 
     sealed class UnusedAggregateReader : IAggregateReader
     {

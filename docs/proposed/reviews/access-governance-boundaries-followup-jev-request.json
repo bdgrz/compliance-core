@@ -1,0 +1,32 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "context": "A review item owns its state and enforces optimistic concurrency on append. The batch is a separate coordinator. A campaign must not complete with any required unresolved item. All items are permanently closed once closed. A digest is computed from only the rows seen by an enumerator."
+  },
+  "questions": {
+    "batch_stale_append": {
+      "type": "noul",
+      "instructions": "Two handlers hydrate the same open item at version 4. A direct decision successfully appends at version 4. Can a batch decision also successfully append using expected version 4?"
+    },
+    "batch_retry": {
+      "type": "noul",
+      "instructions": "After that append conflict, the batch retries after rehydrating the item and sees it has a direct decision. Must it refuse under a rule that only open undecided items accept batch decisions?"
+    },
+    "item_local_authority": {
+      "type": "noul",
+      "instructions": "If every competing decision is required to append with an expected version to the same item stream and retries re-evaluate the item rule, is another aggregate owning all item decisions necessary to stop two first decisions?"
+    },
+    "sealed_exact": {
+      "type": "noul",
+      "instructions": "A sealed source enumerates exactly all required immutable item identities. Each item stream independently proves it is irrevocably closed. May the campaign record completion without copying each item outcome into the campaign stream?"
+    },
+    "sealed_cut_assumed": {
+      "type": "noul",
+      "instructions": "Does a digest of a collection by itself prove no child was omitted when the source was collected?"
+    },
+    "path_array": {
+      "type": "noul",
+      "instructions": "In a large access graph can a single account and entitlement be connected by more paths than fit reasonably in one event or document?"
+    }
+  }
+}

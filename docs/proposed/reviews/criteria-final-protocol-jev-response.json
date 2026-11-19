@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "pin_stuck": {
+      "type": "noul",
+      "noul": 0.3
+    },
+    "published_remove": {
+      "type": "noul",
+      "noul": 0.12
+    },
+    "old_release": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "cancel_activate": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "page_miss": {
+      "type": "noul",
+      "noul": 0.73
+    },
+    "old_remains": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "admitted_finishes": {
+      "type": "noul",
+      "noul": 0.95
+    },
+    "unknown_refused": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "bool_sufficient": {
+      "type": "noul",
+      "noul": 0.03
+    }
+  },
+  "usage": {
+    "input_tokens": 922,
+    "output_tokens": 167
+  }
+}

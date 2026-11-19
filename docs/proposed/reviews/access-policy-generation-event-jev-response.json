@@ -1,0 +1,21 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "activation_fact": {
+      "type": "noul",
+      "noul": 0.85
+    },
+    "proves_rollout": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "implies_roster": {
+      "type": "noul",
+      "noul": 0.07
+    }
+  },
+  "usage": {
+    "input_tokens": 414,
+    "output_tokens": 60
+  }
+}

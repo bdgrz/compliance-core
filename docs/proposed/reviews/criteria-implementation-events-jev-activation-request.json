@@ -1,0 +1,31 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "fact": "An edition owner has attached one reserved label to a pending creation operation. The independent label claim has not yet confirmed the attachment. The draft remains in an intermediate activating state; users cannot add entries or publish yet. A later separate fact CriteriaEditionDrafted is raised once claim confirmation is recorded.",
+    "old": "CriteriaEditionDraftActivated",
+    "alt_attached": "CriteriaEditionDraftLabelAttached",
+    "alt_started": "CriteriaEditionDraftActivationStarted"
+  },
+  "questions": {
+    "old_precise": {
+      "type": "noul",
+      "instructions": "Given state.fact, does CriteriaEditionDraftActivated accurately convey the pending state without suggesting the draft is already usable?"
+    },
+    "old_active": {
+      "type": "noul",
+      "instructions": "Given state.fact, could CriteriaEditionDraftActivated imply that activation is fully complete?"
+    },
+    "attached_precise": {
+      "type": "noul",
+      "instructions": "Given state.fact, does CriteriaEditionDraftLabelAttached clearly name the completed intermediate fact without implying the draft is already usable?"
+    },
+    "started_precise": {
+      "type": "noul",
+      "instructions": "Given state.fact, does CriteriaEditionDraftActivationStarted clearly name the completed intermediate fact without implying the draft is already usable?"
+    },
+    "meaningful_difference": {
+      "type": "noul",
+      "instructions": "Given state.fact, is the difference between attaching the reserved label and finishing draft activation important to a caller deciding whether it can edit the draft?"
+    }
+  }
+}

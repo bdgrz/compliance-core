@@ -1,0 +1,1 @@
+{"model":"jev-1.14.0","answers":{"privilege_granted":{"type":"noul","noul":0.76},"access_granted":{"type":"noul","noul":0.77},"status_granted":{"type":"noul","noul":0.75},"privilege_revoked":{"type":"noul","noul":0.72},"access_revoked":{"type":"noul","noul":0.71}},"usage":{"input_tokens":481,"output_tokens":98}}

@@ -1,0 +1,48 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "domain": "Access review: delegates are independent per instance/member; a frozen population is an immutable source for one campaign; each review item owns one account-entitlement decision and terminal close outcome. Batch selections and item outcomes are individually keyed. A parent has no child roster. A source cut is meaningful only if its admission is sealed and all earlier admissions settle or are durably fenced, and it supports complete authoritative enumeration. Each exact item outcome is in the item stream. Unknowns stay pending. Reads from a projection can lag."
+  },
+  "questions": {
+    "delegation_independent": {
+      "type": "noul",
+      "instructions": "One system has delegates A and B, separately keyed. Does revoking A necessarily revoke B?"
+    },
+    "campaign_complete_projection": {
+      "type": "noul",
+      "instructions": "An eventually consistent projection shows every review item closed, but its source enumeration may omit an item. Is that sufficient to complete a campaign?"
+    },
+    "campaign_sealed_terminal": {
+      "type": "noul",
+      "instructions": "A finite sealed source identifies every expected item exactly. An authoritative complete traversal confirms every deterministic item's own stream has a terminal closed fact that cannot reopen. Can the campaign complete without storing a roster of item outcomes in its own stream?"
+    },
+    "campaign_missing": {
+      "type": "noul",
+      "instructions": "A campaign's expected item has no recorded close outcome, and its close command's append result is unknown. May the campaign declare it closed?"
+    },
+    "batch_race": {
+      "type": "noul",
+      "instructions": "A direct decision and a batch decision race on the same review item. If both must append to that same item's versioned stream, can that item decide which arrives first without a batch parent owning the item?"
+    },
+    "selection_late": {
+      "type": "noul",
+      "instructions": "A batch's selection is considered sealed after a projection was read, but a previously admitted item selection can still append later. Is the selected set guaranteed to remain unchanged?"
+    },
+    "population_cut": {
+      "type": "noul",
+      "instructions": "All individual population records are small, but the validation scan may omit a pending row. Can the system safely accept that population as complete and free of dangling references?"
+    },
+    "absence_needs_cut": {
+      "type": "noul",
+      "instructions": "Can an item-level query safely infer there is no applicable breach from an incomplete eventually consistent projection?"
+    },
+    "paths_unbounded": {
+      "type": "noul",
+      "instructions": "Can one account-entitlement pair have arbitrarily many distinct access paths through a sufficiently large graph?"
+    },
+    "active_check_race": {
+      "type": "noul",
+      "instructions": "A delegate is checked active by reading a separate membership stream, then revoked before an action commits in another stream. Does that earlier read prove the delegate was active at commit?"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "model": "jev-1.14.0",
+  "state": "Evaluate the following independent domain and event-stream scenarios.",
+  "questions": {
+    "ledger": {
+      "type": "noul",
+      "instructions": "A chain of individually finite windows records one admission, entry identifier, and accepted or refused outcome for every draft entry change. Reconstructing the version walks all the windows. Is the chain collectively a per-entry change ledger even if no one window contains a complete roster?"
+    },
+    "serialization": {
+      "type": "noul",
+      "instructions": "A draft change window admits only one entry change at a time and waits for its terminal outcome before admitting another, even if the changes target different independent entries. Does this serialize edits to different entries?"
+    },
+    "fence_missing": {
+      "type": "noul",
+      "instructions": "Each entry aggregate decides independently. Before writing, a caller reads the draft is open; the draft then closes; the caller later writes the entry. There is no common atomic admission fence or equivalent authority. Can an accepted edit occur after closure?"
+    },
+    "cut_assumed": {
+      "type": "noul",
+      "instructions": "Independent entry streams exist, but the provider has not established a complete authoritative enumeration of all entries admitted before a freeze. An eventually consistent projection lists all entries it currently knows. Can the projection alone prove no accepted entry was omitted?"
+    },
+    "long_history": {
+      "type": "noul",
+      "instructions": "An event sourced aggregate records two new events per version forever. Rehydration reads its entire event stream and no lifecycle bound or compaction exists. Is its replay work unbounded as versions accumulate?"
+    }
+  }
+}

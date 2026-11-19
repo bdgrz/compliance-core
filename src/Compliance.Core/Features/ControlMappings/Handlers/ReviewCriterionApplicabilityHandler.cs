@@ -1,13 +1,19 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
+using Bdgrz.Compliance.Features.ControlMappings.Commands;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
 using Bdgrz.Compliance.Features.ControlMappings.Services;
 using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Criteria.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Models;
@@ -16,8 +22,11 @@ using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Services;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
@@ -25,15 +34,7 @@ using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Services;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Commands;
-using Bdgrz.Compliance.Features.ControlMappings.Readers;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Programs.Aggregates;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.ControlMappings.Handlers;
 
 /// <summary>
@@ -42,7 +43,8 @@ namespace Bdgrz.Compliance.Features.ControlMappings.Handlers;
 ///     exact revision of that line only, and an exact retry returns the original result even after later changes.
 /// </summary>
 public sealed class ReviewCriterionApplicabilityHandler(NativeOperationExecutor operations,
-    ApplicabilityReader applicability, IAggregateReader reader, IImmutableContentStore content, TimeProvider clock)
+    ApplicabilityReader applicability, IAggregateReader reader, ICriteriaEntryAuthority criteriaAuthority,
+    IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ReviewCriterionApplicability>
 {
     const string CommandKind = "ReviewCriterionApplicability";
@@ -92,6 +94,13 @@ public sealed class ReviewCriterionApplicabilityHandler(NativeOperationExecutor 
                     if (program.CriteriaEditionId != criterion.EditionId)
                         return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
                             "The decision targets an edition the program no longer selects."));
+                    var entry = await CriteriaEntryAuthorityGuard.RequireAsync(criteriaAuthority, criterion.EditionId,
+                        criterion.CriterionIdentifier, token).ConfigureAwait(false);
+                    if (!entry.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(entry.Error!);
+                    if (entry.Value.Kind != "criterion")
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "The decision no longer has a published criterion as its source."));
                 }
 
                 if (request.SeparationOfDutiesWaiverId is { } waiverId)

@@ -1,0 +1,29 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "old_precise": {
+      "type": "noul",
+      "noul": 0.15
+    },
+    "old_active": {
+      "type": "noul",
+      "noul": 0.48
+    },
+    "attached_precise": {
+      "type": "noul",
+      "noul": 0.79
+    },
+    "started_precise": {
+      "type": "noul",
+      "noul": 0.5
+    },
+    "meaningful_difference": {
+      "type": "noul",
+      "noul": 0.9
+    }
+  },
+  "usage": {
+    "input_tokens": 566,
+    "output_tokens": 95
+  }
+}

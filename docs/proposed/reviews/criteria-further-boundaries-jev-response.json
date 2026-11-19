@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "one_operation_owner": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "one_operation_serializes": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "race_append": {
+      "type": "noul",
+      "noul": 0.35
+    },
+    "race_after": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "projection_absence": {
+      "type": "noul",
+      "noul": 0.09
+    },
+    "per_stream_total": {
+      "type": "noul",
+      "noul": 0.43
+    },
+    "read_memory": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "dispatch_completion": {
+      "type": "noul",
+      "noul": 0.1
+    }
+  },
+  "usage": {
+    "input_tokens": 724,
+    "output_tokens": 146
+  }
+}

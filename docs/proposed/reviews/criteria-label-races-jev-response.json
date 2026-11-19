@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "back_needs_old": {
+      "type": "noul",
+      "noul": 0.14
+    },
+    "back_pending": {
+      "type": "noul",
+      "noul": 0.54
+    },
+    "stale_commit": {
+      "type": "noul",
+      "noul": 0.2
+    },
+    "confirm_activates": {
+      "type": "noul",
+      "noul": 0.12
+    },
+    "refusal_allows_rename": {
+      "type": "noul",
+      "noul": 0.19
+    },
+    "scoped_collision": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "seed_event_exists": {
+      "type": "noul",
+      "noul": 0.03
+    }
+  },
+  "usage": {
+    "input_tokens": 726,
+    "output_tokens": 135
+  }
+}

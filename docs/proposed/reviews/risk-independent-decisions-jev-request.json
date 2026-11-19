@@ -1,0 +1,21 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "triage": "An incident triggers risk triage. A lead records their decision that risk A is affected. A separate A-specific requirement record receives the decision with a deterministic identity. The lead then records that they finished triage without waiting for the requirement record to commit. The A-specific write is delayed and can still fail. The user interface displays triage finished and requirement pending.",
+    "discovery": "A reviewer reads an assurance report and records a review conclusion against the exact immutable report artifact. Separately the reviewer may record individual CUEC, exception and coverage-gap items. Neither the report nor the review records all items or checks whether extraction is complete.",
+    "witness": "A provider review with conclusion acceptable_with_gaps cites one exact committed, immutable finding that identifies a coverage gap and this report version. Other findings remain independently owned and are not counted or examined by the review command.",
+    "due": "Each reassessment requirement has an independent stream keyed by a risk ID and the source reason ID. A residual assessment cites a method and risk-treatment version and the latest requirement known at the time of assessment. A different requirement commits concurrently after the assessment was prepared. A read model updates later.",
+    "historical": "An assessment records an exact earlier method, requirement and treatment version and expressly makes only a historical claim about those facts. Later risk validity is displayed separately as pending reassessment whenever a new requirement is observed.",
+    "reporting": "A projected worklist shows that no provider review items are currently pending. The projection can lag and new items may arrive after the query. An irreversible approval has no other evidence that the item set is complete."
+  },
+  "questions": {
+    "triage_settled": {"type":"noul","instructions":"In triage, has every chosen risk owner necessarily accepted its reassessment requirement when the lead records triage finished?"},
+    "triage_change": {"type":"noul","instructions":"Does defining finished triage as the lead's decision, while selected requirements can remain pending, differ from promising all selected requirements are already applied?"},
+    "extract_complete": {"type":"noul","instructions":"In discovery, does recording a conclusion necessarily prove that every CUEC and exception in the source report has been captured as an item?"},
+    "witness_exists": {"type":"noul","instructions":"In witness, does the one qualifying immutable finding prove at least one coverage gap existed in the cited report version?"},
+    "witness_all": {"type":"noul","instructions":"In witness, does that one finding prove that all coverage gaps in the report were identified?"},
+    "current_requirement": {"type":"noul","instructions":"In due, does naming the latest requirement previously observed prove it was the latest when the assessment committed?"},
+    "historical_claim": {"type":"noul","instructions":"In historical, does the assessment's stated claim avoid asserting that the earlier version remained current at its commit time?"},
+    "zero_safe": {"type":"noul","instructions":"In reporting, does the zero-pending projection alone prove all relevant review items were included and approved?"}
+  }
+}

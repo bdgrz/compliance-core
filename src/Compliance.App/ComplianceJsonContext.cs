@@ -1,16 +1,12 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Cntryl.Portia;
-using Microsoft.AspNetCore.Mvc;
-using Bdgrz.Compliance.Features.Authentication;
-using Bdgrz.Compliance.Features.Work;
-using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Queries;
 using Bdgrz.Compliance.Features.Applications.Commands;
 using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.Applications.Queries;
+using Bdgrz.Compliance.Features.Authentication;
 using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Readiness.Models;
@@ -19,7 +15,11 @@ using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Responsibilities.Queries;
 using Bdgrz.Compliance.Features.SystemDescription.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Cntryl.Portia;
+using Microsoft.AspNetCore.Mvc;
 namespace Bdgrz.Compliance;
 
 [PortiaJsonContext]
@@ -38,6 +38,11 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Evidence.Models.EvidenceSupportStatusView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Evidence.Models.EvidenceSupportWithdrawalView))]
 [JsonSerializable(typeof(Page<Bdgrz.Compliance.Features.Evidence.Models.EvidenceSupportStatusView>))]
+[JsonSerializable(typeof(Page<Bdgrz.Compliance.Features.Tenants.Models.PlatformOperatorDirectoryEntry>))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Tenants.Commands.DesignatePlatformPrimary))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Tenants.Commands.ReleasePlatformPrimary))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Tenants.Queries.GetPlatformOperatorState))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Tenants.Models.PlatformOperatorStateView))]
 [JsonSerializable(typeof(ApplicationAccessPopulationReferenceView))]
 [JsonSerializable(typeof(ApplicationReviewCampaignReferenceView))]
 [JsonSerializable(typeof(ReadinessAssessmentView))]
@@ -133,4 +138,36 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Queries.ListMethodologyTemplatesV2))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.ChangePersonDetails))]
 [JsonSerializable(typeof(PersonHttp.ChangeDetailsBody))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.AbandonCriteriaEditionDraft))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.BeginCriteriaEditionRename))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.BeginCriteriaPublication))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.CancelCriteriaEditionDraftRequest))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.CancelCriteriaEditionRename))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.ChooseInitialEditionLabel))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.CorrectCriterionSummary))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.DraftCriteriaEdition))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.SetCriteriaEditionField))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.SetCriteriaEditionDisclosure))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Commands.ProposeCriterionChange))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.CriteriaEditionDraftView))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.CriteriaEntryAuthorityResult))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.CriteriaEntryAuthorityStatus))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.CriteriaEntryProof))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.CriteriaOperationReceipt))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.CriterionChangeIntent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.CriterionSummaryIntent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.RuntimeCriteriaDisclosure))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.RuntimeCriteriaDisclosurePage))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.RuntimeCriteriaEdition))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.RuntimeCriteriaEditionsPage))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.RuntimeCriteriaEntry))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.RuntimeCriteriaPage))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Queries.GetCriteriaEditionDraft))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Queries.GetCriteriaOperation))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Queries.GetCriteriaEditionValueOperation))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Queries.GetRuntimeCriteriaEdition))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Queries.GetRuntimeCriteriaEntry))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Queries.ListRuntimeCriteriaEditions))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Queries.ListRuntimeCriteriaEntries))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Queries.ListRuntimeCriteriaDisclosures))]
 sealed partial class ComplianceJsonContext : JsonSerializerContext;

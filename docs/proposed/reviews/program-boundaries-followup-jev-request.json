@@ -1,0 +1,27 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "sequence": "A coordinator sends token T to a child. The coordinator freezes a draft after a timeout. The child has not accepted or fenced T. After the freeze, the delayed command with T successfully writes an accepted scope decision into that same draft.",
+    "fence": "A child writes a durable refusal for token T using the same concurrency control as acceptance. If an acceptance for T is already committed, it reports that acceptance instead. Otherwise later acceptance with T is rejected.",
+    "service": "A client service was active when read. Before the scope decision is accepted, the service owner retires it. No source-owner reservation, admission, or other synchronization exists.",
+    "policy": "The product rule says a boundary draft may cite only active services belonging to its program. It does not explicitly say that retirement must be blocked or that the service must remain active forever."
+  },
+  "questions": {
+    "late_fact": {
+      "type": "noul",
+      "instructions": "Did an accepted scope decision enter the draft after it was frozen?"
+    },
+    "fence_prevents": {
+      "type": "noul",
+      "instructions": "After the child has committed that durable refusal for T, can it accept T later?"
+    },
+    "source_active": {
+      "type": "noul",
+      "instructions": "Was the service active at scope-decision acceptance in the service scenario?"
+    },
+    "post_retirement": {
+      "type": "noul",
+      "instructions": "Does the stated policy explicitly require the service owner to reject all later retirement?"
+    }
+  }
+}

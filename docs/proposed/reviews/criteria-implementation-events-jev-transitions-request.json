@@ -1,0 +1,103 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "edition_fence": {
+      "event_name": "CriteriaEditionOperationAttemptFenced",
+      "meaning": "The edition owner records a source-backed fence preventing an old exact operation execution generation from appending at its previous expected stream position."
+    },
+    "initial_label_requested": {
+      "event_name": "CriteriaInitialLabelRequested",
+      "meaning": "The edition with an unavailable initial label records a new operation selecting a replacement initial label; the new label is not yet claimed."
+    },
+    "initial_label_refused": {
+      "event_name": "CriteriaInitialLabelRefused",
+      "meaning": "The edition records that its exact initial label selection was definitively refused or fenced; no label is confirmed."
+    },
+    "creation_cancelled": {
+      "event_name": "CriteriaEditionDraftRequestCancelled",
+      "meaning": "The edition owner commits cancellation of an initial draft-creation attempt before it becomes ready; delayed claim outcomes must not reactivate it."
+    },
+    "rename_requested": {
+      "event_name": "CriteriaEditionRenameRequested",
+      "meaning": "The edition owner records a requested draft label change, including old and new labels, before the new claim is confirmed."
+    },
+    "draft_renamed": {
+      "event_name": "CriteriaEditionDraftRenamed",
+      "meaning": "The edition owner commits a change from the old label generation to a reserved new label generation; the new claim confirmation is still pending."
+    },
+    "rename_completed": {
+      "event_name": "CriteriaEditionRenameCompleted",
+      "meaning": "The edition owner records that the new label claim has been confirmed against its committed label change; old label cleanup may still be pending."
+    },
+    "rename_refused": {
+      "event_name": "CriteriaEditionRenameRefused",
+      "meaning": "The edition owner records a terminal refusal for one exact requested rename; its prior label remains current."
+    },
+    "rename_cancelled": {
+      "event_name": "CriteriaEditionRenameCancelled",
+      "meaning": "The edition owner records cancellation of one exact rename before the edition label-change fact commits."
+    },
+    "draft_abandoned": {
+      "event_name": "CriteriaEditionDraftAbandoned",
+      "meaning": "The edition owner commits the terminal abandonment of one unpublished draft, preventing later publication; claim cleanup is separate."
+    },
+    "summary_corrected": {
+      "event_name": "CriterionSummaryCorrected",
+      "meaning": "An individual criterion or point of focus has its original product-authored summary corrected; the published structural membership does not change."
+    },
+    "entry_fenced": {
+      "event_name": "CriterionOperationAttemptFenced",
+      "meaning": "An entry owner records a source-backed execution-generation fence so an earlier unresolved entry operation cannot rebase and append later."
+    }
+  },
+  "questions": {
+    "edition_fence": {
+      "type": "noul",
+      "instructions": "Does the event name CriteriaEditionOperationAttemptFenced accurately and naturally describe this completed fact: The edition owner records a source-backed fence preventing an old exact operation execution generation from appending at its previous expected stream position."
+    },
+    "initial_label_requested": {
+      "type": "noul",
+      "instructions": "Does the event name CriteriaInitialLabelRequested accurately and naturally describe this completed fact: The edition with an unavailable initial label records a new operation selecting a replacement initial label; the new label is not yet claimed."
+    },
+    "initial_label_refused": {
+      "type": "noul",
+      "instructions": "Does the event name CriteriaInitialLabelRefused accurately and naturally describe this completed fact: The edition records that its exact initial label selection was definitively refused or fenced; no label is confirmed."
+    },
+    "creation_cancelled": {
+      "type": "noul",
+      "instructions": "Does the event name CriteriaEditionDraftRequestCancelled accurately and naturally describe this completed fact: The edition owner commits cancellation of an initial draft-creation attempt before it becomes ready; delayed claim outcomes must not reactivate it."
+    },
+    "rename_requested": {
+      "type": "noul",
+      "instructions": "Does the event name CriteriaEditionRenameRequested accurately and naturally describe this completed fact: The edition owner records a requested draft label change, including old and new labels, before the new claim is confirmed."
+    },
+    "draft_renamed": {
+      "type": "noul",
+      "instructions": "Does the event name CriteriaEditionDraftRenamed accurately and naturally describe this completed fact: The edition owner commits a change from the old label generation to a reserved new label generation; the new claim confirmation is still pending."
+    },
+    "rename_completed": {
+      "type": "noul",
+      "instructions": "Does the event name CriteriaEditionRenameCompleted accurately and naturally describe this completed fact: The edition owner records that the new label claim has been confirmed against its committed label change; old label cleanup may still be pending."
+    },
+    "rename_refused": {
+      "type": "noul",
+      "instructions": "Does the event name CriteriaEditionRenameRefused accurately and naturally describe this completed fact: The edition owner records a terminal refusal for one exact requested rename; its prior label remains current."
+    },
+    "rename_cancelled": {
+      "type": "noul",
+      "instructions": "Does the event name CriteriaEditionRenameCancelled accurately and naturally describe this completed fact: The edition owner records cancellation of one exact rename before the edition label-change fact commits."
+    },
+    "draft_abandoned": {
+      "type": "noul",
+      "instructions": "Does the event name CriteriaEditionDraftAbandoned accurately and naturally describe this completed fact: The edition owner commits the terminal abandonment of one unpublished draft, preventing later publication; claim cleanup is separate."
+    },
+    "summary_corrected": {
+      "type": "noul",
+      "instructions": "Does the event name CriterionSummaryCorrected accurately and naturally describe this completed fact: An individual criterion or point of focus has its original product-authored summary corrected; the published structural membership does not change."
+    },
+    "entry_fenced": {
+      "type": "noul",
+      "instructions": "Does the event name CriterionOperationAttemptFenced accurately and naturally describe this completed fact: An entry owner records a source-backed execution-generation fence so an earlier unresolved entry operation cannot rebase and append later."
+    }
+  }
+}

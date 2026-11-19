@@ -1,0 +1,22 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "rules": "One edition publication attempt T has a generation and monotonic ordinal. Published(T) and Aborted(T) compete on the same edition stream at the same expected revision. Aborted(T) is allowed to commit before any target fence exists. After that abort, edition cleanup remains pending until its exact witness commits a durable fence for T and the edition verifies that exact fence acknowledgment. The witness orders pin and fence commands on its own stream, rejects a pin whose ordinal is at or below its recorded fenced high-water mark, and never clears a different active pin. The fence event is written even if T's pin is absent. A committed abort and a late accepted pin both trigger idempotent reconciliation. A timeout is unknown, not a terminal decision. These rules are assumptions about the example, not evidence of implementation.",
+    "abort_first": "The edition commits Aborted(T) at revision 6 while no witness pin or fence is visible. The committed abort's exact source fact is available to the witness. The target fence has not yet been recorded.",
+    "fence_first": "After Aborted(T), the witness durably fences T at ordinal 4 while no matching pin is present. A delayed Pin(T, 4) arrives later.",
+    "late_pin": "After Aborted(T), a previously sent Pin(T, 4) commits before the abort's target fence. Its acceptance triggers a replayable reconciliation that verifies the exact aborted edition fact and sends Fence(T, 4).",
+    "newer": "The witness has durably fenced ordinal 4. A later valid attempt at ordinal 5 has a different token and currently owns the witness pin. A delayed retry for the old token at ordinal 4 arrives.",
+    "stale_publish": "The edition commits Aborted(T) at revision 6. A delayed Publish(T) still uses expected revision 5; it does not bind a new attempt.",
+    "unknown": "The witness fence command timed out and no committed fence has been observed. The client asks the edition to start the next publication attempt."
+  },
+  "questions": {
+    "abort_needs_fence": {"type":"noul","instructions":"Under state.rules, must a target fence already exist before the edition can commit Aborted(T) in state.abort_first?"},
+    "cleanup_done_early": {"type":"noul","instructions":"Under state.rules, is abort cleanup complete in state.abort_first before any target fence is committed?"},
+    "fenced_late_accept": {"type":"noul","instructions":"Under state.rules, may the delayed Pin(T, 4) in state.fence_first be accepted?"},
+    "late_pin_cleanup": {"type":"noul","instructions":"Under state.rules, does state.late_pin require an exact-token fence reconciliation?"},
+    "old_clears_new": {"type":"noul","instructions":"Under state.rules, may the delayed ordinal-4 retry in state.newer clear the ordinal-5 pin?"},
+    "old_revision_commits": {"type":"noul","instructions":"Under state.rules, may Publish(T) in state.stale_publish append successfully at expected revision 5 after revision 6 has committed?"},
+    "timeout_safe": {"type":"noul","instructions":"Under state.rules, does the timeout in state.unknown prove cleanup is complete and a new attempt can start?"},
+    "assumption_proof": {"type":"noul","instructions":"Do the stipulated owner rules in state.rules prove the deployed event store and application already implement them?"}
+  }
+}

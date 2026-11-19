@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "trigger_complete": {
+      "type": "noul",
+      "noul": 0.09
+    },
+    "trigger_race": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "report_small": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "report_complete": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "assessment_current": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "history_truth": {
+      "type": "noul",
+      "noul": 0.98
+    },
+    "bounded_matrix": {
+      "type": "noul",
+      "noul": 0.97
+    }
+  },
+  "usage": {
+    "input_tokens": 717,
+    "output_tokens": 124
+  }
+}

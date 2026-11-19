@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "atomic_change": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "global_review": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "latest_listing": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "per_entry_progress": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "global_completion": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "parent_race": {
+      "type": "noul",
+      "noul": 0.51
+    },
+    "entry_race": {
+      "type": "noul",
+      "noul": 0.8
+    }
+  },
+  "usage": {
+    "input_tokens": 666,
+    "output_tokens": 126
+  }
+}

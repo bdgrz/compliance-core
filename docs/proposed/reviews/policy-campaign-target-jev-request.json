@@ -1,0 +1,40 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "witness": "A role-targeted policy approval must have at least one target team. Team Red is independently accepted as a target. The approver reads Red, then Red is removed before the approval commits. No fence or version check covers the removal.",
+    "freeze": "An approved policy version has two target teams Red and Blue. The policy root has no team list. The Red and Blue target owners are independently addressable. No demonstrated mechanism orders a late target addition or removal against the version approval.",
+    "review": "A whole policy proposal has two independently edited target teams. Alice authored a revision to the Red target. Bob authored a revision to the Blue target. The accepted rule says the reviewer cannot have authored any revision to the whole proposal. Alice only reviews the Blue target.",
+    "subject": "For a single proposed policy revision, the source authoritatively records each editor in an independently addressable exact key consisting of proposal and editor. The source has a qualified revision fence preventing any new author from being admitted to the reviewed revision while approval is committed. Reviewer identity is Pat.",
+    "hash": "An approval event records a hash without storing or retaining the policy audience target content or any source from which the exact targets can be reconstructed."
+  },
+  "questions": {
+    "witness_race": {
+      "type": "noul",
+      "instructions": "In witness, can the approval commit after its only accepted target was removed?"
+    },
+    "witness_guarantee": {
+      "type": "noul",
+      "instructions": "In witness, does the earlier read prove a nonempty target set at approval?"
+    },
+    "freeze_guarantee": {
+      "type": "noul",
+      "instructions": "In freeze, does independently addressing targets establish an immutable complete target set at approval?"
+    },
+    "review_equiv": {
+      "type": "noul",
+      "instructions": "In review, does Alice reviewing only Blue satisfy the rule that the whole-proposal reviewer authored no revision?"
+    },
+    "subject_local": {
+      "type": "noul",
+      "instructions": "In subject, could an exact authoritative lookup of Pat's authorship key answer whether Pat authored a revision without enumerating all other editors?"
+    },
+    "subject_provider": {
+      "type": "noul",
+      "instructions": "In subject, does the hypothetical scenario prove the existing product source has the stated authoritative fence?"
+    },
+    "hash_complete": {
+      "type": "noul",
+      "instructions": "In hash, does the hash alone make the named audience targets recoverable?"
+    }
+  }
+}

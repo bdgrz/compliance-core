@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "bounded_owner": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "event_store_proven": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "mixed_allow": {
+      "type": "noul",
+      "noul": 0.25
+    },
+    "fresh_policy_t": {
+      "type": "noul",
+      "noul": 0.42
+    },
+    "digest_proves": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "legacy_replays": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "unknown_veto": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "pending_accept": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "equivalent_source": {
+      "type": "noul",
+      "noul": 0.72
+    },
+    "barrier_roster": {
+      "type": "noul",
+      "noul": 0.07
+    }
+  },
+  "usage": {
+    "input_tokens": 1011,
+    "output_tokens": 184
+  }
+}

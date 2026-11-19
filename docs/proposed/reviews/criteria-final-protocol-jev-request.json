@@ -1,0 +1,52 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "late_pin": "An edition records terminal abort for publication attempt A. A delayed pin for A then commits on witness W. Pin acceptance itself triggers a source check, which sees the exact abort and durably fences/releases only A. The worker recovers if interrupted.",
+    "published_pin": "Witness W is pinned for publication attempt A. Edition publishes under A. W retains the exact-generation published fence. A delayed request attempts to remove W under that same generation.",
+    "old_claim": "Label X was held by edition E under generation G1. E moved to Y, then after exact cleanup X was held by another edition under G2. A delayed release targets X/G1 and checks both current holder and exact generation.",
+    "late_confirm": "An edition initial-creation attempt is cancelled on the edition stream. A delayed label-claim confirmation for that exact attempt arrives; completion requires edition state to still be activating the same attempt. Both claim confirmation and cancellation trigger exact-generation cleanup.",
+    "pagination": "A catalog index has not discovered all pre-publication identities. It issues an identifier-ordered cursor after displaying key K. A previously undiscovered pre-cut key J sorts before K. The subsequent page resumes strictly after K.",
+    "replacement": "Entry old incarnation A is accepted. Replacement proposal R is recorded before publication cut C, then its own durable outcome after C refuses R. Published state at C follows accepted state as of proposal positions, and refusal leaves the earlier accepted incarnation in effect.",
+    "program_auth": "An authorized program creator is checked against a source-authoritative admission service. The exact edition is irreversibly published. Authorization read admits the operation, then the grant is revoked, then the same in-flight ProgramCreated append commits. Policy says admitted operations may finish after later revocation.",
+    "unknown_commit": "A program creation append may have committed, but the reply was lost. The client retries the same program ID and same intent. The handler has not yet read the source.",
+    "current_proof": "A system only has a Boolean is-operator response from an unspecified cached source. The policy requires a linearizable current grant read with exact grant generation."
+  },
+  "questions": {
+    "pin_stuck": {
+      "type": "noul",
+      "instructions": "In late_pin, is the pin necessarily left stuck after successful reconciliation?"
+    },
+    "published_remove": {
+      "type": "noul",
+      "instructions": "In published_pin, can the delayed removal become an accepted structural change?"
+    },
+    "old_release": {
+      "type": "noul",
+      "instructions": "In old_claim, can the delayed G1 release clear G2?"
+    },
+    "cancel_activate": {
+      "type": "noul",
+      "instructions": "In late_confirm, may the cancelled edition become active from the delayed confirmation?"
+    },
+    "page_miss": {
+      "type": "noul",
+      "instructions": "In pagination, can J be omitted from that page walk?"
+    },
+    "old_remains": {
+      "type": "noul",
+      "instructions": "In replacement, does A remain effective at cut C?"
+    },
+    "admitted_finishes": {
+      "type": "noul",
+      "instructions": "In program_auth, does the selected policy allow that same in-flight creation to commit?"
+    },
+    "unknown_refused": {
+      "type": "noul",
+      "instructions": "In unknown_commit, does the lost reply establish the first append was refused?"
+    },
+    "bool_sufficient": {
+      "type": "noul",
+      "instructions": "In current_proof, does the Boolean alone establish the required current source authority?"
+    }
+  }
+}

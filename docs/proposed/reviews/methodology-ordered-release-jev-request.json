@@ -1,0 +1,46 @@
+{
+  "model": "jev-1.14.0",
+  "state": "Evaluate each distinct hypothetical; explicit assumptions apply only within that question. Answer the proposition asked.",
+  "questions": {
+    "ordered_snapshot": {
+      "type": "noul",
+      "instructions": "A durable totally ordered source contains independent accepted template-entry changes and a published version marker. A version means each entry as of the point immediately before that marker. A complete retained source and exact scope are given. Must the marker write decide by loading or enumerating every entry in order for the version membership to be well-defined?"
+    },
+    "visibility_lag": {
+      "type": "noul",
+      "instructions": "A version marker commits after two independent entry updates, but a listing projection has processed the first update and not yet the second or the marker. Is the projection sufficient evidence that the complete version has no second entry?"
+    },
+    "order_vs_authority": {
+      "type": "noul",
+      "instructions": "A draft author writes an entry proposal into an ordered stream before a marker. Later, its participant owner refuses that exact proposal due to a business invariant. Does the mere ordering of that proposal before the marker prove that it was accepted into the version?"
+    },
+    "late_writer": {
+      "type": "noul",
+      "instructions": "An editor reads that a draft is open and pauses. The version publication marker commits. The editor then physically appends a proposal into the same ordered scope after that marker. The design admits only proposals positioned before the marker. Is it correct to acknowledge the late proposal as an accepted edit to that already-published version?"
+    },
+    "actor_index": {
+      "type": "noul",
+      "instructions": "A draft reviewer has authored an accepted edit, but the reviewer-author index is eventually consistent and has not processed that edit. A review decision checks only that stale index before accepting. Does that ensure the reviewer authored no edit in the draft?"
+    },
+    "actor_exact": {
+      "type": "noul",
+      "instructions": "A complete and proven author-participation index at the exact draft freeze position says actor X authored no draft edit. The decision needs to disqualify just X, and source completeness, ordering and index integrity are assumed proven. Must the reviewer decision load every entry to decide whether X authored any draft edit?"
+    },
+    "outcome_order": {
+      "type": "noul",
+      "instructions": "A new template-entry application reads prior application outcome as pending. A second application for the same entry revision makes an independent check of a different aggregate and starts. There is no common conditional authority or serialized episode for this key. Can the applications race despite each being scoped to one entry?"
+    },
+    "partial_apply": {
+      "type": "noul",
+      "instructions": "A firm publishes a template version of independently stored entries. A client asks to apply that version and receives one accepted application for entry A; the application of entry B is pending. The client is told the entire version has finished applying. Does that statement overclaim what the outcomes prove?"
+    },
+    "author_claim_before": {
+      "type": "noul",
+      "instructions": "Every editor appends a draft-author claim before sending its entry edit; claims and edits are in separate streams without an atomic transaction. An editor claim commits, but the edit is refused or never sent. Does the mere claim prove the actor authored an accepted draft revision?"
+    },
+    "key_checkpoint": {
+      "type": "noul",
+      "instructions": "A complete index reports it has processed the publication marker, but its worker durably advances the checkpoint before storing the immediately prior entry update and then crashes. Is the checkpoint alone sufficient to prove the indexed version view is complete?"
+    }
+  }
+}

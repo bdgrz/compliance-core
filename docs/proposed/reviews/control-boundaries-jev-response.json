@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "independent_role_streams_break_separation": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "two_slots_fix_identity_race": {
+      "type": "noul",
+      "noul": 0.83
+    },
+    "two_slots_prove_person_team_independence": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "separate_freeze_checks_race": {
+      "type": "noul",
+      "noul": 0.65
+    },
+    "settled_freeze_excludes_old_late_acceptance": {
+      "type": "noul",
+      "noul": 0.17
+    },
+    "timeout_release_loses_authority": {
+      "type": "noul",
+      "noul": 0.83
+    },
+    "projection_counts_prove_exact_results": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "source_fold_requires_full_list_in_memory": {
+      "type": "noul",
+      "noul": 0.05
+    }
+  },
+  "usage": {
+    "input_tokens": 953,
+    "output_tokens": 191
+  }
+}

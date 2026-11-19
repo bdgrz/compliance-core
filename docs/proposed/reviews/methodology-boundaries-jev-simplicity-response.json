@@ -1,0 +1,29 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "ledger": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "serialization": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "fence_missing": {
+      "type": "noul",
+      "noul": 0.59
+    },
+    "cut_assumed": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "long_history": {
+      "type": "noul",
+      "noul": 0.96
+    }
+  },
+  "usage": {
+    "input_tokens": 533,
+    "output_tokens": 89
+  }
+}

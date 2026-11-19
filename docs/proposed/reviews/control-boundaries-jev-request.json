@@ -1,0 +1,47 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "responsibility_race": "A control has two responsibility streams, one for owner and one for reviewer. Neither has a holder. Two requests run concurrently. Each reads the other stream before either writes and sees no holder. The first assigns person P as owner, and the second assigns person P as reviewer. Each writes only its own stream. The business rule forbids the same holder for both roles without a waiver.",
+    "two_slots": "A single per-control owner contains exactly two slots, owner and reviewer. Every assignment to either role checks the other slot and appends to the same stream with optimistic concurrency. On a conflict the loser reloads and rechecks. The rule requires the two holder identities to differ unless a waiver applies.",
+    "freeze_race": "A plan has independent step streams. A revision checks that the plan is unfrozen, and a start checks that revision is complete. Both read before either writes. Revision writes only the step stream; start writes only the evaluation stream.",
+    "pending_window": "An admission window for an evaluation allows one exact step change at a time. It remains pending until that step owner has committed an accepted fact or durably fenced that exact token. A freeze can happen only when no admission is pending, and no later admissions can enter that window.",
+    "timeout_case": "An admitted step command times out after it was dispatched. The coordinator releases the admission without receiving a committed outcome or fencing the token. The delayed step command is then delivered.",
+    "count_case": "A projection reports that a plan has 12 steps and an evaluation has 12 results. Both counts were updated asynchronously. The plan permits concurrent step changes and step result replacements.",
+    "stream_fold": "A frozen source chain enumerates all admitted plan step mutations with durable accepted or fenced outcomes. Each referenced child fact is available. Validation iterates the chain in order and can repeat full bounded-memory passes to find each current step and its result; it stores no complete list.",
+    "team_case": "The owner holder is team A and reviewer holder is team B. These holder IDs differ. A person can belong to both teams, and team memberships can change independently."
+  },
+  "questions": {
+    "independent_role_streams_break_separation": {
+      "type": "noul",
+      "instructions": "In `responsibility_race`, can both assignments commit and violate the business rule?"
+    },
+    "two_slots_fix_identity_race": {
+      "type": "noul",
+      "instructions": "In `two_slots`, does the single stream prevent concurrent commits that make the exact same holder identity both owner and reviewer without a waiver?"
+    },
+    "two_slots_prove_person_team_independence": {
+      "type": "noul",
+      "instructions": "In `team_case`, does comparing only the two team IDs prove that a person cannot be on both sides?"
+    },
+    "separate_freeze_checks_race": {
+      "type": "noul",
+      "instructions": "In `freeze_race`, can a revision commit after evaluation start despite the intended frozen-plan rule?"
+    },
+    "settled_freeze_excludes_old_late_acceptance": {
+      "type": "noul",
+      "instructions": "In `pending_window`, can an earlier dispatched step command still newly commit after freeze, if every step owner rejects a fenced token?"
+    },
+    "timeout_release_loses_authority": {
+      "type": "noul",
+      "instructions": "In `timeout_case`, can the late command change a step after the coordinator has released its admission?"
+    },
+    "projection_counts_prove_exact_results": {
+      "type": "noul",
+      "instructions": "In `count_case`, do the equal projection counts prove every exact plan step has a correct current result?"
+    },
+    "source_fold_requires_full_list_in_memory": {
+      "type": "noul",
+      "instructions": "In `stream_fold`, must validation hold the complete step list in memory at once?"
+    }
+  }
+}

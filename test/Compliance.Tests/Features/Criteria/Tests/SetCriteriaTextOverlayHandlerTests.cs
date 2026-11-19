@@ -1,22 +1,23 @@
 using System.Collections;
 using System.Reflection;
 using System.Security.Claims;
-using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Portia.Testing;
-using Cntryl.Portia;
-using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Aggregates;
+using Bdgrz.Compliance.Features.Criteria.Commands;
 using Bdgrz.Compliance.Features.Criteria.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Events;
+using Bdgrz.Compliance.Features.Criteria.Handlers;
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Criteria.Rules;
 using Bdgrz.Compliance.Features.Criteria.Services;
 using Bdgrz.Compliance.Features.Evidence.Models;
@@ -30,7 +31,9 @@ using Bdgrz.Compliance.Features.NativeOperations.Services;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Models;
@@ -40,17 +43,21 @@ using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceUse.Handlers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Handlers;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -84,17 +91,10 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.Criteria.Aggregates;
-using Bdgrz.Compliance.Features.Criteria.Commands;
-using Bdgrz.Compliance.Features.Criteria.Events;
-using Bdgrz.Compliance.Features.Criteria.Handlers;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SourceUse.Handlers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Authorizers;
-using Bdgrz.Compliance.Features.UserIdentities.Handlers;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 namespace Bdgrz.Compliance.Tests.Features.Criteria.Tests;
 
 /// <summary>
@@ -331,7 +331,7 @@ public sealed class SetCriteriaTextOverlayHandlerTests
             await using var scope = _provider.CreateAsyncScope();
             var services = scope.ServiceProvider;
             var handler = new SetCriteriaTextOverlayHandler(services.GetRequiredService<NativeOperationExecutor>(),
-                CriteriaCatalog.Platform,
+                new FixtureEntryAuthority(),
                 services.GetRequiredService<IImmutableContentStore>(), new FixedTimeProvider(Now));
             return await handler.HandleAsync(context, CancellationToken.None);
         }
@@ -360,6 +360,21 @@ public sealed class SetCriteriaTextOverlayHandlerTests
                 TenantId, reference);
 
         public ValueTask DisposeAsync() => _provider.DisposeAsync();
+    }
+
+    sealed class FixtureEntryAuthority : ICriteriaEntryAuthority
+    {
+        public ValueTask<Result<CriteriaEntryAuthorityResult>> ReadAsync(Uuid editionId, string identifier,
+            CancellationToken ct = default)
+        {
+            var item = CriteriaCatalog.Platform.GetEntry(editionId, identifier);
+            var value = item is null
+                ? new CriteriaEntryAuthorityResult(CriteriaEntryAuthorityStatus.NotMember, null)
+                : new CriteriaEntryAuthorityResult(CriteriaEntryAuthorityStatus.Accepted,
+                    new CriteriaEntryProof(item, Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+                        Uuid.CreateVersion4(), null, null, null));
+            return ValueTask.FromResult(Result<CriteriaEntryAuthorityResult>.Success(value));
+        }
     }
 
     sealed class FixedRequestContext(SetCriteriaTextOverlay request, ClaimsPrincipal actor, Uuid requestId)

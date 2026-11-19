@@ -1,0 +1,64 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "overdue": "A campaign has two participants. One acknowledged; one is still pending but their due date has passed. The closing policy blocks closure only for a participant who is pending within their due date.",
+    "stale": "A campaign view currently shows only Alice and says no one is pending within their due date. Bob joined and qualified while the campaign was open before this view was updated. Bob is pending and his due date is next week.",
+    "intent": "A Compliance Lead records a close request immediately. The UI reports ready when a current derived participant view has no person pending within their due date. No authority checks whether a qualifying participant or change was omitted when the request was recorded.",
+    "deadline": "A participant is pending at noon and due tomorrow. At noon the campaign is not eligible to close. The participant remains pending past tomorrow, when the policy no longer counts this person as pending within their due date.",
+    "origin": "At launch a source guarantees a replayable immutable roster snapshot and a precise launch boundary, with no missing or revised entries. A participant stores one person's origin independently by checking that person's exact roster fact against the campaign rule. The parent stores no participant list.",
+    "retry": "A participant receives an audience amendment with source observation 17. The exact same observation and reason are delivered again. The next day a distinct observation changes the same person's qualification.",
+    "mover": "A worker has two qualifying relationships. One relationship ends but the other continues to qualify.",
+    "noinfer": "A policy decision says the core security audience is employees and contractors with access to in-scope systems or data, and explicitly says the audience is never inferred from application access, platform teams, or the identity provider.",
+    "readclose": "The only policy says a campaign closes once no participant is pending within their due date. A proposal replaces the irreversible recorded close with a non-final current dashboard status that can later become open again if a missed or new qualifying person is discovered."
+  },
+  "questions": {
+    "overdue_all_terminal": {
+      "type": "noul",
+      "instructions": "In overdue, must the still-pending overdue participant complete their business outcome before this closing policy permits closure?"
+    },
+    "overdue_eligible": {
+      "type": "noul",
+      "instructions": "In overdue, is the participant-count condition for closure satisfied?"
+    },
+    "stale_correct": {
+      "type": "noul",
+      "instructions": "In stale, is the view's conclusion about the complete eligible audience reliable?"
+    },
+    "intent_guarantee": {
+      "type": "noul",
+      "instructions": "In intent, does recording the close request prove the closing policy was satisfied at that time?"
+    },
+    "deadline_change": {
+      "type": "noul",
+      "instructions": "In deadline, can eligibility to close change merely because time passes?"
+    },
+    "origin_local": {
+      "type": "noul",
+      "instructions": "In origin, can one person's launch membership be established without storing every other participant in the parent?"
+    },
+    "origin_provider": {
+      "type": "noul",
+      "instructions": "In origin, does the scenario establish that the real roster infrastructure actually provides the stated snapshot?"
+    },
+    "same_retry": {
+      "type": "noul",
+      "instructions": "In retry, is the repeated observation and reason an exact retry rather than a new audience amendment?"
+    },
+    "later_new": {
+      "type": "noul",
+      "instructions": "In retry, can the distinct later observation require a new amendment?"
+    },
+    "mover_remains": {
+      "type": "noul",
+      "instructions": "In mover, does ending the one relationship necessarily mean the person no longer qualifies?"
+    },
+    "noinfer_permission": {
+      "type": "noul",
+      "instructions": "In noinfer, does the stated decision permit deriving the audience by examining application-access assignments?"
+    },
+    "readclose_equivalent": {
+      "type": "noul",
+      "instructions": "In readclose, does the proposed non-final status guarantee the same irreversible recorded closure behavior?"
+    }
+  }
+}

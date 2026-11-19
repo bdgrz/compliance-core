@@ -1,0 +1,55 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "unknown": "A client with ProgramId P submits authorized creation intent A. Its original process crashes after dispatch. No durable source fact identifying A or its attempt token exists yet, but A's expected-position-zero append may still be in flight. Another currently authorized request for P presents different intent B; neither B nor the recovery process knows A's intent.",
+    "original_wins": "In state.unknown, A commits ProgramCreated at position 0 before B commits any fact. The program creation fact binds P to A.",
+    "new_fence_wins": "In state.unknown, B commits a generation-level fence at position 0, bound to B's presented normalized intent. It closes every prior writer expecting position 0, including the still-in-flight A. A stale attempt must not rebase. After confirming the fence, B can obtain fresh authorization and try a successor generation.",
+    "prior_fence": "A prior committed fence already bound P to intent A. B requests the same P with materially different intent.",
+    "empty": "A source read of P returns an empty stream while the original A append may still be in flight, and there is no durable intent binding for P.",
+    "unknown_fence": "B's fence append times out, and A may also still be in flight. A subsequent source read is empty. Neither append has a definitive source outcome.",
+    "admission": "An attempt passed an in-memory current authorization check, but no ProgramCreated or fence has committed. The product says a successful response requires a committed ProgramCreated; admission authorizes an attempt, not a reservation.",
+    "known_prior": "A genuinely durable prior record proves that attempt identifier T and original normalized intent A were associated with ProgramId P. The recovery source checks that exact durable record before naming T as the earlier attempt."
+  },
+  "questions": {
+    "absence_proves_no_old": {
+      "type": "noul",
+      "instructions": "Under state.empty, can the system conclude that no different earlier intent exists or could still commit?"
+    },
+    "first_success_conflict": {
+      "type": "noul",
+      "instructions": "Under state.original_wins, should B be treated as a changed-intent conflict?"
+    },
+    "fence_closes_prior": {
+      "type": "noul",
+      "instructions": "Under state.new_fence_wins, can the still-in-flight expected-position-zero A commit after the fence if expected-position concurrency is enforced?"
+    },
+    "fence_proves_old_intent": {
+      "type": "noul",
+      "instructions": "Under state.new_fence_wins, does B's fence prove that A's original intent was B?"
+    },
+    "fence_binds_b": {
+      "type": "noul",
+      "instructions": "Under state.new_fence_wins, can the fence bind P to the presented intent B without knowing A's content?"
+    },
+    "old_auto_rebase": {
+      "type": "noul",
+      "instructions": "Under state.new_fence_wins, can A safely retry its old append at the new stream position without a fresh generation?"
+    },
+    "old_prior_conflict": {
+      "type": "noul",
+      "instructions": "Under state.prior_fence, must B conflict under the recorded idempotency policy?"
+    },
+    "unknown_source_settled": {
+      "type": "noul",
+      "instructions": "Under state.unknown_fence, does the empty read prove both in-flight writes have definitively failed?"
+    },
+    "allow_implies_reservation": {
+      "type": "noul",
+      "instructions": "Under state.admission, did the transient allow by itself reserve the ProgramId or prove program creation?"
+    },
+    "known_evidence": {
+      "type": "noul",
+      "instructions": "Under state.known_prior, is an exact prior attempt attribution supportable from the durable source record?"
+    }
+  }
+}

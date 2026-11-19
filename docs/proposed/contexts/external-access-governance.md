@@ -1,6 +1,7 @@
 # External access governance
 
-Status: **locked**, 2026-11-03. Hand-authored source of truth for this context.
+Status: **under boundary review**, 2026-11-05. Product rules remain in force; the
+boundary alternatives below are proposals, not yet qualified or locked. This is the hand-authored source for this context.
 It follows the [context conventions](conventions.md).
 
 ## Purpose
@@ -91,65 +92,99 @@ Compliance Lead or Org Admin who did not request it, and ends when it expires
 
 ### AccessReviewDelegation
 
-**Identity:** `TenantId` + `SystemInstanceId`.
+**Identity:** `TenantId` + `SystemInstanceId` + `MemberId`.
 
-**Invariant:** one instance has a set of delegates, each an active member, named
-by the access owner or a Compliance Lead. Delegates act only while they remain
-active members (checked at each use).
+**Invariant:** one member's delegation for one instance is active or revoked;
+other delegates have independent lifecycles. Bind a grant to the exact member
+episode so a later re-invitation does not inherit it. A delegate acts only while
+an active member. A directory of delegates is a projection, not a parent roster.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| DelegateAccessReview | Member linked to the access owner, or Compliance Lead | Instance active; delegate is an active member; not already a delegate | AccessReviewDelegated |
-| RevokeAccessReviewDelegation | Member linked to the access owner, or Compliance Lead | A delegate | AccessReviewDelegationRevoked |
+| DelegateAccessReview | Member linked to the access owner, or Compliance Lead | Instance active; delegate is an active member in the named episode; this delegation is inactive | AccessReviewDelegated |
+| RevokeAccessReviewDelegation | Member linked to the access owner, or Compliance Lead | This delegation is active | AccessReviewDelegationRevoked |
 
 | Event | Carries |
 | --- | --- |
-| AccessReviewDelegated | tenant, instance, delegate, delegated by |
+| AccessReviewDelegated | tenant, instance, delegate, member episode, delegated by |
 | AccessReviewDelegationRevoked | tenant, instance, delegate, revoked by |
+
+**Authority qualification:** checking membership or ownership in a separate
+stream does not serialize revocation against an in-flight action. The required
+revocation-versus-action ordering and any admission or fencing mechanism remain
+open; a projection or a second check does not prove that ordering.
 
 ### AccessPopulation
 
 **Identity:** `TenantId` + `PopulationId`, for one system instance for life.
 
-**Invariant:** one population records what was observed at one exact instance
-version at one time. Rows are entered while it is open. It is accepted as
-complete by the instance's access owner or a delegate (EA-06), and from then on
-never changes; a correction is a new population that names the one it supersedes.
+**Invariant:** one population identifies one observation at one instance and
+time; once accepted, its observation is immutable. How the existing
+whole-population requirements are enforced without an all-child write remains
+unresolved.
 
-- A provider subject ID appears once per population; every assignment names a
-  principal in it.
-- Acceptance is refused when group nesting has a cycle (M0-D07).
-- Acceptance states the population's scope, observation time and completeness,
-  and records a content hash.
-- Rows are entered as row files stored by content hash; events carry each file's
-  hash and row count, never the rows, so the stream stays small however large the
-  population is (EA-12, [CV-13](conventions.md#stream-growth)).
+**Existing product policy:** one population describes observations at one
+instance and time, accepted as complete by the access owner or delegate
+(EA-06) and immutable thereafter. A correction is a new population that names
+the prior one. A subject appears once; every assignment names a principal;
+group nesting must be acyclic (M0-D07). These rules have not been relaxed.
 
-```mermaid
-stateDiagram-v2
-    [*] --> open: OpenAccessPopulation
-    open --> open: RecordAccessPopulationRows / RemoveAccessPopulationRows
-    open --> accepted: AcceptAccessPopulation
-    open --> discarded: DiscardAccessPopulation
-    accepted --> [*]
-    discarded --> [*]
-```
+**Boundary direction:** each small principal or direct relationship has its
+own identity and source facts. A population must not retain a list of them,
+a per-entry ledger, or a reference to one large content object. Pair results,
+paths and their individual hops are independently addressable derived evidence,
+read in pages; a pair does not contain an array of all its paths.
 
-| Command | Who | Accepts when | Emits |
-| --- | --- | --- | --- |
-| OpenAccessPopulation | Compliance Lead, or the access owner or a delegate | `PopulationId` is new; instance active; observed at not in the future; source `manual_attestation`; a superseded population is accepted and of the same instance | AccessPopulationOpened |
-| RecordAccessPopulationRows | The opener, the access owner or a delegate | Open; the row file is stored and its rows valid | AccessPopulationRowsRecorded |
-| RemoveAccessPopulationRows | The opener, the access owner or a delegate | Open; names a row file recorded here | AccessPopulationRowsRemoved |
-| AcceptAccessPopulation | The access owner or a delegate | Open; rules above hold; completeness statement given | AccessPopulationAccepted |
-| DiscardAccessPopulation | The opener or Compliance Lead | Open; reason given | AccessPopulationDiscarded |
+**Unresolved conflict:** accepting a whole population after scanning every
+entry, or serializing every entry through a distributed admission-window chain,
+is still a write decision over all children. Bounded windows, cursors and
+paged scans do not satisfy the no-all-child-decision constraint. Nor do hashes
+or eventually consistent projections prove complete enumeration. This earlier
+proposal is rejected as a remedy. A per-principal decision can enforce its own
+unique identity, but referential integrity, no new entries after acceptance and
+acyclicity need authority across independent records. Checking an arbitrary
+path before adding an edge may itself touch an unbounded number of edges. No
+mechanism satisfying all of these existing rules and the new constraint is
+established here.
 
-| Event | Carries |
-| --- | --- |
-| AccessPopulationOpened | tenant, population, instance, instance version, observed at, source, supersedes (if any), opened by |
-| AccessPopulationRowsRecorded | tenant, population, row file hash, row counts by kind (principals, group memberships, role assumptions, entitlements, assignments), recorded by |
-| AccessPopulationRowsRemoved | tenant, population, row file hash, removed by |
-| AccessPopulationAccepted | tenant, population, row files, row count, content hash, completeness statement, accepted by |
-| AccessPopulationDiscarded | tenant, population, reason, discarded by |
+An alternative product model could treat an acceptance as the named owner's
+attestation about observed evidence, with individual observations independently
+accepted and reports showing missing, dangling or cyclic evidence. Such an
+attestation does **not** establish a system-enforced complete, immutable,
+cycle-free population and cannot silently replace the current policy. It needs
+an explicit product decision, and the rules for consuming partial or invalid
+evidence must be specified. Until then, population acceptance has no approved
+implementation design.
+
+**Local acyclicity candidate:** for a particular population generation, assign
+each principal one immutable integer rank. Each individual nested-group edge
+names the exact accepted principal identities and generation, and may be
+validated only when its source rank is strictly lower than its target rank. If
+every accepted nested-group edge uses those immutable ranks, a cycle of accepted
+edges is impossible: following a cycle would have to increase a rank and return
+to the original rank. Concurrent edge submissions do not change that argument.
+The edge keeps only its own endpoint references and validation outcome; no
+population aggregate checks a graph or retains child outcomes.
+
+This is **not** yet an alternative for accepting the current complete
+population. An acyclic observed graph can contain edges inconsistent with a
+particular rank assignment. Do not discard such observations or infer source
+completeness from edges that happened to validate. Ranking every finite DAG is
+mathematically possible, but how ranks are obtained, corrected or rebuilt without
+unbounded in-memory sorting is unspecified. A rank assignment whose write
+decision depends on examining every observed edge would recreate the prohibited
+all-child decision; independently supplied ranks are a candidate, not a proof
+that every legitimate graph can be accepted. A new generation may be needed to
+change ranks; its workflow and consequences require product review. Preserve
+raw observations and show each rank mismatch as unresolved, not as missing
+access. Role-assumption and any other expansion edges must either satisfy an
+equivalent graph-wide ordering rule or use separately qualified cycle-safe
+expansion. A locally checked rank does not prove complete source capture,
+principal existence at the necessary authority boundary, immutable population
+membership, valid role-assumption paths, or acceptable audit semantics.
+Do not claim an accepted population satisfies M0-D07 until all relevant existing
+requirements have an approved design; see the
+[local-invariant review](../reviews/access-governance-boundaries.md).
 
 ### AccountClassification
 
@@ -180,59 +215,66 @@ across later populations, with its history (EA-02):
 
 **Identity:** `TenantId` + `CampaignId`.
 
-**Invariant:** one campaign freezes, at launch, its owner program, populations,
-reviewers, remediation owner, instructions and deadline (R2 campaign routing).
-Later population, scope or boundary changes never rewrite it. It completes only
-from recorded outcomes: every item it opened has accepted closing (EA-03, EA-11,
-CV-12):
+**Invariant:** one campaign has one program, remediation owner, instructions
+and deadline for its review lifecycle. Existing exact-scope and all-item
+completion requirements remain in force, but their authority mechanism is
+unresolved under the no-all-child-write constraint.
 
-- **Launch.** The program is active. Each population is accepted and is the
-  latest accepted one of its instance. Each instance is in access-review scope.
-  Each reviewer is the instance's access owner or a delegate. The remediation
-  owner holds `access_review.manage` and is not a reviewer.
-- **Completion.** A completion request asks every item not yet closed to close.
-  An item closes only when resolved (`keep` decided, removal verified, or an
-  approved remediation exception) and then accepts no further change; otherwise
-  it refuses and says why ([CV-10](conventions.md#reactors)). The campaign records
-  each answer, completes with the last closing, and returns to `launched` listing
-  the refusals if any item refused. Closed items stay closed.
-- **Coverage.** At the completion request, every instance in the program
-  boundary whose scope is `included` has a population in the campaign or an
-  approved missing-population exception. This is advice
-  ([CV-05](conventions.md#guards-and-reviews)): an instance that comes into scope
-  later shows as the `Uncovered instance` gap and is covered by the next
-  campaign.
-- Past its deadline and not completed, the campaign is overdue: a computed gap.
+**Existing product policy:** a campaign freezes the program, selected
+populations, reviewers, remediation owner, instructions and deadline at
+launch; later changes do not rewrite it. It completes only when all required
+items close. At launch, the program is active, each selected population is the
+latest accepted population of its included instance, each reviewer is the
+access owner or a delegate, and the remediation owner has
+`access_review.manage` and is not a reviewer. Coverage of the current program
+boundary remains advice, with an `Uncovered instance` gap. These rules are not
+changed by this review.
 
-```mermaid
-stateDiagram-v2
-    [*] --> launched: LaunchAccessReviewCampaign
-    launched --> completing: RequestAccessReviewCampaignCompletion
-    completing --> completing: RecordAccessReviewItemCloseOutcome
-    completing --> completed: RecordAccessReviewItemCloseOutcome (last item closed)
-    completing --> launched: RecordAccessReviewItemCloseOutcome (all answered, some refused)
-    launched --> cancelled: CancelAccessReviewCampaign
-    completed --> [*]
-    cancelled --> [*]
-```
+**Boundary direction:** a campaign's scalar lifecycle is independent of each
+instance's selection and each account-entitlement review decision. Each item
+owns its own decision, remediation and final outcome. Results, refusal reasons
+and work remaining can be shown by a paged projection. A per-instance or
+per-item record must not be repurposed as a distributed roster that the parent
+must enumerate in order to decide a write.
 
-| Command | Who | Accepts when | Emits |
-| --- | --- | --- | --- |
-| LaunchAccessReviewCampaign | Holder of `access_review.manage` | `CampaignId` is new; launch rules hold | AccessReviewCampaignLaunched |
-| ChangeCampaignRemediationOwner | Compliance Lead | Launched; new owner eligible and not a reviewer | CampaignRemediationOwnerChanged |
-| RequestAccessReviewCampaignCompletion | The remediation owner or Compliance Lead | Launched; coverage holds (advice) | AccessReviewCampaignCompletionRequested |
-| RecordAccessReviewItemCloseOutcome | Reactor on AccessReviewItemClosed or AccessReviewItemCloseRefused | Completing; the item is the campaign's; a repeat is a no-op | AccessReviewItemCloseOutcomeRecorded, then AccessReviewCampaignCompleted or AccessReviewCampaignCompletionBlocked when all have answered |
-| CancelAccessReviewCampaign | Compliance Lead | Launched; reason given | AccessReviewCampaignCancelled |
+**Unresolved conflict:** the previously proposed completion process traversed
+every expected item and then wrote a campaign outcome. That still makes one
+write decision depend on all children, even with bounded memory and outcomes
+stored on item streams, and is not an acceptable remedy. The proposed admission
+window/chain likewise merely spreads a per-item ledger across records. Neither
+is retained as the implementation design. Complete authoritative enumeration,
+source fencing and cross-owner authorization ordering also remain unresolved;
+a projection, count or digest cannot supply them.
 
-| Event | Carries |
-| --- | --- |
-| AccessReviewCampaignLaunched | tenant, campaign, program, populations (with instance and content hash), reviewer per instance, remediation owner, instructions, deadline, approved expectations in force, launched by |
-| CampaignRemediationOwnerChanged | tenant, campaign, previous owner, new owner, changed by |
-| AccessReviewCampaignCompletionRequested | tenant, campaign, items to close, coverage relied on (populations and exceptions), requested by |
-| AccessReviewItemCloseOutcomeRecorded | tenant, campaign, item, outcome (`closed` or `refused` with reason) |
-| AccessReviewCampaignCompleted | tenant, campaign, item counts by decision and outcome, exceptions relied on, requested by |
-| AccessReviewCampaignCompletionBlocked | tenant, campaign, refused items with reasons |
-| AccessReviewCampaignCancelled | tenant, campaign, reason, cancelled by |
+A viable **alternative for product consideration** is to let reviewers close
+items independently and have reporting show the campaign's observed progress,
+including pending and unknown items, without a campaign-wide completion write.
+That would trade the current authoritative `completed` fact for a potentially
+lagging report. It cannot prove that all required items were closed, and it
+must not be treated as equivalent evidence by a control occurrence or auditor.
+Likewise, per-instance launch decisions do not by themselves prove that one
+exact, globally frozen set was selected at a single launch. The product must
+choose whether and how to change those semantics before this alternative can
+be adopted; until then campaign launch/completion is not implementation-ready.
+
+**Observed progress contract, if product adopts that alternative:** an item
+result is authoritative only for that exact item, and an exact operation ID
+identifies the submitted decision and intent. A query can show `pending`,
+`accepted`, `refused`, or `unknown` for a known operation and separately show
+its own source checkpoint and last update time. An empty result, a zero visible
+pending count, a report checkpoint, or an HTTP timeout is not evidence that no
+required item exists or that all operations succeeded. Absence of a known
+operation is `unknown` until an authoritative terminal outcome or a durable
+fence resolves it; exact retries return the same result and changed intent under
+the same operation identity is a conflict. The report must identify its scope
+as observed rather than present `completed` as a campaign-owned fact. A control
+consumer may cite an individual item's exact outcome; what it may conclude
+about the campaign as a whole is an explicit product and audit question.
+
+This user-facing contract makes uncertainty visible; it does not solve the
+current policy's exact frozen launch scope or all-items-completed assertion. A
+checkpoint proves only whatever the qualified source and projector contracts
+actually guarantee, not that omitted item openings were ever admitted or created.
 
 ### AccessReviewItem
 
@@ -242,9 +284,13 @@ the instance, the account and the entitlement (CV-02).
 **Invariant:** one item holds one reviewer decision on one frozen
 account–entitlement pair, then its remediation outcome:
 
-- At opening it freezes the account, its classification (and whether it is due
-  for reconfirmation), the entitlement, every effective path, whether it is
-  privileged, and its breaches, with any expectation exceptions in force.
+- At opening it freezes the account, classification (including reconfirmation
+  status), entitlement, privileged status and exact immutable evidence cut.
+  Effective paths and their individual hops, breaches and applicable exceptions
+  are individually addressable source-derived evidence, not arrays on the item
+  or an unbounded path document. Preserve all
+  explanations and applicable versions; their complete frozen enumeration remains
+  an explicit source qualification, including proofs of absence.
 - **Reviewer.** Only the item's reviewer decides, and never on access that
   belongs to them (an account classified `human` for their person, or `shared`
   with them accountable), unless a separation-of-duties waiver covers it (M0-D07).
@@ -278,12 +324,12 @@ stateDiagram-v2
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| OpenAccessReviewItem | Reactor on AccessReviewCampaignLaunched | New; a repeat is a no-op | AccessReviewItemOpened |
+| OpenAccessReviewItem | Reactor on AccessReviewCampaignLaunched | Exact expected source identity and current admitted generation; no prior opening; exact retry returns the original outcome | AccessReviewItemOpened or AccessReviewItemOpenRefused |
 | AssignAccessReviewItem | Compliance Lead | Campaign launched; not decided; reviewer is the access owner or a delegate and not the account's person | AccessReviewItemAssigned |
 | RecordAccessDecision | The item's reviewer | Open; rationale given | AccessDecisionRecorded |
-| ApplyBatchAccessDecision | Reactor on AccessDecisionBatchRecorded | Always answers: records the decision when open, non-privileged and still assigned to the batch's reviewer; otherwise refuses with the reason; a repeat is a no-op | AccessDecisionRecorded or AccessBatchDecisionRefused |
+| ApplyBatchAccessDecision | Authorized item operation (batch protocol unresolved) | Always answers: records the decision when open, non-privileged and still assigned to the batch's reviewer; otherwise refuses with the reason; exact retry returns the original outcome and changed intent conflicts | AccessDecisionRecorded or AccessBatchDecisionRefused |
 | ReviseAccessDecision | The item's reviewer | Decided or awaiting remediation; not closed; nothing verified; rationale given | AccessDecisionRevised |
-| CloseAccessReviewItem | Reactor on AccessReviewCampaignCompletionRequested | Always answers: closes when resolved, otherwise refuses with the reason; a repeat is a no-op | AccessReviewItemClosed or AccessReviewItemCloseRefused |
+| CloseAccessReviewItem | Authorized item operation (campaign protocol unresolved) | Always answers: closes when resolved, otherwise records a refusal, including for an absent item; exact retry returns the original outcome | AccessReviewItemClosed or AccessReviewItemCloseRefused |
 | RecordAccessRemediationChange | The campaign's remediation owner | Awaiting remediation; note or ticket given | AccessRemediationChangeRecorded |
 | VerifyAccessRemediation | The campaign's remediation owner | Awaiting remediation; the named population meets the rule above | AccessRemediationVerified |
 | RequestRemediationException | The campaign's remediation owner | Awaiting remediation; rationale and expiry given | RemediationExceptionRequested |
@@ -291,13 +337,14 @@ stateDiagram-v2
 
 | Event | Carries |
 | --- | --- |
-| AccessReviewItemOpened | tenant, campaign, item, instance, population, account, classification, reconfirmation due, entitlement, effective paths, privileged, breaches, exceptions in force, reviewer (or unassigned) |
+| AccessReviewItemOpened | tenant, campaign, item, instance, population and exact source cut, account, classification, reconfirmation due, entitlement, privileged, immutable evidence cut, reviewer (or unassigned) |
+| AccessReviewItemOpenRefused | tenant, campaign, item, source identity, admission token, reason |
 | AccessReviewItemAssigned | tenant, campaign, item, previous reviewer, reviewer, assigned by |
-| AccessDecisionRecorded | tenant, campaign, item, decision (`keep`, `remove`, `change`), rationale, batch (if any), reviewer, waiver (if any) |
+| AccessDecisionRecorded | tenant, campaign, item, decision (`keep`, `remove`, `change`), rationale, batch and operation token (if any), reviewer, waiver (if any) |
 | AccessDecisionRevised | tenant, campaign, item, previous decision, decision, rationale, reviewer |
-| AccessBatchDecisionRefused | tenant, campaign, item, batch, reason (`already_decided`, `privileged`, `reassigned`, `closed`) |
-| AccessReviewItemClosed | tenant, campaign, item, final state (`kept`, `verified`, `excepted`) |
-| AccessReviewItemCloseRefused | tenant, campaign, item, reason (`undecided`, `awaiting_remediation`) |
+| AccessBatchDecisionRefused | tenant, campaign, item, batch and operation token, reason (`already_decided`, `privileged`, `reassigned`, `closed`) |
+| AccessReviewItemClosed | tenant, campaign, item, completion attempt and operation token, final state (`kept`, `verified`, `excepted`) |
+| AccessReviewItemCloseRefused | tenant, campaign, item, completion attempt and operation token, reason (`undecided`, `awaiting_remediation`, `not_opened`) |
 | AccessRemediationChangeRecorded | tenant, campaign, item, note or ticket, recorded by |
 | AccessRemediationVerified | tenant, campaign, item, verifying population, content hash, verified by |
 | RemediationExceptionRequested | tenant, campaign, item, rationale, expires at, requested by |
@@ -308,22 +355,33 @@ stateDiagram-v2
 
 **Identity:** `TenantId` + `CampaignId` + `BatchId`.
 
-**Invariant:** one batch records one reviewer's single decision and shared
-rationale over an exact list of non-privileged items assigned to them (EA-07).
-Each item then answers separately; the batch records every answer and
-completes when all have answered ([CV-10](conventions.md#reactors)). An item
-decided, closed or reassigned meanwhile refuses, and the batch shows why.
+**Invariant:** one batch identifies one reviewer's shared decision and rationale;
+each individual item decides its own eligibility and outcome. Whether the exact
+selected set and whole-batch completion remain authoritative is unresolved.
 
-| Command | Who | Accepts when | Emits |
-| --- | --- | --- | --- |
-| RecordAccessDecisionBatch | A reviewer of the campaign | `BatchId` is new; campaign launched; every item open, non-privileged and assigned to them (advice); rationale given | AccessDecisionBatchRecorded |
-| RecordBatchItemOutcome | Reactor on AccessDecisionRecorded (with this batch) or AccessBatchDecisionRefused | Item listed; a repeat is a no-op | AccessDecisionBatchItemOutcomeRecorded, and AccessDecisionBatchCompleted with the last answer |
+**Existing product policy:** one bulk decision records one reviewer's shared
+decision and rationale over an exact selected set; privileged items cannot be
+bulk decided. Each item accepts or refuses on its own authority and the result
+must explain refusals. An item decided, closed or reassigned meanwhile refuses.
 
-| Event | Carries |
-| --- | --- |
-| AccessDecisionBatchRecorded | tenant, campaign, batch, items, decision, rationale, reviewer |
-| AccessDecisionBatchItemOutcomeRecorded | tenant, campaign, batch, item, outcome (`decided` or `refused` with reason) |
-| AccessDecisionBatchCompleted | tenant, campaign, batch, counts decided and refused |
+**Candidate independent behavior:** a user action identifier can associate
+individual item decision commands with one shared rationale. Each target's own
+stream records acceptance or refusal, checks its reviewer and privileged state,
+and re-evaluates after an optimistic-concurrency conflict. Exact retries must
+return the original outcome; changed intent conflicts. A report can group the
+individual results and show pending or unknown deliveries without a batch
+parent collecting outcomes. Current membership and permission checks across
+separate owners still require a specified authorization ordering.
+
+**Tradeoff and status:** this candidate does not prove an exact selected set
+was completely submitted, nor give an authoritative `batch completed` fact.
+A projection or count cannot establish those claims. Requiring a sealing or
+completion write to traverse all selection records, or introducing short-lived
+windows which collectively record each selected child, would merely create a
+distributed per-item ledger and is not an acceptable remedy. The product must
+explicitly decide whether independent outcomes plus reporting meet bulk-action
+needs. Until then the original exact-set semantics stand and the batch design
+is unresolved; the candidate is not an implementation contract.
 
 ### AccessPopulationException
 
@@ -348,66 +406,17 @@ Compliance Lead or Org Admin who did not request it (EA-05).
 
 Diagrams follow [CV-01](conventions.md#flow-diagrams).
 
-### Recording a population
+### Independent item decisions and reporting
 
 ```mermaid
 flowchart LR
-    X1[[Application inventory: SystemInstance active]] -. checks .-> C1
-    C1[/OpenAccessPopulation/] --> E1([AccessPopulationOpened])
-    E1 -. checks .-> C2[/RecordAccessPopulationRows/] --> E2([AccessPopulationRowsRecorded])
-    D([AccessReviewDelegated]) -. "access owner or delegate" .-> C3
-    E2 -. "no nesting cycle" .-> C3[/AcceptAccessPopulation/] --> E3([AccessPopulationAccepted])
-    E3 -. "account seen" .-> C4[/ClassifyAccount/] --> E4([AccountClassified])
+    R[/Review one item/] --> I([item decision or refusal])
+    I -. projected .-> P[Progress and outstanding work report]
 ```
 
-### Launching a campaign
-
-```mermaid
-flowchart LR
-    P([AccessPopulationAccepted, latest]) -. checks .-> C1
-    S[[Application inventory: AccessReviewScopeDecided, included]] -. checks .-> C1
-    X[[Program and scope: program active]] -. checks .-> C1
-    C1[/LaunchAccessReviewCampaign/] --> E1([AccessReviewCampaignLaunched])
-    E1 --> R1{{"Open one item per account and entitlement (ID derived)"}} --> C2[/OpenAccessReviewItem/] --> E2([AccessReviewItemOpened])
-    K([AccountClassified]) -. frozen .-> C2
-    A([AccessExpectationApproved]) -. "breaches frozen" .-> C2
-```
-
-### Deciding items
-
-```mermaid
-flowchart LR
-    I([AccessReviewItemOpened]) -. "reviewer; not own access" .-> C1[/RecordAccessDecision/] --> E1([AccessDecisionRecorded])
-    C2[/RecordAccessDecisionBatch/] --> E2([AccessDecisionBatchRecorded])
-    E2 --> R1{{"Apply to each item (ID from batch and item)"}} --> CB[/ApplyBatchAccessDecision/]
-    CB --> E1
-    CB --> EB([AccessBatchDecisionRefused])
-    E1 --> R2{{Record outcome}} --> CO[/RecordBatchItemOutcome/] --> EO([AccessDecisionBatchItemOutcomeRecorded])
-    EB --> R2
-    E1 -. "not closed; nothing verified" .-> C3[/ReviseAccessDecision/] --> E3([AccessDecisionRevised])
-```
-
-### Remediation and completion
-
-```mermaid
-flowchart LR
-    E1([AccessDecisionRecorded: remove or change]) -. checks .-> C1[/RecordAccessRemediationChange/] --> E2([AccessRemediationChangeRecorded])
-    P([Later AccessPopulationAccepted, pair absent or changed]) -. checks .-> C2
-    E1 -. checks .-> C2[/VerifyAccessRemediation/] --> E3([AccessRemediationVerified])
-    E1 -. checks .-> C3[/RequestRemediationException/] --> C4[/ReviewRemediationException/] --> E4([RemediationExceptionApproved])
-    PX([AccessPopulationExceptionApproved]) -. "coverage (advice)" .-> C5
-    C5[/RequestAccessReviewCampaignCompletion/] --> E6([AccessReviewCampaignCompletionRequested])
-    E6 --> R1{{"Ask each item to close (ID from campaign and item)"}} --> C6[/CloseAccessReviewItem/]
-    E3 -. resolved .-> C6
-    E4 -. resolved .-> C6
-    C6 --> E7([AccessReviewItemClosed])
-    C6 --> E8([AccessReviewItemCloseRefused])
-    E7 --> R2{{Record outcome}} --> C7[/RecordAccessReviewItemCloseOutcome/]
-    E8 --> R2
-    C7 --> E5([AccessReviewCampaignCompleted])
-    C7 --> E9([AccessReviewCampaignCompletionBlocked])
-    E5 -. "cited as evidence" .-> X1[[Control environment: access review occurrence]]
-```
+The report is advisory. Existing population acceptance, exact campaign launch
+and campaign-wide completion have no approved design under the current
+no-all-child-write constraint; the diagram does not assert those outcomes.
 
 ## Computed gaps
 
@@ -435,35 +444,59 @@ Cases required by [CV-12](conventions.md#guards-and-reviews).
 
 | Case | Outcome |
 | --- | --- |
-| A reviewer revises an item (keep → remove) while completion is requested | The item's stream orders them: a revision first leaves it awaiting remediation, so it refuses to close and the campaign is blocked; a close first refuses the revision |
-| A batch lists an item the reviewer has just decided directly | The item refuses the batch decision (`already_decided`); the batch records `refused` |
-| `AccessReviewCampaignCompletionRequested` delivered twice | Each `CloseAccessReviewItem` repeat is a no-op |
-| An item's answer is not yet recorded | The campaign stays `completing`; it never completes from a read |
-| An instance comes into scope during completion | Coverage was advice; the instance shows the `Uncovered instance` gap |
+| A reviewer revises an item (keep → remove) while completion is requested | The item's stream orders them: a revision first leaves it awaiting remediation, so it refuses to close; a close first refuses the revision. Campaign completion handling remains unresolved. |
+| A batch targets an item the reviewer has just decided directly | The item refuses the batch decision (`already_decided`); the item records the exact operation refusal |
+| An exact item-close operation is delivered twice | The item returns its original terminal outcome |
+| An item's authoritative answer is missing or unknown | Existing policy cannot claim the campaign completed; a projection or incomplete source traversal cannot prove completion |
+| An instance comes into scope later | Coverage remains advice; the instance shows the `Uncovered instance` gap |
 
 ## Decisions
 
-Jev answers are from `jev-1.14.0`, 2026-11-03. A yes is ≥ 0.8 and a no is ≤ 0.2.
-Anything in between is settled by common sense, with the reasoning stated.
+Historical Jev answers are from `jev-1.14.0`, 2026-11-03. The later
+[boundary review](../reviews/access-governance-boundaries.md) records conflicting
+and inconclusive answers; Jev is advisory, and unresolved rules remain open.
 
 | ID | Decision | Evidence |
 | --- | --- | --- |
 | EA-01 | A population stores direct assignments only; effective access is computed. | M0-D07. |
 | EA-02 | An account's classification is kept per instance and provider subject ID across populations, and is shown for reconfirmation after 12 months or a change in kind or name. | Carry it: 0.51. Reclassifying every snapshot is a burden: 0.83. Carrying can hide a change: 0.74. Common sense: carry it, and surface the changes and age that could hide one. |
-| EA-03 | A campaign completes only when every removal or change is verified or excepted, and every in-scope instance is covered. | 0.93. How it is decided: EA-11. |
+| EA-03 | A campaign completes only when every removal or change is verified or excepted; EA-11 treats coverage as advice with a gap. | Historical answer 0.93; see the coverage qualification and unresolved completion in EA-11. |
 | EA-04 | The remediation owner verifies a removal by naming a later accepted population; the product refuses it when the pair is still present. No automatic verification. | Person verifies: 0.81. Automatic verification can be wrong: 0.91. |
 | EA-05 | Expectation, missing-population and remediation exceptions are separate records, each approved by someone other than the requester; the general Waiver is not used. | General Waiver: 0.14 (no). Separate kinds: 0.86. |
 | EA-06 | Only the instance's access owner or a delegate accepts a population as complete. | 0.81. |
-| EA-07 | A bulk decision is its own record listing the exact items and shared rationale, then decided item by item; privileged items are excluded. | Batch record: 0.69. Individual decisions only: 0.31. Auditor value: 0.36. Common sense: the record shows what the reviewer chose together, and per-item decisions keep each item's history whole. |
+| EA-07 | A bulk decision names an exact selection and shared rationale, then each item decides; privileged items are excluded. Whether independent actions and reporting can replace this exact-set behavior is a product decision. | Batch record: 0.69. Individual decisions only: 0.31. Auditor value: 0.36. Common sense: the record shows what the reviewer chose together, and per-item decisions keep each item's history whole. |
 | EA-08 | An expectation needs approval by a Compliance Lead who did not propose it. | 0.57. Common sense: CV-06, and M0-D07 names an approver. |
 | EA-09 | A reviewer can revise a decision while the campaign is launched and nothing is verified. | 0.83. |
 | EA-10 | A leaver who still has an account is a computed gap, not an automatic review item or task. | 0.55. Common sense: the product never changes outside access automatically (Workforce assurance), and the work queue projects gaps. |
-| EA-11 | Completion asks every item to close; an item closes only when resolved and then accepts no change; the campaign completes from the recorded answers. Coverage stays advice with a gap. | Freeze then complete: 0.87. Completing from reported outcomes alone: 0.22. Keeping the advisory check with a gap: 0.36. Portia guidelines review. |
-| EA-12 | Population rows are stored as hashed row files; events carry hashes and counts. | Common sense: an immutable population needs its content hash, not thousands of row events in one stream (Portia guideline 3). |
+| EA-11 | Current policy requires every item to close before campaign completion; an item closes only when resolved and accepts no later change. An implementation that satisfies the no-all-child-write constraint remains unresolved. Coverage stays advice with a gap. | Freeze then complete: 0.87. Completing from reported outcomes alone: 0.22. Keeping the advisory check with a gap: 0.36. Portia guidelines review. |
+| EA-12 | Superseded: large row files and their roster do not meet the small-record boundary. Independent entries are a candidate; complete population acceptance remains unresolved. | Prior rationale preserved for history; see the unresolved source-cut qualification below. |
 
 ## Open questions
 
-None at this time.
+1. Can current complete, immutable, cycle-free population acceptance be
+   preserved without a write that must validate all entries or an equivalent
+   distributed per-item ledger? If not, should acceptance become attestation
+   with partial/invalid observations reported, and what may consume it?
+2. Should campaign completion remain an authoritative all-items assertion, or
+   should independent item outcomes and a potentially lagging progress report
+   replace it? A control occurrence cannot silently treat the latter as proof.
+   How should the exact frozen launch scope change, if at all?
+3. Should a bulk action retain its authoritative exact selected set and complete
+   result, or group independently delivered item commands for reporting? What
+   recovery and user-visible pending semantics are required?
+4. Specify ordering for membership, owner, scope, latest population, reviewer
+   and remediation-owner changes racing launch or action. Cross-stream reads
+   alone do not serialize these decisions. Qualify immutable path, expectation
+   and exception evidence, including completeness and absence.
+5. Is a rank-based nested-group representation acceptable when the observed
+   data is preserved but a rank mismatch blocks edge validation? Determine
+   rank assignment and correction, graph-generation lifecycle, role-assumption
+   cycles, and how to handle legitimate edges invalid under a chosen ordering.
+   No source-completeness or population-acceptance claim follows from ranks.
+
+Until these conflicts are resolved, the boundary redesign is **not locked or
+ready for implementation**. The [Jev boundary review](../reviews/access-governance-boundaries.md)
+records advisory answers and counterexamples; it is not proof.
 
 ## Superseded owners
 
@@ -471,12 +504,12 @@ None at this time.
 | --- | --- |
 | AccessExpectation | AccessExpectation; its exemption becomes AccessExpectationException |
 | AccessPopulation, PopulationSnapshot | AccessPopulation |
-| PopulationSnapshotChunk | Removed: storage, not domain |
+| PopulationSnapshotChunk | Removed: the population source uses individually addressed small observations |
 | AccessPopulationException | AccessPopulationException (per campaign and instance) |
 | AccessPrincipalClassification | AccountClassification (per instance, EA-02) |
 | AccessReviewCampaign | AccessReviewCampaign |
 | AccessReviewItem | AccessReviewItem (remediation exception on the item) |
 | AccessReviewDecisionBatch | AccessDecisionBatch (EA-07) |
-| Access review launch fan-out, bulk admission, settlement and cancellation reactors and processes | "Open one item" and "Decide each listed item" reactions |
-| Access review completion reactors and process | Completion request, item closing and recorded outcomes (EA-11) |
+| Access review launch fan-out, bulk admission, settlement and cancellation reactors and processes | Independent per-item decisions are a candidate; exact launch and bulk semantics remain unresolved |
+| Access review completion reactors and process | Existing all-item completion policy has no approved no-all-child-write design (EA-11) |
 | OpenAccessReviewWorkReactor | Work queue projection (M0-D15) |

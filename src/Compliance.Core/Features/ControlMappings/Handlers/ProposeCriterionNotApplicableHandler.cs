@@ -1,17 +1,24 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
+using Bdgrz.Compliance.Features.ControlMappings.Commands;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
 using Bdgrz.Compliance.Features.ControlMappings.Services;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Criteria.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Models;
@@ -22,8 +29,11 @@ using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Remediation.Models;
@@ -34,17 +44,7 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Services;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Commands;
-using Bdgrz.Compliance.Features.ControlMappings.Models;
-using Bdgrz.Compliance.Features.ControlMappings.Readers;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Programs.Aggregates;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.ControlMappings.Handlers;
 
 /// <summary>
@@ -53,7 +53,7 @@ namespace Bdgrz.Compliance.Features.ControlMappings.Handlers;
 ///     was reviewed, and the same id with a changed rationale conflicts. Different criteria never touch one another.
 /// </summary>
 public sealed class ProposeCriterionNotApplicableHandler(NativeOperationExecutor operations,
-    ApplicabilityReader applicability, IAggregateReader reader, ICriteriaCatalog catalog,
+    ApplicabilityReader applicability, IAggregateReader reader, ICriteriaEntryAuthority criteriaAuthority,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ProposeCriterionNotApplicable, CriterionApplicabilityRegistration>
 {
@@ -99,7 +99,11 @@ public sealed class ProposeCriterionNotApplicableHandler(NativeOperationExecutor
                 if (program.CriteriaEditionId != request.EditionId)
                     return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
                         "A not-applicable decision must target the criteria edition the program has selected."));
-                if (catalog.GetEntry(request.EditionId, request.CriterionIdentifier) is not { Kind: "criterion" })
+                var entry = await CriteriaEntryAuthorityGuard.RequireAsync(criteriaAuthority, request.EditionId,
+                    request.CriterionIdentifier, token).ConfigureAwait(false);
+                if (!entry.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(entry.Error!);
+                if (entry.Value.Kind != "criterion")
                     return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
                         "Not-applicable decisions apply to a criterion of the selected edition, not a point of focus."));
                 var guard = rules.PrepareProposal(request.ExpectedRevision, request.Rationale);

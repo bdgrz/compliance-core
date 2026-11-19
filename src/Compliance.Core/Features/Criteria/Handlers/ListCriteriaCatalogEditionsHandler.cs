@@ -1,16 +1,15 @@
-using System.Globalization;
-using System.Text;
-using Cntryl.Fitz.Extensions;
-using Cntryl.Portia;
-using Bdgrz.Compliance.Features.Criteria.Contracts;
 using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Criteria.Queries;
+using Bdgrz.Compliance.Features.Criteria.Readers;
+using Cntryl.Portia;
+
 namespace Bdgrz.Compliance.Features.Criteria.Handlers;
 
-public sealed class ListCriteriaCatalogEditionsHandler(ICriteriaCatalog catalog)
+/// <summary>Reads the bounded runtime edition directory.</summary>
+public sealed class ListCriteriaCatalogEditionsHandler(IRuntimeCriteriaCatalogReader catalog)
     : IRequestHandler<ListCriteriaCatalogEditions, IReadOnlyList<CriteriaCatalogEdition>>
 {
     public ValueTask<Result<IReadOnlyList<CriteriaCatalogEdition>>> HandleAsync(
         IRequestContext<ListCriteriaCatalogEditions> context, CancellationToken ct) =>
-        ValueTask.FromResult(Result<IReadOnlyList<CriteriaCatalogEdition>>.Success(catalog.Editions));
+        catalog.ListLegacyEditionsAsync(context.Request.TenantId, ct);
 }

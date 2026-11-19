@@ -1,0 +1,1 @@
+{"model":"jev-1.14.0","answers":{"mark_accepted":{"type":"noul","noul":0.77},"mark_recorded":{"type":"noul","noul":0.75},"bootstrap_accepted":{"type":"noul","noul":0.71},"fence_attempt":{"type":"noul","noul":0.78}},"usage":{"input_tokens":514,"output_tokens":79}}

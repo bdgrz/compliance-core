@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "late_member": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "one_marker_lists_every_child": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "lag_proves_complete": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "implied_consent": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "late_plan_revision": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "verified_outcome_requires_write_scan": {
+      "type": "noul",
+      "noul": 0.13
+    },
+    "missing_makes_effective_wrong": {
+      "type": "noul",
+      "noul": 0.92
+    },
+    "later_changes_old_submission": {
+      "type": "noul",
+      "noul": 0.09
+    },
+    "stale_guard_safe": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "request_equals_accepted_finding": {
+      "type": "noul",
+      "noul": 0.03
+    }
+  },
+  "usage": {
+    "input_tokens": 985,
+    "output_tokens": 202
+  }
+}

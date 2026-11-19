@@ -1,0 +1,29 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "whole_scan_write": {
+      "type": "noul",
+      "noul": 0.95
+    },
+    "ledger_smell": {
+      "type": "noul",
+      "noul": 0.2
+    },
+    "review_semantics": {
+      "type": "noul",
+      "noul": 0.09
+    },
+    "independent_owner": {
+      "type": "noul",
+      "noul": 0.82
+    },
+    "read_only": {
+      "type": "noul",
+      "noul": 0.9
+    }
+  },
+  "usage": {
+    "input_tokens": 548,
+    "output_tokens": 95
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "proposal": "Each criterion owns a separate stream. A draft-change stream contains exactly one operation token, its one child address, its outcome and one successor link; it contains no child list. At most one change per edition is in flight. The next change stream opens only after its predecessor closes with the exact successor link. Publication closes the settled chain and records only the terminal source reference. It verifies all linked operations and their exact child outcomes, using bounded-memory repeated reads. All child structural writers use this sequence. Some child streams begin empty.",
+    "race": "A handler checks that operation X is admitted. Its child stream has version zero. The handler pauses immediately before appending X at expected version zero. The coordinator receives no outcome and times out. It releases X without writing to the child stream. No one else writes to that child stream. The coordinator freezes the chain and the edition publishes. The handler then resumes and appends X at expected version zero. The event store accepts an append if and only if the expected stream version equals the current stream version.",
+    "source": "An eventually consistent projection may omit accepted child changes. The authoritative source is the linked operation and child-event streams, if complete and retained. Each stream records its own operation, not a list of children. Per-stream optimistic concurrency does not atomically lock a different stream."
+  },
+  "questions": {
+    "one_operation_owner": {"type": "noul", "instructions": "Does the draft-change stream in proposal contain a collection of criterion records?"},
+    "one_operation_serializes": {"type": "noul", "instructions": "Does proposal allow two structural operations for the same edition to be in flight at the same time?"},
+    "race_append": {"type": "noul", "instructions": "In race, does the handler's append meet the event store's expected-version condition when it resumes?"},
+    "race_after": {"type": "noul", "instructions": "In race, does the handler append after the edition publishes?"},
+    "projection_absence": {"type": "noul", "instructions": "Does the projection in source prove that no child refers to a particular parent?"},
+    "per_stream_total": {"type": "noul", "instructions": "Does proposal put a fixed upper bound on the total number of draft-change streams in an edition?"},
+    "read_memory": {"type": "noul", "instructions": "Can proposal's source history grow even if validating it uses bounded working memory?"},
+    "dispatch_completion": {"type": "noul", "instructions": "Does dispatching a child command prove that the child committed its change?"}
+  }
+}

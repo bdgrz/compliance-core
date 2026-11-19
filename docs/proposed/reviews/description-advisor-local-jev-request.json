@@ -1,0 +1,42 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "reviewer": "A draft permanently designates reviewer R when it is created. Each admitted section and citation edit is independently rejected if its author is R, unless an exact valid waiver covers that author's edit. Approval is by R. All writers obey this rule, including retries and amendments.",
+    "late_reviewer": "A draft accepts revisions from many authors, then selects the reviewer later. An eventually consistent authors list can omit a committed author.",
+    "anchors": "An open handoff must have at least one selected record. Its parent stores one exact anchor record-version reference. Other selections are separate. Removing the anchor requires the handoff to atomically replace it with a different valid record-version reference, or close the handoff; other removals do not touch the anchor.",
+    "selections": "The lead opens a handoff by reading selection A as active. Before the handoff opens, another operation removes selection A. No operation orders or fences removal against opening.",
+    "citations": "An approval explicitly records nine fixed exact section revisions. Citations are independent records, added after the approval unless another ordering protocol forbids this. Approval performs no all-citation check.",
+    "version": "A reviewer approves the exact nine section revision identities. Later, the current section projection points to a different revision. Exact approved revisions are immutable and retained.",
+    "delivery": "A consultant receives bytes while authorized. Later, their membership is revoked."
+  },
+  "questions": {
+    "reviewer_independence": {
+      "type": "noul",
+      "instructions": "Under reviewer, absent a waiver, can R be the author of an admitted section or citation edit?"
+    },
+    "late_reviewer": {
+      "type": "noul",
+      "instructions": "Under late_reviewer, can a committed author be selected as reviewer because of the stale authors list?"
+    },
+    "anchor_nonempty": {
+      "type": "noul",
+      "instructions": "Under anchors, does the handoff always retain at least the exact anchor selection while open, assuming no other path removes or invalidates it?"
+    },
+    "open_race": {
+      "type": "noul",
+      "instructions": "Under selections, can the handoff open after A is removed with zero remaining selections?"
+    },
+    "citation_coverage": {
+      "type": "noul",
+      "instructions": "Under citations, does approval of nine section revisions alone prove that every citation was selected and validated before approval?"
+    },
+    "version_stability": {
+      "type": "noul",
+      "instructions": "Under version, does changing a current projection alter the approved exact section revisions?"
+    },
+    "revoke": {
+      "type": "noul",
+      "instructions": "Under delivery, does the later revocation retract the bytes already received?"
+    }
+  }
+}

@@ -11,11 +11,15 @@ The reviews below did not execute tests. Named tests are evidence to qualify,
 not proof of current GREEN, complete workflows or merged acceptance. No context
 is declared complete by this ledger, and SQL migration does not close business gaps.
 
-## 2026-11-05 criteria authority decision
+## 2026-11-05 boundary refinement supersedes earlier criteria lock
 
-[CR-09/10](contexts/criteria.md#decisions) lock independent criterion owners,
-bounded draft admission windows, exact participant outcomes/fencing and a verified
-published source cut. No complete edition is stored in one manifest or aggregate. This is design, not implemented behavior. The
+[CR-09/10](contexts/criteria.md#decisions) select independent entry incarnations,
+a single pinned publication witness, a source-ordered edition cut and per-label
+authority. Program creation can select an authoritative published edition while
+unrelated entries remain pending. The former admission windows and per-operation
+chain are not the selected solution. Source, authorization, recovery and
+read-coverage guarantees require implementation qualification. No complete edition
+is stored in one manifest or aggregate. This is design, not implemented behavior. The
 static catalog remains data only; preserve its fixed ID and partial-coverage
 warnings until a source-backed publication migration is qualified. Program
 creation must select a published edition. Historical handoffs remain evidence of
@@ -233,7 +237,7 @@ Held Finding closure source and its 78 unexecuted cases are excluded.
 | AW-06 | Waiver expiry is computed without an expiry event | Consumers must verify current exact-scope unexpired coverage; old approval alone is insufficient. |
 | AW-07 | Low/moderate/high command and replay vocabulary, with Work medium mapping, is implemented | Named analysis actor cutover remains separate; no new severity rubric is needed. |
 | AW-08 | Linked risk acceptance does not close a Finding; negative invariant tests exist | Target LinkFindingToRiskAcceptance/Lead admission absent; old linking command also accepts SOD-waiver links. |
-| AW-09 | Finding owns action admission and exact source-verified terminal outcome reporting; committed-source reactors and reporting-lag tests | Target command/role vocabulary and reviewed closure are separate; retain planned-but-unmaterialized/refused closure behavior. |
+| AW-09 | Finding owns action admission and exact source-verified terminal outcome reporting; committed-source reactors and reporting-lag tests | Historical source evidence only: the target closure invariant and independent action authority are being refined; see the context and boundary review. |
 | Body: identities | Current Finding includes ProgramId and Action includes program/finding in stream keys | Target tenant+FindingId and tenant+ActionId are not established by current tuple/wrong-stream tests. Coordinate canonical identity migration. |
 | Body: source vocabulary | Readiness/occurrence source checks and stable deterministic reaction raises exist | Target control_evaluation_deviation/audit_test_exception/provider_review/management_review vocabulary and producer migration remain; preserve coordinated #1180. |
 | Body: analysis/owner | Generic revision combines analysis and owner fields; active-member checks exist | Separate named analysis and Lead-only owner assignment, including approved person/team owner representation. |

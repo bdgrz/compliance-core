@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "abort_needs_fence": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "cleanup_done_early": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "fenced_late_accept": {
+      "type": "noul",
+      "noul": 0.42
+    },
+    "late_pin_cleanup": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "old_clears_new": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "old_revision_commits": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "timeout_safe": {
+      "type": "noul",
+      "noul": 0.02
+    },
+    "assumption_proof": {
+      "type": "noul",
+      "noul": 0.02
+    }
+  },
+  "usage": {
+    "input_tokens": 931,
+    "output_tokens": 159
+  }
+}

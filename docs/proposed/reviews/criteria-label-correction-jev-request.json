@@ -1,0 +1,41 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "correction": "A client creates edition E with operation T and label alpha. E durably records label-unavailable for T and enters needs_label. The client sends ChooseInitialEditionLabel for the same E using a new operation U and label beta. U reserves and confirms beta. Structural entry writes were refused until U confirmed.",
+    "retry": "After correction completed, the client retries the original creation with E, T and alpha, preserving the exact original intent. The original T result is a durable label-unavailable refusal. U is a different operation.",
+    "stale": "After E durably refuses T, a delayed worker reserves alpha for E with T. It sends that fact to E, whose current operation U for beta is confirmed. Every reservation event triggers reconciliation against its own exact T outcome.",
+    "ambiguous": "An edition E has an unresolved initial label operation T. The prior reservation might have committed, and no cancellation or durable target fence exists. A client wants to start another initial label operation U.",
+    "collision": "Legacy edition E1 uses normalized label alpha and legacy edition E2 also uses normalized label alpha. Migration has not chosen which edition owns the claim.",
+    "gate": "A cutover has backfilled alpha claim for E1. A legacy writer bypasses the claim gate and can still create E2 with alpha."
+  },
+  "questions": {
+    "same_id": {
+      "type": "noul",
+      "instructions": "In correction, is beta selected for the same edition E?"
+    },
+    "old_result": {
+      "type": "noul",
+      "instructions": "In retry, does the exact T retry change its earlier refusal into success because U succeeded?"
+    },
+    "stale_promoted": {
+      "type": "noul",
+      "instructions": "In stale, is the delayed T reservation evidence that U acquired alpha?"
+    },
+    "unfenced_reuse": {
+      "type": "noul",
+      "instructions": "In ambiguous, may the system conclude T has no committed reservation just because it has not received an answer?"
+    },
+    "collision_safe": {
+      "type": "noul",
+      "instructions": "In collision, does the claim migration already establish unique ownership of alpha?"
+    },
+    "bypass_safe": {
+      "type": "noul",
+      "instructions": "In gate, does backfilling alpha alone prevent E2 from being created with alpha?"
+    },
+    "correction_requires_new_id": {
+      "type": "noul",
+      "instructions": "In correction, does the client need a different edition ID to choose beta?"
+    }
+  }
+}

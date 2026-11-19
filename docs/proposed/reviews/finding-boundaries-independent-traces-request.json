@@ -1,0 +1,26 @@
+{
+  "model": "jev-latest",
+  "state": "The rule says every admitted action must be complete or cancelled at the moment a finding closure is approved. Consider two histories. In both, the Finding's own state, closure proposal, evidence, reviewer and every fact consulted by the closure decision are identical. In history A, an independently owned admitted action is completed. In history B, that same action remains open. The decision does not read that action, any authoritative state that reflects its outcome, or any proof that admission of such an action was impossible. An identical decision procedure makes the same choice on identical inputs.",
+  "questions": {
+    "identical_decision": {
+      "type": "noul",
+      "instructions": "Must the closure decision give the same result in both histories?"
+    },
+    "safety": {
+      "type": "noul",
+      "instructions": "If the decision approves closure in both histories, does history B violate the original rule?"
+    },
+    "refuse_all": {
+      "type": "noul",
+      "instructions": "Could a system guarantee the original rule without consulting any child-dependent state by refusing every closure attempt?"
+    },
+    "sufficient": {
+      "type": "noul",
+      "instructions": "Does independent reviewed evidence prove all actions are terminal when a separately owned action may remain open?"
+    },
+    "new_policy": {
+      "type": "noul",
+      "instructions": "Would allowing closure on reviewed evidence even in history B intentionally change the original all-actions-terminal rule?"
+    }
+  }
+}

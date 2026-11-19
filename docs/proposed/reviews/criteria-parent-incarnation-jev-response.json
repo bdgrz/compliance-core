@@ -1,0 +1,33 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "old_ref_reactivated": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "remove_mutates_children": {
+      "type": "noul",
+      "noul": 0.25
+    },
+    "read_other_children": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "old_witness_proves_at_publish": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "same_edition_correction": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "old_f_preserved": {
+      "type": "noul",
+      "noul": 0.91
+    }
+  },
+  "usage": {
+    "input_tokens": 673,
+    "output_tokens": 127
+  }
+}

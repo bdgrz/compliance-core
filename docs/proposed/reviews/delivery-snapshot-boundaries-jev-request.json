@@ -1,0 +1,47 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "source_cut": "An export reads a paginated eventually consistent projection at 12:00. A record committed at 11:59 is missing from that projection. The export contains all rows it saw and stores their hash.",
+    "admission": "A coordinator records every row submitted to its admission windows. Another source can create rows directly without submitting them to those windows.",
+    "stream": "A population has independent small immutable rows. A proven retained cut identifies all rows and each row pins source identity and version. A reader traverses the cut in pages while incrementally computing a digest, without keeping all rows in memory.",
+    "race": "A delivery checks an artifact is shareable. Before the delivery sends its bytes, the artifact owner quarantines it. No reservation, fence, or transaction prevents this order.",
+    "artifact": "A ZIP file is generated incrementally for an auditor. Its manifest is streamed into the ZIP; domain events do not contain a complete list of entries.",
+    "late": "A period close relies on all known significant items. A new item dated in the period is committed after close approval and an independently durable reaction marks the close as requiring amendment.",
+    "hash": "A digest identifies the bytes returned by a source cut, but the source enumeration is allowed to silently omit records.",
+    "item": "Each exported record has its own outcome, including withheld reason when withheld. A separate coordinator publishes completion only after the exact source cut and all participant outcomes have been verified."
+  },
+  "questions": {
+    "projection_complete": {
+      "type": "noul",
+      "instructions": "Does `source_cut` establish that the export includes every record committed by 12:00?"
+    },
+    "admission_complete": {
+      "type": "noul",
+      "instructions": "Does `admission` establish that all source rows are in the coordinator windows?"
+    },
+    "stream_bounded": {
+      "type": "noul",
+      "instructions": "Can `stream` calculate a digest without holding the whole population in memory?"
+    },
+    "race_disclosure": {
+      "type": "noul",
+      "instructions": "Can `race` deliver bytes after the artifact has been quarantined?"
+    },
+    "file_is_aggregate": {
+      "type": "noul",
+      "instructions": "Does the ZIP file in `artifact` itself need to be an aggregate that owns its entries?"
+    },
+    "late_remediated": {
+      "type": "noul",
+      "instructions": "Does `late` leave the closed period visibly requiring an amendment?"
+    },
+    "hash_complete": {
+      "type": "noul",
+      "instructions": "Does `hash` establish that the source enumeration omitted no records?"
+    },
+    "item_authority": {
+      "type": "noul",
+      "instructions": "Does `item` require separate participant outcomes before publishing completion?"
+    }
+  }
+}

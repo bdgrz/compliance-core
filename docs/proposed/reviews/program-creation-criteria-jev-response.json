@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "bind_published": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "retractable": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "pending_absent": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "pending_mapping": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "outcome_membership": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "changed_retry": {
+      "type": "noul",
+      "noul": 0.11
+    },
+    "legacy_fabrication": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "auth_fence": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "partial_support": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "unknown_is_absent": {
+      "type": "noul",
+      "noul": 0.05
+    }
+  },
+  "usage": {
+    "input_tokens": 1021,
+    "output_tokens": 189
+  }
+}

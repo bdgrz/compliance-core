@@ -32,13 +32,15 @@ flowchart LR
   command, is final and is not retried. Processing failure is never a business
   outcome: a stuck or failing reactor is an operational alert, and the business
   record stays visibly pending.
-- **CV-10** When a reaction asks an owner to accept or refuse part of a larger
-  operation, the owner records its answer as a fact either way (for example
-  `DispositionDecided`, listing what it authorized and refused), and the
-  coordinating record records each outcome. Where the owner's command simply
-  refuses, the reaction records that refusal on the coordinating record instead.
-  Pending, accepted and refused are always distinguishable; a refusal is never
-  only a missing event.
+- **CV-10** When a reaction asks another owner to accept or refuse part of an
+  operation, the exact participant outcome is durable and attributable. It lives
+  with that participant or a separately scoped decision, not as one accumulating
+  outcome per child on a long-lived parent. Pending, accepted and refused are
+  distinguishable; missing events and successful dispatch are not outcomes. A
+  no-fact refusal, no-op or cancellation does not release admission until an
+  exact-token target outcome or fence prevents a delayed write, including on an
+  initially empty target. An already committed acceptance must be reported, not
+  overwritten by a fence. Unknown results stay pending across retries/restart.
 
 - **CV-04** A reactor decides only from its trigger event and the current state
   of the aggregate it commands. When it needs to know why a fact happened (for
@@ -63,9 +65,10 @@ flowchart LR
   own stream decides it. Either the rule's facts live in that aggregate, the
   identity enforces it (an ID derived from the unique key), or the owner admits
   each change before it takes effect ([CV-10](#reactors)).
-- **CV-12** An operation that depends on several aggregates completes only from
-  recorded outcomes of its participants, never from a successful read. Each
-  context with such an operation lists its disagreement and replay cases: an
+- **CV-12** When an operation depends on a specific participant's decision, use
+  that participant's recorded outcome, never a successful advisory read. Keep
+  the operation's participants specific to the business decision; do not expand
+  them into every child. Each context lists disagreement and replay cases: an
   advisory pass followed by the owner's refusal, a repeated delivery, and a
   pending outcome.
 - **CV-06** When a draft is reviewed by "someone other than the author", the
@@ -86,29 +89,50 @@ snapshots. A stream that grows without bound slows every command on it for the
 life of the record, and a wide record (one per tenant, program or platform) puts
 every user of that scope behind it.
 
-- **CV-13** A stream grows only with the business occasions of the one thing it
-  identifies: never per artifact, row, participant, delivery item, member churn
-  or sync. Before giving a long-lived or wide record a growing list, find the
-  real invariant, keep only that on the record, and move the volume into
-  short-lived or per-item streams. The patterns in use:
-  - **Protect a seat, not a roster.** Guard the few members the rule needs,
-    on their own records ([Platform access](platform-access.md) `PrimaryOrgAdmins`).
-  - **Decide a batch in one event.** One decision per disposition or delivery,
-    listing its items ([Retention](retention.md) `HoldRegister`).
-  - **One stream per draft.** A long-lived line keeps its versions and the
-    one-open-draft rule; each draft's revisions and reviews live in a per-draft
-    stream ([System description](system-description.md),
-    [Firm methodology](firm-methodology.md)).
-  - **One stream per run.** Per-item outcomes of one application or campaign
-    live on a record for that run, not on the record that lasts for life
-    ([Firm methodology](firm-methodology.md) `TemplateVersionApplication`).
-  - **Content by hash.** Bulk rows are stored as files; events carry the hash
-    and counts ([External access governance](external-access-governance.md)
-    `AccessPopulation`).
-
-  A record whose growth is bounded by people revising that one record, such as a
-  control or a policy with its proposals, meets the rule. Every wide record
-  states its expected growth.
+- **CV-13** Give an aggregate one business invariant and one stable identity.
+  A parent is not a roster, inbox or per-child outcome ledger. A stream per run
+  or window is not automatically bounded merely because the run can finish, and
+  splitting a roster into segments does not itself make its total history or
+  traversal bounded. Per-item source facts and per-draft revisions belong to
+  their own focused owners. A small fixed set can remain together only when the
+  same atomic decision genuinely requires it and its fixed bound is stated.
+- **Write decisions must not require every child.** Re-express a proposed rule
+  around the individual decision and the few facts it actually needs. A
+  collection-wide scan, distributed child ledger, or mandatory settlement of
+  every child is not an acceptable write-model decision. Ordinary
+  lists, reporting, exports and other read-side enumeration may use paged or
+  streamed reads. When an existing product promise appears to require all
+  children, treat its semantics and alternative local invariants as an open
+  design question; do not silently weaken it or declare a source cut a solution.
+- Keep event payloads and persisted business content small. Do not put an
+  unbounded audience, inventory, item list, manifest, row set or per-child
+  outcomes into one aggregate, fact or content object as a substitute for source
+  authority. Real customer files and deliverable archives are external artifacts;
+  preserve their exact bytes and provenance through streaming or independently
+  verifiable pieces without making their size a parent-aggregate responsibility.
+- A parent or process may hold its own small lifecycle and limited in-flight
+  decision. For an explicitly qualified cross-owner operation, a participant's
+  exact outcome or fence is authoritative; unknown remains pending (CV-10/11/12).
+  Do not turn that rule into a requirement to collect every child's outcome.
+  A source cut can identify what a read observes, but does not itself authorize a
+  collection-wide write decision or prove a business invariant. Never infer
+  completeness from an eventually consistent roster, a zero projected count, an
+  unverified index, a hash alone or successful dispatch.
+- Read source records incrementally in their proven order, with bounded working
+  memory; use repeated passes where necessary. A read index can locate candidates
+  but cannot prove absence or completeness unless its exact coverage is proven
+  against the authoritative cut. Individual records remain independently owned.
+  Source history and traversal time can still grow; record operational limits,
+  retention and recovery. No framework snapshot, cross-stream atomicity,
+  complete global source frontier or safe compaction is assumed without proof.
+- A bounded logical state does not by itself guarantee a hard replay bound.
+  Histories that grow with one record's own real business changes have focused
+  blast radius. A fixed-seat, low-churn owner such as `PrimaryOrgAdmins` may
+  retain the decisions needed for its own continuity invariant and retries;
+  this is not a reason to split it or invent a lifetime event limit. Assess a
+  history's actual churn and invariant, rather than treating all history growth
+  as the same design smell. Do not invent arbitrary business limits or a new
+  generic execution framework.
 
 ## Evidence
 
@@ -118,6 +142,6 @@ every user of that scope behind it.
 | CV-03 | Retry technical failures, treat a business-rule refusal as final and visible: 0.90. Never retrying anything was weaker (0.64, harm 0.63), so technical retries are kept. |
 | CV-06 | The reviewer must have authored no revision: 0.79. Adopted because it is the strictest rule and the simplest to show an auditor. |
 | CV-08 | Record an impairing service and show a gap rather than refuse it: 0.89. |
-| CV-10 | Record an owner's refusal as a fact on the coordinating record: 0.90. |
+| CV-10 | Historical 0.90 supported recording an owner's refusal; it did not establish that all child answers belong on one coordinator. 2026-11-05 recheck: independent participants with a proven complete cut/outcomes 0.87; timeout release safe 0.07. See [request](../reviews/domain-boundaries-jev-request.json) and [response](../reviews/domain-boundaries-jev-response.json). |
 | CV-05, CV-11 | Advisory uniqueness for display names, owned identifiers for audit-facing codes: 0.75. Advisory last-Org-Admin check: 0.11 (no). Commitment identifiers need an owner: 0.92. Adopted from the Portia domain guidelines review, 2026-11-03. |
-| CV-13 | Splitting a per-program system description into a version line plus per-draft streams: 0.85. Splitting a single control's drafts: 0.28 (not needed). A line that starts each draft enforces one open draft: 0.46; common sense: the start is decided in the line's own stream. Adopted from the product owner, 2026-11-03: "anytime we start creating potential for unbounded streams we need to look to minimize the blast radius and protect the real invariant". |
+| CV-13 | Historical system-description split 0.85; one-open-draft line 0.46. 2026-11-05 recheck: per-child parent history grows with children 0.94; a short-lived run automatically bounds events 0.10; complete source traversal can use bounded working memory 0.77. The last is not established by Jev: source/provider qualification is required. Product direction: no god objects or catalog-sized records/content. |

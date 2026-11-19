@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "same_id": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "old_result": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "stale_promoted": {
+      "type": "noul",
+      "noul": 0.09
+    },
+    "unfenced_reuse": {
+      "type": "noul",
+      "noul": 0.16
+    },
+    "collision_safe": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "bypass_safe": {
+      "type": "noul",
+      "noul": 0.12
+    },
+    "correction_requires_new_id": {
+      "type": "noul",
+      "noul": 0.2
+    }
+  },
+  "usage": {
+    "input_tokens": 720,
+    "output_tokens": 134
+  }
+}

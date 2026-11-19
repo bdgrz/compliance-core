@@ -1,0 +1,33 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "per_item_report": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "all_child_gate": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "distributed_ledger": {
+      "type": "noul",
+      "noul": 0.53
+    },
+    "batch_reporting": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "business_tradeoff": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "cycle_edge": {
+      "type": "noul",
+      "noul": 0.91
+    }
+  },
+  "usage": {
+    "input_tokens": 577,
+    "output_tokens": 111
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "premature_release": "Label alpha is reserved for edition E with token T. Edition E has no event. E creation is delayed. The system releases alpha because a request timed out. Edition F reserves alpha with token U. The delayed creation of E then commits using T because E stream was empty and nothing fenced it.",
+    "empty_fence": "An empty edition E stream receives a durable creation-fence event at expected physical position 0. A previously paused creation command later tries to append its first event at expected position 0. All writers use the expected position and honor the fence after reloading.",
+    "no_event": "An empty edition E stream receives an empty append at position 0; the event store returns without writing anything. A paused first creation still expects position 0.",
+    "rename_race": "Draft edition E has confirmed alpha. Its stream atomically records rename intent R from alpha to beta; while R is unresolved, publication is rejected. Beta reservation, the rename, and confirmation are pending. A publication request arrives.",
+    "late_reservation": "Rename intent R is cancelled by a durable target-side fence. A delayed worker had already read R and later reserves beta in the beta claim stream. A reactor saw cancellation before beta was reserved and will not run again; no process inspects later beta reservation or reconciles this operation.",
+    "release_generation": "Claim alpha previously held by edition E token G1 was released. Later E reserves alpha with token G2. A duplicate delayed release message names E and G1. The claim compares the full current holder and generation.",
+    "exact_retry": "An operation token T reserved alpha for edition E and later completed and released that exact reservation. A new operation token U currently holds alpha for edition F. The original request with T and unchanged intent is retried; current holder U remains active.",
+    "rename_done": "Edition E had a confirmed alpha reservation under token A. It reserved beta under B, committed an E rename fact naming A and B, and confirmed B. The alpha claim receives that exact committed rename fact as proof, and its current holder still matches E and A.",
+    "changed_intent": "Token R first requested edition E rename from alpha to beta. A later request reuses R for E rename from alpha to gamma.",
+    "publication_wins": "Edition E is draft and has no pending rename. A publication event appends first. A competing rename begin used the preceding expected version, gets a conflict, reloads, and rejects because published editions cannot rename.",
+    "actor_stale": "A user is authorized when starting a rename. They are then revoked before the edition accepts the rename; the only check was the earlier user-permission read. The business rule requires authorization at the actual edition acceptance.",
+    "scope": "One claim stream per normalized edition label has one current holder or reservation. The edition has one pending rename at a time. The claim records only reservation, confirmation, release and exact retry evidence for that label, and does not store a list of criteria."
+  },
+  "questions": {
+    "premature_double": {
+      "type": "noul",
+      "instructions": "In premature_release, do two editions end up accepted or holding alpha? "
+    },
+    "empty_fence_blocks": {
+      "type": "noul",
+      "instructions": "In empty_fence, does the stale creation append at position 0 succeed?"
+    },
+    "empty_append_blocks": {
+      "type": "noul",
+      "instructions": "In no_event, did the empty append prevent the paused creation?"
+    },
+    "rename_publication": {
+      "type": "noul",
+      "instructions": "In rename_race, may the arriving publication be accepted while R is unresolved?"
+    },
+    "late_leaks": {
+      "type": "noul",
+      "instructions": "In late_reservation, can beta remain reserved despite the cancelled rename?"
+    },
+    "late_release_new": {
+      "type": "noul",
+      "instructions": "In release_generation, does G1 release the current G2 reservation?"
+    },
+    "retry_steals": {
+      "type": "noul",
+      "instructions": "In exact_retry, must the old T retry reacquire alpha from edition F?"
+    },
+    "rename_release": {
+      "type": "noul",
+      "instructions": "In rename_done, does the exact committed rename prove edition E switched away from alpha token A?"
+    },
+    "changed_is_retry": {
+      "type": "noul",
+      "instructions": "In changed_intent, is the second request an exact retry?"
+    },
+    "published_rename": {
+      "type": "noul",
+      "instructions": "In publication_wins, can the competing stale rename begin be accepted after the published event?"
+    },
+    "actor_check_suffices": {
+      "type": "noul",
+      "instructions": "In actor_stale, does the early permission check prove the business authorization rule was met at acceptance?"
+    },
+    "scope_children": {
+      "type": "noul",
+      "instructions": "In scope, does the label claim require an aggregate-owned list of the edition criteria?"
+    }
+  }
+}

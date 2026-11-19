@@ -1,5 +1,16 @@
 # Scoped access checkpoint — 2026-11-05
 
+**Latest domain-design refinement:** [boundary review](reviews/domain-boundaries-review.md)
+reopens child-collection designs. CR-09 product behavior is selected in
+[criteria](contexts/criteria.md); earlier references to locked windows are
+historical. Retain the usability order and qualify source authority, complete
+discovery, fencing, and recovery while implementing the selected behavior.
+
+The existing `PrimaryOrgAdmins` owner protects the one-or-two-primary continuity
+invariant. Its low-churn designation and release history is part of that owner's
+business lifecycle, not a roster of ordinary administrators or a redesign task.
+Preserve its idempotency, episode fencing and last-primary protection.
+
 **Organization creation and primary administration — 2026-11-05.** Source is
 implemented across API, MCP, write models and read models, including mandatory
 client-created tenant IDs. Strict Release build, whitespace and tooling pass;

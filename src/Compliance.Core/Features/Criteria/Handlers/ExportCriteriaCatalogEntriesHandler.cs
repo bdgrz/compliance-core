@@ -1,13 +1,13 @@
-using Cntryl.Fitz.Extensions;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Criteria.Commands;
 using Bdgrz.Compliance.Features.Criteria.Contracts;
 using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Criteria.Services;
-using Bdgrz.Compliance.Features.Criteria.Commands;
 using Bdgrz.Compliance.Features.Criteria.Readers;
+using Bdgrz.Compliance.Features.Criteria.Services;
+using Cntryl.Fitz.Extensions;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Criteria.Handlers;
 
-public sealed class ExportCriteriaCatalogEntriesHandler(ICriteriaCatalog catalog,
+public sealed class ExportCriteriaCatalogEntriesHandler(IRuntimeCriteriaCatalogReader catalog,
     ICriteriaTextOverlayReader overlays)
     : IRequestHandler<ExportCriteriaCatalogEntries, Page<Criterion>>
 {

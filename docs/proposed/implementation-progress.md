@@ -1,5 +1,16 @@
 # Proposed domain implementation progress
 
+**Design refinement:** This ledger records source as it was reviewed, including
+historical finding-owned outcome work. It does not establish the revised target;
+see [boundary refinement](reviews/domain-boundaries-review.md) and the current
+context for outstanding design qualifications.
+
+**Primary administration boundary — 2026-11-05:** `PrimaryOrgAdmins` owns the
+one-or-two-primary continuity invariant. Its infrequent designation, outcome and
+release history belongs to that decision; ordinary administrator churn does not
+grow the aggregate. This is an appropriate low-churn boundary, not a roster of
+all administrators or a reason to redesign the existing owner.
+
 **Organization creation and primary administration — 2026-11-05.** Source is
 implemented across API, MCP, write models and read models, including mandatory
 client-created tenant IDs. Strict Release build, whitespace and tooling pass;

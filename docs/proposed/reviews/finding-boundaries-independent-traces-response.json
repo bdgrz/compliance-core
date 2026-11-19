@@ -1,0 +1,29 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "identical_decision": {
+      "type": "noul",
+      "noul": 0.83
+    },
+    "safety": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "refuse_all": {
+      "type": "noul",
+      "noul": 0.71
+    },
+    "sufficient": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "new_policy": {
+      "type": "noul",
+      "noul": 0.68
+    }
+  },
+  "usage": {
+    "input_tokens": 491,
+    "output_tokens": 96
+  }
+}

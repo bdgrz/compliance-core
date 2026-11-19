@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "projection_complete": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "admission_complete": {
+      "type": "noul",
+      "noul": 0.02
+    },
+    "stream_bounded": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "race_disclosure": {
+      "type": "noul",
+      "noul": 0.74
+    },
+    "file_is_aggregate": {
+      "type": "noul",
+      "noul": 0.37
+    },
+    "late_remediated": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "hash_complete": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "item_authority": {
+      "type": "noul",
+      "noul": 0.95
+    }
+  },
+  "usage": {
+    "input_tokens": 774,
+    "output_tokens": 154
+  }
+}

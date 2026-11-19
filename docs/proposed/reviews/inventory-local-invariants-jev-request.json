@@ -1,0 +1,67 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "redirect": "Instance I stores original application A. A has an immutable recorded merge redirect to active application B. The user interface resolves I by following A to B without changing I. A is retired.",
+    "physical": "An instance stream retains its original application A forever. A user interface displays survivor B by following A's merge redirect. The old implementation contract requires the instance stream to record a move to B.",
+    "cycle": "Application A has a merge redirect to B. B subsequently receives a merge redirect to A. No cycle prevention is enforced.",
+    "admission": "An instance reads target application B as active. B retires. Then the instance commits its move to B. No shared fence or transaction exists.",
+    "projected": "A projection says there are no active instances associated with application A. A previously committed active instance has not yet been processed by the projection.",
+    "anchor": "A published flow version names asset X as its required witness. A separate intended asset Y has not been accepted and is absent from all other authoritative facts shown.",
+    "links": "A flow has a draft. Link X is approved with an encryption waiver valid Monday. On Tuesday the waiver is revoked. On Wednesday a flow version is published after checking only X's earlier approval; no renewed authority or fence exists.",
+    "single": "A published one-asset flow version records exact asset X, source, destination, classification evidence, and protection settings. A separate version is published for asset Y. Each version validates its one asset independently. There is no operation approving both versions together.",
+    "view": "A projection shows a family of flow versions, one per asset, but updates can arrive late. The interface calls the family a complete immutable multi-asset snapshot.",
+    "group": "Ten independent carried-asset decisions each accept or refuse one asset, with no parent retaining their outcomes. A command approves a flow only after enumerating all ten decisions.",
+    "reclass": "A flow was accepted while asset X was internal. Later X is classified restricted. Existing TI-02 records the new classification and displays a current protection gap if encryption is missing.",
+    "failed": "An application retirement records a request. A background read fails or returns an incomplete set. The application is marked retired anyway."
+  },
+  "questions": {
+    "effective_redirect": {
+      "type": "noul",
+      "instructions": "In redirect, does the described user interface display B as the effective application for I?"
+    },
+    "physical_move": {
+      "type": "noul",
+      "instructions": "In physical, has the instance stream recorded its required move to B?"
+    },
+    "redirect_cycle": {
+      "type": "noul",
+      "instructions": "In cycle, can following merge redirects return to A indefinitely?"
+    },
+    "target_race": {
+      "type": "noul",
+      "instructions": "In admission, can an instance end up assigned to a retired target?"
+    },
+    "stale_zero": {
+      "type": "noul",
+      "instructions": "In projected, can the zero count omit an active instance?"
+    },
+    "anchor_all": {
+      "type": "noul",
+      "instructions": "In anchor, does naming X prove that intended asset Y was accepted?"
+    },
+    "old_waiver": {
+      "type": "noul",
+      "instructions": "In links, was the waiver still valid when the version was published Wednesday?"
+    },
+    "single_atomic": {
+      "type": "noul",
+      "instructions": "In single, does the design guarantee X and Y become published together atomically?"
+    },
+    "incomplete_view": {
+      "type": "noul",
+      "instructions": "In view, can a late projection omit a published flow version from the displayed family?"
+    },
+    "approval_scans": {
+      "type": "noul",
+      "instructions": "In group, does the approval command depend on every carried-asset decision?"
+    },
+    "later_gap": {
+      "type": "noul",
+      "instructions": "In reclass, does the new classification remain recorded even when the flow has a gap?"
+    },
+    "failed_retire": {
+      "type": "noul",
+      "instructions": "In failed, does the incomplete read prove no active instance remains?"
+    }
+  }
+}

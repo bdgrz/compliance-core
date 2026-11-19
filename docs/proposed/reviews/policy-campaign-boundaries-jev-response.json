@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "split_audit": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "missing_projection": {
+      "type": "noul",
+      "noul": 0.95
+    },
+    "determinism": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "late_join": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "two_relationships": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "participant_serialization": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "timeout_fence": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "time_changes": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "small_records": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "evidence_gap": {
+      "type": "noul",
+      "noul": 0.03
+    }
+  },
+  "usage": {
+    "input_tokens": 919,
+    "output_tokens": 185
+  }
+}

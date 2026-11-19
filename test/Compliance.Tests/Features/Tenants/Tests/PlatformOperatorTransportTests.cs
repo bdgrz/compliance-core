@@ -4,83 +4,25 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Commands;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Projections;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
 using Bdgrz.Compliance.Tests.E2E;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Bdgrz.Compliance.Features.AccessControl.Contracts;
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
-using Bdgrz.Compliance.Features.Content.Contracts;
-using Bdgrz.Compliance.Features.ControlMappings.History;
-using Bdgrz.Compliance.Features.Controls.Contracts;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.Incidents.Rules;
-using Bdgrz.Compliance.Features.NamedRecords.Contracts;
-using Bdgrz.Compliance.Features.NativeOperations.History;
-using Bdgrz.Compliance.Features.Operations.History;
-using Bdgrz.Compliance.Features.Processes.Processes;
-using Bdgrz.Compliance.Features.Readiness.Rules;
-using Bdgrz.Compliance.Features.Remediation.Processes;
-using Bdgrz.Compliance.Features.Retention.Models;
-using Bdgrz.Compliance.Features.SourceFacts.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Projections;
-using Bdgrz.Compliance.Features.TechnologyInventory.Models;
-using Bdgrz.Compliance.Features.Tenants.Models;
-using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
-using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
-using Bdgrz.Compliance.Tests.Features.Applications.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
-using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
-using Bdgrz.Compliance.Tests.Features.Changes.Tests;
-using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
-using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
-using Bdgrz.Compliance.Tests.Features.Controls.Tests;
-using Bdgrz.Compliance.Tests.Features.Criteria.Tests;
-using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
-using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
-using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
-using Bdgrz.Compliance.Tests.Features.Exports.Tests;
-using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
-using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
-using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
-using Bdgrz.Compliance.Tests.Features.Operations.Tests;
-using Bdgrz.Compliance.Tests.Features.Policies.Tests;
-using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
-using Bdgrz.Compliance.Tests.Features.Programs.Tests;
-using Bdgrz.Compliance.Tests.Features.Providers.Tests;
-using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
-using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
-using Bdgrz.Compliance.Tests.Features.Retention.Tests;
-using Bdgrz.Compliance.Tests.Features.Risks.Tests;
-using Bdgrz.Compliance.Tests.Features.Snapshots.Tests;
-using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
-using Bdgrz.Compliance.Tests.Features.SourceUse.Tests;
-using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
-using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
-using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
-using Bdgrz.Compliance.Tests.Features.Work.Tests;
-using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.AccessControl.Events;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SourceFacts.Readers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Commands;
-using Bdgrz.Compliance.Features.Tenants.Events;
-using Bdgrz.Compliance.Features.UserIdentities.Readers;
-using Bdgrz.Compliance.Tests;
+
 namespace Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 
 [Trait("Category", "WebIntegration")]
@@ -89,33 +31,10 @@ public sealed class PlatformOperatorTransportTests
     const string OperationId = "b4eb443f-94d4-4ca6-aec8-06d7946ff1da";
     const string AnotherId = "dc97120d-631c-4aa7-ae05-ecf9e5d18791";
 
-    [Fact]
-    public async Task ShouldReturnDeclaredUnitBodyGivenPlatformGrantHttpSuccessAndRetry()
-    {
-        // Arrange
-        await using var factory = Factory();
-        using var client = factory.CreateClient();
-        await LoginAndSeedAsync(factory, client);
-        var command = Uuid.CreateVersion4();
-        var body = new { user_id = Uuid.CreateVersion4(), expected_revision = 1, reason = "Cover operations" };
-        var route = $"/api/v1/platform/operator-grants/{command}";
-
-        // Act
-        using var first = await client.PutAsJsonAsync(route, body);
-        using var retry = await client.PutAsJsonAsync(route, body);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
-        Assert.Equal("{}", await first.Content.ReadAsStringAsync());
-        Assert.Equal(await first.Content.ReadAsByteArrayAsync(), await retry.Content.ReadAsByteArrayAsync());
-        Assert.Equal("application/json", first.Content.Headers.ContentType?.MediaType);
-    }
-
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ShouldPreserveLaterAssignmentsAndLogicalIdentityGivenHttpOrMcpRetries(bool mcp)
+    public async Task ShouldPreservePerUserEpisodeGivenExactHttpOrMcpRetries(bool mcp)
     {
         // Arrange
         await using var factory = Factory();
@@ -126,40 +45,34 @@ public sealed class PlatformOperatorTransportTests
         var first = Uuid.CreateVersion4();
         var removal = Uuid.CreateVersion4();
         var next = Uuid.CreateVersion4();
-        await SendAsync(first, 1, "Cover operations");
-        await SendAsync(removal, 2, "Coverage ended", first);
+        await SendAsync(first, 0, "Cover operations");
+        await SendAsync(removal, 1, "Coverage ended", first);
 
         // Act
-        await SendAsync(first, 1, "Cover operations");
-        await SendAsync(next, 3, "New coverage");
-        await SendAsync(removal, 2, "Coverage ended", first);
+        await SendAsync(first, 0, "Cover operations");
+        await SendAsync(next, 2, "New coverage");
+        await SendAsync(removal, 1, "Coverage ended", first);
         await using var scope = factory.Services.CreateAsyncScope();
-        var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperatorRoster());
+        var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new PlatformOperator(target));
         var facts = new List<DomainEvent>();
         await foreach (var record in factory.Services.GetRequiredService<IEventStore>().ReadAsync(owner.Stream, 0))
             facts.Add(record.Event);
-        using var response = await client.GetAsync("/api/v1/platform/operators");
-        var view = await response.Content.ReadFromJsonAsync(ComplianceCoreJsonContext.Default.PlatformOperatorRosterView);
+        await ProjectAsync(factory, actor, target);
+        using var response = await client.GetAsync("/api/v1/platform/operators?limit=1");
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var authority = await PlatformOperatorRosterContent.ReadAsync(scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), owner);
-        Assert.Equal(next, Assert.Single(authority.Operators, item => item.UserId == target).AssignmentId);
-        Assert.Equal(4UL, owner.Version);
-        Assert.Equal(4UL, view!.Revision);
-        Assert.Equal(next, Assert.Single(view.Operators, entry => entry.UserId == target).AssignmentId);
+        Assert.True(owner.IsActive);
+        Assert.Equal(next, owner.GrantEpisodeId);
+        Assert.Equal(3UL, owner.Version);
+        Assert.Single(document.RootElement.GetProperty("items").EnumerateArray());
+        Assert.Equal(JsonValueKind.String, document.RootElement.GetProperty("next_cursor").ValueKind);
         Assert.Collection(facts,
-            fact => Assert.Equal(PlatformOperatorRoster.CreationId, fact.Metadata.CausationId),
-            fact => AssertAccepted(first, actor, Assert.IsType<PlatformOperatorGranted>(fact)),
-            fact =>
-            {
-                var revoked = Assert.IsType<PlatformOperatorRevoked>(fact);
-                Assert.Equal(removal, revoked.CommandId);
-                Assert.Equal(removal, fact.Metadata.CausationId);
-                Assert.Equal(first, revoked.AssignmentId);
-                Assert.Equal(revoked.Actor, fact.Metadata.Actor);
-            },
-            fact => AssertAccepted(next, actor, Assert.IsType<PlatformOperatorGranted>(fact)));
+            fact => Assert.Equal(first, Assert.IsType<PlatformOperatorAccessGranted>(fact).OperationId),
+            fact => Assert.Equal(first, Assert.IsType<PlatformOperatorAccessRevoked>(fact).GrantEpisodeId),
+            fact => Assert.Equal(next, Assert.IsType<PlatformOperatorAccessGranted>(fact).OperationId));
 
         async Task SendAsync(Uuid commandId, ulong revision, string reason, Uuid? assignment = null)
         {
@@ -184,6 +97,54 @@ public sealed class PlatformOperatorTransportTests
         }
     }
 
+    [Fact]
+    public async Task ShouldRejectChangedIntentGivenReusedHttpOperationIdentity()
+    {
+        // Arrange
+        await using var factory = Factory();
+        using var client = factory.CreateClient();
+        await LoginAndSeedAsync(factory, client);
+        var target = Uuid.CreateVersion4();
+        var operation = Uuid.CreateVersion4();
+        var path = $"/api/v1/platform/operator-grants/{operation}";
+        using var first = await client.PutAsJsonAsync(path, new { user_id = target, expected_revision = 0, reason = "First" });
+
+        // Act
+        using var changed = await client.PutAsJsonAsync(path, new { user_id = target, expected_revision = 0, reason = "Changed" });
+        await using var scope = factory.Services.CreateAsyncScope();
+        var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperator(target));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, changed.StatusCode);
+        Assert.Equal(1UL, owner.Version);
+        Assert.Equal(operation, owner.GrantEpisodeId);
+    }
+
+    [Fact]
+    public async Task ShouldForbidOperatorReadsAndWritesGivenAuthenticatedNonOperator()
+    {
+        // Arrange
+        await using var factory = Factory();
+        using var client = factory.CreateClient();
+        await TenantInvitationE2ETests.LoginAsync(client, "not-an-operator@example.com");
+        var target = Uuid.CreateVersion4();
+
+        // Act
+        using var list = await client.GetAsync("/api/v1/platform/operators");
+        using var state = await client.GetAsync($"/api/v1/platform/operators/{target}");
+        using var grant = await client.PutAsJsonAsync($"/api/v1/platform/operator-grants/{Uuid.CreateVersion4()}",
+            new { user_id = target, expected_revision = 0, reason = "Unauthorized" });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, list.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, state.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, grant.StatusCode);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperator(target));
+        Assert.Equal(0UL, owner.Version);
+    }
+
     [Theory]
     [InlineData("", "", HttpStatusCode.NotFound)]
     [InlineData("malformed", "", HttpStatusCode.BadRequest)]
@@ -191,27 +152,24 @@ public sealed class PlatformOperatorTransportTests
     [InlineData(OperationId, "", HttpStatusCode.OK)]
     [InlineData(OperationId, ",\"command_id\":\"" + OperationId + "\"", HttpStatusCode.OK)]
     [InlineData(OperationId, ",\"command_id\":\"" + AnotherId + "\"", HttpStatusCode.BadRequest)]
-    [InlineData(OperationId, ",\"command_id\":null", HttpStatusCode.BadRequest)]
-    [InlineData(OperationId, ",\"command_id\":\"malformed\"", HttpStatusCode.BadRequest)]
-    public async Task ShouldBindOrRejectRequiredOperationIdentityGivenHttpInput(
-        string operationId, string duplicate, HttpStatusCode expected)
+    public async Task ShouldBindOrRejectOperationIdentityGivenHttpInput(string operationId, string duplicate, HttpStatusCode expected)
     {
         // Arrange
         await using var factory = Factory();
         using var client = factory.CreateClient();
         await LoginAndSeedAsync(factory, client);
         var target = Uuid.CreateVersion4();
-        using var body = new StringContent("{\"user_id\":\"" + target + "\",\"reason\":\"Cover operations\",\"expected_revision\":1" + duplicate + "}",
+        using var body = new StringContent("{\"user_id\":\"" + target + "\",\"reason\":\"Cover operations\",\"expected_revision\":0" + duplicate + "}",
             Encoding.UTF8, "application/json");
 
         // Act
         using var response = await client.PutAsync($"/api/v1/platform/operator-grants/{operationId}", body);
         await using var scope = factory.Services.CreateAsyncScope();
-        var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperatorRoster());
+        var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperator(target));
 
         // Assert
         Assert.Equal(expected, response.StatusCode);
-        Assert.Equal(expected == HttpStatusCode.OK ? 2UL : 1UL, owner.Version);
+        Assert.Equal(expected == HttpStatusCode.OK ? 1UL : 0UL, owner.Version);
     }
 
     [Theory]
@@ -230,7 +188,7 @@ public sealed class PlatformOperatorTransportTests
         {
             ["user_id"] = Uuid.CreateVersion4().ToString(),
             ["reason"] = "Cover operations",
-            ["expected_revision"] = 1,
+            ["expected_revision"] = 0,
         };
         if (commandId is not null)
             arguments["command_id"] = commandId;
@@ -245,22 +203,85 @@ public sealed class PlatformOperatorTransportTests
         Assert.True(result.IsError);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldExposeOwnerRevisionGivenAuthorizedStateRead(bool mcp)
+    {
+        // Arrange
+        await using var factory = Factory();
+        using var client = factory.CreateClient();
+        var user = await LoginAndSeedAsync(factory, client);
+        await using var scenario = mcp ? await McpScenario.ConnectAsync(client, new Uri(client.BaseAddress!, "/mcp")) : null;
+
+        // Act
+        JsonElement state;
+        if (scenario is not null)
+        {
+            var response = await scenario.When("bdgrz.platform.operator.state.get", new Dictionary<string, object?>
+            { ["user_id"] = user.ToString() }).ExpectSuccess();
+            state = Assert.IsType<JsonElement>(response.StructuredJson).GetProperty("result");
+        }
+        else
+        {
+            using var response = await client.GetAsync($"/api/v1/platform/operators/{user}");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            state = document.RootElement.Clone();
+        }
+
+        // Assert
+        Assert.Equal(user.ToString(), state.GetProperty("user_id").GetString());
+        Assert.True(state.GetProperty("is_active").GetBoolean());
+        Assert.Equal(1UL, state.GetProperty("operator_revision").GetUInt64());
+        Assert.Equal(0UL, state.GetProperty("primary_revision").GetUInt64());
+        Assert.Equal(0UL, state.GetProperty("seat_generation").GetUInt64());
+    }
+
     [Fact]
-    public async Task ShouldPreserveAndValidateTheTypedIdentityGivenAQueueEnvelope()
+    public async Task ShouldRejectOperatorToolsGivenAuthenticatedNonOperator()
+    {
+        // Arrange
+        await using var factory = Factory();
+        using var client = factory.CreateClient();
+        await TenantInvitationE2ETests.LoginAsync(client, "not-an-operator-mcp@example.com");
+        await using var scenario = await McpScenario.ConnectAsync(client, new Uri(client.BaseAddress!, "/mcp"));
+        var user = Uuid.CreateVersion4();
+
+        // Act
+        var state = await scenario.When("bdgrz.platform.operator.state.get", new Dictionary<string, object?>
+        { ["user_id"] = user.ToString() });
+        var grant = await scenario.When("bdgrz.platform.operator.grant", new Dictionary<string, object?>
+        {
+            ["user_id"] = user.ToString(),
+            ["command_id"] = Uuid.CreateVersion4().ToString(),
+            ["expected_revision"] = 0,
+            ["reason"] = "Unauthorized",
+        });
+
+        // Assert
+        Assert.True(state.IsError);
+        Assert.True(grant.IsError);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperator(user));
+        Assert.Equal(0UL, owner.Version);
+    }
+
+    [Fact]
+    public async Task ShouldPreserveAndValidateTypedIdentityGivenQueueEnvelope()
     {
         // Arrange
         await using var factory = Factory();
         var options = factory.Services.GetRequiredKeyedService<JsonSerializerOptions>(PortiaServiceKeys.Json);
         var serializer = new JsonRequestSerializer([
             new RequestTransportRegistration(typeof(RevokePlatformOperator), [RequestTransportId.Queue],
-                new RequestRouteAttribute("bdgrz", "operators", "roster", "revoke"),
+                new RequestRouteAttribute("bdgrz", "operators", "user", "revoke"),
                 new DiscriminatorAttribute("bdgrz.platform.operator.revoke", 1)),
         ], options);
         var command = new RevokePlatformOperator(Uuid.CreateVersion4(), "Coverage ended", Uuid.CreateVersion4(), 7, Uuid.CreateVersion4());
-        var metadata = RequestMetadata.FromRequest(command);
 
         // Act
-        var bytes = serializer.Serialize(command, null, metadata, null);
+        var bytes = serializer.Serialize(command, null, RequestMetadata.FromRequest(command), null);
         var envelope = serializer.DeserializeEnvelope(bytes);
         var tampered = JsonNode.Parse(bytes.Span)!;
         var payload = tampered["payload"]!.AsObject();
@@ -308,28 +329,44 @@ public sealed class PlatformOperatorTransportTests
         Assert.Equal(3UL, current.Version);
     }
 
-    static void AssertAccepted(Uuid commandId, Uuid actor, PlatformOperatorGranted fact)
-    {
-        Assert.Equal(commandId, fact.CommandId);
-        Assert.Equal(commandId, fact.Metadata.CausationId);
-        Assert.Equal(actor, fact.ActorUserId);
-        Assert.Equal(fact.Actor, fact.Metadata.Actor);
-    }
-
     static WebApplicationFactory<Program> Factory() => ProviderHttpMcpTests.CreateFactory()
         .WithWebHostBuilder(builder => builder.ConfigureServices(services =>
         {
             services.RemoveAll<IPlatformUserDirectoryReader>();
             services.AddSingleton<IPlatformUserDirectoryReader, ExistingUsers>();
+            services.RemoveAll<IPlatformOperatorAccess>();
+            services.AddScoped<IPlatformOperatorAccess, StoredOperatorAccess>();
         }));
 
     static async Task<Uuid> LoginAndSeedAsync(WebApplicationFactory<Program> factory, HttpClient client)
     {
         var actor = Uuid.Parse(await TenantInvitationE2ETests.LoginAsync(client, "operator-transport@example.com"), CultureInfo.InvariantCulture);
         await using var scope = factory.Services.CreateAsyncScope();
-        Assert.True((await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(
-            new SeedPlatformOperatorRoster(PlatformOperatorRoster.CreationId, [actor]), RequestActor.System)).IsSuccess);
+        var operation = Uuid.CreateVersion4();
+        var owner = new PlatformOperator(actor, operation);
+        Assert.True(owner.GrantBootstrap(operation, 0, Uuid.CreateVersion4(), new ActorAttribution("portia:system", "Portia")).IsSuccess);
+        await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(owner,
+            new RequestDispatchContext(RequestActor.System));
         return actor;
+    }
+
+    static async Task ProjectAsync(WebApplicationFactory<Program> factory, params Uuid[] users)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var projection = scope.ServiceProvider.GetRequiredService<IPlatformOperatorDirectoryProjection>();
+        var identity = new CheckpointIdentity("PlatformOperatorDirectory", EventStreamPattern.ForPattern("bdgrz", "platform-operators"));
+        await using var batch = await projection.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
+        var events = scope.ServiceProvider.GetRequiredService<IEventStore>();
+        foreach (var user in users)
+            await foreach (var record in events.ReadAsync(PlatformOperator.AddressOf(user), 0))
+                await projection.ApplyAsync(record.Event);
+        await batch.CommitAsync(ProjectionCheckpoint.Start);
+    }
+
+    sealed class StoredOperatorAccess(IAggregateReader reader) : IPlatformOperatorAccess
+    {
+        public async ValueTask<bool> IsOperatorAsync(Uuid userId, CancellationToken ct = default) =>
+            userId != Uuid.Empty && (await reader.HydrateAsync(new PlatformOperator(userId), ct)).IsActive;
     }
 
     sealed class ExistingUsers : IPlatformUserDirectoryReader

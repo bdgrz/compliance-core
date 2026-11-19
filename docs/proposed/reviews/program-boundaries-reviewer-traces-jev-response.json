@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "false_refusal": {
+      "type": "noul",
+      "noul": 0.25
+    },
+    "missed_author": {
+      "type": "noul",
+      "noul": 0.47
+    },
+    "unauthorised_approval": {
+      "type": "noul",
+      "noul": 0.51
+    },
+    "late_commit": {
+      "type": "noul",
+      "noul": 0.81
+    },
+    "human_review": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "no_author": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "write_all": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "progress_dependency": {
+      "type": "noul",
+      "noul": 0.81
+    },
+    "coverage_collection": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "policy_choice": {
+      "type": "noul",
+      "noul": 0.9
+    }
+  },
+  "usage": {
+    "input_tokens": 792,
+    "output_tokens": 181
+  }
+}

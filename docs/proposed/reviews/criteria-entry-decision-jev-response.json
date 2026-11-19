@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "publication_race_in_cut": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "publication_race_accept_membership": {
+      "type": "noul",
+      "noul": 0.8
+    },
+    "late_proposal_excluded": {
+      "type": "noul",
+      "noul": 0.35
+    },
+    "old_head_itself_certifies": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "no_coverage_safe": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "abandon_not_published": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "claim_id_alone": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "parent_roster": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "implementation_proven": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "conditional_independent_verification": {
+      "type": "noul",
+      "noul": 0.77
+    }
+  },
+  "usage": {
+    "input_tokens": 1087,
+    "output_tokens": 209
+  }
+}

@@ -1,7 +1,8 @@
 # Change and incident oversight
 
-Status: **locked**, 2026-11-03. Hand-authored source of truth for this context.
-It follows the [context conventions](conventions.md).
+Status: **provisional boundary revision**, 2026-11-05. The business decisions remain,
+but the authoritative revision, assessment and reference-admission protocol below is
+not yet qualified. It follows the [context conventions](conventions.md).
 
 ## Purpose
 
@@ -10,7 +11,8 @@ and incidents, and a person's assessment of whether each is significant (M0-D21)
 It never copies the ticketing or incident tool: source identifiers are optional
 provenance, and supporting detail is governed evidence.
 
-**Owns:** changes and compliance incidents.
+**Owns:** changes, compliance incidents, and individual affected-record and
+supporting-artifact relationships.
 
 **Does not own:**
 
@@ -29,7 +31,8 @@ provenance, and supporting detail is governed evidence.
 | --- | --- |
 | Change | A change to the system recorded for compliance: title, when it happened (a date or a range), affected records and optional source provenance. |
 | Incident | An event recorded for compliance: title, detected and resolved times, whether customer data or an availability SLA was affected, affected records and optional source provenance. |
-| Affected records | Exact references to the boundary, commitments, controls or inventory records the item touches. |
+| Affected records | Individual exact references to the boundary, commitments, controls or inventory records the item touches. |
+| Revision cut | The intended exact authoritative boundary of an item's scalar revisions and independently owned relationship changes. How accepted, pending and late outcomes relate to the assessment remains unresolved. A cut identifies facts, not an embedded collection. |
 | Provenance | Optional `source_system`, `source_identifier` and `source_url` from an outside tool. Never a required connection. |
 | Significance | `significant` or `not_significant`, a person's assessment of the current revision, with a rationale. |
 | Significance criteria | For a change: `changes_boundary`, `changes_commitment_or_requirement`, `changes_key_control`, `changes_in_scope_infrastructure`. For an incident: `customer_data_affected`, `availability_sla_affected`. |
@@ -57,15 +60,15 @@ stateDiagram-v2
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| RecordChange | Compliance Lead or Contributor | `ChangeId` is new; program active; title and date or range given; affected records exist in the program | ChangeRecorded |
-| ReviseChange | Compliance Lead or Contributor | Names the current revision; affected records exist | ChangeRevised |
-| AssessChange | Compliance Lead who authored no revision, or covered by a waiver | Names the current revision; criteria marked; rationale given; `not_significant` only when no criterion is marked | ChangeAssessed |
+| RecordChange | Compliance Lead or Contributor | `ChangeId` is new; program active; title and date or range given | ChangeRecorded |
+| ReviseChange | Compliance Lead or Contributor | Names the current revision; admitted through the revision protocol below | ChangeRevised |
+| AssessChange | Compliance Lead who authored no revision, or covered by a waiver | Names the exact current frozen revision cut; source-author proof and waiver, if any, satisfy CI-01; criteria marked; rationale given; `not_significant` only when no criterion is marked | ChangeAssessed |
 
 | Event | Carries |
 | --- | --- |
-| ChangeRecorded | tenant, change, program, revision, title, occurred at or range, affected records, provenance, handling class, supporting artifacts, recorded by |
-| ChangeRevised | tenant, change, revision, changed fields, previous assessment cleared, revised by |
-| ChangeAssessed | tenant, change, revision, significance, criteria met, affected records, rationale, assessor, waiver (if any) |
+| ChangeRecorded | tenant, change, program, revision, title, occurred at or range, provenance, handling class, recorded by |
+| ChangeRevised | tenant, change, revision, bounded scalar changed fields, admission evidence, previous assessment cleared, revised by |
+| ChangeAssessed | tenant, change, exact revision cut, significance, the four fixed criteria, rationale, assessor, exact waiver evidence (if any) |
 
 ### ComplianceIncident
 
@@ -89,17 +92,74 @@ stateDiagram-v2
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| RecordComplianceIncident | Compliance Lead or Contributor | `IncidentId` is new; program active; detected at not in the future; affected records exist | ComplianceIncidentRecorded |
-| ReviseComplianceIncident | Compliance Lead or Contributor | Names the current revision; detected at unchanged | ComplianceIncidentRevised |
-| AssessComplianceIncident | Compliance Lead who authored no revision, or covered by a waiver | Names the current revision; rationale given; `not_significant` only when neither flag is set | ComplianceIncidentAssessed |
+| RecordComplianceIncident | Compliance Lead or Contributor | `IncidentId` is new; program active; detected at not in the future | ComplianceIncidentRecorded |
+| ReviseComplianceIncident | Compliance Lead or Contributor | Names the current revision; detected at unchanged; admitted through the revision protocol below | ComplianceIncidentRevised |
+| AssessComplianceIncident | Compliance Lead who authored no revision, or covered by a waiver | Names the exact current frozen revision cut; source-author proof and waiver, if any, satisfy CI-01; rationale given; `not_significant` only when neither flag is set | ComplianceIncidentAssessed |
 | RecordComplianceIncidentResolution | Compliance Lead or Contributor | Not resolved; resolved at not before detected at | ComplianceIncidentResolved |
 
 | Event | Carries |
 | --- | --- |
-| ComplianceIncidentRecorded | tenant, incident, program, revision, title, detected at, customer data affected, availability SLA affected, affected records, provenance, handling class, supporting artifacts, recorded by |
-| ComplianceIncidentRevised | tenant, incident, revision, changed fields, previous assessment cleared, revised by |
-| ComplianceIncidentAssessed | tenant, incident, revision, significance, criteria met, affected records, rationale, assessor, waiver (if any) |
+| ComplianceIncidentRecorded | tenant, incident, program, revision, title, detected at, customer data affected, availability SLA affected, provenance, handling class, recorded by |
+| ComplianceIncidentRevised | tenant, incident, revision, bounded scalar changed fields, admission evidence, previous assessment cleared, revised by |
+| ComplianceIncidentAssessed | tenant, incident, exact revision cut, significance, the two fixed flags, rationale, assessor, exact waiver evidence (if any) |
 | ComplianceIncidentResolved | tenant, incident, resolved at, recorded by |
+
+## Individual relationships and revision authority
+
+Each affected-record relationship is identified by tenant, item kind and ID,
+record kind and ID. Each supporting-artifact relationship is identified by
+tenant, item kind and ID, artifact ID and relationship purpose. An owner records
+one relationship's addition or removal, actor, exact admission token and target
+identity; an exact retry has the original outcome, while a changed intent under
+the same operation ID is refused. References to records must be accepted by the
+record's authoritative owner as belonging to the same program; an artifact
+reference must satisfy Evidence's authoritative rules. A missing or unknown
+participant outcome stays pending, and a rejection does not create the link.
+Read-model lists are for navigation, never admission or assessment proof.
+Neither item, assessment, nor event contains all links or a copied artifact body.
+Fixed-size fields have explicit limits to be defined per field; long supporting
+content belongs to governed evidence, referenced by exact artifact version.
+
+Changing either relationship is a revision of the compliance item: it clears an
+assessment under CI-03 just as a scalar edit does. Every revision author,
+including the actor of a relationship change, is covered by CI-01. Resolution is
+a later, separate incident fact under CI-04; it does not silently rewrite the
+detection time or make an assessment current for a different revision.
+
+The previous proposal serialized all relationship changes through admission
+windows, settled each one, and scanned their complete author history before
+assessment. Splitting that sequence into small records does not remove the
+distributed child ledger or the all-relationship write decision. It is withdrawn.
+
+One candidate is to designate the prospective assessor before the first item or
+relationship revision in an assessment episode. Each independent revision
+decides its own author restriction against the exact designation: the assessor
+may not author it unless an authoritative waiver covers that item, action and
+time. The assessment refers to that designation and an exact ordered episode
+boundary; it does not enumerate authors or links. Per-item owners retain their own
+acceptance and exact-retry outcomes. A read model may list the revisions and
+relationships represented at a qualified boundary and must report incomplete
+coverage as pending. A source position by itself is not evidence that every
+revision was valid or that the assessor actually reviewed its content.
+
+This is **not equivalent to the accepted workflow yet**. It changes when an
+assessor must be selected, can exclude an otherwise eligible author, and cannot
+retroactively establish that a reviewer did not author an earlier revision.
+Assessor replacement, existing histories, waiver expiry or revocation, and the
+meaning of an assessment while earlier valid proposals are unsettled require
+explicit product and authority decisions. In particular, marking an assessment
+accepted before all earlier link outcomes are known can change what the
+assessment attests to; a source marker or projection cannot silently preserve
+the stronger promise.
+
+The candidate also needs authoritative ordering between designation, each
+revision, assessment, and successor episode. A late edit must either belong to
+the assessed boundary with its own valid outcome, or make that assessment
+non-current; retrying an old token cannot mutate a newer episode. An unknown
+commit remains pending until resolved. Exact target eligibility and waiver
+evidence need owner authority, not advisory reads. Source ordering, retained
+history, target fencing, replay and recovery remain unqualified. No design in
+this section yet proves CI-01 or CI-03 across independent owners.
 
 ## Flows
 
@@ -156,14 +216,17 @@ Cases required by [CV-12](conventions.md#guards-and-reviews).
 
 | Case | Outcome |
 | --- | --- |
-| A change is revised while its assessment is being made | The assessment names the current revision; one naming an older revision is refused |
+| A scalar or relationship revision races assessment | Freeze and settle the exact source cut; assessment must either win against the revision or be refused/fenced. The concrete protocol is unresolved; an expected root revision alone is insufficient. |
+| A relationship command times out while the cut is freezing | Its result remains unknown until target acceptance or a durable token-specific refusal/fence is proven. Whether assessment can proceed without weakening the existing exact-boundary promise remains unresolved; do not hide the outcome or treat timeout as refusal. |
+| The reviewer authored a prior revision or a relationship edit | Refuse unless an applicable authoritative waiver covers the action. An early-designation candidate must establish this per revision; the prior complete-history scan is withdrawn as a cross-child write decision. |
 | An item dated in a closing period is assessed significant after the close is approved | Examinations records it as a late significant item (`LateSignificantItemRecorded`), and the period requires an amendment |
 | `ChangeAssessed` delivered twice | Section reviews and reassessment triggers take IDs from the item, so repeats are no-ops |
 
 ## Decisions
 
-Jev answers are from `jev-1.14.0`, 2026-11-03. A yes is ≥ 0.8 and a no is ≤ 0.2.
-Anything in between is settled by common sense, with the reasoning stated.
+Jev answers are from `jev-1.14.0`, 2026-11-03. The historical 0.8 and 0.2
+thresholds were triage conventions, not calibrated probabilities of correctness;
+conflicting or inconclusive cases remain open until source evidence resolves them.
 
 | ID | Decision | Evidence |
 | --- | --- | --- |
@@ -175,7 +238,11 @@ Anything in between is settled by common sense, with the reasoning stated.
 
 ## Open questions
 
-None at this time.
+- How are assessor designation, individual revision acceptance, exact assessment boundary and successor episodes ordered without a per-relationship ledger or an all-child write decision?
+- What authoritative target-owner proof establishes same-program membership and governed artifact eligibility, and how are concurrent target changes handled?
+- How do repeatedly changed relationship owners roll over without losing their unique identity, idempotency, fences or retained historical facts?
+- What retention and source enumeration guarantees make every prior author and cut retrievable after rollover or archival?
+- What field-level limits keep scalar content and every relationship fact small without discarding required business information?
 
 ## Superseded owners
 

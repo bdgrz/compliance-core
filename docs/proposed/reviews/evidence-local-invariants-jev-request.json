@@ -1,0 +1,47 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "request": "A request cites exactly one accepted available anchor artifact when it is fulfilled. Other artifacts and each support relation are independently governed records; lists are a read projection. A submitted group is not implicitly all-or-none.",
+    "race": "An artifact was read as available at time A. At time B its disposal commits. At time C an external delivery sends the artifact bytes, and afterward an asynchronous reactor writes a disclosure log record.",
+    "capture": "The artifact becomes available only after a clean inspection; detected secrets are rejected and content purged. A redacted derivative is a separate artifact and requires independent approval before disclosure.",
+    "delivery": "The source delivery has a stable operation ID, the artifact has an immutable content hash, each disclosure names the artifact, exact release operation and recipient. A delivery can time out after sending bytes and be retried."
+  },
+  "questions": {
+    "single_anchor": {
+      "type": "noul",
+      "instructions": "Does one available anchor plus independent additional links avoid collecting every submitted artifact on the request?"
+    },
+    "atomic_batch": {
+      "type": "noul",
+      "instructions": "Does recording one anchor by itself prove that every artifact in a concurrently submitted group was accepted atomically?"
+    },
+    "stale_availability": {
+      "type": "noul",
+      "instructions": "In the race, can the delivery release bytes after the artifact was disposed despite the earlier available read?"
+    },
+    "late_audit_guard": {
+      "type": "noul",
+      "instructions": "Can writing the disclosure log after the delivery prevent the already completed bytes from being disclosed?"
+    },
+    "duplicate_log": {
+      "type": "noul",
+      "instructions": "Can retrying a delivery after an ambiguous timeout create duplicate disclosure logs if log identity is randomly generated each attempt?"
+    },
+    "unknown_is_no": {
+      "type": "noul",
+      "instructions": "After a delivery timeout with unknown acceptance, is it guaranteed that no recipient got bytes?"
+    },
+    "redaction_approval": {
+      "type": "noul",
+      "instructions": "Does a derivative being inspected clean by itself prove its redaction was approved for external disclosure?"
+    },
+    "parent_growth": {
+      "type": "noul",
+      "instructions": "Would an artifact aggregate that appends one event for every independent support link have history growing with the number of links?"
+    },
+    "conditional_auth": {
+      "type": "noul",
+      "instructions": "If a true authoritative per-artifact delivery fence makes eligibility and release atomic against quarantine and disposal, would that exclude the stated stale-read race for those changes?"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "model": "jev-latest",
+  "state": "Product rules: An effective-dated data-flow version must include at least one information asset. Confidential and restricted assets require both transit and at-rest encryption, unless an approved, unexpired, exact-scope data-flow-encryption waiver applies. An asset's classification may change later without blocking that truth; flows that cease to meet encryption rules show a gap. Asset and waiver owners each have separate streams, and commands use optimistic concurrency only within one stream. A flow may have arbitrarily many assets. A read projection may lag; events for different owners may be concurrent. Do not assume cross-stream transactions or infinite-sized records.",
+  "questions": {
+    "edge_owners": {
+      "type": "noul",
+      "instructions": "If each independently added or removed flow-to-asset relationship has its own small owner, does that avoid storing the entire asset list in the flow aggregate?"
+    },
+    "one_anchor": {
+      "type": "noul",
+      "instructions": "If every committed version contains one designated asset ID in its own fact, does this alone guarantee that every committed version names at least one asset?"
+    },
+    "edge_anchor": {
+      "type": "noul",
+      "instructions": "If version publication merely sees one asset edge in a lagging projection, can it prove that the version has at least one committed asset?"
+    },
+    "classification_race": {
+      "type": "noul",
+      "instructions": "If a handler reads a public classification, then the asset becomes confidential before the unencrypted flow is committed, can the earlier read alone guarantee encryption was valid when the flow was committed?"
+    },
+    "waiver_race": {
+      "type": "noul",
+      "instructions": "If a handler reads an approved waiver, then the waiver is revoked before the unencrypted flow is committed, can the earlier read alone guarantee the waiver was valid when the flow was committed?"
+    },
+    "bulk_publication": {
+      "type": "noul",
+      "instructions": "If additional version asset edges are written independently while a version is being published, can a count or list from a lagging projection prove all intended edges were accepted before publication?"
+    },
+    "later_change": {
+      "type": "noul",
+      "instructions": "Does allowing an asset to be reclassified after a valid flow commit require a persistent gap if the flow is then inadequately encrypted and no applicable waiver exists?"
+    },
+    "atomic_owner": {
+      "type": "noul",
+      "instructions": "Does splitting all assets into separate owners by itself prove that a version and all its assets were published atomically?"
+    }
+  }
+}

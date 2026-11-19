@@ -1,0 +1,56 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "contract": "All edition and entry facts share one gapless retained area order with unique monotonically increasing positions. A criterion proposal is committed at P, its target decision at D, edition publication at C, and draft abandonment at A. Before issuing a draft decision a trusted worker proves the exact proposal and immutable claim and an edition head H from a qualified fresh-current provider. It writes an accepted entry outcome with H, P and exact source IDs. H was observed before the write. A verifier later re-reads exact H, P, D and all edition facts through D with source-qualified contiguous coverage. The provider can prove coverage through D even when the edition has no event at D. A claimed H or an empty page alone is not a freshness certificate. The writer requires fresh target-head certification and expected-position CAS. Publication independently pins a committed accepted criterion, verifies its decision and uses one C cut, never enumerating other entries.",
+    "publication_race": "P < H < C < D. The writer observed the current draft head H before C, then publication C won before its accepted outcome D. The verifier sees C before D and validates the proposal against C.",
+    "late_proposal": "H < C < P < D. A stale head H is incorrectly presented as current before writing the decision. The verifier sees C before D.",
+    "forged_old_head": "P < H < C < D. An actor presents an exact older draft head H as if currently certified after C; no independently qualified current-head certificate was actually supplied. Source later proves P < C.",
+    "abandon_race": "P < H < A < D. The entry outcome is accepted after abandonment raced the prior draft observation. The verification result is abandoned and the edition is never represented as published.",
+    "no_coverage": "A source page ends without seeing any terminal edition fact, but no qualified proof covers the edition through D.",
+    "parent": "A point-of-focus proposal binds one exact accepted parent incarnation. A verifier examines only that parent stream and its decisions; later changes may make it ineffective at publication. No edition-level parent roster is loaded.",
+    "claim": "A human proposal includes the ID of its exact previously committed operation claim. A worker re-reads that claim at its deterministic stream and checks matching intent, actor, user, generation and common-area order claim < proposal.",
+    "limitation": "The current deployed broker/SDK do not expose a qualified current-head certificate or qualified cross-resource coverage. The described workflow is not yet operational. Tests and provider qualification are not complete."
+  },
+  "questions": {
+    "publication_race_in_cut": {
+      "type": "noul",
+      "instructions": "Does state.publication_race place the proposal before the publication cut?"
+    },
+    "publication_race_accept_membership": {
+      "type": "noul",
+      "instructions": "If the proposal was validly admitted and all other invariants hold, can state.publication_race contribute to the published cut despite its decision occurring later?"
+    },
+    "late_proposal_excluded": {
+      "type": "noul",
+      "instructions": "Does state.late_proposal place the proposal outside the published cut?"
+    },
+    "old_head_itself_certifies": {
+      "type": "noul",
+      "instructions": "In state.forged_old_head, does the observed old head by itself prove it was current when the decision was made?"
+    },
+    "no_coverage_safe": {
+      "type": "noul",
+      "instructions": "Does state.no_coverage prove that no terminal edition fact exists before D?"
+    },
+    "abandon_not_published": {
+      "type": "noul",
+      "instructions": "Does state.abandon_race permit representing the abandoned edition as published?"
+    },
+    "claim_id_alone": {
+      "type": "noul",
+      "instructions": "Does a claim ID by itself establish matching committed claim and prior source order?"
+    },
+    "parent_roster": {
+      "type": "noul",
+      "instructions": "Does state.parent require the edition aggregate to load all children to decide one point of focus?"
+    },
+    "implementation_proven": {
+      "type": "noul",
+      "instructions": "Does state.limitation provide evidence that production source authority and race handling have been implemented and validated?"
+    },
+    "conditional_independent_verification": {
+      "type": "noul",
+      "instructions": "Under the guarantees explicitly stated in state.contract, can the verifier establish the relation between P and any edition terminal event before D by scanning only the edition stream through D?"
+    }
+  }
+}

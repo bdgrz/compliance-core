@@ -1,0 +1,27 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "A single low-churn platform policy owner stores only one current generation and immutable content identity, with monotonic activation events and exact expected-position appends. It has no user, grant, session, account, node, or child roster. Immutable prior policy bytes are retained independently.",
+    "qualification": "The event store has not been qualified to provide fresh linearizable reads, non-reused lineage, complete retention, or a deployment barrier. No current production policy source or rollout authority has been identified in the repository.",
+    "rollout": "Activating V2 requires an independently qualified deployment writer barrier or routing authority for exact V2 content. A deciding node also fresh-reads the active policy owner and rejects an unsupported generation or digest. V1 nodes may have in-flight work; decisions proven at a prior common instant T may complete according to admission-at-T semantics.",
+    "twopass": "Every authority owner provides a fresh linearizable read with unique non-resetting monotonically advancing positions. All first reads finish before T and all second reads start after T. Every source affecting admission is included, and corresponding first and second positions match. The policy bytes are immutable and verified against the source identity and digest.",
+    "mixed": "A stale instance supports only policy V1. At the admission time T, the fresh qualified current policy source returns V2 and the instance requires exact policy generation and content support before allowing admission.",
+    "digest": "A receipt records only a policy generation string and a claimed digest. The policy source-to-content binding and retained bytes are unavailable.",
+    "legacy": "A pre-existing program event has no publication proof and no admission. New writes use a separate strict admission validator requiring explicit policy content evidence, while replay validates the old event under its historical rules. Legacy evidence is not upgraded or represented as current proof.",
+    "scheme": "A signed Bdgrz token is unexpired. Its current policy does not specify whether session revocation is applicable, and no qualified session authority is checked.",
+    "pending": "An old proposal was committed with legacy admission evidence. A new worker sees that proposal but has no qualified historical rule proving that its original admission may still authorize a participant outcome.",
+    "alternative": "A deployment service supplies globally unique non-resetting active policy generation, exact immutable retained bytes, qualified linearizable reads, independently verifiable historical positions and a tested writer barrier covering every admission writer and rollback."
+  },
+  "questions": {
+    "bounded_owner": { "type": "noul", "instructions": "Does owner require maintaining a roster of grants, users or child entries to select the current policy?" },
+    "event_store_proven": { "type": "noul", "instructions": "Does owner by itself prove the storage and rollout guarantees missing in qualification?" },
+    "mixed_allow": { "type": "noul", "instructions": "May the V1-only instance in mixed authorize a new operation under V1 at T?" },
+    "fresh_policy_t": { "type": "noul", "instructions": "Under every condition in twopass, was the captured policy source state current at T?" },
+    "digest_proves": { "type": "noul", "instructions": "Does digest prove which retained policy bytes governed the historical admission?" },
+    "legacy_replays": { "type": "noul", "instructions": "Can the legacy program event in legacy remain replayable without being treated as current policy proof?" },
+    "unknown_veto": { "type": "noul", "instructions": "Does scheme establish that no session veto is required?" },
+    "pending_accept": { "type": "noul", "instructions": "Does pending provide proof to accept a new participant outcome for the old proposal?" },
+    "equivalent_source": { "type": "noul", "instructions": "Can alternative provide the stated policy version authority without creating a separate policy aggregate?" },
+    "barrier_roster": { "type": "noul", "instructions": "Does rollout require the policy owner itself to maintain a roster of deployment nodes?" }
+  }
+}

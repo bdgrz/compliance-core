@@ -1,31 +1,36 @@
-using System.Runtime.CompilerServices;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
-using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Commands;
 using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Programs.Events;
 using Bdgrz.Compliance.Features.Programs.History;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Rules;
 using Bdgrz.Compliance.Features.Programs.Services;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
@@ -49,14 +54,9 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
-using Bdgrz.Compliance.Features.Programs.Aggregates;
-using Bdgrz.Compliance.Features.Programs.Commands;
-using Bdgrz.Compliance.Features.Programs.Events;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
 namespace Bdgrz.Compliance.Tests.Features.Programs.Tests;
 
 public sealed class ProgramNativeHistoryTests
@@ -155,7 +155,7 @@ public sealed class ProgramNativeHistoryTests
         var tenant = Uuid.CreateVersion4();
         var program = Uuid.CreateVersion4();
         var actor = ProgramManagementServices.Actor(Uuid.CreateVersion4());
-        var create = new CreateProgram(program, tenant, "SOC 2", Plan());
+        var create = new CreateProgram(program, tenant, "SOC 2", Plan(), Uuid.CreateVersion4());
         var first = await fixture.Operations.CreateAsync(new RequestContext<CreateProgram>(create, actor), CancellationToken.None);
         Assert.True(first.IsSuccess, first.Error?.Message);
         var revised = await fixture.Operations.ReviseAsync(new RequestContext<ReviseProgram>(new ReviseProgram(Uuid.CreateVersion4(),
@@ -171,7 +171,7 @@ public sealed class ProgramNativeHistoryTests
         Assert.True(replay.IsSuccess, replay.Error?.Message);
         Assert.Equal(first.Value, replay.Value);
         Assert.Equal(0, store.AuthoredReads);
-        Assert.Equal(2, (await fixture.Programs.HistoryAsync(tenant, program)).Facts.Count);
+        Assert.Equal(2, (await fixture.Programs.HistoryAsync(tenant, program)).Facts.OfType<IProgramFact>().Count());
     }
 
     [Fact]
@@ -215,13 +215,13 @@ public sealed class ProgramNativeHistoryTests
         await using var fixture = new ProgramNativeFixture();
         var name = string.Concat(Enumerable.Repeat("审计🦡", 16_000));
         var plan = Plan() with { ReadinessAdvisor = name };
-        var request = new CreateProgram(Uuid.CreateVersion4(), Uuid.CreateVersion4(), name, plan);
+        var request = new CreateProgram(Uuid.CreateVersion4(), Uuid.CreateVersion4(), name, plan, Uuid.CreateVersion4());
         var actor = ProgramManagementServices.Actor(Uuid.CreateVersion4());
 
         // Act
         var result = await fixture.Operations.CreateAsync(new RequestContext<CreateProgram>(request, actor), CancellationToken.None);
         var history = await fixture.Programs.HistoryAsync(request.TenantId, request.ProgramId);
-        var fact = Assert.IsType<ProgramCreated>(Assert.Single(history.Facts));
+        var fact = Assert.Single(history.Facts.OfType<ProgramCreated>());
         var value = await ProgramReader.ReadContentAsync(fixture.Content, request.TenantId, fact.Content);
         var native = JsonSerializer.SerializeToUtf8Bytes(fact, ComplianceCoreJsonContext.Default.ProgramCreated);
 

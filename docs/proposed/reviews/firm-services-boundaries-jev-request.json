@@ -1,0 +1,22 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "goal": "Maintain independence and deliver an exact attest record while each aggregate holds a small, focused record and truthfully entered services are never refused for causing impairment.",
+    "acceptance_race": "An attest engagement reads an approved evaluation of service history. Before its acceptance commits, a separate service record commits an impairing service. The acceptance does not consult an authoritative participant after the service commit. A projection will eventually show impairment.",
+    "assignment_race": "An engagement assignment reads a clear independence gap, then an impairing service commits before the assignment commits. The assignment does not obtain an authoritative participant outcome after the service commit.",
+    "pending_protocol": "A bounded coordinator orders service-change and protected-action attempts. Each service change first registers a durable pending attempt and is allowed to record truth, even if impairing. While an attempt is unresolved, protected actions remain pending. Attempts and protected actions carry a fence, retries use the same identity, and an unresolved outcome never grants an action. The protocol is a proposal; no storage capability or implementation has yet been established.",
+    "evaluation": "One evaluation stores a rule version, outcome, approval and a compact exact source cut. Each service revision in that cut has a separate immutable evaluation contribution. A source-provided cut and enumeration proof are required; a projection watermark alone does not establish completeness.",
+    "package": "An engagement record package holds its delivery decision and a compact closed source cut. Each request, response, population, sample and evidence version is an independently enumerated entry. A complete manifest is streamed from these entries. No aggregate event embeds the manifest or every entry. Completeness requires proof that every relevant source write through the cut is covered."
+  },
+  "questions": {
+    "acceptance_race_safe": {"type":"noul","instructions":"In acceptance_race, can the attest acceptance commit after the impairing service commit despite the rule forbidding acceptance based on current impaired history?"},
+    "assignment_race_safe": {"type":"noul","instructions":"In assignment_race, can the assignment commit after an impairing service commits?"},
+    "later_gap_suffices": {"type":"noul","instructions":"Does an eventual gap in acceptance_race prevent the already committed acceptance?"},
+    "pending_truth": {"type":"noul","instructions":"Does pending_protocol require rejecting truthful service changes merely because they impair independence?"},
+    "protocol_proven": {"type":"noul","instructions":"Does pending_protocol establish that the required coordinator and fencing mechanism already exist?"},
+    "projection_proof": {"type":"noul","instructions":"In evaluation, does a projection watermark alone prove that every relevant service revision is included?"},
+    "evaluation_roster": {"type":"noul","instructions":"In evaluation, must the evaluation aggregate store one growing list of all service revisions?"},
+    "package_roster": {"type":"noul","instructions":"In package, must the package aggregate store one growing list of every entry?"},
+    "package_completeness": {"type":"noul","instructions":"In package, is proof covering every relevant source write required to claim the streamed manifest is complete?"}
+  }
+}

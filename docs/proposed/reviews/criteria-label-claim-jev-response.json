@@ -1,0 +1,57 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "premature_double": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "empty_fence_blocks": {
+      "type": "noul",
+      "noul": 0.19
+    },
+    "empty_append_blocks": {
+      "type": "noul",
+      "noul": 0.16
+    },
+    "rename_publication": {
+      "type": "noul",
+      "noul": 0.12
+    },
+    "late_leaks": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "late_release_new": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "retry_steals": {
+      "type": "noul",
+      "noul": 0.13
+    },
+    "rename_release": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "changed_is_retry": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "published_rename": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "actor_check_suffices": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "scope_children": {
+      "type": "noul",
+      "noul": 0.06
+    }
+  },
+  "usage": {
+    "input_tokens": 1187,
+    "output_tokens": 225
+  }
+}

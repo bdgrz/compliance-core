@@ -1,0 +1,26 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "format": "An access policy artifact has exactly eight required known fields. Exact canonical bytes use one fixed JSON property order, unescaped fixed ASCII field names and enum strings, lowercase JSON booleans, and no whitespace or trailing bytes. Input is rejected if it has a duplicate key, an unknown key, a missing key, a wrong type, malformed UTF-8, or differs from the canonical bytes. SHA-256 covers those exact bytes, and the activation source binds their immutable reference, length, schema and digest.",
+    "unsupported": "A node supports only evaluator profile V1. The active policy source names an artifact with a profile V2 or an extra field. The node cannot interpret that field's effect on authority.",
+    "samebytes": "An authority activates identical immutable policy bytes in generation 1, then again in a new higher generation 2. A reader observes each generation at a distinct committed source position.",
+    "scheme": "The current evaluator has one global session_required, account_required and global_veto_required triple. FullParticipants requires all three true. BdgrzIdentityOnly requires all three false and its explicit enable flag true.",
+    "developer": "A signed, unexpired token has issuer bdgrz. Its source UserIdentity provider is bdgrz-development. Current policy disallows development identities.",
+    "scope": "A user has a program.manage grant scoped only to existing program A. They request creation of a different program B. Policy requires organization-wide scope for program creation.",
+    "bytes": "A receipt contains a digest matching a node's local string, but the historical activation source and immutable policy bytes are unavailable.",
+    "legacy": "An old program event is replayed under its old format with no policy content digest. No digest is invented and no claim of current authorization is made.",
+    "rollout": "All current writers read a qualified active generation and reject an unsupported profile. A deployment barrier is needed to prevent unsupported writers being routed or activated for new work; its durability and partition behavior have not been qualified."
+  },
+  "questions": {
+    "duplicate": { "type": "noul", "instructions": "Does format accept JSON with the same property twice?" },
+    "unknown": { "type": "noul", "instructions": "May the node in unsupported ignore the extra field and authorize using V1 semantics?" },
+    "same_generation": { "type": "noul", "instructions": "Are the two activations in samebytes the same policy generation?" },
+    "scheme_both": { "type": "noul", "instructions": "Can one fixed boolean triple in scheme satisfy both credential modes?" },
+    "developer_allowed": { "type": "noul", "instructions": "Does developer pass the development-identity policy check?" },
+    "scope_creation": { "type": "noul", "instructions": "Does the grant in scope authorize creating program B?" },
+    "digest_proof": { "type": "noul", "instructions": "Does bytes prove what immutable policy content governed admission?" },
+    "legacy_replay": { "type": "noul", "instructions": "Can legacy be replayed without asserting current policy proof?" },
+    "rollout_proven": { "type": "noul", "instructions": "Does rollout establish that the deployment barrier has been qualified?" },
+    "roster": { "type": "noul", "instructions": "Does format require an aggregate-owned roster of users or grants?" }
+  }
+}

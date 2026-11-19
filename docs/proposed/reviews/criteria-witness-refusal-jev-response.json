@@ -1,0 +1,33 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "pending": {
+      "type": "noul",
+      "noul": 0.21
+    },
+    "exact_live": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "retry": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "delayed_pin": {
+      "type": "noul",
+      "noul": 0.11
+    },
+    "race": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "provider": {
+      "type": "noul",
+      "noul": 0.03
+    }
+  },
+  "usage": {
+    "input_tokens": 1745,
+    "output_tokens": 103
+  }
+}

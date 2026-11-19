@@ -1,6 +1,7 @@
 # Risk and provider oversight
 
-Status: **locked**, 2026-11-03. Hand-authored source of truth for this context.
+Status: **refining**, 2026-11-05. Hand-authored proposal; the authority and
+completeness questions below block implementation of the affected decisions.
 It follows the [context conventions](conventions.md).
 
 ## Purpose
@@ -83,15 +84,22 @@ including retired risks because the identity enforces it (CV-11), one owner and 
 a retirement proposal is approved by a Compliance Lead who did not propose it
 (RP-07).
 
-- Each reassessment requirement is recorded on the risk with its reason. Whether
-  the risk is due for reassessment is computed ([CV-09](conventions.md#reactors)).
+- Each reassessment requirement has its own source-derived identity and stream;
+  a risk does not record an event for every trigger or retain a requirement
+  roster. Whether reassessment is due is derived from individual requirements
+  and assessments ([CV-09](conventions.md#reactors)). This design does not yet
+  prove that an assessment observed all concurrent requirements.
 - Choosing `mitigate` is allowed before any control treatment exists; the residual
   assessment is what needs one.
+- Risk state must not retain a roster of requirements or trigger selections.
+  Exact retry of an individual requirement uses a durable source-derived operation
+  identity without reconstructing all prior requirements in memory. Its precise
+  idempotency mechanism is an implementation gate.
 
 ```mermaid
 stateDiagram-v2
     [*] --> active: IdentifyRisk
-    active --> active: ReviseRisk / AssignRiskOwner / ChooseRiskTreatment / RequireRiskReassessment
+    active --> active: ReviseRisk / AssignRiskOwner / ChooseRiskTreatment
     active --> retiring: ProposeRiskRetirement
     retiring --> active: ReviewRiskRetirement (rejected) / WithdrawRiskRetirement
     retiring --> retired: ReviewRiskRetirement (approved)
@@ -104,7 +112,6 @@ stateDiagram-v2
 | ReviseRisk | Compliance Lead, Contributor or the owner | Active; names the current revision; the identifier is not changed | RiskRevised |
 | AssignRiskOwner | Compliance Lead | Active; owner is a member or an active team | RiskOwnerAssigned |
 | ChooseRiskTreatment | Compliance Lead or the owner | Active; kind and rationale given; differs from the current treatment | RiskTreatmentChosen |
-| RequireRiskReassessment | Reactor | Active; a repeat for the same reason source is a no-op | RiskReassessmentRequired |
 | ProposeRiskRetirement | Compliance Lead or the owner | Active; reason given | RiskRetirementProposed |
 | WithdrawRiskRetirement | Its proposer | Retiring | RiskRetirementWithdrawn |
 | ReviewRiskRetirement | Compliance Lead who did not propose it, or covered by a waiver | Retiring | RiskRetired or RiskRetirementRejected |
@@ -115,35 +122,87 @@ stateDiagram-v2
 | RiskRevised | tenant, risk, revision, title, description, category, revised by |
 | RiskOwnerAssigned | tenant, risk, previous owner, new owner, assigned by |
 | RiskTreatmentChosen | tenant, risk, previous treatment, treatment, rationale, chosen by |
-| RiskReassessmentRequired | tenant, risk, reason (`trigger` with the trigger, or `control_retired` with the control), required at |
 | RiskRetirementProposed | tenant, risk, reason, proposed by |
 | RiskRetirementWithdrawn | tenant, risk, withdrawn by |
 | RiskRetired | tenant, risk, reason, reviewer, waiver (if any) |
 | RiskRetirementRejected | tenant, risk, comments, reviewer |
 
+### RiskReassessmentRequirement
+
+**Identity:** tenant + risk + exact source reason identity, including its source
+episode when a reason can recur.
+
+**Invariant:** one accepted source reason requires reassessment of one risk;
+an exact retry cannot create a second requirement and changed intent cannot
+reuse its identity. This stream owns only that requirement, not the risk's other
+requirements or assessments. Its active-risk admission and late-writer recovery
+are unqualified; a prior read of the risk is not a retirement fence. Requirements
+are retained individually even if a later assessment addresses them.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| RequireRiskReassessment | Reactor | Exact source identity and risk are bound; risk-owner admission is authoritative; exact retry is a no-op; changed intent is refused. Admission protocol remains unresolved. | RiskReassessmentRequired |
+
+| Event | Carries |
+| --- | --- |
+| RiskReassessmentRequired | tenant, requirement, risk, reason (`trigger` with exact trigger, or `control_retired` with exact treatment and control), required at |
+
 ### RiskAssessment
 
 **Identity:** `TenantId` + `AssessmentId`.
 
-**Invariant:** one assessment scores one risk once, in one phase, against the
-program's current method version, and never changes. Score is likelihood ×
+**Invariant:** one assessment begins as a draft and scores one risk once, in one phase, against the
+program's current method version; its finalized score never changes. Score is likelihood ×
 impact (M0-D10).
 
-- A residual assessment is refused unless an inherent assessment of the risk was
-  recorded since its latest reassessment requirement, and, when the treatment is
-  `mitigate`, at least one accepted control treatment exists for the risk
-  (checked against current state).
-- A residual assessment names the completed treatment actions and accepted
-  control treatments it relies on (RP-06).
+- A residual assessment requires an inherent assessment after the latest
+  reassessment requirement and, for `mitigate`, at least one accepted control
+  treatment. These are mutable cross-owner facts: projections and version reads
+  alone cannot authorize the decision. The source owners must confirm exact
+  versions under a protocol that prevents a conflicting mutation between their
+  admission and the assessment decision. The protocol and recovery of unknown
+  outcomes remain an implementation gate; until settled, no residual assessment
+  may claim those current-state guards are enforced.
+- Each treatment or action relied on is a separate assessment reference, not an
+  array on the assessment. It names the exact source identity and version. A
+  historical reference proves what was recorded, not that it remains current.
+  A current reliance requires authoritative source admission and re-evaluation
+  after invalidating source changes (RP-06). Naming the latest known requirement
+  does not prove a concurrent requirement did not commit. One possible historical
+  claim is to record only the exact evidence cited and show later requirements as
+  separate reassessment gaps; that weakens the existing current-at-commit rule
+  and is **not an approved replacement**.
 - A correction is a new assessment; nothing is overwritten.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| RecordRiskAssessment | Compliance Lead, Contributor or the risk owner | `AssessmentId` is new; risk active; names the current method version; likelihood and impact 1–5; rationale given; residual rules above hold | RiskAssessmentRecorded |
+| StartRiskAssessment | Compliance Lead, Contributor or the risk owner | `AssessmentId` is new; risk identified; exact retry is a no-op | RiskAssessmentStarted |
+| RecordRiskAssessment | Compliance Lead, Contributor or the risk owner | Draft; risk active; names the current method version; likelihood and impact 1–5; rationale given; residual rules above hold | RiskAssessmentRecorded |
 
 | Event | Carries |
 | --- | --- |
-| RiskAssessmentRecorded | tenant, assessment, risk, phase, method version, likelihood, impact, score, above appetite, rationale, treatment at the time, control treatments and actions relied on (residual), assessed by |
+| RiskAssessmentStarted | tenant, assessment, risk, started by |
+| RiskAssessmentRecorded | tenant, assessment, risk, phase, method version, likelihood, impact, score, above appetite, rationale, treatment at the time, assessed by; source references are separate records |
+
+### RiskAssessmentReference
+
+**Identity:** `TenantId` + `AssessmentId` + reference kind + source ID.
+
+**Invariant:** one reference records one exact treatment or action revision used
+by one assessment; it neither contains other references nor asserts currentness.
+An individual reference does not prove the reviewer's entire selection was
+captured, or that its source remains current. The assessment's exact admission
+and races with source changes remain subject to the protocol gate above. Do not
+replace that gate with a requirement to scan or settle every reference; any
+product promise of a complete selected set remains a separate open question.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| RecordRiskAssessmentReference | Assessor | Assessment and exact source version identified; source belongs to the same tenant and risk; exact retry is a no-op; changed intent is refused | RiskAssessmentReferenceRecorded |
+
+| Event | Carries |
+| --- | --- |
+| RiskAssessmentReferenceRecorded | tenant, assessment, reference kind, source ID and exact version, recorded by |
 
 ### RiskControlTreatment
 
@@ -197,6 +256,10 @@ made by the right authority and by someone independent of the risk (M0-D10):
   assessor, unless a separation-of-duties waiver covers it (RP-04).
 - Expiry is computed; an expired acceptance makes the risk due for reassessment.
   Revocation ends it early, with a reason.
+- Treatment, latest assessment, authority and independence cross multiple owners.
+  Their coordinated admission and the handling of competing changes are not
+  specified yet. A projection or read of exact versions is insufficient. Do
+  not finalize an acceptance under these guards until the protocol is defined.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
@@ -230,7 +293,7 @@ separate review; the residual assessment that relies on it names it (RP-06).
 | --- | --- |
 | RiskTreatmentActionAdded | tenant, action, risk, description, owner, due date, added by |
 | RiskTreatmentActionChanged | tenant, action, changed fields (description, owner, due date), changed by |
-| RiskTreatmentActionCompleted | tenant, action, evidence (artifact versions), note, completed by |
+| RiskTreatmentActionCompleted | tenant, action, one evidence artifact version, note, completed by |
 | RiskTreatmentActionCancelled | tenant, action, reason, cancelled by |
 
 ### RiskReassessmentTrigger
@@ -239,26 +302,65 @@ separate review; the residual assessment that relies on it names it (RP-06).
 ([CV-02](conventions.md#reactors)).
 
 **Invariant:** one trigger records one event that may change risks in one
-program, and is triaged once by a Compliance Lead, who names the affected risks or
-records why none are affected (RP-05). Only the named risks are required for
-reassessment. An untriaged trigger is a visible readiness gap.
+program. A Compliance Lead determines affected risks or records why none are
+affected (RP-05). Each selection and its result is independently owned below;
+the trigger never carries a roster. Unfinished or indeterminate triage remains
+a visible readiness gap.
 
 - Kind is `boundary_change`, `significant_change`, `incident`,
   `new_material_provider` or `manual`, with the exact source record. An expired
   acceptance and the annual interval need no trigger; both are computed.
 - A tenant-level source (a provider) raises one trigger per active program, with
   an ID derived from the source and the program.
-- A triage is never reopened. A risk it missed is named by a `manual` trigger.
+- A completed triage is never reopened. A subsequently discovered risk is named
+  by a `manual` trigger. The former proposal required a cut and a terminal
+  outcome for **every** selected risk before recording triage: that is an
+  all-child write decision, even if the cut is streamed or segmented, and is
+  withdrawn as a design. RP-05 still requires a lead's affected-risk decision
+  or a reason that none are affected.
+- **Candidate, not approved:** record the lead's triage judgment independently;
+  each affected-risk selection and reassessment requirement has its own durable
+  outcome. The user can see `triage submitted`, a particular requirement's
+  pending/accepted/refused state and any associated gap. A submitted judgment
+  does **not** prove every selected requirement was accepted. Treating submission
+  as completion changes the earlier all-outcomes-terminal guarantee and must be
+  explicitly resolved; the UI and readiness consumer must not conflate them.
+  A `none affected` judgment is the lead's attributed determination, not a proof
+  that an eventually consistent projection contains no selected risks. Authority
+  for late selection, no-affected decisions and competing submissions remains
+  unresolved; unknown target outcomes remain pending.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | RaiseRiskReassessmentTrigger | Reactor, or Compliance Lead (kind `manual`) | `TriggerId` is new; program active; a repeat is a no-op | RiskReassessmentTriggerRaised |
-| TriageRiskReassessmentTrigger | Compliance Lead | Untriaged; named risks are active in the program, or none with a reason | RiskReassessmentTriggerTriaged |
+| TriageRiskReassessmentTrigger | Compliance Lead | **Candidate only:** one attributed triage judgment for the trigger; `none affected` needs a reason; admission and late-selection rules unresolved. Does not claim all individual outcomes settled. | RiskReassessmentTriggerTriaged |
 
 | Event | Carries |
 | --- | --- |
 | RiskReassessmentTriggerRaised | tenant, trigger, program, kind, source record, summary, raised by |
-| RiskReassessmentTriggerTriaged | tenant, trigger, affected risks, reason when none, triaged by |
+| RiskReassessmentTriggerTriaged | **Candidate only:** tenant, trigger, attributed lead judgment, reason when none, triaged by; no child list, set-wide completion proof or claim that each selection was applied |
+
+### RiskTriggerDisposition
+
+**Identity:** `TenantId` + `TriggerId` + `RiskId`.
+
+**Invariant:** one lead's selection of one risk for one trigger has one durable
+outcome. The requirement owner independently accepts the reassessment requirement or
+returns an explicit terminal rejection (for example, retirement); an unknown
+outcome stays pending and is retried using the same operation identity. A rejected
+selection requires an explicit lead disposition; whether it blocks a separate
+completion claim remains an open product rule. This
+record does not establish that all selections have been admitted.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| SelectRiskForTrigger | Compliance Lead | Trigger and risk belong to the same program; source-bound admission is permitted; exact retry is a no-op and changed intent is refused | RiskForTriggerSelected |
+| RecordRiskTriggerOutcome | Reactor | Same selection and operation identity; authoritative risk outcome received; exact retry is a no-op | RiskTriggerOutcomeRecorded |
+
+| Event | Carries |
+| --- | --- |
+| RiskForTriggerSelected | tenant, trigger, risk, source cut, selected by |
+| RiskTriggerOutcomeRecorded | tenant, trigger, risk, operation identity, accepted or rejected outcome, reason, source version |
 
 ### Provider
 
@@ -277,8 +379,8 @@ retired.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| RegisterProvider | Compliance Lead or Contributor | `ProviderId` is new; name unused among active providers; owner given | ProviderRegistered |
-| ReviseProvider | Compliance Lead, Contributor or the owner | Active; names the current revision; name still unused | ProviderRevised |
+| RegisterProvider | Compliance Lead or Contributor | `ProviderId` is new; owner given; duplicate-name check is advisory and creates a gap, not authoritative admission | ProviderRegistered |
+| ReviseProvider | Compliance Lead, Contributor or the owner | Active; names the current revision; duplicate-name check is advisory and creates a gap | ProviderRevised |
 | AssignProviderOwner | Compliance Lead | Active | ProviderOwnerAssigned |
 | ClassifyProviderMateriality | Compliance Lead | Active; basis rules hold; differs from the current classification | ProviderMaterialityClassified |
 | SetProviderSubservice | Compliance Lead | Active; `inclusive` needs a rationale | ProviderSubserviceSet |
@@ -286,12 +388,31 @@ retired.
 
 | Event | Carries |
 | --- | --- |
-| ProviderRegistered | tenant, provider, name, kind, services used, owner, registered by |
-| ProviderRevised | tenant, provider, revision, name, kind, services used, revised by |
+| ProviderRegistered | tenant, provider, name, kind, owner, registered by |
+| ProviderRevised | tenant, provider, revision, name, kind, revised by |
 | ProviderOwnerAssigned | tenant, provider, previous owner, new owner, assigned by |
 | ProviderMaterialityClassified | tenant, provider, previous materiality, materiality, basis, rationale, first time material, classified by |
 | ProviderSubserviceSet | tenant, provider, subservice, boundary treatment, rationale, set by |
 | ProviderRetired | tenant, provider, reason, retired by |
+
+### ProviderServiceUse
+
+**Identity:** `TenantId` + `ProviderId` + `ServiceId`.
+
+**Invariant:** one independently governed provider-service relationship is
+active or ended. It contains no roster of services. This records the service
+used by the organization, not a claim that a provider report covers it; that
+claim belongs to an exact report item and its review outcome.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| RecordProviderServiceUse | Compliance Lead or Contributor | Provider and service identified; relationship is not active; exact retry is a no-op | ProviderServiceUseRecorded |
+| EndProviderServiceUse | Compliance Lead or Contributor | Relationship active; reason given; exact retry is a no-op | ProviderServiceUseEnded |
+
+| Event | Carries |
+| --- | --- |
+| ProviderServiceUseRecorded | tenant, provider, service, recorded by |
+| ProviderServiceUseEnded | tenant, provider, service, reason, ended by |
 
 ### ProviderAssuranceReport
 
@@ -305,46 +426,107 @@ names the exact revision it read.
   Type 2 report has a period; the others have a point-in-time date.
 - A bridge letter (period and date) is added as a correction when the report
   period ends before the organization's need.
+- Covered services, exceptions, CUECs and noted gaps are separate report item
+  records bound to an exact report revision and source location; the report
+  retains no item roster. The artifact remains evidence, not aggregate state.
+  Each item is independently identified and has bounded content.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | RecordProviderAssuranceReport | Compliance Lead or Contributor | `ReportId` is new; provider active; fields complete for the kind; artifact version is accepted evidence | ProviderAssuranceReportRecorded |
-| CorrectProviderAssuranceReport | Compliance Lead or Contributor | Names the current revision; reason given | ProviderAssuranceReportCorrected |
+| CorrectProviderAssuranceReport | Compliance Lead or Contributor | Names the current revision; reason given; only scalar fields or one artifact reference, never an item list | ProviderAssuranceReportCorrected |
 
 | Event | Carries |
 | --- | --- |
-| ProviderAssuranceReportRecorded | tenant, report, provider, revision, kind, period or as-of date, issuing firm, opinion, covered services, exceptions, CUECs, coverage gaps noted, bridge letter, artifact version, recorded by |
+| ProviderAssuranceReportRecorded | tenant, report, provider, revision, kind, period or as-of date, issuing firm, opinion, bridge letter reference, artifact version, recorded by |
 | ProviderAssuranceReportCorrected | tenant, report, revision, changed fields, reason, corrected by |
 
 ### ProviderReview
 
 **Identity:** `TenantId` + `ReviewId`.
 
-**Invariant:** one review records one person's due-diligence conclusion on one
-provider from one exact report revision, and never changes (M0-D11):
+**Invariant:** one review starts as a draft and records one person's due-diligence conclusion on one
+provider from one exact report revision; the finalized conclusion never changes (M0-D11):
 
 - The evidence kind is the report's kind. A `questionnaire` review states that
   the provider has no SOC 2 report or ISO/IEC 27001 certificate (RP-10).
 - The next review is due after the review date and, for a material provider,
   within 12 months of it. A material provider whose latest review's due date has
   passed is a computed readiness gap.
-- Conclusion is `acceptable`, `acceptable_with_gaps` or `not_acceptable`. Coverage
-  gaps found are listed in the review and become coverage gap records.
+- Conclusion is `acceptable`, `acceptable_with_gaps` or `not_acceptable`. Each
+  gap and each CUEC adoption is a separate result tied to this review and the
+  relevant exact report item; neither is an array on the review. A result
+  naming a gap directly creates one independently owned coverage gap.
+- The former candidate finalized a review only after a cut and terminal results
+  for **all** report items. That is an all-child write decision and is withdrawn;
+  paging the cut or splitting admissions does not change it. M0-D11 requires the
+  report fields and a review, but does not by itself establish that every piece
+  of the source artifact must be represented by a separate application record.
+- **Candidate, not approved:** a reviewer records an attributed conclusion on
+  one exact source artifact and report revision; individual extraction and gap
+  decisions remain separate. This can record what the person reviewed, but does
+  not mechanically prove every exception or CUEC was extracted, nor that every
+  item has a result. If the product promises complete extraction or settlement
+  as a precondition, that stronger guarantee remains unresolved; do not present
+  the candidate as equivalent. A human's attestation must remain distinguishable
+  from a mechanically verified item universe.
+- A possible local precondition for `acceptable_with_gaps` is one immutable,
+  accepted, exact-report gap result as a witness. The witness proves one gap,
+  not all gaps. Gap-result acceptance, report correction/retirement races and
+  exact review authorization remain unqualified. No conclusion may assert more
+  than the record and its admission actually establish.
 - The vendor-review control occurrence for the provider cites the review as
   evidence (M0-D19, RP-11).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| RecordProviderReview | Compliance Lead or Contributor | `ReviewId` is new; provider active; names the report's current revision; rules above hold; `acceptable_with_gaps` lists at least one gap | ProviderReviewRecorded |
+| StartProviderReview | Compliance Lead or Contributor | `ReviewId` is new; provider and exact report revision identified; exact retry is a no-op | ProviderReviewStarted |
+| RecordProviderReview | Compliance Lead or Contributor | **Candidate only:** draft; provider/report admission and exact report revision established; reviewer attributes the conclusion and any required one-gap witness. Cross-owner authority and product semantics remain unresolved. | ProviderReviewRecorded |
 
 | Event | Carries |
 | --- | --- |
-| ProviderReviewRecorded | tenant, review, provider, report, report revision, evidence kind, no SOC 2 or ISO statement (questionnaire), conclusion, gaps found, CUECs adopted, next review due, reviewed by |
+| ProviderReviewStarted | tenant, review, provider, report, report revision, started by |
+| ProviderReviewRecorded | **Candidate only:** tenant, review, provider, report, report revision, evidence kind, no SOC 2 or ISO statement (questionnaire), attributed conclusion, optional one accepted gap witness, next review due, reviewed by; no item list or all-results proof |
+
+### ProviderReportItem
+
+**Identity:** `TenantId` + `ReportId` + report revision + item ID.
+
+**Invariant:** one item describes one covered service, exception, CUEC or noted
+gap from one exact source revision and location. It is not a list of other items.
+A correction creates source-bound items for the new revision; earlier items stay
+historical. A link to an artifact location does not prove that all source items
+have been captured.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| RecordProviderReportItem | Compliance Lead or Contributor | Exact report revision and source location exist; item ID is new; exact retry is a no-op; changed intent is refused | ProviderReportItemRecorded |
+
+| Event | Carries |
+| --- | --- |
+| ProviderReportItemRecorded | tenant, report, report revision, item, kind, bounded description, exact source location, recorded by |
+
+### ProviderReviewItemResult
+
+**Identity:** `TenantId` + `ReviewId` + item ID.
+
+**Invariant:** one independently recorded result states a reviewer's disposition
+of one exact report item, including CUEC adoption or a gap where applicable.
+No result contains a collection. The result alone proves neither complete report
+extraction nor complete review.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| RecordProviderReviewItemResult | Reviewer | Review and exact source-bound item belong to the same report revision; same ID and intent retry is a no-op; changed intent is refused | ProviderReviewItemResultRecorded |
+
+| Event | Carries |
+| --- | --- |
+| ProviderReviewItemResultRecorded | tenant, review, item, exact report revision, disposition, optional one gap ID, rationale, recorded by |
 
 ### ProviderCoverageGap
 
 **Identity:** `TenantId` + `GapId`; a gap from a review takes an ID derived from
-the review and the gap's position in it (CV-02).
+the review and its independently identified gap result (CV-02).
 
 **Invariant:** one gap records one uncovered service or period of one provider,
 open until a Compliance Lead closes it with a reason and evidence such as a later
@@ -352,15 +534,15 @@ report. Linking a risk acceptance never closes it (RP-12).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| RecordProviderCoverageGap | Reactor on ProviderReviewRecorded, or Compliance Lead | `GapId` is new; provider active; a repeat is a no-op | ProviderCoverageGapRecorded |
+| RecordProviderCoverageGap | Reactor on ProviderReviewItemResultRecorded, or Compliance Lead | `GapId` is new; provider active; a repeat is a no-op | ProviderCoverageGapRecorded |
 | LinkProviderCoverageGapToRiskAcceptance | Compliance Lead | Open; acceptance accepted and unexpired; not already linked | ProviderCoverageGapLinkedToRiskAcceptance |
 | CloseProviderCoverageGap | Compliance Lead | Open; reason and evidence given | ProviderCoverageGapClosed |
 
 | Event | Carries |
 | --- | --- |
-| ProviderCoverageGapRecorded | tenant, gap, provider, source review (if any), uncovered services or period, description, recorded by |
+| ProviderCoverageGapRecorded | tenant, gap, provider, source review (if any), one uncovered service or one period, description, recorded by |
 | ProviderCoverageGapLinkedToRiskAcceptance | tenant, gap, acceptance, linked by |
-| ProviderCoverageGapClosed | tenant, gap, reason, evidence (report revision or artifact versions), closed by |
+| ProviderCoverageGapClosed | tenant, gap, reason, one evidence reference (report revision or artifact version), closed by |
 
 ## Flows
 
@@ -400,8 +582,11 @@ flowchart LR
     P([ProviderMaterialityClassified, first time material]) --> R1
     R1 --> C1[/RaiseRiskReassessmentTrigger/] --> E1([RiskReassessmentTriggerRaised])
     E1 -. "untriaged: readiness gap" .-> G1[[Readiness]]
-    E1 -. checks .-> C2[/TriageRiskReassessmentTrigger/] --> E2([RiskReassessmentTriggerTriaged])
-    E2 --> R2{{"Require each named risk (ID from trigger and risk)"}} --> C3[/RequireRiskReassessment/] --> E3([RiskReassessmentRequired])
+    E1 -. selection .-> C5[/SelectRiskForTrigger/] --> E5([RiskForTriggerSelected])
+    E5 --> R2{{"Require this risk"}} --> C3[/RequireRiskReassessment/] --> E3([RiskReassessmentRequired])
+    E3 --> C6[/RecordRiskTriggerOutcome/] --> E6([RiskTriggerOutcomeRecorded])
+    E1 -. "candidate lead judgment; separate from individual outcomes" .-> C2[/TriageRiskReassessmentTrigger/] --> E2([RiskReassessmentTriggerTriaged])
+    E6 -. "per-risk acceptance or refusal; pending otherwise" .-> G1
     E3 -. "due until a later residual assessment" .-> C4[/RecordRiskAssessment/]
 ```
 
@@ -412,8 +597,13 @@ flowchart LR
     C1[/RegisterProvider/] --> E1([ProviderRegistered])
     E1 -. checks .-> C2[/ClassifyProviderMateriality/] --> E2([ProviderMaterialityClassified])
     C3[/RecordProviderAssuranceReport/] --> E3([ProviderAssuranceReportRecorded])
-    E3 -. "exact revision" .-> C4[/RecordProviderReview/] --> E4([ProviderReviewRecorded])
-    E4 --> R1{{"Record each gap found (ID from review)"}} --> C5[/RecordProviderCoverageGap/] --> E5([ProviderCoverageGapRecorded])
+    E3 -. "exact revision" .-> C8[/StartProviderReview/] --> E8([ProviderReviewStarted])
+    E3 -. "exact revision" .-> C6[/RecordProviderReportItem/] --> E6([ProviderReportItemRecorded])
+    E8 -. draft .-> C7[/RecordProviderReviewItemResult/]
+    E6 -. "one item" .-> C7 --> E7([ProviderReviewItemResultRecorded])
+    E7 --> R1{{"Record this gap, if any"}} --> C5[/RecordProviderCoverageGap/] --> E5([ProviderCoverageGapRecorded])
+    E8 -. "candidate: attributed conclusion for exact source" .-> C4[/RecordProviderReview/] --> E4([ProviderReviewRecorded])
+    E7 -. "optional one-gap witness; not a complete set" .-> C4
     E4 -. "cited as evidence" .-> X1[[Control environment: vendor review occurrence]]
     E4 -. "not acceptable: a person may raise" .-> X2[[Assurance work: RaiseFinding]]
 ```
@@ -433,7 +623,7 @@ flowchart LR
 | Gap | Shown when |
 | --- | --- |
 | Risk due for reassessment | A requirement after the latest residual assessment, no residual assessment within the interval, or an expired acceptance |
-| Untriaged trigger | A reassessment trigger has no triage |
+| Untriaged trigger | A reassessment trigger has no qualified triage decision; an independent submitted judgment does not by itself prove selected requirements are settled. Pending/refused per-risk outcomes remain visible as separate gaps. |
 | Overdue treatment action | Past its due date and open |
 | Unclassified provider | An active provider has no materiality classification |
 | Provider review due | A material provider has no review, or its latest review's due date has passed |
@@ -450,8 +640,9 @@ flowchart LR
 
 ## Decisions
 
-Jev answers are from `jev-1.14.0`, 2026-11-03. A yes is ≥ 0.8 and a no is ≤ 0.2.
-Anything in between is settled by common sense, with the reasoning stated.
+Jev answers are from `jev-1.14.0`, 2026-11-03. The historical review used 0.8
+and 0.2 as triage thresholds, not as measured probabilities of design correctness.
+Conflicting or inconclusive answers remain open until resolved with evidence.
 
 | ID | Decision | Evidence |
 | --- | --- | --- |
@@ -471,7 +662,27 @@ Anything in between is settled by common sense, with the reasoning stated.
 
 ## Open questions
 
-None at this time.
+- Decide whether the lead's triage submission may be recorded while individually
+  selected requirements remain pending, or whether a stronger all-outcomes
+  completion promise is required. The old collection-wide cut is withdrawn.
+  Specify no-affected/late-selection authority, exact per-risk refusal, unknown
+  outcome, deduplication and recovery. Do not let a projected zero prove absence.
+- Resolve whether the product requires mechanically complete report extraction
+  before a review can be recorded. A conclusion on an exact artifact is a person's
+  attributed judgment, not proof every required item exists or has an outcome.
+  Define correction, evidence provenance and single-gap witness admission; keep
+  any stronger completion semantics open until an acceptable local design exists.
+- Define atomic source-owner admission and recovery for assessment and
+  acceptance guards, including risk retirement, new reassessment requirement,
+  treatment retirement, new assessment and appetite changes. Exact versions and
+  eventual invalidation alone cannot prove facts were current at commit. Until
+  settled, current-state decisions are not implementation-ready.
+- Specify provider-service association authority and its relationship to report
+  items; no Provider event may acquire an unbounded `services used` list.
+- Prove one-reason-per-risk requirement identity, active-risk admission, exact
+  retry and ordering against concurrent assessments and retirements; the latter
+  cannot be decided from the last projection observed. Specify finite content
+  bounds for individual authored fields at implementation.
 
 ## Superseded owners
 
@@ -493,3 +704,19 @@ None at this time.
 | KeepProviderNamesUniqueReactor, ProviderChangeAcceptedReactor, ProviderNameChangeProcess | Current-state check (RP-09) |
 | ProviderReviewReactor, ProviderReviewProcess, RecordProviderAssuranceReportReviewReactor | `RecordProviderReview` |
 | ProviderRiskAcceptanceLinkReactor, KeepRiskAcceptanceWithProviderGapReactor | `LinkProviderCoverageGapToRiskAcceptance` |
+
+## Boundary review, 2026-11-05
+
+[Jev request](../reviews/risk-boundaries-jev-request.json) and
+[response](../reviews/risk-boundaries-jev-response.json) retain the exact live
+probe. Jev judged the unfenced trigger completeness claim 0.09 and its race
+0.93; separate report items alone prove completeness 0.05; bare version reads
+prove currentness at commit 0.10. It assessed the explicitly historical claim
+0.98 and the fixed 5×5 method bound 0.97. These are advisory signals, not proof.
+The unresolved protocols above are explicit release gates. The method remains
+fixed-size; ordinary limits on each textual description still apply.
+
+The [independent-decision review](../reviews/risk-independent-decisions.md)
+records the narrower triage, provider-review and per-reason candidates, their
+product-semantic differences, and the adversarial Jev results. These candidates
+do not authorize implementing the still-unqualified coordination.

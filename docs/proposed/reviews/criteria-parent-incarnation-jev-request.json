@@ -1,0 +1,17 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "candidate": "A point of focus stores an immutable reference to one exact parent criterion incarnation. It is effective only while that exact parent incarnation is included in the draft. Removing the parent ends that incarnation and makes its points of focus ineffective without editing them. Re-adding the same identifier creates a new incarnation. Determining a point of focus's effective status reads its exact parent; it does not enumerate other points of focus. All acceptance and inclusion decisions require an authoritative, correctly ordered source, which is not yet specified.",
+    "example": "Point of focus F references parent criterion P incarnation 1. P incarnation 1 is removed. Later P is re-added as incarnation 2. F is not revised and still references incarnation 1.",
+    "witness_race": "A publisher reads criterion P as included. A different writer removes that exact incarnation of P. The publisher then publishes using the earlier read as its only evidence. There is no common ordered publication boundary and no cross-stream transaction.",
+    "draft_correction": "A draft has a misspelled parent criterion. The operator removes its old incarnation and creates a corrected incarnation. The operator then recreates or revises affected points of focus to reference the corrected exact incarnation. The edition identity stays the same."
+  },
+  "questions": {
+    "old_ref_reactivated": {"type": "noul", "instructions": "In example, does re-adding P as incarnation 2 make F effective again?"},
+    "remove_mutates_children": {"type": "noul", "instructions": "Under candidate, does removing the parent require writing a change to each point of focus?"},
+    "read_other_children": {"type": "noul", "instructions": "Under candidate, does determining F's effective status require reading all other points of focus?"},
+    "old_witness_proves_at_publish": {"type": "noul", "instructions": "In witness_race, does the earlier read prove P is still included at publication?"},
+    "same_edition_correction": {"type": "noul", "instructions": "In draft_correction, did the operator need to create a new edition identity?"},
+    "old_f_preserved": {"type": "noul", "instructions": "In example, does F still exist as a recorded point of focus after the parent was removed?"}
+  }
+}

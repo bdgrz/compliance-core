@@ -1,0 +1,13 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "confirmed": "After the user's durable mark was verified, the platform authority completes the appointment, making the user a confirmed primary operator.",
+    "vacated": "After a released primary's exact target unmark was verified, the platform authority makes the previously occupied seat available for a new appointment."
+  },
+  "questions": {
+    "designated": {"type":"noul","instructions":"Does PrimaryPlatformOperatorDesignated naturally and precisely name state.confirmed as a completed appointment?"},
+    "appointed": {"type":"noul","instructions":"Does PrimaryPlatformOperatorAppointed naturally and precisely name state.confirmed as a completed appointment?"},
+    "seat_vacated": {"type":"noul","instructions":"Does PrimaryPlatformOperatorSeatVacated naturally and precisely name state.vacated?"},
+    "seat_cleared": {"type":"noul","instructions":"Does PrimaryPlatformOperatorSeatCleared naturally and precisely name state.vacated?"}
+  }
+}

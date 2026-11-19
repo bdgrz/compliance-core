@@ -27,10 +27,15 @@ Status: decided, 2026-09-22. Decision owner: Jeff Repanich, product owner.
 
 ## Ownership and publication update — 2026-11-05
 
-CR-09/10 in [Criteria](../contexts/criteria.md) retain one independent criterion
-owner per edition and identifier. Bounded admission windows serialize structural
-changes and publication; the exact verified frozen source cut identifies the
-accepted set. No edition-wide manifest or mutable roster replaces criterion outcomes.
+CR-09/10 in [Criteria](../contexts/criteria.md) select one independent entry owner
+per edition and identifier. Removing a draft parent makes references to that exact
+incarnation ineffective; re-adding it does not silently restore them. Publication
+uses one pinned criterion witness and a committed edition cut, without an
+edition-wide manifest, child roster or all-child write decision. A program may
+select a validly published edition while unrelated entry outcomes remain pending;
+coverage is explicit. The exact source, admission and fencing implementation
+remain to be qualified. The earlier admission windows and operation chain are
+not the selected design.
 The existing seed ID, partial-coverage disclosures and license boundary remain.
 
 ## Repository check

@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "projected_zero": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "read_rollup": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "gate_still_global": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "weakened_guard": {
+      "type": "noul",
+      "noul": 0.73
+    },
+    "previous_snapshot": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "latest_plan": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "pending_unknown": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "key_collision": {
+      "type": "noul",
+      "noul": 0.85
+    },
+    "cut_claim": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "unknown_verdict": {
+      "type": "noul",
+      "noul": 0.21
+    }
+  },
+  "usage": {
+    "input_tokens": 765,
+    "output_tokens": 183
+  }
+}

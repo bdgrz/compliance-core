@@ -1,0 +1,57 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "policy": "An authenticated active tenant member may create a program only if a coherent, fresh, source-authoritative admission decision proves effective organization-wide program.manage for that actor at the decision instant. Admission is a transient read decision, not a durable receipt or separate aggregate. If admission succeeds and the same uninterrupted attempt appends ProgramCreated, permission revocation ordered after admission does not cancel that attempt. A crash before a known commit discards transient admission and requires a fresh authorization before any new append. An append with unknown outcome is reconciled first. Current authorization is required before a retry response is disclosed.",
+    "earlier_revocation": "A permission revocation has committed and is visible to the authoritative admission service before the admission decision begins. A cache still shows the old permission.",
+    "later_revocation": "The coherent source-authoritative admission decision is allow at time A. The same process remains running; permission is revoked at time B after A and before ProgramCreated is appended. The request intent has not changed.",
+    "crash": "A coherent admission decision was allow, then the process crashes before the append has started. The actor is revoked while the process is down. No ProgramCreated event exists.",
+    "unknown": "The append response is lost. The client retries after revocation. It is unknown whether ProgramCreated committed; no source reconciliation has run.",
+    "fixed_path": "An active tenant, current allowed member episode, and one complete valid direct-primary or team-membership-to-active-org-wide-role-to-program.manage permission path are all proven coherent at the same authoritative admission point. Every global restriction and source capable of revoking this allow is included in that proof.",
+    "stale_path": "A query checks membership at time 1; the member is suspended at time 2; it checks role and permission at time 3 and combines the two reads into an allow without a shared coherent cut.",
+    "program_scope": "The member has program.manage only for an existing program P, and has no organization-wide grant.",
+    "no_witness": "An eventually consistent index finds no grant but may be behind source. The authority service cannot prove a valid positive path or a complete current negative result.",
+    "data": "The initial create appended successfully. The caller is now revoked and sends the same retry to retrieve its original response."
+  },
+  "questions": {
+    "earlier_must_deny": {
+      "type": "noul",
+      "instructions": "In state.earlier_revocation, can the stale cached permission safely authorize admission?"
+    },
+    "later_finish": {
+      "type": "noul",
+      "instructions": "Under state.policy and state.later_revocation, may the same uninterrupted attempt append ProgramCreated despite the later revocation?"
+    },
+    "crash_reauth": {
+      "type": "noul",
+      "instructions": "Under state.policy and state.crash, can the restarted process use the old in-memory allow without current reauthorization?"
+    },
+    "unknown_reconcile": {
+      "type": "noul",
+      "instructions": "Under state.policy and state.unknown, should the system determine whether the original program append committed before deciding to attempt a new append?"
+    },
+    "path_sufficient": {
+      "type": "noul",
+      "instructions": "Under state.fixed_path, can this one coherent positive path establish the specified org-wide authorization without enumerating all grants?"
+    },
+    "stale_coherent": {
+      "type": "noul",
+      "instructions": "Under state.stale_path, do the two successful reads prove the member was active and permitted at one current instant?"
+    },
+    "scope_sufficient": {
+      "type": "noul",
+      "instructions": "Under state.program_scope, does access to program P authorize creating a different program?"
+    },
+    "no_path_absence": {
+      "type": "noul",
+      "instructions": "Under state.no_witness, does index absence conclusively prove the member has no source grant?"
+    },
+    "retry_response": {
+      "type": "noul",
+      "instructions": "Under state.policy and state.data, may the caller receive the original response without current authorization?"
+    },
+    "contract_proof": {
+      "type": "noul",
+      "instructions": "Does merely naming an authoritative admission service establish that it implements state.policy correctly?"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "exact_noop": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "changed_conflict": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "spoof_accept": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "source_verifies": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "isolation": {
+      "type": "noul",
+      "noul": 0.97
+    },
+    "foreign_replay": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "both_commit": {
+      "type": "noul",
+      "noul": 0.09
+    },
+    "hash_proof": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "parent_roster": {
+      "type": "noul",
+      "noul": 0.05
+    }
+  },
+  "usage": {
+    "input_tokens": 2247,
+    "output_tokens": 164
+  }
+}

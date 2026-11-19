@@ -1,49 +1,49 @@
 using System.Globalization;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Persistence;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Programs.Events;
 using Bdgrz.Compliance.Features.Programs.History;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Projections;
 using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Events;
+using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
-using Bdgrz.Compliance.Features.Programs.Events;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.Programs.Projections;
-using Bdgrz.Compliance.Features.Readiness.Aggregates;
-using Bdgrz.Compliance.Features.Readiness.Events;
-using Bdgrz.Compliance.Features.Readiness.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
-using Bdgrz.Compliance.Features.Content.Persistence;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Programs.Readers;
 
 sealed class CassieProgramDirectory(CassieProjectionDatabase database, IImmutableContentStore content)
@@ -69,11 +69,13 @@ sealed class CassieProgramDirectory(CassieProjectionDatabase database, IImmutabl
                                     "Record the point-in-time examination outcome and Type II plan."),
                                 new ProgramStageView("type_ii",
                                     "Close the operating period and record the examination outcome."),
-                            ]), ct)
+                            ])
+                        { CriteriaEditionId = created.CriteriaEditionId }, ct)
                     .ConfigureAwait(false);
                 await InsertRevisionAsync(
                         new ProgramRevisionView(created.ProgramId, 1, creation.Name, creation.Plan,
-                            created.ActorMemberId, created.ActorDisplay, created.ChangedAt), ct)
+                            created.ActorMemberId, created.ActorDisplay, created.ChangedAt)
+                        { CriteriaEditionId = created.CriteriaEditionId }, ct)
                     .ConfigureAwait(false);
                 break;
             case ProgramRevised revised:

@@ -1,0 +1,17 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "reserve": "The platform primary authority reserves one of its two seats for a specific user, grant episode and unique generation; the user's owner has not accepted the primary mark yet.",
+    "confirm": "The platform primary authority confirms a reserved primary seat after verifying the exact target user's committed primary mark acceptance.",
+    "refuse": "The platform primary authority closes a pending seat reservation after verifying that the target owner durably fenced that exact primary mark generation.",
+    "release": "The platform primary authority accepts release of a confirmed primary seat after establishing a different confirmed primary, but target-side unmark cleanup has not completed.",
+    "cleanup": "The platform primary authority has verified the exact target-side unmark of a previously released primary, so its seat is free."
+  },
+  "questions": {
+    "reserve": {"type":"noul","instructions":"Does PrimaryPlatformOperatorSeatReserved clearly name state.reserve without implying a confirmed primary?"},
+    "confirm": {"type":"noul","instructions":"Does PrimaryPlatformOperatorSeatConfirmed precisely name state.confirm?"},
+    "refuse": {"type":"noul","instructions":"Does PrimaryPlatformOperatorSeatRefused clearly name state.refuse as the outcome of a fenced reservation?"},
+    "release": {"type":"noul","instructions":"Does PrimaryPlatformOperatorSeatReleased clearly name state.release without implying cleanup has completed?"},
+    "cleanup": {"type":"noul","instructions":"Does PrimaryPlatformOperatorSeatCleanupCompleted clearly name state.cleanup?"}
+  }
+}

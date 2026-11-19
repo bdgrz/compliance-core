@@ -1,42 +1,43 @@
-using Bdgrz.Compliance.Features.Applications.Queries;
-using Bdgrz.Compliance.Features.AuditPopulations.Queries;
-using Bdgrz.Compliance.Features.AuditorRequests.Commands;
-using Bdgrz.Compliance.Features.AuditorRequests.Queries;
-using Bdgrz.Compliance.Features.Evidence.Commands;
-using Bdgrz.Compliance.Features.Evidence.Queries;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Queries;
-using Bdgrz.Compliance.Features.Responsibilities.Commands;
-using Bdgrz.Compliance.Features.Responsibilities.Queries;
-using Bdgrz.Compliance.Features.Retention.Commands;
-using Bdgrz.Compliance.Features.Retention.Queries;
-using Bdgrz.Compliance.Features.SystemDescription.Commands;
-using Bdgrz.Compliance.Features.SystemDescription.Queries;
-using Bdgrz.Compliance.Features.UserIdentities.Commands;
-using Bdgrz.Compliance.Features.UserIdentities.Queries;
-using Bdgrz.Compliance.Features.Applications.Commands;
-using Bdgrz.Compliance.Hosting.NativeResponses;
-using Bdgrz.Compliance.Hosting;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance;
-using Cntryl.Portia;
-using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Queries;
+using Bdgrz.Compliance.Features.AuditorRequests.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Queries;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Queries;
+using Bdgrz.Compliance.Features.Criteria.Services;
+using Bdgrz.Compliance.Features.Evidence.Commands;
 using Bdgrz.Compliance.Features.Evidence.Handlers;
+using Bdgrz.Compliance.Features.Evidence.Queries;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Queries;
+using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.NativeOperations.Contracts;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Queries;
+using Bdgrz.Compliance.Features.Retention.Commands;
 using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Retention.Queries;
+using Bdgrz.Compliance.Features.SystemDescription.Commands;
 using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Queries;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
+using Bdgrz.Compliance.Features.UserIdentities.Queries;
 using Bdgrz.Compliance.Features.UserIdentities.Readers;
-
-using Bdgrz.Compliance.Features.NamedRecords;
+using Bdgrz.Compliance.Hosting;
+using Bdgrz.Compliance.Hosting.NativeResponses;
+using Cntryl.Portia;
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi;
 
 var hostMode = ComplianceHostModeParser.Parse(
     Environment.GetEnvironmentVariable("COMPLIANCE_HOST_MODE"));
@@ -106,7 +107,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<OffboardTenant>(tool => tool.Destructive())
         .AddMcpTool<GrantPlatformOperator>()
         .AddMcpTool<RevokePlatformOperator>(tool => tool.Destructive())
+        .AddMcpTool<DesignatePlatformPrimary>(tool => tool.Idempotent())
+        .AddMcpTool<ReleasePlatformPrimary>(tool => tool.Idempotent())
         .AddMcpTool<ListPlatformOperators>(tool => tool.ReadOnly())
+        .AddMcpTool<GetPlatformOperatorState>(tool => tool.ReadOnly())
         .AddMcpTool<ReviseMethodologyTemplateDraftV3>(tool => tool.Idempotent())
         .AddMcpTool<DiscardMethodologyTemplateDraft>(tool => tool.Destructive())
         .AddMcpTool<StartMethodologyTemplateDraft>(tool => tool.Idempotent())
@@ -131,6 +135,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ListCriteriaCatalogEntries>(tool => tool.ReadOnly())
         .AddMcpTool<GetCriteriaCatalogEntry>(tool => tool.ReadOnly())
         .AddMcpTool<ExportCriteriaCatalogEntries>(tool => tool.ReadOnly())
+        .AddMcpTool<ListRuntimeCriteriaEditions>(tool => tool.ReadOnly())
+        .AddMcpTool<GetRuntimeCriteriaEdition>(tool => tool.ReadOnly())
+        .AddMcpTool<ListRuntimeCriteriaEntries>(tool => tool.ReadOnly())
+        .AddMcpTool<GetRuntimeCriteriaEntry>(tool => tool.ReadOnly())
+        .AddMcpTool<ListRuntimeCriteriaDisclosures>(tool => tool.ReadOnly())
         .AddMcpTool<RegisterFirmStaff>(tool => tool.Idempotent())
         .AddMcpTool<SetFirmStaffStatus>(tool => tool.Idempotent())
         .AddMcpTool<GetFirmStaffDirectory>(tool => tool.ReadOnly())
@@ -449,6 +458,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetWorkDigestPreference>(tool => tool.ReadOnly())
         .AddMcpTool<SetWorkDigestPreference>()
         .AddMcpHttp();
+    portia.AddCriteriaAuthoringMcpTools();
+    builder.Services.AddScoped<HttpAdmissionCredentialResolver>();
+    builder.Services.AddScoped<McpHttpAdmissionCredentialResolver>();
+    builder.Services.AddScoped<ITrustedAdmissionCredentialResolver, TransportAdmissionCredentialResolver>();
+    builder.Services.AddScoped<IAccessAdmissionAuthority, CodePolicyAdmissionAuthority>();
     builder.Services.AddScoped<CaptureEvidenceArtifactHandler>();
     builder.Services.ConfigureHttpJsonOptions(options =>
     {
@@ -459,6 +473,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     if (hostMode.RunsWorkers())
     {
         portia.AddWorkers();
+        builder.Services.AddHostedService<PlatformCriteriaSeedWorker>();
         builder.Services.AddHostedService<WorkDigestDispatchBackgroundService>();
         builder.Services.AddHostedService<ProcessSweep>();
     }
@@ -495,6 +510,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
 
     app.MapPortiaOpenApi();
     app.MapPortiaMcp(AuthorizationDenialLog.McpPath).RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser);
+    app.MapCriteriaAuthoringEndpoints();
 
     app.MapComplianceHealthChecks();
     app.MapGet(
@@ -580,13 +596,22 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaPut<OffboardTenant, UnitResult>("/api/v1/tenants/{tenant_id}/offboarding/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<OffboardTenant>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
-    app.MapPortiaPut<GrantPlatformOperator>("/api/v1/platform/operator-grants/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<GrantPlatformOperator>()
+    app.MapPortiaPut<GrantPlatformOperator>("/api/v1/platform/operator-grants/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
-    app.MapPortiaPut<RevokePlatformOperator>("/api/v1/platform/operator-revocations/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RevokePlatformOperator>()
+    app.MapPortiaPut<RevokePlatformOperator>("/api/v1/platform/operator-revocations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
-    app.MapPortiaGet<ListPlatformOperators, PlatformOperatorRosterView>("/api/v1/platform/operators")
+    app.MapPortiaPut<DesignatePlatformPrimary>("/api/v1/platform/operators/{user_id}/primary-designations/{command_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Platform operators");
+    app.MapPortiaPut<ReleasePlatformPrimary>("/api/v1/platform/operators/{user_id}/primary-releases/{command_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Platform operators");
+    app.MapPortiaGet<ListPlatformOperators, Page<PlatformOperatorDirectoryEntry>>("/api/v1/platform/operators")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Platform operators");
+    app.MapPortiaGet<GetPlatformOperatorState, PlatformOperatorStateView>("/api/v1/platform/operators/{user_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
     app.MapPortiaGet<GetMethodologyTemplateLine, MethodologyTemplateLineView>(
@@ -715,6 +740,26 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Criteria");
     app.MapPortiaGet<GetCriteriaCatalogEntry, Criterion>(
             "/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Criteria");
+    app.MapPortiaGet<ListRuntimeCriteriaEditions, RuntimeCriteriaEditionsPage>(
+            "/api/v2/tenants/{tenant_id}/criteria-editions")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Criteria");
+    app.MapPortiaGet<GetRuntimeCriteriaEdition, RuntimeCriteriaEdition>(
+            "/api/v2/tenants/{tenant_id}/criteria-editions/{edition_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Criteria");
+    app.MapPortiaGet<ListRuntimeCriteriaEntries, RuntimeCriteriaPage>(
+            "/api/v2/tenants/{tenant_id}/criteria-editions/{edition_id}/entries")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Criteria");
+    app.MapPortiaGet<GetRuntimeCriteriaEntry, RuntimeCriteriaEntry>(
+            "/api/v2/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Criteria");
+    app.MapPortiaGet<ListRuntimeCriteriaDisclosures, RuntimeCriteriaDisclosurePage>(
+            "/api/v2/tenants/{tenant_id}/criteria-editions/{edition_id}/disclosures")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Criteria");
     app.MapPortiaPut<RegisterFirmStaff, OperationAcceptedResponse>(
@@ -3332,6 +3377,7 @@ static async Task RunWorkerAsync(string[] args)
         .AddCompliance(builder.Configuration, developerAuthentication,
             requireRealEmailDelivery: !builder.Environment.IsDevelopment())
         .AddWorkers();
+    builder.Services.AddHostedService<PlatformCriteriaSeedWorker>();
     builder.Services.AddHostedService<WorkDigestDispatchBackgroundService>();
     builder.Services.AddHostedService<ProcessSweep>();
     builder.Services.AddComplianceHealthChecks();

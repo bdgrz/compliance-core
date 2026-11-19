@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "delayed_pin": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "lost_abort": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "unprotected": {
+      "type": "noul",
+      "noul": 0.47
+    },
+    "sealed": {
+      "type": "noul",
+      "noul": 0.68
+    },
+    "reacquire": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "cas_safety": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "missing_outcome": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "scope": {
+      "type": "noul",
+      "noul": 0.03
+    }
+  },
+  "usage": {
+    "input_tokens": 913,
+    "output_tokens": 146
+  }
+}

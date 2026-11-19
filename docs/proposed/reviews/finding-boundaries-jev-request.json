@@ -1,0 +1,46 @@
+{
+  "model": "jev-latest",
+  "state": "Review this specific event-sourced Finding/CorrectiveAction design for closure safety, not generic microservice advice. Each independent action has a globally unique tenant/action stream, immutable finding binding, and may transition open -> completed with evidence or cancelled with reason; terminal actions never reopen. An action can be accepted only following admission; all competing legacy creation paths are disabled. Each finding has a deterministic chain of admission-turn streams. Each turn serializes exactly one action admission attempt OR one freeze, using optimistic expected-version append. Each accepted attempt pins action id, finding, exact intent and operation id, and the deterministic successor turn. Before proceeding to successor, target action must commit the exact operation or durable operation-specific refusal/fence even for an empty stream; unknown stays pending and retries use identical intent. Each turn holds at most one attempt, not a list. Its successor links to its immutable predecessor; no forks or unexplained gaps allowed. Freeze competes for the current turn and closes admission. Until resolved, freeze remains and no later turn is writable. A closure check streams from the first turn through the exact frozen cut, verifying the complete deterministic chain and every accepted action binding and authoritative terminal state; reads are direct source reads, not projections. Missing data, unavailable source, unknown outcome, broken continuity or unresolved action means no approval. Processing keeps one turn/action at a time in memory; no child list or manifest is persisted. The checker records a small closure verification fact with finding id, freeze id, cut, and outcome only once. Only a matching exact accepted verification can be used to propose closure. Freeze persists while proposal is dispatched and during review. If a proposal outcome is unknown, no release until exact accepted or target-side durable refusal/fence proves late dispatch cannot succeed. Return, withdrawal or reopen durably permits the next deterministic turn; stale permits and operations are fenced by attempt and finding generation. Reopened findings may gain new actions but accepted past actions cannot reopen. Reviewing uses OCC and independent reviewer rules. Only the finding decides proposal/review; action owners decide their own state. The design requires source event retention and authoritative contiguous reads, not a projection or global offset.",
+  "questions": {
+    "closure_safety": {
+      "type": "noul",
+      "instructions": "Given every stated assumption, does the complete frozen chain plus direct reads of irreversible terminal action states prevent proposal or approval while any accepted or pending action is unresolved?"
+    },
+    "pending_release_risk": {
+      "type": "noul",
+      "instructions": "If an admission is allowed to finish and freeze proceed merely because target response timed out, can a delayed target creation violate closure safety?"
+    },
+    "empty_refusal_risk": {
+      "type": "noul",
+      "instructions": "If a no-fact refusal from an empty action target is used to release admission without a durable operation-specific fence, can a delayed identical creation later succeed?"
+    },
+    "late_proposal_risk": {
+      "type": "noul",
+      "instructions": "If a frozen gate is released after a closure proposal dispatch times out without a target-side fence, can a delayed proposal succeed after a new action is admitted?"
+    },
+    "bounded_parent": {
+      "type": "noul",
+      "instructions": "Does the stated design require the Finding aggregate to retain a roster or per-action history?"
+    },
+    "bounded_total": {
+      "type": "noul",
+      "instructions": "Does the stated design bound the total number of admission-turn streams or the time needed to traverse all historical actions?"
+    },
+    "nonterminal_crossread": {
+      "type": "noul",
+      "instructions": "Would merely reading an eventually consistent projection and seeing no unresolved actions establish the closure invariant?"
+    },
+    "alternative_count": {
+      "type": "noul",
+      "instructions": "Can a single unresolved-action count safely replace the per-action history without a specified exactly-once durable decrement protocol for retry, lost acknowledgement and rollover?"
+    },
+    "no_batch_memory": {
+      "type": "noul",
+      "instructions": "Can the stated check process arbitrarily many turns using bounded working memory, without sorting or collecting all action IDs, assuming source iteration is paged?"
+    },
+    "correct_design": {
+      "type": "noul",
+      "instructions": "Is there still a consequential missing protocol detail that prevents the design as stated from being called implementation ready?"
+    }
+  }
+}

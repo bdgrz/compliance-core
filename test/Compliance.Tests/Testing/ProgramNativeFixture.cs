@@ -1,16 +1,16 @@
-using Bdgrz.Compliance.Hosting.Persistence;
-using Cntryl.Fitz.Testing;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Persistence;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Programs.Rules;
 using Bdgrz.Compliance.Features.Programs.Services;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 namespace Bdgrz.Compliance.Tests.Testing;
 
 sealed class ProgramNativeFixture : IAsyncDisposable
@@ -38,7 +38,7 @@ sealed class ProgramNativeFixture : IAsyncDisposable
         Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-        Operations = new ProgramOperations(new NativeOperationExecutor(Reader, Executor, Content), Content, TimeProvider.System);
+        Operations = ProgramSeeds.Operations(Reader, Writer, Events, Content);
     }
 
     public Task PublishAsync(ProgramRules rules) => ProgramSeeds.AppendAsync(Reader, Writer, Events, Content, rules);

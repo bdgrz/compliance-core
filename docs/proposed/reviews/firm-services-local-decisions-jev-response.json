@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "race_violates": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "window_ledger": {
+      "type": "noul",
+      "noul": 0.85
+    },
+    "witness_sufficient": {
+      "type": "noul",
+      "noul": 0.98
+    },
+    "absence_sufficient": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "partner_equivalent": {
+      "type": "noul",
+      "noul": 0.02
+    },
+    "projection_authority": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "compartment_history": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "rule_race": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "rule_race_safe": {
+      "type": "noul",
+      "noul": 0.02
+    }
+  },
+  "usage": {
+    "input_tokens": 919,
+    "output_tokens": 176
+  }
+}

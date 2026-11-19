@@ -1,0 +1,72 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "draft_requested": "An edition owner has durably recorded the client-provided edition identity, requested label, operation ID and original actor. Its label is not yet reserved or confirmed and it is not a usable draft. The proposed event is CriteriaEditionDraftRequested.",
+    "draft_activated": "An edition owner has durably attached a reserved exact label to an initial creation attempt. The independent label claim has not yet confirmed the edition event, so the draft is not ready to use. The proposed event is CriteriaEditionDraftActivated.",
+    "drafted": "The initial activation and its exact label confirmation have both committed. The edition is now a usable draft. The proposed event is CriteriaEditionDrafted.",
+    "publication_started": "An edition has recorded one exact publication attempt with its actor, current confirmed label generation, and nominated witness identity; the witness pin and publication are not yet accepted. The proposed event is CriteriaPublicationStarted.",
+    "published": "A valid edition owner has committed its terminal published fact after verifying its own active attempt, its confirmed claim and one exact pinned nonempty criterion. This fact is the sole publication cut. Other independent entry outcomes may still settle later. The proposed event is CriteriaEditionPublished.",
+    "aborted": "The edition has committed a terminal decision aborting a particular publication attempt. The exact witness pin still needs a separate target-side fence and acknowledgement before another publication may begin. The proposed event is CriteriaPublicationAborted.",
+    "cleanup_completed": "A terminally aborted publication attempt has received proof that its exact target witness is fenced, including if the pin had not arrived. The edition may now start another publication attempt. The proposed event is CriteriaPublicationAbortCleanupCompleted.",
+    "edit_proposed": "A specific entry owner durably recorded an exact structural-change request, including its actor, operation, requested kind/category/parent and intention. The final business outcome has not yet been decided. The proposed event is CriterionChangeProposed.",
+    "edit_changed": "An entry owner has decided one exact previously proposed structural change accepted; the resulting specific incarnation or removal is bound to that operation. The proposed event is CriterionChanged.",
+    "edit_refused": "An entry owner has decided one exact previously proposed structural change cannot be accepted and recorded its terminal refusal. The proposed event is CriterionChangeRefused.",
+    "pin": "A criterion owner accepted an exact publication-attempt witness pin protecting one current criterion incarnation. The edition has not necessarily published yet. The proposed event is CriterionWitnessPinned.",
+    "fence": "A criterion owner recorded an exact attempt-specific fence that prevents a delayed old witness pin from acquiring or reacquiring protection after abort. The proposed event is CriterionWitnessPinFenced.",
+    "event_receipt": "A downstream component receives an arbitrary UUID called an event ID but has not validated the concrete owner stream, exact version, payload, matching operation, or committed status."
+  },
+  "questions": {
+    "draft_requested_name": {
+      "type": "noul",
+      "instructions": "Does CriteriaEditionDraftRequested accurately distinguish the pending creation in state.draft_requested from a ready draft?"
+    },
+    "draft_activated_ambiguity": {
+      "type": "noul",
+      "instructions": "Could CriteriaEditionDraftActivated in state.draft_activated reasonably be misread as saying the draft is already usable?"
+    },
+    "drafted_name": {
+      "type": "noul",
+      "instructions": "Does CriteriaEditionDrafted naturally describe the ready draft fact in state.drafted?"
+    },
+    "started_name": {
+      "type": "noul",
+      "instructions": "Does CriteriaPublicationStarted in state.publication_started clearly describe a pending attempt rather than completed publication?"
+    },
+    "published_name": {
+      "type": "noul",
+      "instructions": "Does CriteriaEditionPublished in state.published naturally describe the edition publication decision?"
+    },
+    "aborted_cleanup": {
+      "type": "noul",
+      "instructions": "Does the event CriteriaPublicationAborted alone in state.aborted establish that the witness pin cleanup is complete?"
+    },
+    "cleanup_name": {
+      "type": "noul",
+      "instructions": "Does CriteriaPublicationAbortCleanupCompleted in state.cleanup_completed describe completed cleanup of the aborted attempt?"
+    },
+    "proposed_name": {
+      "type": "noul",
+      "instructions": "Does CriterionChangeProposed in state.edit_proposed clearly distinguish a submitted intent from accepted change?"
+    },
+    "changed_name": {
+      "type": "noul",
+      "instructions": "Does CriterionChanged in state.edit_changed describe a completed accepted change rather than merely a proposal?"
+    },
+    "refused_name": {
+      "type": "noul",
+      "instructions": "Does CriterionChangeRefused in state.edit_refused clearly describe a terminal business refusal?"
+    },
+    "pin_name": {
+      "type": "noul",
+      "instructions": "Does CriterionWitnessPinned in state.pin describe the protective pin without implying the edition has already published?"
+    },
+    "fence_name": {
+      "type": "noul",
+      "instructions": "Does CriterionWitnessPinFenced in state.fence reasonably describe the owner fact preventing the exact old pin?"
+    },
+    "uuid_proof": {
+      "type": "noul",
+      "instructions": "Does the UUID by itself in state.event_receipt prove the required committed source fact?"
+    }
+  }
+}

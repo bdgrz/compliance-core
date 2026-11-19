@@ -1,0 +1,46 @@
+{
+  "model": "jev-latest",
+  "state": "A compliance system has a Finding (a deficiency with analysis and evidence) and independently owned Corrective Actions (work with an owner, due date and completion evidence or cancellation reason). Existing behavior required every corrective action be completed or cancelled before a Finding closure proposal could be accepted. The user now requires that no write decision depend on collecting, counting, folding or querying all children. Consider a proposed explicit business policy change: a Finding may be closed when its owner supplies a concrete resolution rationale and versioned evidence and an independent authorized reviewer approves the current proposal. Closure asserts that the deficiency itself is resolved, based on the reviewed evidence; it does not assert that every associated action is complete. Every action independently remains open, due/overdue, completed or cancelled according to its own stream. Closing the Finding neither completes nor cancels any action; an open action remains assigned and may subsequently complete or be cancelled. Finding reopen requires its own reviewed closure cycle, and does not reopen terminal actions. Read models may show action status as advisory navigation and must never authorize closure. The UI must visibly communicate the changed meaning, and must not claim all work is finished. The independent reviewer must determine from the submitted evidence whether the deficiency is actually resolved; an outstanding action may still be necessary to demonstrate resolution, in which case the reviewer returns the proposal. Proposal/review do not require discovering or adjudicating all actions. Separately, the previous requirement that new actions cannot be planned on a closing or closed Finding is retained; a race-safe authoritative per-action admission handshake is still unspecified. Evidence submission and exact reviewed versions also need bounded design.",
+  "questions": {
+    "meaning_change": {
+      "type": "noul",
+      "instructions": "Does this policy change the original user-visible meaning of closing a finding from all associated actions resolved to an evidence-based resolution decision that can coexist with open work?"
+    },
+    "independent": {
+      "type": "noul",
+      "instructions": "Under this policy can an existing corrective action remain open and be completed after the finding closes without changing that action as a side effect of closure?"
+    },
+    "claim": {
+      "type": "noul",
+      "instructions": "Does finding closure under this policy prove that all associated actions are complete or cancelled?"
+    },
+    "intrinsic": {
+      "type": "noul",
+      "instructions": "Can the stated finding closure decision be made without querying or folding all actions, provided the reviewer can assess the submitted rationale and evidence independently?"
+    },
+    "contradiction": {
+      "type": "noul",
+      "instructions": "Does an open action necessarily prove the deficiency is unresolved, even if the action is additional preventive work and the reviewed evidence proves the deficiency itself has been resolved?"
+    },
+    "no_action_after": {
+      "type": "noul",
+      "instructions": "Does independently deciding closure automatically enforce the separate existing rule forbidding new action planning while finding is closing or closed, including concurrent races?"
+    },
+    "review_evidence": {
+      "type": "noul",
+      "instructions": "Can an eventually consistent projection of evidence associations alone establish exactly which immutable evidence versions were reviewed?"
+    },
+    "safe_original": {
+      "type": "noul",
+      "instructions": "Can the original invariant that all actions are terminal at closure be guaranteed under all races without either authoritative information reflecting the whole child set or an explicit business policy change?"
+    },
+    "retain_owner": {
+      "type": "noul",
+      "instructions": "Does closing a finding automatically provide authority to cancel or complete its independently owned open actions?"
+    },
+    "unresolved": {
+      "type": "noul",
+      "instructions": "Does this proposal still have consequential domain, authorization, review-evidence or action-admission decisions that must be specified before implementation?"
+    }
+  }
+}

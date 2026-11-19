@@ -1,8 +1,7 @@
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
@@ -10,10 +9,10 @@ using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Content.Contracts;
@@ -21,10 +20,15 @@ using Bdgrz.Compliance.Features.Content.Services;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Criteria.Aggregates;
 using Bdgrz.Compliance.Features.Criteria.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Events;
 using Bdgrz.Compliance.Features.Criteria.History;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Criteria.Readers;
 using Bdgrz.Compliance.Features.Criteria.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Examinations.Contracts;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
@@ -33,6 +37,8 @@ using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Events;
 using Bdgrz.Compliance.Features.Programs.History;
 using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Readers;
@@ -43,25 +49,19 @@ using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Retention.Commands;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
-using Bdgrz.Compliance.Features.Criteria.Aggregates;
-using Bdgrz.Compliance.Features.Criteria.Events;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Criteria.Readers;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Programs.Aggregates;
-using Bdgrz.Compliance.Features.Programs.Events;
-using Bdgrz.Compliance.Features.Retention.Commands;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Examinations.Models;
 
 /// <summary>Resolves the criteria edition selected for the program at the Type I date.</summary>
@@ -117,11 +117,33 @@ public sealed class CriteriaTypeIBaselineSourceContributor(IAggregateReader read
             .LastOrDefault(static fact => fact.ChangeCount == 1);
         if (selectedFact is not null && (selectedFact.TenantId != engagement.TenantId || selectedFact.ProgramId != engagement.ProgramId))
             throw new ImmutableContentIntegrityException("The criteria selection belongs to another exact program.");
+        var createdFact = programReceipts?.Included.Select(record => record.Event).OfType<ProgramCreated>()
+            .SingleOrDefault();
         var selection = receiptCut is null ? history.CriteriaSelectionAt(through) : selectedFact is null ? null
             : new ProgramCriteriaEditionSelection(selectedFact.Revision, selectedFact.EditionId, selectedFact.ChangedAt);
+        if (receiptCut is not null && selectedFact is null && createdFact?.CriteriaEditionId is { } initialEdition)
+            selection = new ProgramCriteriaEditionSelection(createdFact.Revision, initialEdition, createdFact.ChangedAt);
         if (!program.IsCreated || selection is null)
             return Result<TypeIBaselineSourceContribution>.Success(Contribution([],
                 ["No criteria edition was selected for the program by the Type I date."], []));
+
+        // Legacy selections have no publication proof and refer to the historical static catalog.
+        // A runtime publication must never be represented by that catalog: its complete published
+        // source cut cannot yet be certified by the advisory catalog projection.
+        var runtimeSelection = history.Facts.Any(fact => fact switch
+        {
+            ProgramCreated created => created.Revision == selection.Revision &&
+                created.CriteriaEditionId == selection.EditionId && created.CriteriaPublication is not null,
+            ProgramCriteriaEditionSelected selected => selected.ChangeCount == 1 &&
+                selected.Revision == selection.Revision && selected.EditionId == selection.EditionId &&
+                selected.CriteriaPublication is not null,
+            _ => false,
+        });
+        if (runtimeSelection)
+            return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(
+                RequestErrorKind.Conflict,
+                "The published criteria edition's complete source cut cannot yet be verified for the Type I baseline.",
+                isTransient: true));
 
         var edition = catalog.GetEdition(selection.EditionId);
         if (edition is null)

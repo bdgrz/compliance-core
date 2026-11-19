@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "delegation_independent": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "campaign_complete_projection": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "campaign_sealed_terminal": {
+      "type": "noul",
+      "noul": 0.74
+    },
+    "campaign_missing": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "batch_race": {
+      "type": "noul",
+      "noul": 0.19
+    },
+    "selection_late": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "population_cut": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "absence_needs_cut": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "paths_unbounded": {
+      "type": "noul",
+      "noul": 0.75
+    },
+    "active_check_race": {
+      "type": "noul",
+      "noul": 0.04
+    }
+  },
+  "usage": {
+    "input_tokens": 741,
+    "output_tokens": 190
+  }
+}

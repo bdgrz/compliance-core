@@ -1,0 +1,21 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "exact": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "rebase": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "mutates": {
+      "type": "noul",
+      "noul": 0.12
+    }
+  },
+  "usage": {
+    "input_tokens": 933,
+    "output_tokens": 54
+  }
+}

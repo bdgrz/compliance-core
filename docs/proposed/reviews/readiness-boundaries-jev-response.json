@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "source_cut_required": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "projection_counts": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "missing_fails_closed": {
+      "type": "noul",
+      "noul": 0.92
+    },
+    "individual_evidence_possible": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "unfenced_late_work": {
+      "type": "noul",
+      "noul": 0.83
+    },
+    "empty_universe": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "old_complete_assessment": {
+      "type": "noul",
+      "noul": 0.13
+    },
+    "plan_policy": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "plan_observation": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "seal_counts": {
+      "type": "noul",
+      "noul": 0.05
+    }
+  },
+  "usage": {
+    "input_tokens": 797,
+    "output_tokens": 190
+  }
+}

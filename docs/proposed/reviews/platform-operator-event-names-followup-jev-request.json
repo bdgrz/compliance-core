@@ -1,0 +1,14 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "mark": "A specific user's active platform-operator grant has accepted and durably stored the primary protection mark for one exact reserved seat generation; the seat has not yet independently confirmed it.",
+    "bootstrap": "The first bootstrap decision atomically activates one user's platform-operator grant and stores the primary protection mark for an exact reserved seat generation. The seat has not yet independently confirmed it.",
+    "fence": "A specific user's operator owner has durably blocked an exact reserved primary designation generation, so a delayed mark with that generation cannot succeed. This is not a grant, revocation, or successful designation."
+  },
+  "questions": {
+    "mark_accepted": {"type": "noul", "instructions": "Does PlatformOperatorPrimaryMarkAccepted clearly name state.mark without implying seat confirmation?"},
+    "mark_recorded": {"type": "noul", "instructions": "Does PlatformOperatorPrimaryMarkRecorded clearly name state.mark without implying seat confirmation?"},
+    "bootstrap_accepted": {"type": "noul", "instructions": "Does PlatformOperatorBootstrapGrantAndMarkAccepted clearly name both effects in state.bootstrap without implying seat confirmation?"},
+    "fence_attempt": {"type": "noul", "instructions": "Does PlatformOperatorPrimaryMarkFenced clearly name state.fence without implying a successful designation?"}
+  }
+}

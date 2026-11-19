@@ -1,0 +1,57 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "empty": "An authorized create attempt A carries expected physical stream position 0 and may still be in flight. The response was lost. A later source read returns an empty program stream; the source append request has not been definitively settled.",
+    "fence_wins": "The reconciler commits a ProgramCreationAttemptFenced fact at expected stream position 0 for generation G1 and the exact normalized program intent. A pending ProgramCreated attempt for G1 also requires position 0 and is not allowed to change its expected position.",
+    "original_wins": "ProgramCreated for intent X commits at position 0 before the reconciler tries to append the generation G1 fence at expected position 0. The original response is recoverable and the retry caller is currently authorized.",
+    "new_attempt": "The G1 fence is committed at position 0, binds ProgramId to intent X, and all G1 attempts are forbidden to rebase. A fresh currently authorized G2 attempt with the same ProgramId and normalized intent X appends ProgramCreated at expected position 1.",
+    "rebase": "A handler for old generation G1 receives an expected-position conflict after the G1 fence committed. It reads the new stream position and automatically retries its original ProgramCreated at that new position without a new authorization or generation.",
+    "changed": "A fence on ProgramId P has durably bound normalized creation intent X to P. A subsequent create command uses P with materially different intent Y. The product policy says changed intent for a bound identity conflicts.",
+    "unknown_fence": "The source response for appending a generation G1 fence at position 0 is lost. A subsequent read returns an empty stream while that fence request may still be in flight.",
+    "fence_success": "A ProgramCreationAttemptFenced event committed but there is no ProgramCreated event for that ProgramId.",
+    "no_fact": "A create request was refused before admission and wrote no event or fence for its unused ProgramId.",
+    "current_auth": "ProgramCreated for intent X did commit; the caller has since lost access. The caller retries and asks for the original response."
+  },
+  "questions": {
+    "empty_proves_refused": {
+      "type": "noul",
+      "instructions": "In state.empty, does the empty read prove attempt A cannot commit later?"
+    },
+    "old_after_fence": {
+      "type": "noul",
+      "instructions": "In state.fence_wins, can the old position-0 ProgramCreated append still commit if the event store enforces expected-position concurrency?"
+    },
+    "fence_is_success": {
+      "type": "noul",
+      "instructions": "In state.fence_success, does the fence mean the program was successfully created?"
+    },
+    "first_wins": {
+      "type": "noul",
+      "instructions": "In state.original_wins, should an exact authorized retry reconcile and return the original creation response rather than record a fence?"
+    },
+    "fresh_same_id": {
+      "type": "noul",
+      "instructions": "Under state.new_attempt, can the newly authorized same-intent G2 append create the program under the original client ProgramId?"
+    },
+    "rebase_safe": {
+      "type": "noul",
+      "instructions": "In state.rebase, is the automatic rebase safe against the purpose of the fence?"
+    },
+    "changed_conflict": {
+      "type": "noul",
+      "instructions": "Under state.changed, should the differing intent be treated as a conflict rather than an exact retry?"
+    },
+    "empty_fence_settled": {
+      "type": "noul",
+      "instructions": "In state.unknown_fence, does the empty read prove the fence cannot commit later?"
+    },
+    "nofact_reuse": {
+      "type": "noul",
+      "instructions": "In state.no_fact, may an otherwise authorized caller reuse the still-unbound ProgramId for a valid create attempt?"
+    },
+    "disclose_revoked": {
+      "type": "noul",
+      "instructions": "In state.current_auth, may the original response be disclosed without current authorization?"
+    }
+  }
+}

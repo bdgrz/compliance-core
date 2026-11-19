@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "projection_lag_false_closed": {
+      "type": "noul",
+      "noul": 0.72
+    },
+    "review_order_changed": {
+      "type": "noul",
+      "noul": 0.51
+    },
+    "close_event_changed": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "sealed_alone": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "queue_cancel": {
+      "type": "noul",
+      "noul": 0.21
+    },
+    "one_round": {
+      "type": "noul",
+      "noul": 0.79
+    },
+    "independent_action": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "review_without_collection": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "all_terminal_projection": {
+      "type": "noul",
+      "noul": 0.75
+    }
+  },
+  "usage": {
+    "input_tokens": 689,
+    "output_tokens": 167
+  }
+}

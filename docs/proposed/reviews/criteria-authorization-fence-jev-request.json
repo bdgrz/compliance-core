@@ -1,0 +1,45 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "empty": "Attempt A uses client operation ID X and attempt generation G. It sent an expected-position-zero append to a new target. The response was lost; a later source read is empty, while the original append may still be in flight. No fence has committed.",
+    "fence_wins": "Attempt A and a recovery fence target the same empty stream and expected position zero. The durable fence for X and G commits first. A must never rebase its expected position, and the target rejects X/G after the fence.",
+    "append_wins": "Attempt A and a recovery fence target the same empty stream and expected position zero. A commits first with its original admission evidence, and its response is lost. The fence then conflicts and recovery reads the committed intent.",
+    "existing": "An existing target is at position N when A sends its expected-N append. A recovery fence for X/G also expects N. A different valid operation commits at N first. The target is read and A is absent. The original A cannot rebase, and recovery appends an X/G fence at the new position before starting another generation.",
+    "new_attempt": "Recovery durably fences generation G of client operation X, which binds the original actor and normalized intent. Later an authorized caller retries the same intent for X with fresh authorization and a new generation H. The target permanently rejects G.",
+    "no_fence": "A source read finds no intent for X/G. Recovery uses an empty/no-op append and immediately starts a new generation, while the old expected-position append is still in flight."
+  },
+  "questions": {
+    "empty_proves_absent": {
+      "type": "noul",
+      "instructions": "In empty, does the empty read prove A can never commit later?"
+    },
+    "fence_no_rebase": {
+      "type": "noul",
+      "instructions": "In fence_wins, can A still commit if it obeys the original position and terminal-generation rule?"
+    },
+    "append_authoritative": {
+      "type": "noul",
+      "instructions": "In append_wins, should recovery treat the admitted committed intent as authoritative?"
+    },
+    "existing_safe": {
+      "type": "noul",
+      "instructions": "Under the stated rules in existing, does the committed X/G fence prevent the old generation from being accepted later?"
+    },
+    "new_allowed": {
+      "type": "noul",
+      "instructions": "Under new_attempt, can fresh authorization start generation H without reusing generation G?"
+    },
+    "noop_is_fence": {
+      "type": "noul",
+      "instructions": "In no_fence, does the empty/no-op append durably fence the old attempt?"
+    },
+    "old_still_possible": {
+      "type": "noul",
+      "instructions": "In no_fence, can the old delayed append still commit?"
+    },
+    "proof_provider": {
+      "type": "noul",
+      "instructions": "Do these scenarios prove that the deployed provider actually implements the stated atomic expected-position and recovery rules?"
+    }
+  }
+}

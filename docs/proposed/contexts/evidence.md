@@ -1,7 +1,9 @@
 # Evidence
 
-Status: **locked**, 2026-11-03. Hand-authored source of truth for this context.
-It follows the [context conventions](conventions.md).
+Status: **under boundary revision**, 2026-11-05. The 2026-11-03 product
+baseline remains; candidates and unresolved ordering requirements here are not
+implementation-ready. See the [boundary review](../reviews/platform-evidence-boundaries-review.md)
+and the [local-invariant review](../reviews/evidence-local-invariants.md).
 
 ## Purpose
 
@@ -54,9 +56,15 @@ rescan. Disposal is final and keeps a tombstone (M0-D16).
   with a rationale (EV-02).
 - A redacted derivative names its original; the original keeps its own retention
   and access rules.
-- Disposal is decided by Retention's hold register (RT-06). This context removes
-  the content only for an artifact a `DispositionDecided` authorizes, and does not
-  re-read holds or dates.
+- Retention owns the disposition authorization, but a prior
+  `DispositionDecided` does not by itself prove that physical deletion remains
+  allowed if a hold or retention extension takes effect later. M0-D16 prohibits
+  disposing of held evidence; the previous RT-06 interpretation that the
+  authorization alone permits later physical deletion is unresolved. Until a
+  proven source-authoritative ordering or fence covers both hold activation and
+  irreversible byte deletion, keep deletion pending. A fresh advisory read is
+  not that fence. See [Retention](retention.md) for the still-unqualified
+  coordination and the distinction between hold and retention-extension rules.
 - Downloads by the organization's members are audit-log entries checked by
   authorization. A download by anyone else is a disclosure (EV-03).
 
@@ -79,7 +87,7 @@ stateDiagram-v2
 | RecordArtifactInspection | Inspection service | Pending inspection | EvidenceArtifactInspectedClean, EvidenceArtifactQuarantined or EvidenceArtifactRejected |
 | ReleaseArtifactQuarantine | Org Admin | Quarantined; clean rescan referenced; reason given | EvidenceArtifactQuarantineReleased |
 | ChangeArtifactHandlingClass | Compliance Lead | Not rejected or disposed; class differs; rationale given | ArtifactHandlingClassChanged |
-| DisposeArtifact | Reactor on DispositionDecided (Retention hold register), for each authorized artifact | Available or quarantined; names the decision; a repeat is a no-op | EvidenceArtifactDisposed |
+| DisposeArtifact | Reactor on a per-artifact Retention disposition decision | Available or quarantined; names the decision; a qualified hold/deletion ordering protects the physical byte deletion; exact repeat is a no-op. Until that ordering is proven, remain pending. | EvidenceArtifactDisposed |
 
 | Event | Carries |
 | --- | --- |
@@ -115,19 +123,54 @@ unless a waiver covers it (M0-D16, EV-04).
 **Identity:** `TenantId` + `RequestId`.
 
 **Invariant:** one request asks one person or team for evidence about one record,
-with an optional due date, and is open, then fulfilled or cancelled.
+with an optional due date, and is open, then fulfilled or cancelled. A candidate
+fulfilment names one available anchor artifact. Additional submitted artifacts
+are independent request-artifact links; the request does not own their roster.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | OpenEvidenceRequest | Compliance Lead or Contributor | `RequestId` is new; target record exists | EvidenceRequestOpened |
-| FulfilEvidenceRequest | The person asked, a member of the team asked, or Compliance Lead | Open; at least one available artifact | EvidenceRequestFulfilled |
+| FulfilEvidenceRequest | The person asked, a member of the team asked, or Compliance Lead | Open; exact anchor artifact availability is established at the required decision point | EvidenceRequestFulfilled |
 | CancelEvidenceRequest | Its opener or Compliance Lead | Open; reason given | EvidenceRequestCancelled |
 
 | Event | Carries |
 | --- | --- |
 | EvidenceRequestOpened | tenant, request, target record, asked of, description, due date, opened by |
-| EvidenceRequestFulfilled | tenant, request, artifacts, note, fulfilled by |
+| EvidenceRequestFulfilled | tenant, request, one anchor artifact, note, fulfilled by |
 | EvidenceRequestCancelled | tenant, request, reason, cancelled by |
+
+Additional artifacts can be linked individually by one request-artifact
+association per request and artifact; the existing support link owns one
+artifact-to-exact-target-version relation. A fulfilment cannot be recorded from
+a stale availability read if disposal or quarantine wins before the decision.
+The cross-owner guard/fence, exact retry and delayed submission semantics remain
+unqualified. Fulfilment of the one anchor does not assert that every other
+artifact submitted at the same time was accepted, linked or made available. Each
+additional link has an independently visible accepted, refused or pending
+outcome. A projected list is a view, not proof that a submission is complete.
+The prior multi-artifact fulfilment shape may have implied an all-or-none user
+operation; whether to retain that guarantee is an open product question. An
+all-child completion write or distributed per-artifact coordinator ledger is not
+an approved solution.
+
+### EvidenceRequestArtifact (candidate)
+
+**Identity:** `TenantId` + `RequestId` + `ArtifactId` for one request and one
+submitted artifact. A new request or artifact has a different identity.
+
+**Invariant:** one link records one artifact's association with one request and
+its own admission outcome. It does not prove that the artifact supports the
+target; `EvidenceSupport` owns that distinct relationship. This owner and its
+event contract are provisional until source authority and retry semantics are
+qualified.
+
+The request actor submits one link with a stable operation identity. An exact
+retry returns the established result; changed intent is not an exact retry.
+Pending, unknown and refused links are distinguishable; an asynchronous
+request-to-support reaction is not proof that support was accepted. Each
+artifact's availability and request's authorization must be established at the
+decision point by an authoritative protocol, including the race with request
+cancellation. Neither owner appends an event for every other association.
 
 ### EvidenceSupport
 
@@ -157,8 +200,24 @@ and the artifact (CV-02).
 class at that moment, went to one recipient for one purpose. It never changes.
 
 - Only an available artifact, or an approved redacted derivative, can be
-  disclosed (M0-D16). The sharing check happens at delivery, so the disclosure is
-  recorded without a separate approval (EV-06).
+  disclosed (M0-D16). There is no separate human approval for each disclosure
+  (EV-06); an earlier read alone is not a delivery-time fence against disposal,
+  reclassification or redaction changes. Delivery authorization and actual
+  release need an exact authoritative ordering protocol, still unresolved.
+- Disclosure is a fact about an actual external release, not a prospective
+  permission. Once bytes have left the system, a failed or delayed log write
+  cannot undo the release. The delivery must preserve enough durable identity
+  and evidence to recover and record every release, even after an ambiguous
+  outcome; unknown is pending, not proof that no bytes were sent. Exact retries
+  must not invent duplicate disclosure facts. Whether retransmitting bytes is a
+  distinct disclosure occurrence needs an explicit business definition; a shared
+  request ID cannot simply collapse potentially separate external releases.
+- The decision must identify the artifact and exact content, recipient, purpose,
+  applicable handling class and permission at the authoritative release point.
+  Whether a permission or handling change after a stream has begun must halt the
+  remaining bytes is also unqualified. A proposed per-artifact release fence must
+  order against quarantine, disposal, relevant classification and permission
+  changes; no cross-stream transaction, lease or revocation guarantee is assumed.
 - Each disclosure names the examination it served, when there is one. Retention
   uses that to decide what an engagement hold covers.
 
@@ -195,9 +254,10 @@ Inspection is a technical scan; its outcome is the business fact.
 flowchart LR
     T([Target record exists]) -. checks .-> C1
     C1[/OpenEvidenceRequest/] --> E1([EvidenceRequestOpened])
-    A([Artifacts available]) -. checks .-> C2
+    A([Anchor artifact available]) -. checks .-> C2
     E1 -. checks .-> C2[/FulfilEvidenceRequest/] --> E2([EvidenceRequestFulfilled])
-    E2 --> R1{{"Link each artifact to the target (ID from request and artifact)"}} --> C3[/LinkEvidenceSupport/] --> E3([EvidenceSupportLinked])
+    E2 --> R1{{"Link the anchor to the target"}} --> C3[/LinkEvidenceSupport/] --> E3([EvidenceSupportLinked])
+    S([Independently submitted artifact]) -. individual link outcome .-> C3
     E3 -.-> X1[[Retention: extend retention to the covered period]]
 ```
 
@@ -232,8 +292,10 @@ flowchart LR
 
 ## Decisions
 
-Jev answers are from `jev-1.14.0`, 2026-11-03. A yes is ≥ 0.8 and a no is ≤ 0.2.
-Anything in between is settled by common sense, with the reasoning stated.
+Jev answers are from `jev-1.14.0`, 2026-11-03. Earlier 0.8 and 0.2 thresholds
+were triage conventions, not measured confidence that a design is correct. The
+[local-invariant review](../reviews/evidence-local-invariants.md) records newer
+conditional cases and unresolved authority.
 
 | ID | Decision | Evidence |
 | --- | --- | --- |
@@ -242,13 +304,28 @@ Anything in between is settled by common sense, with the reasoning stated.
 | EV-03 | Members' downloads are audit-log entries checked by authorization; downloads by anyone outside the organization's members are disclosures. | Downloads as audit log only: 0.39. External downloads as disclosures: 0.68. Harm from members' downloads in the audit log only: 0.58. Common sense: the disclosure log covers everything that leaves the organization, and PA-08 treats sign-in activity the same way. Replaces `ArtifactDownloadGrant`. |
 | EV-04 | A redaction is approved by a Compliance Lead who did not prepare it. | 0.65. M0-D16 and CV-06. |
 | EV-05 | A mistaken support link is withdrawn with a reason and kept in history. | 0.84. |
-| EV-06 | Disclosures are recorded automatically from deliveries and firm-staff downloads; sharing is checked at delivery, so there is no approval step. | Automatic: 0.48; harm without approval: 0.37. Common sense: AC-01 already decided deliveries need no second approval. |
+| EV-06 | Disclosures are recorded automatically from deliveries and firm-staff downloads; there is no separate human approval. The authority and ordering of the sharing check at delivery remain open. | Automatic: 0.48; harm without approval: 0.37. AC-01 already decided deliveries need no second human approval. |
 | EV-07 | Internal evidence requests are separate from auditor requests. | 0.79. |
-| EV-08 | A quarantined artifact follows the normal disposal rules: it is disposed only on an authorization from Retention's hold register ([RT-06](retention.md#decisions)). | 0.70. |
+| EV-08 | A quarantined artifact follows the normal disposal rules. Retention authorization is necessary, but the effect of a later hold on physical deletion and the authoritative fence are unresolved ([RT-06](retention.md#decisions)). | 0.70; this score does not establish the cross-owner ordering. |
 
 ## Open questions
 
-None at this time.
+- Qualify anchor-availability ordering against quarantine and disposal and
+  distinguish absent, refused, pending and accepted link outcomes.
+- Confirm whether a submission with multiple artifacts requires atomic all-or-none
+  semantics; define authoritative completion if it does.
+- Establish the actual disclosure-versus-disposal/reclassification ordering and
+  preservation of the class at the moment of disclosure. See also Retention and
+  Auditor collaboration; an asynchronously recorded disclosure is not a fence.
+- Resolve hold placement after an accepted disposition but before physical byte
+  deletion. Qualify an authoritative hold/deletion fence and crash recovery; do
+  not treat a historical disposition or current advisory no-hold read as proof
+  that deletion may proceed.
+- Establish release identity and recovery when a timeout follows partial or
+  completed delivery, including whether a retransmission is a separate disclosure
+  and what happens if permission changes during streaming.
+- Qualify independently submitted request-artifact admission, cancellation races,
+  exact retries and support-link refusal, including the UX of partial outcomes.
 
 ## Superseded owners
 

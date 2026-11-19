@@ -1,0 +1,45 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "background": "The system preserves immutable exact versions. Aggregate state and each event must stay small; independent children are not stored as parent collections. Projection reads can lag. A read or admission that starts before access revocation may be in flight.",
+    "cases": {
+      "citations": "A section can cite arbitrarily many independently added source versions. Draft approval emits all current citations in one event.",
+      "frozen_cut": "Before approval, an authority rejects new edits for a draft, waits for all previously admitted edits to terminate, and supplies a complete immutable source cut. Approval binds that cut. Previously admitted edits cannot commit after the authority declares the cut complete.",
+      "review_race": "A change is assessed significant concurrently with period close. Its section-review reactor has not yet consumed that committed assessment. Close checks only the current section-review projection.",
+      "handoff_race": "A consultant reads handoff status open and selection present. The lead closes the handoff. The consultant then posts feedback without a fresh authoritative admission ordered against the close.",
+      "reply": "An immutable reply references a feedback identity and the author. The original feedback has its own separately controlled change-request resolution.",
+      "review_author": "A lead authored a prior draft revision, but a query of an eventually consistent authors projection misses that revision. The lead approves the draft as an independent reviewer.",
+      "instant_access": "An authorized download starts, the handoff closes, and bytes already delivered to the consultant cannot be recalled."
+    }
+  },
+  "questions": {
+    "citation_parent": {
+      "type": "noul",
+      "instructions": "Can the size of the draft approval event in cases.citations grow with the number of citations?"
+    },
+    "frozen_cut": {
+      "type": "noul",
+      "instructions": "Does cases.frozen_cut prevent an edit admitted before freeze from appearing after the approved cut?"
+    },
+    "review_race": {
+      "type": "noul",
+      "instructions": "Can close in cases.review_race miss a review that must be created from an already committed assessment?"
+    },
+    "handoff_race": {
+      "type": "noul",
+      "instructions": "Can feedback in cases.handoff_race be accepted after the handoff has closed?"
+    },
+    "reply": {
+      "type": "noul",
+      "instructions": "Can cases.reply preserve the feedback's separate resolution without storing the reply on the feedback owner?"
+    },
+    "review_author": {
+      "type": "noul",
+      "instructions": "Can approval in cases.review_author violate the requirement that the reviewer authored no draft revision?"
+    },
+    "instant_access": {
+      "type": "noul",
+      "instructions": "Can closing the handoff in cases.instant_access retract bytes already delivered to the consultant?"
+    }
+  }
+}

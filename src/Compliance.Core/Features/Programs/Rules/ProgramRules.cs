@@ -1,6 +1,7 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
@@ -10,9 +11,11 @@ using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Commands;
 using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.Rules;
@@ -21,10 +24,7 @@ using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.NamedRecords.Processes;
-using Bdgrz.Compliance.Features.Programs.Commands;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Programs.Rules;
 
 public sealed class ProgramRules
@@ -37,6 +37,7 @@ public sealed class ProgramRules
     readonly List<(long Revision, Uuid EditionId, DateTimeOffset ChangedAt)> _criteriaEditionHistory = [];
     string? _initialName;
     ProgramPlan? _initialPlan;
+    Uuid? _initialCriteriaEditionId;
 
     public bool IsCreated => _created;
     public long Revision => _revision;
@@ -81,6 +82,12 @@ public sealed class ProgramRules
             _created = true;
             _initialName = change.Content!.Name;
             _initialPlan = change.Content.Plan;
+            _initialCriteriaEditionId = change.EditionId;
+            if (change.EditionId is { } editionId)
+            {
+                _criteriaEditionId = editionId;
+                _criteriaEditionHistory.Add((change.Revision, editionId, change.ChangedAt));
+            }
         }
         else if (change.Kind == nameof(SelectProgramCriteriaEdition))
         {
@@ -93,18 +100,20 @@ public sealed class ProgramRules
     }
 
     public CommandFailure? Create(string name, ProgramPlan plan, Uuid actorMemberId,
-        string actorDisplay, DateTimeOffset changedAt)
+        string actorDisplay, DateTimeOffset changedAt, Uuid? editionId = null)
     {
         if (_created)
             return StringComparer.Ordinal.Equals(_initialName, name?.Trim()) &&
-                   Equals(_initialPlan, plan)
+                   Equals(_initialPlan, plan) && _initialCriteriaEditionId == editionId
                 ? null
                 : CommandFailure.StateConflict(
                     "The program already exists with different content.");
         var error = Validate(name, plan);
         if (error is not null)
             return CommandFailure.InvalidContent(error);
-        Add(new ProgramRuleChange(nameof(CreateProgram), 1, new ProgramContent(name.Trim(), plan), null,
+        if (editionId == Uuid.Empty)
+            return CommandFailure.InvalidContent("A criteria edition is required.");
+        Add(new ProgramRuleChange(nameof(CreateProgram), 1, new ProgramContent(name.Trim(), plan), editionId,
             ActorReference.ForMember(actorMemberId, actorDisplay), changedAt));
         return null;
     }

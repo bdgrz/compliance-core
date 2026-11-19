@@ -1,0 +1,23 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "rules": "A draft edition has independently owned entries. Parents cannot be removed or structurally changed in this candidate. Every entry proposal has a unique operation token and exact intent; its own identity stream uses expected-position concurrency. A point-of-focus proposal can be valid only if it contains evidence of a previously accepted immutable parent in the same draft generation, edition and category. An edition publication marker and every entry proposal share one durable, totally ordered commit sequence with no missing records. The single edition stream allows only one publication or abandonment to win. These ordering and durability properties are assumed in this hypothetical; they are not established by this state.",
+    "membership": "The meaning of an edition cut is defined by order, not by an evaluator's progress: a proposal that is independently valid for the draft and commits before the winning publication marker is a member, while a proposal committed after that marker is refused and is not a member. A participant's durable individual outcome can be written later. A source reader may lag, and any list whose reader has not reached the marker is labeled incomplete. Publication validates one exact already accepted, nonremovable criterion as its nonempty witness and does not wait for other entries to be individually processed.",
+    "trace_before": "A valid proposal P commits at sequence position 10. A publication marker M for the same draft generation commits at position 11. The participant processing P crashes and has not recorded its individual outcome when M commits. After recovery it observes positions 10 and 11.",
+    "trace_after": "Proposal Q reads the edition as draft, pauses, and commits at position 12 after publication marker M at position 11. Q had not otherwise committed before M.",
+    "trace_unknown": "A client submits proposal R and times out. The client does not know whether R committed at position 9 or failed to commit. The user retries exactly the same token and intent.",
+    "trace_witness": "The publisher uses criterion W as the nonempty witness, but W's first committed proposal appears at position 12, after publication marker M at 11. W was not previously accepted.",
+    "trace_gap": "An ordered reader sees offsets 9 then 11; it has not recovered offset 10, which could contain a valid proposal. It reports a complete list of all members at marker 11."
+  },
+  "questions": {
+    "prior_member": {"type": "noul", "instructions": "Under the stated rules, is valid P a member of the frozen edition even though its individual outcome is recorded after M?"},
+    "after_member": {"type": "noul", "instructions": "Under the stated rules, can Q be a member of the frozen edition?"},
+    "pending_scan": {"type": "noul", "instructions": "Under the stated rules, must the publication decision wait for P's individual outcome before M commits?"},
+    "unknown_success": {"type": "noul", "instructions": "Does the timeout by itself prove that R did not commit?"},
+    "late_witness": {"type": "noul", "instructions": "Can W prove the edition was nonempty when M committed?"},
+    "gap_complete": {"type": "noul", "instructions": "Does the reader in trace_gap have proof its member list at M is complete?"},
+    "assumptions_prove_runtime": {"type": "noul", "instructions": "Do the hypothetical ordering and durability assumptions prove that the deployed event store actually provides those guarantees?"},
+    "changed_intent": {"type": "noul", "instructions": "If token R is retried with a changed identifier or category, is that an exact retry?"},
+    "visibility": {"type": "noul", "instructions": "Under the stated rules, can M be committed while the read-side list is still incomplete?"}
+  }
+}

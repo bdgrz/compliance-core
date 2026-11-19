@@ -1,15 +1,16 @@
-using Bdgrz.Compliance.Tests.Testing;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
-using Cntryl.Fitz;
-using Cntryl.Fitz.Testing;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Persistence;
 using Bdgrz.Compliance.Features.Criteria.Services;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Handlers;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Projections;
+using Bdgrz.Compliance.Features.Programs.Projectors;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
@@ -20,14 +21,13 @@ using Bdgrz.Compliance.Tests.Features.Programs.Tests;
 using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
 using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
-using Bdgrz.Compliance.Features.Programs.Commands;
-using Bdgrz.Compliance.Features.Programs.Events;
-using Bdgrz.Compliance.Features.Programs.Handlers;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.Programs.Projections;
-using Bdgrz.Compliance.Features.Programs.Projectors;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 namespace Bdgrz.Compliance.Tests.Features.Criteria.Tests;
 
 public sealed class ProgramCriteriaProjectionTests
@@ -45,11 +45,11 @@ public sealed class ProgramCriteriaProjectionTests
             "BdgrzSession"));
         var plan = new ProgramPlan(null, null, null, null, null, null);
         var creation = new RequestContext<CreateProgram>(new CreateProgram(Uuid.CreateVersion4(), tenantId, "SOC 2",
-            plan), actor);
+            plan, Uuid.CreateVersion4()), actor);
         Assert.True((await new CreateProgramHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content))
             .HandleAsync(creation, CancellationToken.None)).IsSuccess);
         var programId = creation.Request.ProgramId;
-        Assert.True((await new SelectProgramCriteriaEditionHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content), CriteriaCatalog.Platform)
+        Assert.True((await new SelectProgramCriteriaEditionHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content))
             .HandleAsync(new RequestContext<SelectProgramCriteriaEdition>(
                 new SelectProgramCriteriaEdition(Uuid.CreateVersion4(), tenantId, programId, 1, editionId), actor),
                 CancellationToken.None)).IsSuccess);
@@ -89,7 +89,7 @@ public sealed class ProgramCriteriaProjectionTests
         Assert.Equal("SOC 2 revised", current.Name);
         Assert.Equal(editionId, current.CriteriaEditionId);
         Assert.Collection(history.OrderBy(static revision => revision.Revision),
-            revision => Assert.Null(revision.CriteriaEditionId),
+            revision => Assert.Equal(creation.Request.EditionId, revision.CriteriaEditionId),
             revision => Assert.Equal((2L, editionId),
                 (revision.Revision, revision.CriteriaEditionId)),
             revision => Assert.Equal((3L, editionId),
@@ -115,6 +115,7 @@ public sealed class ProgramCriteriaProjectionTests
         builder.Services.AddScoped<IProgramDirectoryReader>(provider =>
             provider.GetRequiredService<CassieProgramDirectory>());
         builder.Services.AddPortiaEvent<ProgramCreated>(2, "bdgrz.program.created");
+        builder.Services.AddPortiaEvent<ProgramCreationAttemptFenced>(1, "bdgrz.program.creation_attempt.fenced");
         builder.Services.AddPortiaEvent<ProgramRevised>(2, "bdgrz.program.revised");
         builder.Services.AddPortiaEvent<ProgramCriteriaEditionSelected>(2,
             "bdgrz.program.criteria.selected");

@@ -1,16 +1,20 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
+using Bdgrz.Compliance.Features.ControlMappings.Commands;
 using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
 using Bdgrz.Compliance.Features.ControlMappings.Services;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Controls.Rules;
@@ -18,6 +22,7 @@ using Bdgrz.Compliance.Features.Controls.Services;
 using Bdgrz.Compliance.Features.Criteria.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -28,8 +33,11 @@ using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
@@ -39,22 +47,14 @@ using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Commands;
-using Bdgrz.Compliance.Features.ControlMappings.Models;
-using Bdgrz.Compliance.Features.ControlMappings.Readers;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Programs.Aggregates;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.ControlMappings.Handlers;
 
 /// <summary>
@@ -64,7 +64,7 @@ namespace Bdgrz.Compliance.Features.ControlMappings.Handlers;
 ///     and the same id with a changed intent conflicts. Proposals on different tuples never touch one another.
 /// </summary>
 public sealed class ProposeControlCriterionMappingHandler(NativeOperationExecutor operations,
-    ControlMappingReader mappings, IAggregateReader reader, ICriteriaCatalog catalog,
+    ControlMappingReader mappings, IAggregateReader reader, ICriteriaEntryAuthority criteriaAuthority,
     ControlActivationSource controls, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ProposeControlCriterionMapping, ControlCriterionMappingRegistration>
 {
@@ -108,10 +108,10 @@ public sealed class ProposeControlCriterionMappingHandler(NativeOperationExecuto
                 if (program.CriteriaEditionId != request.EditionId)
                     return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
                         "A mapping must target the criteria edition the program has selected."));
-                var entry = catalog.GetEntry(request.EditionId, request.CriterionIdentifier);
-                if (entry is null)
-                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Validation,
-                        "The criterion or point of focus is not in the selected edition."));
+                var entry = await CriteriaEntryAuthorityGuard.RequireAsync(criteriaAuthority, request.EditionId,
+                    request.CriterionIdentifier, token).ConfigureAwait(false);
+                if (!entry.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(entry.Error!);
                 var control = await controls.LoadAsync(request.TenantId, request.ProgramId, request.ControlId, token)
                     .ConfigureAwait(false);
                 if (!control.IsSuccess)
@@ -123,7 +123,7 @@ public sealed class ProposeControlCriterionMappingHandler(NativeOperationExecuto
                     request.ApplicabilityExplanation);
                 if (!guard.IsSuccess)
                     return Result<FirstResponseDescriptor>.Failure(guard.Error!);
-                criterionKind = entry.Kind;
+                criterionKind = entry.Value.Kind;
                 (response, result) = await NativeContent.FreezeAsync(content, request.TenantId,
                     ControlCriterionMapping.RegistrationSchema, new ControlCriterionMappingRegistration(request.MappingId,
                         request.ExpectedRevision + 1, (rules.View?.Versions.Count ?? 0) + 1), token).ConfigureAwait(false);

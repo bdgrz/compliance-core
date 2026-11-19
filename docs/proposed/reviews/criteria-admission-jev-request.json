@@ -1,0 +1,21 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "policy": "A trusted handler admits an exact operation only after a fresh, source-authoritative, linearizable current read of the actor's operator owner says the actor is active. The handler durably binds actor, operation ID, complete intent and exact grant generation/version in the operation. Under this proposed policy, revocation prevents later admissions but does not cancel the exact operations already admitted. After a crash, an unknown commit is reconciled; if no intent was committed, a later attempt must be reauthorized. A retry result is disclosed only if the requester currently has permission. Linearizable reads and trusted binding are assumed for the examples, not established provider capabilities.",
+    "before": "The authoritative current read admits operation T while actor A is active. The trusted handler commits T with that exact admitted actor, grant generation and intent. A is then revoked. T later finishes with that same intent.",
+    "after": "A is revoked on the authoritative operator owner. Afterwards a linearizable current read of that same owner is performed for a new operation U.",
+    "stale": "A projection shows actor B is active. B is revoked on the source owner. The projection is delayed and still says B is active. The handler relies only on the projection to admit operation V.",
+    "crash": "Actor A was read as active, but the process crashes before recording an operation. A is revoked before the process restarts. Reconciliation proves the operation never committed.",
+    "unknown": "Actor A's operation W was submitted and the process timed out. It is not known whether W committed. A retry with the same token arrives.",
+    "disclosure": "An operation was accepted earlier while its actor was authorized. The same actor later becomes unauthorized and retries to retrieve its earlier result."
+  },
+  "questions": {
+    "admitted_finishes": {"type":"noul","instructions":"Under state.policy, may the exact admitted operation in state.before finish after revocation?"},
+    "revoked_new": {"type":"noul","instructions":"Under state.policy, does the read in state.after authorize a new operation?"},
+    "stale_proof": {"type":"noul","instructions":"In state.stale, does the delayed projection prove B was active at admission?"},
+    "uncommitted_reuse": {"type":"noul","instructions":"Under state.policy, may state.crash reuse the old read as authority to admit the operation after restart?"},
+    "timeout_absence": {"type":"noul","instructions":"In state.unknown, does the timeout prove W did not commit?"},
+    "unauthorized_disclosure": {"type":"noul","instructions":"Under state.policy, may the earlier result in state.disclosure be disclosed to the actor solely because the actor was authorized when it was created?"},
+    "assumed_provider": {"type":"noul","instructions":"Does the hypothetical state.policy prove the deployed operator reader is linearizable?"}
+  }
+}

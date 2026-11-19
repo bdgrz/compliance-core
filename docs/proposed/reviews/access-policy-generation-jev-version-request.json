@@ -1,0 +1,10 @@
+{
+  "model": "jev-latest",
+  "state": "A single policy source is read at t1 and at t2. Each read is linearizable at its stated time. Both reads return version V1. Every change to the source advances its version, and a version is never reused. The times satisfy t1 < T < t2.",
+  "questions": {
+    "version_at_t": {
+      "type": "noul",
+      "instructions": "Must the policy source's version at time T be V1?"
+    }
+  }
+}

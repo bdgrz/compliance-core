@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "closure_safety": {
+      "type": "noul",
+      "noul": 0.92
+    },
+    "pending_release_risk": {
+      "type": "noul",
+      "noul": 0.7
+    },
+    "empty_refusal_risk": {
+      "type": "noul",
+      "noul": 0.28
+    },
+    "late_proposal_risk": {
+      "type": "noul",
+      "noul": 0.15
+    },
+    "bounded_parent": {
+      "type": "noul",
+      "noul": 0.18
+    },
+    "bounded_total": {
+      "type": "noul",
+      "noul": 0.12
+    },
+    "nonterminal_crossread": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "alternative_count": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "no_batch_memory": {
+      "type": "noul",
+      "noul": 0.85
+    },
+    "correct_design": {
+      "type": "noul",
+      "noul": 0.9
+    }
+  },
+  "usage": {
+    "input_tokens": 1028,
+    "output_tokens": 189
+  }
+}

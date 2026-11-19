@@ -1,0 +1,22 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "method": "    public Result RefuseContested(Uuid editionId, Uuid operationId, long requestedGeneration,\n        Uuid editionRequestEventId, ActorAttribution requestedBy)\n    {\n        if (!ValidIdentity(editionId, operationId, requestedGeneration) || editionRequestEventId == Uuid.Empty ||\n            !ValidActor(requestedBy) || !Selected(editionId, operationId))\n            return Failure(RequestErrorKind.Validation, \"The selected edition request, generation and actor are required.\");\n        if (_selectedRefusal is { } previous)\n            return previous.RequestedGeneration == requestedGeneration && previous.EditionRequestEventId == editionRequestEventId &&\n                   previous.RequestedBy == requestedBy ? Result.Success :\n                Failure(RequestErrorKind.Conflict, \"The operation already has a different refusal intent.\");\n        if (_selected is not null || _selectedFence is not null)\n            return Failure(RequestErrorKind.Conflict, \"The edition request already has a reservation or terminal fence.\");\n        if (_current is not { } holder || holder.Reserved.EditionId == editionId && holder.Reserved.OperationId == operationId ||\n            holder.Reserved.Metadata.EventId == Uuid.Empty || _lastGeneration == long.MaxValue ||\n            requestedGeneration != _lastGeneration + 1)\n            return Failure(RequestErrorKind.Conflict, \"A different exact live holder and the next generation are required.\");\n        RaiseEvent(new EditionLabelReservationRefused(_label, editionId, operationId, requestedGeneration,\n            editionRequestEventId, requestedBy, holder.Reserved.EditionId, holder.Reserved.OperationId,\n            holder.Reserved.Generation, holder.Reserved.Metadata.EventId));\n        return Result.Success;\n    }\n\n",
+    "selected_state": "The same operation is selected during replay. Its saved refusal has RequestedGeneration 2, EditionRequestEventId R, and RequestedBy A. The method was originally called with those exact values. The current label holder is now a different later reservation at generation 2, and _lastGeneration is now 2.",
+    "assumption": "The stored refusal is present in _selectedRefusal when the method is called."
+  },
+  "questions": {
+    "exact": {
+      "type": "noul",
+      "instructions": "In state.selected_state, if RefuseContested is called with requestedGeneration 2, editionRequestEventId R, and requestedBy A, does this method return success before examining the current holder?"
+    },
+    "rebase": {
+      "type": "noul",
+      "instructions": "In state.selected_state, if RefuseContested is called with requestedGeneration 3 instead, does this method reject the changed generation?"
+    },
+    "mutates": {
+      "type": "noul",
+      "instructions": "In state.selected_state, does the exact retry append an event?"
+    }
+  }
+}

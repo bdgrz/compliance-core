@@ -1,0 +1,14 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "grant": "A single user's previously inactive platform-operator privilege becomes active. The source event belongs to that user's independent operator aggregate, not the legacy global roster.",
+    "revoke": "An active unprotected user's exact platform-operator grant episode becomes inactive on that user's independent aggregate."
+  },
+  "questions": {
+    "privilege_granted": {"type":"noul","instructions":"Does PlatformOperatorPrivilegeGranted precisely name state.grant as a completed per-user business fact?"},
+    "access_granted": {"type":"noul","instructions":"Does PlatformOperatorAccessGranted precisely name state.grant as a completed per-user business fact?"},
+    "status_granted": {"type":"noul","instructions":"Does PlatformOperatorStatusGranted precisely name state.grant as a completed per-user business fact?"},
+    "privilege_revoked": {"type":"noul","instructions":"Does PlatformOperatorPrivilegeRevoked precisely name state.revoke as a completed per-user business fact?"},
+    "access_revoked": {"type":"noul","instructions":"Does PlatformOperatorAccessRevoked precisely name state.revoke as a completed per-user business fact?"}
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner_methods": "    public Result PinWitness(CriteriaPublicationStarted started)\n    {\n        ArgumentNullException.ThrowIfNull(started);\n        if (!ValidStarted(started) || !SelectedAttempt(started.PublicationAttemptId))\n            return Failure(RequestErrorKind.Validation, \"The selected, source-verified publication attempt is required.\");\n        if (_selectedPin is { } previous)\n            return Matches(previous, started) ? Result.Success :\n                Failure(RequestErrorKind.Conflict, \"The publication attempt already pinned different intent.\");\n        if (started.AttemptOrdinal <= _fencedAttemptOrdinal || _selectedPinFence is not null)\n            return Failure(RequestErrorKind.Conflict, \"The publication attempt was already fenced.\");\n        if (_activePin is not null || _pending is not null || !Exists || _kind != \"criterion\" ||\n            _currentIncarnationId != started.WitnessIncarnationId || _draftGeneration != started.DraftGeneration)\n            return Failure(RequestErrorKind.Conflict, \"The exact accepted criterion is not an available witness.\");\n        RaiseEvent(new CriterionWitnessPinned(_editionId, _draftGeneration, _identifier, started.PublicationAttemptId,\n            started.AttemptOrdinal, _currentIncarnationId, started.Metadata.EventId));\n        return Result.Success;\n    }\n\n    /// <summary>Fences an exact attempt when its witness cannot satisfy the pin at this target position.</summary>\n    /// <remarks>The caller must authenticate the committed start and qualify the exact target head and conditional append.</remarks>\n    public Result RefuseWitness(CriteriaPublicationStarted started)\n    {\n        ArgumentNullException.ThrowIfNull(started);\n        if (!ValidStarted(started) || !SelectedAttempt(started.PublicationAttemptId))\n            return Failure(RequestErrorKind.Validation, \"The selected source-verified publication attempt is required.\");\n        if (_selectedWitnessRefusal is { } previous)\n            return Matches(previous, started) ? Result.Success :\n                Failure(RequestErrorKind.Conflict, \"The witness refusal already names a different attempt.\");\n        if (_selectedPin is not null || _selectedPinFence is not null || started.AttemptOrdinal <= _fencedAttemptOrdinal ||\n            _pending is not null || _activePin is not null ||\n            _draftGeneration != Uuid.Empty && _draftGeneration != started.DraftGeneration)\n            return Failure(RequestErrorKind.Conflict, \"The witness attempt or entry state requires reconciliation.\");\n        if (Exists && _kind == \"criterion\" && _currentIncarnationId == started.WitnessIncarnationId &&\n            _draftGeneration == started.DraftGeneration)\n            return Failure(RequestErrorKind.Conflict, \"The exact criterion can still be pinned.\");\n        var fact = new CriterionWitnessRefused(_editionId, started.DraftGeneration, _identifier, started.PublicationAttemptId,\n            started.AttemptOrdinal, started.WitnessIncarnationId, started.Metadata.EventId);\n        if (!CriteriaContentBounds.Payload(fact))\n            return Failure(RequestErrorKind.Validation, \"A criteria event's JSON business payload must fit within 8192 bytes.\");\n        RaiseEvent(fact);\n        return Result.Success;\n    }\n\n    /// <summary>\n    /// Fences an exact committed edition-abort fact, including when the pin has\n    /// not arrived. The caller must authenticate the source event before invoking.\n    /// </summary>\n    public Result FenceWitness(CriteriaPublicationAborted aborted)\n    {\n        ArgumentNullException.ThrowIfNull(aborted);\n        if (!ValidAborted(aborted) || !SelectedAttempt(aborted.PublicationAttemptId))\n            return Failure(RequestErrorKind.Validation, \"The selected, source-verified abort is required.\");\n        if (_selectedPinFence is { } previous)\n            return Matches(previous, aborted) ? Result.Success :\n                Failure(RequestErrorKind.Conflict, \"The attempt was fenced by different source evidence.\");\n        if (_draftGeneration != Uuid.Empty && _draftGeneration != aborted.DraftGeneration)\n            return Failure(RequestErrorKind.Conflict, \"The abort names another draft generation.\");\n        if (_activePin is { } active && active.AttemptOrdinal == aborted.AttemptOrdinal &&\n            (active.PublicationAttemptId != aborted.PublicationAttemptId || active.IncarnationId != aborted.WitnessIncarnationId))\n            return Failure(RequestErrorKind.Conflict, \"The attempt ordinal is owned by another witness pin.\");\n        if (_activePin is { } earlier && earlier.AttemptOrdinal < aborted.AttemptOrdinal)\n            return Failure(RequestErrorKind.Conflict, \"A prior witness pin must be reconciled before fencing a later attempt.\");\n        RaiseEvent(new CriterionWitnessPinFenced(_editionId, aborted.DraftGeneration, _identifier,\n            aborted.PublicationAttemptId, aborted.AttemptOrdinal, aborted.WitnessIncarnationId, aborted.Metadata.EventId));\n        return Result.Success;\n    }\n\n",
+    "storage": "The entry stream supports a durable conditional append at the exact observed resource position. Competing appends at the same position cannot both commit. The caller verifies the exact committed edition-start event and has a qualified fresh entry head before deciding. No provider is presently qualified.",
+    "race": "A publication start targets an absent entry. An independently authorized create proposal competes with a witness refusal at the same empty resource position.",
+    "retry": "A previously committed refusal is hydrated for the selected attempt, and the same start event is delivered again."
+  },
+  "questions": {
+    "pending": {
+      "type": "noul",
+      "instructions": "Can RefuseWitness emit a refusal when an entry mutation is unresolved?"
+    },
+    "exact_live": {
+      "type": "noul",
+      "instructions": "Can RefuseWitness emit a refusal when the exact requested criterion incarnation is accepted and available to pin?"
+    },
+    "retry": {
+      "type": "noul",
+      "instructions": "In state.retry does the exact refusal retry return success without a new fact?"
+    },
+    "delayed_pin": {
+      "type": "noul",
+      "instructions": "After a refusal commits and is replayed, does the same attempt remain able to append a witness pin?"
+    },
+    "race": {
+      "type": "noul",
+      "instructions": "In state.race can both competing writes commit at the same source position under the stated storage assumption?"
+    },
+    "provider": {
+      "type": "noul",
+      "instructions": "Does state.storage say a production freshness provider has been qualified?"
+    }
+  }
+}

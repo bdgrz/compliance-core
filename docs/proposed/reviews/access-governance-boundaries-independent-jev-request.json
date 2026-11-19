@@ -1,0 +1,32 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "domain": "An access campaign reviews one item per expected account-entitlement pair. Items independently own decisions. Existing policy requires an authoritative campaign completed fact only when all required items have closed. The architectural constraint prohibits a write decision that must collect or decide over every child, including a distributed chain or ledger. Projection reports may lag. Delegates and authorization remain separate owners."
+  },
+  "questions": {
+    "per_item_report": {
+      "type": "noul",
+      "instructions": "If each access-review item independently records its final decision and a projection displays pending and decided items, does this alone prove an authoritative campaign-wide assertion that every required item has been decided?"
+    },
+    "all_child_gate": {
+      "type": "noul",
+      "instructions": "If a campaign completion write is permitted only after a process checks every required item outcome, does that write still depend on all children even if outcomes are stored on the items and streamed in pages?"
+    },
+    "distributed_ledger": {
+      "type": "noul",
+      "instructions": "If each selected item is tracked in a separate admission record and a process must traverse all of those records before sealing, is that still a distributed per-item ledger used to decide the parent write?"
+    },
+    "batch_reporting": {
+      "type": "noul",
+      "instructions": "Can individual privileged-safe access decisions be recorded independently while a non-authoritative report groups them by a shared user action identifier?"
+    },
+    "business_tradeoff": {
+      "type": "noul",
+      "instructions": "Does replacing an authoritative completed campaign with a projection of item statuses weaken the original guarantee that a durable campaign completion means all required items were closed?"
+    },
+    "cycle_edge": {
+      "type": "noul",
+      "instructions": "If a new graph edge is accepted only after checking whether an arbitrary path already connects its endpoints, can validation require examining an unbounded number of existing edges?"
+    }
+  }
+}
