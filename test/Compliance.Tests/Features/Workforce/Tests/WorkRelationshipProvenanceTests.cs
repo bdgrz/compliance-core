@@ -11,6 +11,7 @@ using Cntryl.Portia.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
+[Collection("Cassie test server")]
 public sealed class WorkRelationshipProvenanceTests
 {
     static readonly Uuid Tenant = Uuid.CreateVersion4();

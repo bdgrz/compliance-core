@@ -82,6 +82,7 @@ using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Work.Queries;
 namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
 
+[Collection("Cassie test server")]
 public sealed class WorkQueueSearchTests
 {
     [Fact]

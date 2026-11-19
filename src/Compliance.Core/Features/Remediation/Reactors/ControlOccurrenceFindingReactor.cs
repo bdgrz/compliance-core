@@ -51,8 +51,10 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
         CancellationToken ct)
     {
         var ev = context.Trigger;
-        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
+        var sourceVerification = await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
             new ControlOccurrence(ev.TenantId, ev.ProgramId, ev.ControlId, ev.OccurrenceId).Stream, ct).ConfigureAwait(false);
+        if (!sourceVerification.IsSuccess)
+            return sourceVerification;
         var attestation = await ReadAsync<ControlAttestationView>(context, ev.AttestationContent, ct)
             .ConfigureAwait(false);
         if (attestation.Result is not (ControlOperationStates.Failed or ControlOperationStates.Skipped))
@@ -70,8 +72,10 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
         CancellationToken ct)
     {
         var ev = context.Trigger;
-        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
+        var sourceVerification = await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
             new ControlOccurrence(ev.TenantId, ev.ProgramId, ev.ControlId, ev.OccurrenceId).Stream, ct).ConfigureAwait(false);
+        if (!sourceVerification.IsSuccess)
+            return sourceVerification;
         var review = await ReadAsync<ControlOccurrenceReviewView>(context, ev.ReviewContent, ct)
             .ConfigureAwait(false);
         if (review.Outcome != ControlOperationStates.ActionRequested)

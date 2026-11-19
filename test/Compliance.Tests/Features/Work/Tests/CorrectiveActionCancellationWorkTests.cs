@@ -8,6 +8,7 @@ using Bdgrz.Compliance.Features.Work.Services;
 using Bdgrz.Compliance.Tests.Features.Operations.Tests;
 namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
 
+[Collection("Cassie test server")]
 public sealed class CorrectiveActionCancellationWorkTests
 {
     [Fact]

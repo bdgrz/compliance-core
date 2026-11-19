@@ -82,6 +82,7 @@ using Bdgrz.Compliance.Features.Work.Queries;
 using Bdgrz.Compliance.Features.Work.Readers;
 namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
 
+[Collection("Cassie test server")]
 public sealed class OccurrencePopulationPaginationTests
 {
     [Fact]

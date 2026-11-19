@@ -16,6 +16,7 @@ using Cntryl.Portia.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
+[Collection("Cassie test server")]
 public sealed class WorkRelationshipSponsorshipTests
 {
     static readonly DateOnly Start = new(2026, 1, 5);

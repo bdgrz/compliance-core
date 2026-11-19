@@ -64,8 +64,10 @@ public sealed partial class ControlEvaluationDeviationFindingReactor(
         CancellationToken ct)
     {
         var ev = context.Trigger;
-        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
+        var sourceVerification = await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
             new ControlEvaluation(ev.TenantId, ev.EvaluationId).Stream, ct).ConfigureAwait(false);
+        if (!sourceVerification.IsSuccess)
+            return sourceVerification;
         EvaluationSubmissionView submission;
         try
         {
