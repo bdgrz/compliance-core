@@ -25,7 +25,7 @@ namespace Bdgrz.Compliance.Features.Tenants.Models;
 public sealed record TenantInvitationDeliveryAttempt(Uuid AttemptId, DateTimeOffset StartedAt, string Result,
     string? FailureCode, DateTimeOffset? ResultAt)
 {
-    /// <summary>The send began and no result is stored; a resume sends the same attempt again.</summary>
+    /// <summary>The send began but no result was stored; a resume records an unknown outcome without resending.</summary>
     public const string InFlight = "in_flight";
 
     /// <summary>The provider accepted the message.</summary>

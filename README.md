@@ -115,8 +115,9 @@ previous token. The `.env.example` remains suitable for local mock delivery.
 The API commits only a token hash and key ID under the client-chosen invitation ID; the invitation
 delivery process (not the invitation stream) derives the seven-day invitation token and keeps its
 attempt result in its own process record. A provider-accepted invitation is not proof of delivery.
-An unknown SES outcome blocks automatic resend for that attempt; a known failure requires an
-administrator to invite again under a new invitation ID after the cause is fixed. At most one
+An unknown SES outcome, or a resumed send attempt whose provider result was never recorded, blocks
+automatic resend for that attempt; a known failure requires an administrator to invite again under a
+new invitation ID after the cause is fixed. At most one
 invitation is pending per mailbox: a second invitation ID for the same address conflicts until the
 first is accepted, expired, or failed. Development and tests default to
 `MockTenantInvitationDelivery` in the worker that sent the invitation. Invitation acceptance and

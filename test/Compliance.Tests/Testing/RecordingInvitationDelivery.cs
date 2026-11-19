@@ -44,8 +44,8 @@ using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 namespace Bdgrz.Compliance.Tests.Testing;
 
 /// <summary>
-///     Records every send of an invitation. It can fail the first send as a provider rejection, or cancel the worker
-///     right after the first send is accepted, which is how a crash between the send and its stored result looks.
+///     Records every send of an invitation. It can fail the first send as a provider rejection, return an unknown
+///     outcome, or cancel the worker right after the first send is accepted to simulate a lost stored result.
 /// </summary>
 sealed class RecordingInvitationDelivery : ITenantInvitationDelivery
 {
