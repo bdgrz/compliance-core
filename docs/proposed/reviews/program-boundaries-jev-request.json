@@ -1,0 +1,45 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "domain": "An organization has one system boundary per program and at most one draft. The boundary has an immutable sequence of approved versions with strictly increasing effective dates. Every draft has a description, categories including security, and many independently owned scope decisions. Each decision records one subject and exact source version. An approver must not have authored any draft revision unless covered by a waiver. A client service must be active and belong to the program.",
+    "design": "A small boundary line serializes opening and approval. Each scope decision has its own stream. Every scope change receives one admission, its target durably records acceptance or a token-specific no-effect/fence, and a bounded admission window stores the single settled outcome. Windows close and link to successors. A frozen verified chain of windows and exact participant facts identifies the immutable draft cut. Approval checks each authored revision against the reviewer through source-backed bounded-memory scans. No parent stores all decisions or all authors.",
+    "race": "A source service was active and in the program when its state was read. It retired before the boundary approved, and the boundary uses only the earlier read.",
+    "delayed": "A target child has no event yet. A coordinator sends a change, times out, treats the timeout as refusal, releases the admission, and freezes the draft. The delayed target write then succeeds.",
+    "missing": "A cut specifies only the last window identifier; the system does not verify predecessor closure, child outcomes, or completeness of the retained chain.",
+    "scan": "A verifier reads every authoritative, frozen source event in a complete ordered chain using paged reads, comparing each author with one reviewer; it retains only the reviewer and a match flag."
+  },
+  "questions": {
+    "child_ownership": {
+      "type": "noul",
+      "instructions": "Can each scope decision retain an independent owner without a boundary aggregate storing a roster, if all changes obey the described admissions?"
+    },
+    "read_race": {
+      "type": "noul",
+      "instructions": "Does the earlier read establish that the service was active at approval in the race?"
+    },
+    "delayed_write": {
+      "type": "noul",
+      "instructions": "Can the delayed target write change the supposedly frozen draft in the delayed scenario?"
+    },
+    "terminal_fence": {
+      "type": "noul",
+      "instructions": "Would a target-side durable fence for the exact operation token prevent that delayed write, provided the fence atomically detects a prior acceptance?"
+    },
+    "cut_completeness": {
+      "type": "noul",
+      "instructions": "Is the last window identifier alone sufficient evidence of a complete and immutable set of admitted decisions in the missing scenario?"
+    },
+    "author_scan": {
+      "type": "noul",
+      "instructions": "Can the scan determine whether the one reviewer authored any of the frozen revisions without holding all author identities in memory?"
+    },
+    "immutable_reference": {
+      "type": "noul",
+      "instructions": "If the retained source facts of the frozen chain cannot be altered, every exact child fact is retained, and all subsequent writes are excluded from that cut, can an approved version refer to the cut without embedding all scope decisions in the approval event?"
+    },
+    "separation_waiver": {
+      "type": "noul",
+      "instructions": "Does checking only the author of the latest edit establish that the reviewer authored no revision of the entire draft?"
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "status": "partial source checkpoint; scoped authority selection green; full acceptance blocked",
+  "base_commit": "5c9d9b83b602c9d33f003feab7e92f86e2d99b5f",
+  "build": {
+    "configuration": "Release",
+    "warnings": 0,
+    "errors": 0
+  },
+  "focused": {
+    "passed": 296,
+    "failed": 0,
+    "log": "/tmp/compliance-scoped-access-expanded.log"
+  },
+  "supplement_after_full_run": {
+    "passed": 21,
+    "failed": 0,
+    "scope": "WithdrawEvidenceSupportHandlerTests after two expired-guest fixture cap corrections",
+    "log": "/tmp/compliance-scoped-access-expiry-fixture.log"
+  },
+  "full_gate": {
+    "passed": 8141,
+    "failed": 1082,
+    "skipped": 0,
+    "total": 9223,
+    "excluded_categories": [
+      "BrokerIntegration",
+      "WebIntegration"
+    ],
+    "log": "/tmp/compliance-scoped-access-full-final.log",
+    "trx": "/tmp/compliance-scoped-access-full-final/backend.trx",
+    "frozen_inputs": 6713,
+    "changed_during_run": 0,
+    "input_manifest_sha256": "823e6ec1b98bc765fecc01f1b62c3adc87632d48babd88292b0022236bdac704",
+    "note": "Two expired-guest fixture cap corrections followed this run; the supplementary 21-case selection passed. No later full pass is claimed."
+  },
+  "failure_groups": [
+    {
+      "message": "CASSIE_STARTUP_DDL",
+      "count": 540,
+      "example": "Bdgrz.Compliance.Tests.Features.Workforce.Tests.PersonNativeHistoryTests.ShouldRefuseDifferentUnselectedIntermediateSavedPersonPrefixGivenCorruptedHistory(fault: \"event_id\")"
+    },
+    {
+      "message": "Cntryl.Cassie.CassieException : too many connections",
+      "count": 481,
+      "example": "Bdgrz.Compliance.Tests.Features.Workforce.Tests.CassieServiceIdentityDirectoryTests.ShouldListOnlyUnownedWorkGivenExpiredReviewAndEndedOwner"
+    },
+    {
+      "message": "Finding closure requires a current proposal and its independent review.",
+      "count": 30,
+      "example": "Bdgrz.Compliance.Tests.Features.Remediation.Tests.FindingTests.ShouldCloseAndReopenWithHistoryGivenVerifiedRemediation"
+    },
+    {
+      "message": "Assert.True() Failure",
+      "count": 16,
+      "example": "Bdgrz.Compliance.Tests.Features.Remediation.Tests.FindingCorrectiveActionOutcomeTests.ShouldKeepExactRepeatedOutcomeAsNoOpGivenFindingAlreadyClosingOrClosed(closed: False)"
+    },
+    {
+      "message": "System.InvalidOperationException :  is not an action of the frozen closure.",
+      "count": 5,
+      "example": "Bdgrz.Compliance.Tests.Features.Remediation.Tests.FindingClosureWithdrawalWorkflowTests.ShouldRefuseWithoutWithdrawalFactGivenReviewAlreadyClosedFinding"
+    },
+    {
+      "message": "Assert.Equal() Failure: Values differ",
+      "count": 3,
+      "example": "Bdgrz.Compliance.Tests.Features.Policies.Tests.PolicyNativeContentTests.ShouldAcceptNativeApprovalGivenReviewerIsIndependentOfAllAuthors"
+    },
+    {
+      "message": "The technology-inventory directory returned invalid baseline source data.",
+      "count": 2,
+      "example": "Bdgrz.Compliance.Tests.Features.Examinations.Tests.TechnologyComponentTypeIBaselineSourceContributorTests.ShouldBlockCloudAccountComponentGivenReviewedSystemWasNotCaptured"
+    },
+    {
+      "message": "Only a returned attestation can be corrected.",
+      "count": 2,
+      "example": "Bdgrz.Compliance.Tests.Features.Operations.Tests.ControlOperatingHistoryCompactionTests.ShouldKeepOccurrenceCommandAuthorityBoundedGivenManyCorrectedAndReviewedVersions"
+    },
+    {
+      "message": "Assert.Equal() Failure: Strings differ",
+      "count": 1,
+      "example": "Bdgrz.Compliance.Tests.Features.Work.Tests.WorkDigestAttemptBindingTests.ShouldRecoverUnknownWithoutResendingGivenTransportExceptionOrRequestedCancellation(cancellation: False)"
+    },
+    {
+      "message": "A provider source stream is invalid or inconsistent.",
+      "count": 1,
+      "example": "Bdgrz.Compliance.Tests.Features.Examinations.Tests.ProviderTypeIBaselineSourceContributorTests.ShouldCaptureProviderAtTypeIDateGivenLaterRevision"
+    },
+    {
+      "message": "System.InvalidOperationException : A projection batch is open on this store, and a query-side read cannot see its staged writes. Read through Transaction while a batch is open.",
+      "count": 1,
+      "example": "Bdgrz.Compliance.Tests.Features.Applications.Tests.ApplicationEvidenceSourceReferenceDirectoryTests.ShouldRetainUnresolvedHistoryGivenWithdrawnOccurrenceSupport"
+    }
+  ],
+  "blockers": [
+    "https://github.com/bdgrz/compliance-core/issues/1188",
+    "https://github.com/bdgrz/compliance-core/issues/1189"
+  ],
+  "delivery": "No PR, final-head CI, merge or deployment acceptance."
+}

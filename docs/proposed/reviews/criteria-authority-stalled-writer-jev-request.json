@@ -1,0 +1,16 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "case": "Operation X has an edition-window admission. The target criterion handler reads the gate as open and the target stream as empty, then pauses before appending. Coordinator times out and marks X refused without recording any event on the target. Gate seals and publication completes. The paused handler resumes and attempts its already-prepared append against the still-empty target stream. No other events have been appended to that target."
+  },
+  "questions": {
+    "append_can_win": {
+      "type": "noul",
+      "instructions": "In this case, can the paused handler append its prepared criterion event after publication if the target stream version is still unchanged?"
+    },
+    "fence_changes_version": {
+      "type": "noul",
+      "instructions": "In this case, would a committed token-specific fence on the target before gate closure cause the paused append with its original expected stream version to conflict?"
+    }
+  }
+}

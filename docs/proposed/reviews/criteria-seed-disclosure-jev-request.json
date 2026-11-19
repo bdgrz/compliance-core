@@ -1,0 +1,52 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "source": "using Bdgrz.Compliance.Features.Criteria.Events;\nusing Bdgrz.Compliance.Features.Kernel.Services;\nusing Cntryl.Portia;\n\nnamespace Bdgrz.Compliance.Features.Criteria.Aggregates;\n\n/// <summary>One immutable disclosed support limit for one platform seed edition.</summary>\n/// <remarks>\n/// A trusted seed participant must verify the exact committed edition request and\n/// its version/fingerprint before calling <see cref=\"Record\" />. An event ID or\n/// a system actor supplied by an untrusted caller is not source authority.\n/// </remarks>\npublic sealed class CriteriaSeedDisclosure : Aggregate\n{\n    readonly Uuid _editionId;\n    readonly string _category;\n    readonly string _code;\n    CriteriaSeedDisclosureRecorded? _recorded;\n\n    /// <summary>Opens one edition/category/code disclosure.</summary>\n    public CriteriaSeedDisclosure(Uuid editionId, string category, string code)\n        : base(IdentityOf(editionId, category, code), AddressOf(editionId, category, code))\n    {\n        _editionId = editionId;\n        _category = category;\n        _code = code;\n        On<CriteriaSeedDisclosureRecorded>(Apply);\n    }\n\n    /// <summary>Whether the disclosure fact has been raised or replayed.</summary>\n    public bool IsRecorded => _recorded is not null;\n\n    /// <summary>The exact disclosure fact, if recorded.</summary>\n    public CriteriaSeedDisclosureRecorded? Recorded => _recorded;\n\n    /// <summary>Returns the deterministic identity for one disclosure.</summary>\n    public static Uuid IdentityOf(Uuid editionId, string category, string code)\n    {\n        EnsureIdentity(editionId, category, code);\n        return AggregateIdentity.Create(nameof(CriteriaSeedDisclosure), editionId, category, code);\n    }\n\n    /// <summary>Returns the disclosure stream in the edition's ordered source area.</summary>\n    public static EventStreamAddress AddressOf(Uuid editionId, string category, string code) =>\n        new(\"bdgrz\", $\"criteria-{editionId}\", $\"disclosure-{IdentityOf(editionId, category, code)}\");\n\n    /// <summary>Records an immutable source-verified disclosure or returns its exact prior result.</summary>\n    public Result Record(Uuid operationId, string seedVersion, string seedFingerprint,\n        Uuid editionRequestEventId, string note, ActorAttribution recordedBy)\n    {\n        if (!Valid(operationId, seedVersion, seedFingerprint, editionRequestEventId, note, recordedBy))\n            return Failure(RequestErrorKind.Validation,\n                \"A disclosure needs an operation, exact seed binding, edition request, note and actor.\");\n\n        if (_recorded is not null)\n        {\n            return _recorded.OperationId == operationId && _recorded.SeedVersion == seedVersion &&\n                   _recorded.SeedFingerprint == seedFingerprint &&\n                   _recorded.EditionRequestEventId == editionRequestEventId && _recorded.Note == note &&\n                   _recorded.RecordedBy == recordedBy\n                ? Result.Success\n                : Failure(RequestErrorKind.Conflict, \"The disclosure identity already has a different seed intent.\");\n        }\n\n        RaiseEvent(new CriteriaSeedDisclosureRecorded(_editionId, _category, _code, operationId, seedVersion,\n            seedFingerprint, editionRequestEventId, note, recordedBy));\n        return Result.Success;\n    }\n\n    void Apply(CriteriaSeedDisclosureRecorded fact)\n    {\n        if (_recorded is not null || fact.EditionId != _editionId ||\n            !string.Equals(fact.Category, _category, StringComparison.Ordinal) ||\n            !string.Equals(fact.Code, _code, StringComparison.Ordinal) ||\n            !Valid(fact.OperationId, fact.SeedVersion, fact.SeedFingerprint, fact.EditionRequestEventId,\n                fact.Note, fact.RecordedBy))\n            throw new InvalidOperationException(\"A seed disclosure must be one valid fact for its exact identity.\");\n\n        _recorded = fact;\n    }\n\n    static bool Valid(Uuid operationId, string? seedVersion, string? fingerprint, Uuid editionRequestEventId,\n        string? note, ActorAttribution? actor) =>\n        operationId != Uuid.Empty && editionRequestEventId != Uuid.Empty &&\n        !string.IsNullOrWhiteSpace(seedVersion) && IsFingerprint(fingerprint) &&\n        !string.IsNullOrWhiteSpace(note) && actor is not null &&\n        !string.IsNullOrWhiteSpace(actor.Subject) && !string.IsNullOrWhiteSpace(actor.Issuer);\n\n    static bool IsFingerprint(string? value) => value is { Length: 64 } &&\n        value.All(static character => character is >= '0' and <= '9' or >= 'a' and <= 'f');\n\n    static void EnsureIdentity(Uuid editionId, string? category, string? code)\n    {\n        if (editionId == Uuid.Empty || category is not (\"security\" or \"availability\" or \"confidentiality\" or\n                \"processing_integrity\" or \"privacy\") || string.IsNullOrWhiteSpace(code) ||\n            !string.Equals(code, code.Trim(), StringComparison.Ordinal))\n            throw new ArgumentException(\"A disclosure requires an edition, known category and canonical code.\");\n    }\n\n    static Result Failure(RequestErrorKind kind, string message) => Result.Failure(new RequestError(kind, message));\n}\n",
+    "event": "using Cntryl.Portia;\n\nnamespace Bdgrz.Compliance.Features.Criteria.Events;\n\n/// <summary>Records one disclosed coverage limit of one platform seed edition.</summary>\n[Discriminator(\"bdgrz.criteria.seed-disclosure-recorded\", 1)]\npublic sealed record CriteriaSeedDisclosureRecorded(Uuid EditionId, string Category, string Code,\n    Uuid OperationId, string SeedVersion, string SeedFingerprint, Uuid EditionRequestEventId,\n    string Note, ActorAttribution RecordedBy) : DomainEvent;\n",
+    "exact_retry": "An existing owner already recorded operation A, seed v1, matching 64-hex digest, edition-request event R, note N and actor P. Caller repeats precisely A/v1/digest/R/N/P.",
+    "changed_intent": "The owner already recorded A/v1/digest/R/N/P. Caller repeats A with note changed to M.",
+    "unverified": "A caller supplies a nonempty UUID R that is not a real committed edition request; all other fields are structurally valid. No external source verification happens before Record.",
+    "different_edition": "One owner is opened under edition E1 and another owner under different edition E2 with identical category and code. AggregateIdentity.Create derives the owner from all supplied typed parts.",
+    "invalid_replay": "A disclosure owner for edition E1 is replayed with one disclosure event whose EditionId is E2; all other fields match.",
+    "competing": "Two fresh instances target the same disclosure stream. Both call Record successfully in memory. The event store atomically appends one batch at expected position zero; the second tries expected zero after the first commit.",
+    "fingerprint": "The owner receives any syntactically valid 64-character lowercase hexadecimal string; the owner does not calculate the fingerprint from the seed content."
+  },
+  "questions": {
+    "exact_noop": {
+      "type": "noul",
+      "instructions": "In exact_retry, does the second call raise another disclosure event?"
+    },
+    "changed_conflict": {
+      "type": "noul",
+      "instructions": "In changed_intent, does the second call reject the changed note?"
+    },
+    "spoof_accept": {
+      "type": "noul",
+      "instructions": "In unverified, can the aggregate accept the fake source event ID?"
+    },
+    "source_verifies": {
+      "type": "noul",
+      "instructions": "Does Record itself load and verify the referenced edition event from durable source?"
+    },
+    "isolation": {
+      "type": "noul",
+      "instructions": "In different_edition, do the two owners have distinct stream identities?"
+    },
+    "foreign_replay": {
+      "type": "noul",
+      "instructions": "In invalid_replay, does the owner reject replay?"
+    },
+    "both_commit": {
+      "type": "noul",
+      "instructions": "In competing, can both appends at expected zero commit to the same stream?"
+    },
+    "hash_proof": {
+      "type": "noul",
+      "instructions": "In fingerprint, does the accepted string by itself prove the actual seed content matches?"
+    },
+    "parent_roster": {
+      "type": "noul",
+      "instructions": "Does this owner retain a collection of other disclosures?"
+    }
+  }
+}

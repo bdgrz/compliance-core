@@ -494,6 +494,6 @@ public sealed class TenantInvitationTests
 
     static TEvent Fresh<TEvent>(TEvent fact)
         where TEvent : DomainEvent => (TEvent)System.Text.Json.JsonSerializer.Deserialize(
-            System.Text.Json.JsonSerializer.Serialize(fact, fact.GetType(), ComplianceCoreJsonContext.Default),
-            fact.GetType(), ComplianceCoreJsonContext.Default)!;
+            System.Text.Json.JsonSerializer.Serialize(fact, fact.GetType(), ComplianceCoreJsonMetadata.Default),
+            fact.GetType(), ComplianceCoreJsonMetadata.Default)!;
 }

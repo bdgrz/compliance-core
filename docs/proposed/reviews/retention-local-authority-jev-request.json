@@ -1,0 +1,57 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "preexisting": "A legal hold for artifact A is committed and active. A later strictly serializable transaction checks an authoritative indexed EXISTS predicate for active holds covering A and must refuse authorization if the predicate is true. The hold activation, predicate check, and authorization record participate in that same serializable authority.",
+    "phantom": "An authorization transaction reads an empty index range for holds covering A. A concurrent legal hold H for A is inserted and commits before authorization commits. The storage does not protect the predicate range against concurrent inserts. Both transactions commit.",
+    "scope": "A legal hold intends to cover selected artifacts A and B. Only the independent membership of A is committed; B is still a pending request. The UI displays the entire selected hold as active.",
+    "unknown": "A disposal authorization request timed out after reaching the authoritative transaction. No terminal outcome or fence is available. The receiver may still commit the original request.",
+    "duplicate": "A hold H has two independent artifacts in scope. Duplicate delivery of the command to release H is processed twice. An implementation decrements a shared count each time without deduplicating by operation identity.",
+    "dualwrite": "A relational database transaction checks the hold index and commits an authorization row. Afterwards a separate Portia event append records authorization. There is no atomic commit or durable reconciled state tying those two writes together.",
+    "existence": "An indexed existence predicate finds one matching active hold and immediately returns true, or returns false when the exact relevant ranges are empty under a serializable transaction. It does not load or sort the entire artifact inventory, and the authorization belongs only to artifact A.",
+    "batch": "An administrator approves separate disposal commands for artifacts A and B using one interface action. Item A is disposed. Item B is pending. A read-side worklist shows those individual statuses, with no batch-completion event.",
+    "window": "Each temporary coordinator stores one child operation and points to the next. The authorization process must traverse the whole coordinator chain from the beginning to find holds that may cover an artifact.",
+    "serialize": "An independently owned hold has an earlier committed active fact. A disposal authorization checks only an eventually consistent read model before writing an artifact event. The read model has not yet seen the hold."
+  },
+  "questions": {
+    "preexisting_refusal": {
+      "type": "noul",
+      "instructions": "In preexisting, must the authorization be refused?"
+    },
+    "phantom_race": {
+      "type": "noul",
+      "instructions": "In phantom, can authorization commit even though the hold committed first?"
+    },
+    "scope_misleading": {
+      "type": "noul",
+      "instructions": "In scope, does displaying the entire selected hold as active overstate protection for B?"
+    },
+    "unknown_pending": {
+      "type": "noul",
+      "instructions": "In unknown, is the authorization outcome still unknown?"
+    },
+    "duplicate_debit": {
+      "type": "noul",
+      "instructions": "In duplicate, can the shared count become incorrect?"
+    },
+    "dualwrite_gap": {
+      "type": "noul",
+      "instructions": "In dualwrite, can a crash leave the authorization row committed without its Portia event?"
+    },
+    "existence_all": {
+      "type": "noul",
+      "instructions": "In existence, does the authorization decision have to load all child artifacts?"
+    },
+    "batch_completion": {
+      "type": "noul",
+      "instructions": "In batch, can the worklist truthfully say both items have terminal outcomes?"
+    },
+    "window_ledger": {
+      "type": "noul",
+      "instructions": "In window, does the protocol still require a growing traversal over child operations?"
+    },
+    "serialize_stale": {
+      "type": "noul",
+      "instructions": "In serialize, can the authorization commit despite the earlier active hold?"
+    }
+  }
+}

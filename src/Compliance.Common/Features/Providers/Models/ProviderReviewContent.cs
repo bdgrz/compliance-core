@@ -8,4 +8,14 @@ namespace Bdgrz.Compliance.Features.Providers.Models;
 /// </summary>
 public sealed record ProviderReviewContent(DateOnly ReviewedAt, DateOnly NextReviewDue, string EvidenceKind,
     string Conclusion, string Rationale, Uuid? AssuranceReportId = null,
-    IReadOnlyList<string>? Exceptions = null, ProviderSourceCitation? Evidence = null);
+    IReadOnlyList<string>? Exceptions = null, ProviderSourceCitation? Evidence = null)
+{
+    /// <summary>The reviewer explicitly confirmed that no SOC 2 report or ISO/IEC 27001 certificate exists.</summary>
+    public bool NoSoc2OrIso27001 { get; init; }
+
+    /// <summary>Exact service/period gaps recorded by the immutable due-diligence review.</summary>
+    public IReadOnlyList<ProviderCoverageGapContent>? CoverageGapsFound { get; init; }
+
+    /// <summary>Complementary user-entity controls adopted by the organization.</summary>
+    public IReadOnlyList<string>? CuecsAdopted { get; init; }
+}

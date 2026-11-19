@@ -90,7 +90,8 @@ public static class BoundaryFactContent
             header.ProgramId == Uuid.Empty || header.Content is null || fact.Change is null || fact.Authority is null ||
             fact.Operation.Owner != new EventStreamAddress(header.TenantId.ToString(), SystemBoundary.Area, header.BoundaryId.ToString()))
             throw new ImmutableContentIntegrityException("The native boundary fact has another exact owner scope.");
-        var valid = fact switch
+        var shape = fact is DomainEvent value ? BoundaryFactShape.Normalize(value) : null;
+        var valid = shape switch
         {
             BoundaryDraftCreated data => data.ProgramId == header.ProgramId && data.BoundaryId == header.BoundaryId,
             BoundaryDraftRevised data => data.BoundaryId == header.BoundaryId,

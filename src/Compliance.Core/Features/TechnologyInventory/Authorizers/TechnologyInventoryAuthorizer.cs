@@ -30,11 +30,13 @@ using Bdgrz.Compliance.Features.Retention.Commands;
 using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Tenants.Readers;
 using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Authorizers;
 
 sealed class TechnologyInventoryAuthorizer(ITenantMembershipDirectoryReader memberships,
     ITenantActivity tenants, IPermissionAuthorizer permissions,
-    IAccessGrantScopePermissionAuthorizer? scopedPermissions = null)
+    IAccessGrantScopePermissionAuthorizer? scopedPermissions = null,
+    IAccessGrantRolePermissionAuthorizer? rolePermissions = null)
     : IRequestAuthorizer<ITechnologyInventoryRequest>
 {
     // Technology inventory has its own permission so its scoped authorization can evolve
@@ -58,6 +60,17 @@ sealed class TechnologyInventoryAuthorizer(ITenantMembershipDirectoryReader memb
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "The tenant is not active."));
         var memberId = RbacIds.Member(tenantId, userId);
+        if (context.Request is ReviseInformationAsset)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "Use the named information asset details, classification, owner or retirement action."));
+        if (context.Request is ITechnologyInventoryLeadWriteRequest)
+            return rolePermissions is not null &&
+                await rolePermissions.IsAllowedAsOrganizationRoleAsync(tenantId, userId, memberId,
+                    BuiltInRbac.ComplianceManagementRoleId(tenantId), RbacPermissions.TechnologyInventoryManage, ct)
+                    .ConfigureAwait(false)
+                ? Result.Success
+                : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                    "This inventory action requires a current tenant Compliance Lead."));
         if (await permissions.IsAllowedAsync(tenantId, userId, memberId,
                 RbacPermissions.TechnologyInventoryManage, ct).ConfigureAwait(false))
             return Result.Success;

@@ -79,8 +79,14 @@ public sealed class RoleCleanupReactorTests
         await DefineAndDeleteAsync(provider, [], RoleId);
         var permissions = Enumerable.Range(0, 205).Select(index => $"controls.item{index:000}").ToArray();
         var teams = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() };
+        // Historical permissions can predate the product catalog. Cleanup must still discover
+        // every old relationship even though a new assignment of these names is now refused.
         foreach (var permission in permissions)
-            await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, permission);
+        {
+            var owner = new RolePermission(TenantId, RoleId, permission);
+            var fact = DomainEventSeed.Attach(RbacPermissionFacts.Assigned(TenantId, RoleId, permission), owner.Id, 1);
+            await provider.GetRequiredService<IEventStore>().AppendAsync(owner.Stream, 0, [fact]);
+        }
         foreach (var team in teams)
             await RbacTeamRoleFacts.GrantAsync(provider, TenantId, team, RoleId);
 
@@ -101,7 +107,7 @@ public sealed class RoleCleanupReactorTests
         // Arrange
         await using var provider = Build();
         await DefineAndDeleteAsync(provider, [], RoleId);
-        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, "controls.read");
+        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, RbacPermissions.ProgramManage);
         var team = Uuid.CreateVersion4();
         await RbacTeamRoleFacts.GrantAsync(provider, TenantId, team, RoleId);
         var scenario = new ReactorScenario(new TenantId(TenantId.ToString())).Given(await DeletedFactAsync(provider));
@@ -112,8 +118,8 @@ public sealed class RoleCleanupReactorTests
         // Assert
         Assert.Equal(2, scenario.SentRequests.Count);
         var permission = Assert.Single(scenario.SentRequests.OfType<RemoveRolePermission>());
-        Assert.Equal("controls.read", permission.Permission);
-        Assert.Equal((await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, "controls.read")))
+        Assert.Equal(RbacPermissions.ProgramManage, permission.Permission);
+        Assert.Equal((await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, RbacPermissions.ProgramManage)))
             .AssignmentId, permission.AssignmentId);
         var teamRole = Assert.Single(scenario.SentRequests.OfType<RemoveTeamRole>());
         Assert.Equal(team, teamRole.TeamId);
@@ -125,7 +131,7 @@ public sealed class RoleCleanupReactorTests
         // Arrange
         await using var provider = Build();
         await DefineAndDeleteAsync(provider, [], RoleId);
-        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, "controls.read");
+        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, RbacPermissions.ProgramManage);
         await RbacTeamRoleFacts.GrantAsync(provider, TenantId, Uuid.CreateVersion4(), RoleId);
         var trigger = await DeletedFactAsync(provider);
         var first = new ReactorScenario(new TenantId(TenantId.ToString())).Given(trigger);
@@ -136,7 +142,7 @@ public sealed class RoleCleanupReactorTests
         await RunWithRecordingBusAsync(provider, replay);
 
         // Assert
-        var permission = await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, "controls.read"));
+        var permission = await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, RbacPermissions.ProgramManage));
         Assert.Equal(first.SentRequests.Count, replay.SentRequests.Count);
         var removal = Assert.IsType<RemoveRolePermission>(first.SentRequests.First(static request => request is RemoveRolePermission));
         Assert.Equal(removal, replay.SentRequests.First(static request => request is RemoveRolePermission));
@@ -169,16 +175,16 @@ public sealed class RoleCleanupReactorTests
         await using var provider = Build();
         var other = Uuid.CreateVersion4();
         await DefineAndDeleteAsync(provider, [other], RoleId);
-        await RbacPermissionFacts.GrantAsync(provider, TenantId, other, "controls.read");
+        await RbacPermissionFacts.GrantAsync(provider, TenantId, other, RbacPermissions.ProgramManage);
         await RbacTeamRoleFacts.GrantAsync(provider, TenantId, Uuid.CreateVersion4(), other);
-        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, "controls.write");
-        await RbacPermissionFacts.RevokeAsync(provider, TenantId, RoleId, "controls.write");
+        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, RbacPermissions.ProgramManage);
+        await RbacPermissionFacts.RevokeAsync(provider, TenantId, RoleId, RbacPermissions.ProgramManage);
 
         // Act
         await CleanupReactorHost.RunAsync(provider, TenantId, Create);
 
         // Assert
-        Assert.True((await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, other, "controls.read"))).IsAssigned);
+        Assert.True((await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, other, RbacPermissions.ProgramManage))).IsAssigned);
         var records = await RecordsAsync(provider, "rbac-role-permissions");
         Assert.Single(records.Select(static record => record.Event).OfType<RolePermissionRemoved>(),
             removed => removed.RoleId == RoleId);
@@ -191,20 +197,20 @@ public sealed class RoleCleanupReactorTests
         var store = new ScanHookEventStore();
         await using var provider = Build(store);
         await DefineAndDeleteAsync(provider, [], RoleId);
-        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, "controls.read");
-        var old = (await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, "controls.read")))
+        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, RbacPermissions.ProgramManage);
+        var old = (await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, RbacPermissions.ProgramManage)))
             .AssignmentId;
         store.AfterNextScan(EventStreamPattern.ForPattern(TenantId.ToString(), "rbac-role-permissions"), async () =>
         {
-            await RbacPermissionFacts.RevokeAsync(provider, TenantId, RoleId, "controls.read");
-            await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, "controls.read");
+            await RbacPermissionFacts.RevokeAsync(provider, TenantId, RoleId, RbacPermissions.ProgramManage);
+            await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, RbacPermissions.ProgramManage);
         });
 
         // Act
         await CleanupReactorHost.RunAsync(provider, TenantId, Create);
 
         // Assert
-        var current = await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, "controls.read"));
+        var current = await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, RbacPermissions.ProgramManage));
         Assert.True(current.IsAssigned);
         Assert.NotEqual(old, current.AssignmentId);
     }

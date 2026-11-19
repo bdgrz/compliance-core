@@ -319,7 +319,7 @@ public sealed class MethodologyTemplateDraftTests
 
     static ImmutableContentRef Content(IReadOnlyList<MethodologyTemplateRecordContent> entries)
     {
-        var info = ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(IReadOnlyList<MethodologyTemplateRecordContent>))!;
+        var info = ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(IReadOnlyList<MethodologyTemplateRecordContent>))!;
         var bytes = JsonSerializer.SerializeToUtf8Bytes(entries, info);
         return new ImmutableContentRef(Uuid.CreateVersion4(), ContentDigest.Sha256(bytes), bytes.LongLength,
             "application/json", MethodologyTemplateDraft.EntriesSchema);

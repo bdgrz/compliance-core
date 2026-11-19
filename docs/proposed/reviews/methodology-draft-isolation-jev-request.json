@@ -1,0 +1,38 @@
+{
+  "model": "jev-1.14.0",
+  "state": "Evaluate each independent synthetic case under its stated assumptions. Answer the yes/no proposition.",
+  "questions": {
+    "discarded_draft": {
+      "type": "noul",
+      "instructions": "A template release contains A1. Draft D1 accepts A2, then is discarded. Draft D2 based on the same release is reviewed without changing A. A read model chooses the latest accepted value for A before D2's freeze regardless of draft ID. Can the read incorrectly include A2 in D2?"
+    },
+    "approved_cut": {
+      "type": "noul",
+      "instructions": "Draft D2 accepts A2 and is reviewed at freeze F1. After F1, D2 accepts a new editing epoch and A3. Publication cites F1 and no later review occurs. Can the published version truthfully include A3 as reviewed?"
+    },
+    "earlier_epoch": {
+      "type": "noul",
+      "instructions": "Draft D2 based on A1 accepts A2 in editing epoch 1. A review is returned, then epoch 2 changes only B. Final review approves epoch 2 at its exact freeze; draft D2 was never discarded. If a version reader ignores all changes from epoch 1, can it incorrectly revert A2 to A1?"
+    },
+    "uncertain_before_freeze": {
+      "type": "noul",
+      "instructions": "An admitted draft edit is requested before freeze, but its target outcome is still unknown at the freeze. The old product contract requires every pre-freeze admitted edit to resolve or be fenced before review. A candidate silently excludes every outcome committed after freeze and accepts review immediately. Does it preserve the old admission contract?"
+    },
+    "base_and_draft": {
+      "type": "noul",
+      "instructions": "A release explicitly identifies an immutable accepted base, a single draft ID and a reviewed freeze. For one key, a complete trustworthy lookup selects the latest accepted revision in any editing epoch of that draft before the freeze, or the base value if none. Are changes from an unrelated discarded draft necessarily part of that key result?"
+    },
+    "author_visibility": {
+      "type": "noul",
+      "instructions": "A reviewer authored an accepted edit in draft epoch 1. The review was returned and no edit by that reviewer was made in epoch 2. The final review checks only authors of epoch 2 even though the policy requires the reviewer to have authored no accepted revision of the entire draft. Can that final review violate the policy?"
+    },
+    "checkpoint_partial": {
+      "type": "noul",
+      "instructions": "A per-key index checkpoint for a frozen view advances durably past a draft edit before the edit is saved; a crash loses the edit but not the checkpoint. Can the checkpoint claim falsely that the view is complete?"
+    },
+    "late_edit": {
+      "type": "noul",
+      "instructions": "An accepted entry revision is recorded after the precise freeze which an approved release cites. No explicit correction or later release is created. Can it be silently added to that already approved release while preserving the exact reviewed cut?"
+    }
+  }
+}

@@ -26,7 +26,7 @@ public static class ContentDigest
     {
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(type);
-        var info = ComplianceCoreJsonContext.Default.GetTypeInfo(type)
+        var info = ComplianceCoreJsonMetadata.Default.GetTypeInfo(type)
             ?? throw new InvalidOperationException($"No serialization metadata is registered for {type.FullName}.");
         return Sha256(JsonSerializer.SerializeToUtf8Bytes(value, info));
     }

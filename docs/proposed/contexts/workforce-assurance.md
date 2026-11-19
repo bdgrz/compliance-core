@@ -1,6 +1,6 @@
 # Workforce assurance
 
-Status: **locked**, 2026-11-03. Hand-authored source of truth for this context.
+Status: **under refinement**, 2026-11-05. Hand-authored source of truth for this context; the cross-context contracts and infrastructure qualifications below remain open.
 
 ## Purpose
 
@@ -40,26 +40,70 @@ and workforce source observations with their reconciliation.
 
 **Identity:** `TenantId` + `PersonId`.
 
-**Invariant:** one person has one display name, one work email, optional
-personal contact details (restricted), and any number of linked platform members.
-A person is never ended or retired (WF-02).
-
-- A platform member can be linked to at most one person. Linking is refused if the
-  member is already linked to someone else (WF-05).
+**Invariant:** one person has one display name, one work email and optional
+personal contact details (restricted). A person is never ended or retired
+(WF-02). A person's linked members are a projection of independent `Member`
+facts, not state or per-member history on `Person` (WF-05).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | RecordPerson | Compliance Lead or Org Admin, or reactor | `PersonId` is new | PersonRecorded |
 | ChangePersonDetails | Compliance Lead or Org Admin, or reactor | Details differ | PersonDetailsChanged |
-| LinkPersonToMember | Org Admin | Member not linked to another person | PersonLinkedToMember |
-| UnlinkPersonFromMember | Org Admin | Linked | PersonUnlinkedFromMember |
 
 | Event | Carries |
 | --- | --- |
 | PersonRecorded | tenant, person, display name, work email, personal contact (restricted), recorded by |
 | PersonDetailsChanged | tenant, person, changed fields, changed by |
-| PersonLinkedToMember | tenant, person, user, linked by |
-| PersonUnlinkedFromMember | tenant, person, user, unlinked by |
+
+### Member–Person association
+
+**Identity:** `(TenantId, UserId)`, the existing platform-access `Member`.
+
+**Invariant:** at most one Person is linked to a Member at a time; link and
+unlink decisions are ordered with that Member's episode changes. This candidate
+contract remains subject to the cross-context and policy qualifications below.
+
+The platform access `Member` identified by `(TenantId, UserId)` owns its one
+optional `PersonId` and link generation alongside its current membership
+episode. It makes link, unlink, and episode changes in the same versioned
+stream. Competing links therefore cannot both win. The target `Person` must
+have an authoritative, committed `PersonRecorded` fact in the same tenant;
+that existence is stable because a Person never ends. A projection is not proof
+of existence. This association does not grant platform or business-record access.
+
+An Org Admin requests a link with the expected current episode, the target
+Person and a unique link generation. A current active or suspended episode is
+required; stale episode commands are refused. An exact retry returns the original
+operation's recorded outcome without applying the change again, while reuse of
+an operation or generation for changed intent is refused. A historical success
+does not assert that the link is still current. Linking a
+different Person while linked is refused: unlink the exact current generation
+first. Unlink carries the expected Person, link generation and episode, so a
+late unlink cannot remove a later link even if the Person is the same. Unlinking
+an already absent link is a no-op only for an exact retry, not a claim that an
+unrelated operation succeeded. The `Member` records link and unlink facts with
+tenant, user, Person, episode, generation and actor; a per-Person member list is
+derived from these facts. This requires corresponding platform-access command
+and event contracts; it does not add child facts to `Person`.
+
+The candidate retains identity correlation on the stable Member when an episode
+ends and a new episode begins. It never makes the new episode active
+or transfers any grant. Consumers must independently enforce current-episode
+authorization. A delayed link or unlink from an old episode is refused even if
+the identity correlation survived. If product policy instead requires clearing
+that correlation at deprovisioning, the clear must be ordered atomically on the
+same Member stream; this policy is not implied by WF-05.
+
+To resolve an old retry after later unlink and relink operations, current link
+state is insufficient. The operation identity and original intent must resolve
+to a retained, authoritative Member fact or an equally authoritative outcome;
+an eventually consistent reverse-members projection is not that authority.
+Until the lookup and retention guarantees are qualified, an ambiguous operation
+stays pending rather than reporting a guessed success or issuing another link.
+Link and unlink events are changes to this Member's own association, not a
+Person-owned roster, but repeated episodes and link changes still increase the
+Member stream that Portia replays. Their expected lifetime, replay cost and
+recovery require qualification.
 
 ### WorkRelationship
 
@@ -168,10 +212,12 @@ and receives at most one attributable reconciliation decision: `accepted` or
   conflict and is never resolved silently (M0-D06).
 - Observations can be entered by a person, so the manual path works without a
   connected source.
-- An accepted HRIS observation is applied to the person and work relationship by
-  a reactor. Accepting a revision older than one already accepted for the same
-  source record is refused; the person dismisses it instead, so a late
-  acceptance never overwrites newer facts (WF-08).
+- An HRIS acceptance requests admission from the source-record authority below.
+  Only its committed admission establishes acceptance; a stale read cannot do
+  so. An older, never-admitted revision is refused and may be dismissed (WF-08).
+- An accepted revision is applied separately to the Person and WorkRelationship.
+  Acceptance is not proof either target has applied it. Target-local fences
+  prevent an older revision overwriting a newer revision already applied there.
 - A new person and work relationship created by that reactor take IDs derived from
   the source record, so two revisions of a new worker produce one person
   ([CV-02](conventions.md#reactors), WF-08).
@@ -179,12 +225,76 @@ and receives at most one attributable reconciliation decision: `accepted` or
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | RecordWorkforceSourceObservation | Compliance Lead, or a source integration | This revision is new | WorkforceSourceObserved |
-| ReconcileWorkforceSourceObservation | Compliance Lead or Org Admin | Not reconciled; note given; `accepted` only when no newer revision of the same record is accepted | WorkforceSourceReconciled |
+| ReconcileWorkforceSourceObservation | Compliance Lead or Org Admin | Not reconciled; note given; dismissal is local; acceptance requires the source-record admission outcome | WorkforceSourceReconciled, or an admission request pending outcome |
 
 | Event | Carries |
 | --- | --- |
 | WorkforceSourceObserved | tenant, source, record, revision, observed facts, matched person and worker identifier (if any), recorded by |
-| WorkforceSourceReconciled | tenant, source, record, revision, decision, note, decided by |
+| WorkforceSourceReconciled | tenant, source, record, revision, decision, note, decided by, acceptance admission identity when accepted |
+
+An acceptance request reserves this observation's reconciliation while the
+admission outcome is unknown: dismissal and a different acceptance intent cannot
+race it. After admission it must converge to the accepted decision, including
+after a crash. A refused admission releases the pending request so the person
+can dismiss or resolve the conflict. An exact request retry recovers the same
+outcome; a different request is not silently treated as that retry.
+
+### WorkforceSourceRecord admission
+
+**Identity:** `(TenantId, source kind, source system, source record)`.
+
+**Invariant:** newly admitted revisions for this source record increase
+monotonically, as decided by its versioned admission stream. This candidate
+guarantee requires the source-ordering and atomic-append qualifications below.
+
+This is the authority for the greatest accepted revision of that one source
+record. It retains that scalar revision and enough identity to recognize an
+exact current retry, not a list of observations or affected people. Its own
+append history records admissions; it is not a roster of child changes. That
+history can grow with the record's own revisions: fixed-size decision state is
+not a claim that its lifetime event stream has a fixed size.
+
+Every provider must define an immutable, totally ordered revision for a record.
+Same revision with changed content is a conflict, not a retry; incomparable or
+untrustworthy provider revisions remain unresolved until a source-specific
+ordering contract exists. A manual path must provide an equivalent ordering
+authority. Concurrent admission requests compare the proposed revision with the
+greatest admitted revision and append against the same stream version: a higher
+revision is admitted, a lower never-admitted revision is refused, and an exact
+retry resolves to its original outcome. A changed-intent retry is refused.
+The admission fact identifies the observation, revision, payload identity,
+request and attributable decision. The observation records acceptance only on
+that participant outcome. Admission is not undone if delivery is delayed; an
+unknown result remains pending and is recovered from durable evidence, not
+guessed. Implementation must qualify a bounded-memory, authoritative way to
+find an older admission by request identity after later revisions advance the
+gate; the current latest revision alone cannot distinguish its retry from a new
+stale request.
+
+Each target atomically binds at most one authoritative source record for its
+source-owned fields, and stores that binding and its greatest applied revision.
+For a new target, creation, source binding and the first applied revision commit
+together against that target's identity; conflicting creation attempts cannot
+both win.
+An update carries the source identity, revision, exact request identity, and a
+complete snapshot of the source-owned fields for that target, not merely a
+delta. It applies only to the matching binding and a greater revision; same
+revision with the same intent is a no-op, and changed intent or a different
+source is a conflict requiring explicit resolution. Thus target state is fixed
+per target rather than a map of all source records. Source binding or migration
+must be decided by that target; unresolved collisions stay visible and do not
+overwrite facts. Manual and user-owned fields are preserved, and precedence for
+every field must be specified before implementation.
+
+There is no atomic commit across the gate and targets. An older admitted update
+may apply to a target after a newer revision is admitted but before that newer
+revision reaches it; the target remains pending until the newer revision has
+its own durable outcome. Once a target applies the newer revision, its own fence
+refuses the old one. Independent per-revision/per-target outcomes, retries and
+conflicts are recorded without a source-record-owned target list; an unknown
+outcome is not success. If stronger immediate visibility is needed, this
+eventual guarantee is insufficient and requires an explicitly designed
+coordination or transaction mechanism.
 
 ## Flows
 
@@ -193,15 +303,18 @@ and receives at most one attributable reconciliation decision: `accepted` or
 ```mermaid
 flowchart LR
     C1[/RecordWorkforceSourceObservation/] --> E1([WorkforceSourceObserved])
-    N([No newer revision of the record accepted]) -. "checks, for accepted" .-> C2
-    E1 -. checks .-> C2[/ReconcileWorkforceSourceObservation/] --> E2([WorkforceSourceReconciled])
+    E1 --> C2[/Request acceptance/] --> G["Source-record revision admission"]
+    G -->|admitted| E2([WorkforceSourceReconciled])
+    G -->|refused| X([Visible conflict or dismissal])
     E2 --> R1{{Apply accepted HRIS facts}}
-    R1 --> C3[/"RecordPerson (ID from source record) or ChangePersonDetails"/] --> E3([PersonRecorded / PersonDetailsChanged])
-    R1 --> C4[/RecordWorkRelationship or a named change/] --> E4([WorkRelationship facts])
+    R1 --> C3[/Person: source-fenced update/] --> E3([Person outcome])
+    R1 --> C4[/WorkRelationship: source-fenced update/] --> E4([WorkRelationship outcome])
 ```
 
-The reactor runs only for an `accepted` HRIS observation. It issues one command
-per changed fact, so the resulting facts are the same as for manual entry.
+The reactor runs only for an `accepted` HRIS observation. Each target applies a
+complete source-owned snapshot atomically and emits the individual named domain
+facts for changes it actually accepted. The two targets may complete at
+different times; their outcomes and conflicts remain separately visible.
 
 ### Joiners, movers and leavers
 
@@ -237,20 +350,27 @@ Anything in between is settled by common sense, with the reasoning stated.
 | WF-04 | Each annual service-identity review is a fact with reviewer and next review date. | 0.70. Common sense: auditors need evidence that the annual review happened. |
 | WF-05 | A member is linked to at most one person, but a person may have several linked members. | One-to-one both ways: 0.32. Common sense: one person can have more than one account, but one account is never two people. |
 | WF-06 | A sponsor must be active when named; a later departure shows as unsponsored work rather than blocking anything. | Sponsor must be active: 0.43. Same treatment as a service identity whose owner leaves (M0-D06). |
-| WF-07 | One observation aggregate carries both the observation and its reconciliation. | The old `WorkforceObservationResolution` duplicated the reconciliation on `WorkforceSourceObservation`. |
-| WF-08 | Accepting a revision older than one already accepted for the same source record is refused, so the person dismisses it. New people and work relationships take IDs derived from the source record. | Flow audit G5. Refuse rather than silently skip: 0.81 (silently skipping was 0.58). CV-02. |
+| WF-07 | One observation carries its own reconciliation; source-record admission is a separate authority for ordering revisions. | The old `WorkforceObservationResolution` duplicated the observation's decision; independent observations cannot decide record-wide ordering. |
+| WF-08 | A source-record owner refuses a newly requested older revision; each target independently fences application and records its outcome. New people and work relationships take IDs derived from the source record. | Flow audit G5; [boundary review](../reviews/workforce-boundaries.md); CV-02. |
 
 ## Open questions
 
-None at this time.
+- The candidate platform-access `Member` association commands, events,
+  generation and episode rules require cross-context and runtime qualification;
+  the product policy for retaining the link across deprovisioning needs explicit
+  confirmation before implementation.
+- Qualify provider revision ordering, field ownership and source binding/migration,
+  recovery of old admission outcomes, target idempotency, and the atomic target
+  fence in the actual framework. The single-source-per-target restriction may
+  require a product decision when multiple sources contend for one Person.
 
 ## Superseded owners
 
 | Old owner | Becomes |
 | --- | --- |
-| Person | Person (links to members; WF-05) |
+| Person | Person (member links owned by `Member`; WF-05) |
 | WorkRelationship | WorkRelationship (named facts; WF-03) |
 | ServiceIdentity | ServiceIdentity (named facts and reviews; WF-03, WF-04) |
-| WorkforceSourceObservation, WorkforceObservationResolution | WorkforceSourceObservation (WF-07) |
+| WorkforceSourceObservation, WorkforceObservationResolution | WorkforceSourceObservation and WorkforceSourceRecord admission (WF-07, WF-08) |
 | WorkforceRosterSnapshotProcess | Deferred with roster import (#347) |
 | ImportedOwnerResolution | Moves to Application inventory |

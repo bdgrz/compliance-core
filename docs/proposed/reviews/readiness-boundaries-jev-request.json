@@ -1,0 +1,49 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "domain": "A readiness assessment evaluates a deterministic versioned ruleset over independently owned, mutable sources and may report gaps or unknown. A Type I entry decision cites an immutable completed assessment; entering with gaps is permitted, and gaps and their plans are recorded. Large rosters, manifest aggregates, and huge events or blobs are prohibited.",
+    "candidate": "Record each source input or explicit unknown separately, each rule/subject result separately, and each entry-decision gap/plan observation separately. An O(1)-state coordinator only seals a completed decision after a source-authoritative complete universe at a defined cut, durable per-item outcomes, and fencing of stale concurrent work; otherwise the result is pending/incomplete. A projection may serve queries but cannot establish completeness. The repository has not yet demonstrated a complete source cut across independent streams or exactly when a missing gap plan is acceptable."
+  },
+  "questions": {
+    "source_cut_required": {
+      "type": "noul",
+      "instructions": "Can reading independently mutable source streams one by one without an authoritative common cutoff or equivalent consistency protocol establish that all recorded values represented their state at one common decision instant?"
+    },
+    "projection_counts": {
+      "type": "noul",
+      "instructions": "Do matching counts from an eventually consistent projection prove that all authoritative required sources or gaps were included, even when the projection could omit members?"
+    },
+    "missing_fails_closed": {
+      "type": "noul",
+      "instructions": "If an authoritative required input is unavailable or its membership is unknown, must the assessment avoid reporting a complete, ready conclusion?"
+    },
+    "individual_evidence_possible": {
+      "type": "noul",
+      "instructions": "Is it conceptually possible to preserve completeness while storing evidence per input and per gap in separate bounded records, without a parent owning a roster, if a suitable authoritative cut, durable outcomes, and fences are actually proven?"
+    },
+    "unfenced_late_work": {
+      "type": "noul",
+      "instructions": "Can an unfenced in-flight child write invalidate a coordinator's claim that all evidence was finalized when it sealed?"
+    },
+    "empty_universe": {
+      "type": "noul",
+      "instructions": "Can an empty projection alone prove that no authoritative subjects require assessment?"
+    },
+    "old_complete_assessment": {
+      "type": "noul",
+      "instructions": "Given the stated product policy that a decision may cite a completed historical assessment, is it inherently invalid solely because a newer assessment exists?"
+    },
+    "plan_policy": {
+      "type": "noul",
+      "instructions": "Does the statement 'entering with gaps is permitted, and gaps and their plans are recorded', without an explicit rule for a missing plan, unambiguously establish whether entry must be rejected when a gap has no plan?"
+    },
+    "plan_observation": {
+      "type": "noul",
+      "instructions": "Do gap plans read at arbitrary different times without a common cutoff necessarily represent all plans as they existed at one decision instant?"
+    },
+    "seal_counts": {
+      "type": "noul",
+      "instructions": "Is merely storing an expected and actual result count on a coordinator sufficient authority to establish which required inputs or gap outcomes were included?"
+    }
+  }
+}

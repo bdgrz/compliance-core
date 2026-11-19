@@ -47,7 +47,7 @@ public static class MappingLineContent
     public const string Schema = "control-mapping-line-mutation.v1";
 
     public static JsonElement Json<T>(T value) where T : notnull => JsonSerializer.SerializeToElement(value,
-        typeof(T), ComplianceCoreJsonContext.Default);
+        typeof(T), ComplianceCoreJsonMetadata.Default);
 
     internal static async Task<MappingLinePrepared> PrepareAsync<TRequest>(IImmutableContentStore content,
         Aggregate owner, TRequest request, object change, object current, MappingLineHeader header,
@@ -59,8 +59,8 @@ public static class MappingLineContent
         CancellationToken ct)
     {
         var mutation = new MappingLineMutation(authored, JsonSerializer.SerializeToElement(change,
-            change.GetType(), ComplianceCoreJsonContext.Default), JsonSerializer.SerializeToElement(current,
-            current.GetType(), ComplianceCoreJsonContext.Default));
+            change.GetType(), ComplianceCoreJsonMetadata.Default), JsonSerializer.SerializeToElement(current,
+            current.GetType(), ComplianceCoreJsonMetadata.Default));
         var tenant = Uuid.Parse(owner.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
         var reference = await NativeContent.WriteAsync(content, tenant, Schema, mutation, ct).ConfigureAwait(false);
         var frame = Frame(change, reference, header, null, result);
@@ -110,7 +110,7 @@ public static class MappingLineContent
 
     public static void ValidateCurrent(JsonElement expected, object current)
     {
-        var actual = JsonSerializer.SerializeToElement(current, current.GetType(), ComplianceCoreJsonContext.Default);
+        var actual = JsonSerializer.SerializeToElement(current, current.GetType(), ComplianceCoreJsonMetadata.Default);
         if (!JsonElement.DeepEquals(expected, actual))
             throw new ImmutableContentIntegrityException("The immutable current authority does not match the full verified transition history.");
     }

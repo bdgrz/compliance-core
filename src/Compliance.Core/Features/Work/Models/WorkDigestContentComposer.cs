@@ -51,6 +51,7 @@ static class WorkDigestContentComposer
             .OrderBy(static candidate => candidate.Item.DueOn)
             .ThenBy(static candidate => candidate.ProgramId.ToString(), StringComparer.Ordinal)
             .ThenBy(static candidate => candidate.Item.WorkItemId.ToString(), StringComparer.Ordinal)
+            .Take(200)
             .ToArray();
         if (selected.Length == 0)
             return null;
@@ -65,7 +66,7 @@ static class WorkDigestContentComposer
             tenantId, tenantSlug, settings);
         lines.AppendLine("Open each item in the application to review its current status and access.");
         return new WorkDigestDeliveryMessage(messageId, recipient, "Your weekly work digest",
-            lines.ToString());
+            lines.ToString(), selected.Select(candidate => candidate.Item.WorkItemId).ToArray());
     }
 
     static void AppendSection(StringBuilder lines, string title,

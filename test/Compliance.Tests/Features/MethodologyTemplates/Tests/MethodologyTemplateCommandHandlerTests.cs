@@ -1,25 +1,30 @@
-using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Fitz.Testing;
-using Bdgrz.Compliance.Hosting.Persistence;
 using System.Security.Claims;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Persistence;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Handlers;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Handlers;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Readiness.Models;
@@ -27,15 +32,18 @@ using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -65,19 +73,11 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Handlers;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
-using Bdgrz.Compliance.Features.Programs.Commands;
-using Bdgrz.Compliance.Features.Programs.Handlers;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 namespace Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
 
 public sealed class MethodologyTemplateCommandHandlerTests
@@ -86,30 +86,27 @@ public sealed class MethodologyTemplateCommandHandlerTests
     static readonly Uuid TemplateId = Uuid.CreateVersion4();
 
     [Fact]
-    public async Task ShouldRejectContributionSelfReviewGivenSameUserAcrossTenantAndPlatformContexts()
+    public async Task ShouldRefuseContributionProposalWithoutFactGivenClientSourceContent()
     {
         // Arrange
         await using var scenario = new Scenario();
         var tenant = Uuid.CreateVersion4();
-        var subject = Uuid.CreateVersion4();
-        var contributionId = Uuid.CreateVersion4();
-        var propose = new ProposeDeidentifiedTemplateContribution(tenant, contributionId, Uuid.CreateVersion4(),
+        var contribution = Uuid.CreateVersion4();
+        var request = new ProposeDeidentifiedTemplateContribution(tenant, contribution, Uuid.CreateVersion4(),
             1, new MethodologyTemplateRecordContent("review-access", "control", "Review access",
                 "Review access quarterly", []), "Removed client identifiers");
-        var created = await new ProposeDeidentifiedTemplateContributionHandler(scenario.ContributionOperations())
-            .HandleAsync(Scenario.Context(propose, subject), CancellationToken.None);
-        Assert.True(created.IsSuccess, created.Error?.Message);
-        Assert.NotEqual(RbacIds.Member(tenant, subject), RbacIds.Member(Uuid.Empty, subject));
 
         // Act
-        var reviewed = await new ReviewTemplateContributionHandler(scenario.ContributionOperations())
-            .HandleAsync(Scenario.Context(new ReviewTemplateContribution(Uuid.CreateVersion4(), tenant,
-                contributionId, "approved", "My own proposal"), subject), CancellationToken.None);
-        var owner = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant, contributionId));
+        var result = await new ProposeDeidentifiedTemplateContributionHandler(scenario.ContributionOperations())
+            .HandleAsync(Scenario.Context(request, Uuid.CreateVersion4()), CancellationToken.None);
+        var owner = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant, contribution));
 
         // Assert
-        Assert.Equal(RequestErrorKind.Forbidden, reviewed.Error?.Kind);
-        Assert.Equal(1, owner.Revision);
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.False(result.Error!.IsTransient);
+        Assert.Contains("retired", result.Error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, owner.Revision);
+        Assert.Equal(0UL, owner.CommittedStreamPosition);
     }
 
     [Fact]
@@ -169,52 +166,30 @@ public sealed class MethodologyTemplateCommandHandlerTests
     }
 
     [Fact]
-    public async Task ShouldReplayContributionProposalAndDecisionsGivenAcceptedContributionAndLaterClock()
+    public async Task ShouldRefuseContributionDecisionsWithoutFactGivenMissingContribution()
     {
         // Arrange
         await using var scenario = new Scenario();
         var tenant = Uuid.CreateVersion4();
-        var contributor = Uuid.CreateVersion4();
-        var reviewer = Uuid.CreateVersion4();
-        var approver = Uuid.CreateVersion4();
-        var propose = new ProposeDeidentifiedTemplateContribution(tenant, Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), 3, new MethodologyTemplateRecordContent("quarterly-review", "control",
-                "Review access", "Review access quarterly", []), "Removed client identifiers");
-        var review = new ReviewTemplateContribution(Uuid.CreateVersion4(), tenant, propose.ContributionId,
-            "approved", "Deidentified");
-        var accept = new AcceptTemplateContribution(Uuid.CreateVersion4(), tenant, propose.ContributionId, "Accept");
-        Assert.True((await new ProposeDeidentifiedTemplateContributionHandler(scenario.ContributionOperations())
-            .HandleAsync(Scenario.Context(propose, contributor), CancellationToken.None)).IsSuccess);
-        Assert.True((await new ReviewTemplateContributionHandler(scenario.ContributionOperations())
-            .HandleAsync(Scenario.Context(review, reviewer), CancellationToken.None)).IsSuccess);
-        Assert.True((await new AcceptTemplateContributionHandler(scenario.ContributionOperations())
-            .HandleAsync(Scenario.Context(accept, approver), CancellationToken.None)).IsSuccess);
-        var before = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
-            propose.ContributionId));
-        var later = new FixedTimeProvider(Now.AddHours(1));
+        var contribution = Uuid.CreateVersion4();
+        var actor = Uuid.CreateVersion4();
 
         // Act
-        var proposalReplay = await new ProposeDeidentifiedTemplateContributionHandler(scenario.ContributionOperations(later))
-            .HandleAsync(Scenario.Context(propose, contributor), CancellationToken.None);
-        var reviewReplay = await new ReviewTemplateContributionHandler(scenario.ContributionOperations(later))
-            .HandleAsync(Scenario.Context(review, reviewer), CancellationToken.None);
-        var acceptanceReplay = await new AcceptTemplateContributionHandler(scenario.ContributionOperations(later))
-            .HandleAsync(Scenario.Context(accept, approver), CancellationToken.None);
-        var changed = await new AcceptTemplateContributionHandler(scenario.ContributionOperations(later))
-            .HandleAsync(Scenario.Context(accept with { AcceptanceRationale = "Different" }, approver), CancellationToken.None);
-        var after = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
-            propose.ContributionId));
+        var review = await new ReviewTemplateContributionHandler(scenario.ContributionOperations())
+            .HandleAsync(Scenario.Context(new ReviewTemplateContribution(Uuid.CreateVersion4(), tenant,
+                contribution, "approved", "Reviewed"), actor), CancellationToken.None);
+        var acceptance = await new AcceptTemplateContributionHandler(scenario.ContributionOperations())
+            .HandleAsync(Scenario.Context(new AcceptTemplateContribution(Uuid.CreateVersion4(), tenant,
+                contribution, "Accepted"), actor), CancellationToken.None);
+        var owner = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant, contribution));
 
         // Assert
-        Assert.True(proposalReplay.IsSuccess, proposalReplay.Error?.Message);
-        Assert.True(reviewReplay.IsSuccess, reviewReplay.Error?.Message);
-        Assert.True(acceptanceReplay.IsSuccess, acceptanceReplay.Error?.Message);
-        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
-        var beforeShare = await scenario.Contributions.ShareAsync(tenant, propose.ContributionId);
-        var afterShare = await scenario.Contributions.ShareAsync(tenant, propose.ContributionId);
-        Assert.Equal(beforeShare!.AcceptanceId, afterShare!.AcceptanceId);
-        Assert.Equal(beforeShare.ContentSha256, afterShare.ContentSha256);
+        Assert.Equal(RequestErrorKind.Validation, review.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, acceptance.Error?.Kind);
+        Assert.False(review.Error!.IsTransient);
+        Assert.False(acceptance.Error!.IsTransient);
+        Assert.Equal(0, owner.Revision);
+        Assert.Equal(0UL, owner.CommittedStreamPosition);
     }
 
     [Fact]
@@ -270,43 +245,33 @@ public sealed class MethodologyTemplateCommandHandlerTests
     }
 
     [Fact]
-    public async Task ShouldAcceptOnlyIndependentlyReviewedDeidentifiedContributionGivenTenantProposal()
+    public async Task ShouldRefuseContributionRetriesWithoutFactGivenChangedIntentOrActor()
     {
         // Arrange
         await using var scenario = new Scenario();
-        var tenantId = Uuid.CreateVersion4();
-        var contributionId = Uuid.CreateVersion4();
-        var sourceRecordId = Uuid.CreateVersion4();
-        var contributor = Uuid.CreateVersion4();
-        var reviewer = Uuid.CreateVersion4();
-        var platformOperator = Uuid.CreateVersion4();
-        var propose = new ProposeDeidentifiedTemplateContributionHandler(scenario.ContributionOperations());
-        var review = new ReviewTemplateContributionHandler(scenario.ContributionOperations());
-        var accept = new AcceptTemplateContributionHandler(scenario.ContributionOperations());
-        var content = new MethodologyTemplateRecordContent("quarterly-access-review", "control",
-            "Review privileged access", "Review privileged access quarterly.", []);
+        var tenant = Uuid.CreateVersion4();
+        var request = new ProposeDeidentifiedTemplateContribution(tenant, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            3, new MethodologyTemplateRecordContent("quarterly-review", "control", "Review access",
+                "Review access quarterly", []), "Removed client identifiers");
+        var actor = Uuid.CreateVersion4();
+        var handler = new ProposeDeidentifiedTemplateContributionHandler(scenario.ContributionOperations());
 
         // Act
-        var proposed = await propose.HandleAsync(Scenario.Context(new ProposeDeidentifiedTemplateContribution(
-            tenantId, contributionId, sourceRecordId, 3, content, "Removed client names and system identifiers."), contributor),
-            CancellationToken.None);
-        var reviewed = await review.HandleAsync(Scenario.Context(new ReviewTemplateContribution(Uuid.CreateVersion4(),
-            tenantId, contributionId, "approved", "No tenant identifiers remain."), reviewer), CancellationToken.None);
-        var accepted = await accept.HandleAsync(Scenario.Context(new AcceptTemplateContribution(Uuid.CreateVersion4(),
-            tenantId, contributionId, "Approved for firm methodology reuse."), platformOperator), CancellationToken.None);
-        var aggregate = await scenario.Contributions.ReadAsync(tenantId, contributionId);
+        var first = await handler.HandleAsync(Scenario.Context(request, actor), CancellationToken.None);
+        var retry = await handler.HandleAsync(Scenario.Context(request, actor), CancellationToken.None);
+        var changed = await handler.HandleAsync(Scenario.Context(request with
+        { DeidentificationRationale = "Another rationale" }, Uuid.CreateVersion4()), CancellationToken.None);
+        var owner = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
+            request.ContributionId));
 
         // Assert
-        Assert.True(proposed.IsSuccess, proposed.Error?.Message);
-        Assert.True(reviewed.IsSuccess, reviewed.Error?.Message);
-        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
-        var share = Assert.IsType<MethodologyTemplateContributionShareView>(
-            await scenario.Contributions.ShareAsync(tenantId, contributionId));
-        Assert.Equal("accepted", aggregate!.Status);
-        Assert.NotEqual(aggregate.ProposedByMemberId, share.Review.ReviewedByMemberId);
-        Assert.NotEqual(aggregate.ProposedByMemberId, share.AcceptedByMemberId);
-        Assert.NotEqual(share.Review.ReviewedByMemberId, share.AcceptedByMemberId);
-        Assert.Equal("quarterly-access-review", share.Content.EntryKey);
+        Assert.Equal(RequestErrorKind.Validation, first.Error?.Kind);
+        Assert.Equal(first.Error?.Kind, retry.Error?.Kind);
+        Assert.Equal(first.Error?.Message, retry.Error?.Message);
+        Assert.Equal(first.Error?.Kind, changed.Error?.Kind);
+        Assert.Equal(first.Error?.Message, changed.Error?.Message);
+        Assert.Equal(0, owner.Revision);
+        Assert.Equal(0UL, owner.CommittedStreamPosition);
     }
 
     [Fact]
@@ -322,7 +287,7 @@ public sealed class MethodologyTemplateCommandHandlerTests
         var clientAdmin = Uuid.CreateVersion4();
         var createProgram = await new CreateProgramHandler(ProgramSeeds.Operations(scenario.Reader, scenario.Writer, scenario.Events, scenario.ContentStore, scenario.Clock)).HandleAsync(
             Scenario.Context(new CreateProgram(Uuid.CreateVersion4(), tenantId, "Northwind SOC 2", new ProgramPlan(null, null, null,
-                null, null, null)), clientAdmin), CancellationToken.None);
+                null, null, null), Uuid.CreateVersion4()), clientAdmin), CancellationToken.None);
         var programId = createProgram.Value!.ProgramId;
         var createTemplate = new CreateMethodologyTemplateHandler(scenario.TemplateOperations());
         var reviseTemplate = new ReviseMethodologyTemplateDraftHandler(scenario.TemplateOperations());

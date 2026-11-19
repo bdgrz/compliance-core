@@ -220,6 +220,105 @@ public sealed class WorkDigestDispatchProcessorTests
         Assert.Equal(0, delivery.Calls);
     }
 
+    [Fact]
+    public async Task ShouldAutomaticallyRetryUnknownDeliveryWithSameIdentityGivenCurrentFrozenWeek()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        var clock = new AdvancingClock(new DateTimeOffset(2026, 10, 5, 9, 0, 0, TimeSpan.Zero));
+        var settings = RetrySettings();
+        var content = new ReadyDigestContentReader();
+        var delivery = new AmbiguousThenAcceptedDelivery();
+        await using var scope = provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var histories = new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+            scope.ServiceProvider.GetRequiredService<ISourceFactResolver>());
+        var processor = new WorkDigestDispatchProcessor(reader,
+            scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content, delivery, settings, clock, histories);
+
+        // Act
+        await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId, true, true, CancellationToken.None);
+        clock.Now = clock.Now.AddMinutes(6);
+        await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId, true, true, CancellationToken.None);
+        clock.Now = clock.Now.AddMinutes(6);
+        await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId, true, true, CancellationToken.None);
+        var history = await histories.ReadDispatchAsync(fixture.TenantId, fixture.Member(fixture.OwnerUserId));
+
+        // Assert
+        Assert.Equal(2, delivery.Messages.Count);
+        Assert.Equal(delivery.Messages[0], delivery.Messages[1]);
+        Assert.Equal(WorkDigestDispatch.Sent, history.Read(new DateOnly(2026, 10, 5)).Status);
+        Assert.Equal(2, content.Calls);
+    }
+
+    [Fact]
+    public async Task ShouldRecheckEligibilityBeforeUnknownRetryGivenRecipientOptedOut()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        var clock = new AdvancingClock(new DateTimeOffset(2026, 10, 5, 9, 0, 0, TimeSpan.Zero));
+        var content = new ChangingDigestContentReader();
+        var delivery = new AmbiguousThenAcceptedDelivery();
+        await using var scope = provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var histories = new WorkDigestHistoryReader(reader, scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+            scope.ServiceProvider.GetRequiredService<ISourceFactResolver>());
+        var processor = new WorkDigestDispatchProcessor(reader,
+            scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content, delivery, RetrySettings(), clock, histories);
+
+        // Act
+        await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId, true, true, CancellationToken.None);
+        content.OptedOut = true;
+        clock.Now = clock.Now.AddMinutes(6);
+        await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId, true, true, CancellationToken.None);
+        clock.Now = clock.Now.AddMinutes(6);
+        await processor.ProcessMemberAsync(fixture.TenantId, fixture.OwnerUserId, true, true, CancellationToken.None);
+        var history = await histories.ReadDispatchAsync(fixture.TenantId, fixture.Member(fixture.OwnerUserId));
+
+        // Assert
+        Assert.Single(delivery.Messages);
+        Assert.Equal(WorkDigestDispatch.Skipped, history.Read(new DateOnly(2026, 10, 5)).Status);
+        Assert.Equal("email_opt_out", history.Read(new DateOnly(2026, 10, 5)).FailureCode);
+        Assert.Equal(2, content.Calls);
+    }
+
+    static WorkDigestDeliverySettings RetrySettings() => new("https://app.example",
+        "/tenants/{tenant_id}/{tenant_slug}/programs/{program_id}/work/{work_item_id}",
+        3, TimeSpan.FromMinutes(5), TimeSpan.FromDays(6), TimeSpan.FromMinutes(3), TimeSpan.FromMinutes(1));
+
+    sealed class AdvancingClock(DateTimeOffset now) : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; } = now;
+        public override DateTimeOffset GetUtcNow() => Now;
+    }
+
+    sealed class AmbiguousThenAcceptedDelivery : IWorkDigestDelivery
+    {
+        public List<Uuid> Messages { get; } = [];
+        public ValueTask<WorkDigestTransportOutcome> SendAsync(WorkDigestDeliveryMessage message, CancellationToken ct)
+        {
+            Messages.Add(message.MessageId);
+            return ValueTask.FromResult(new WorkDigestTransportOutcome(Messages.Count == 1
+                ? WorkDigestTransportOutcomeKind.Unknown : WorkDigestTransportOutcomeKind.Accepted));
+        }
+    }
+
+    sealed class ChangingDigestContentReader : IWorkDigestContentReader
+    {
+        public bool OptedOut { get; set; }
+        public int Calls { get; private set; }
+        public ValueTask<WorkDigestContentRead> ReadAsync(Uuid tenantId, Uuid userId,
+            WorkDigestDispatchStatusView dispatch, CancellationToken ct)
+        {
+            Calls++;
+            return ValueTask.FromResult(OptedOut ? WorkDigestContentRead.Skip("email_opt_out") :
+                WorkDigestContentRead.Ready(new WorkDigestDeliveryMessage(dispatch.MessageId,
+                    "member@example.com", "Weekly digest", "One assigned item.")));
+        }
+    }
+
     sealed class ReadyDigestContentReader : IWorkDigestContentReader
     {
         public int Calls { get; private set; }

@@ -125,7 +125,7 @@ public sealed class AuditorRequestScopedReadHttpTests
         Assert.True(result.StatusCode == HttpStatusCode.OK, json);
         if (route == "requests")
         {
-            var page = JsonSerializer.Deserialize(json, (System.Text.Json.Serialization.Metadata.JsonTypeInfo<Page<AuditorRequestSummaryView>>)ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(Page<AuditorRequestSummaryView>))!)!;
+            var page = JsonSerializer.Deserialize(json, (System.Text.Json.Serialization.Metadata.JsonTypeInfo<Page<AuditorRequestSummaryView>>)ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(Page<AuditorRequestSummaryView>))!)!;
             var item = Assert.Single(page.Items);
             Assert.Equal(fixture.RequestId, item.AuditorRequestId);
             Assert.Equal("External request wording", item.Name);
@@ -133,7 +133,7 @@ public sealed class AuditorRequestScopedReadHttpTests
         }
         else if (route == "responses")
         {
-            var page = JsonSerializer.Deserialize(json, (System.Text.Json.Serialization.Metadata.JsonTypeInfo<Page<AuditorRequestResponseView>>)ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(Page<AuditorRequestResponseView>))!)!;
+            var page = JsonSerializer.Deserialize(json, (System.Text.Json.Serialization.Metadata.JsonTypeInfo<Page<AuditorRequestResponseView>>)ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(Page<AuditorRequestResponseView>))!)!;
             var item = Assert.Single(page.Items);
             Assert.Equal(response, item.AuditorRequestResponseId);
             Assert.Equal(fixture.RequestId, item.AuditorRequestId);
@@ -250,7 +250,7 @@ public sealed class AuditorRequestScopedReadHttpTests
         using var first = await fixture.Client.GetAsync(fixture.Prefix + "?limit=1");
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
         var page = JsonSerializer.Deserialize(await first.Content.ReadAsStringAsync(),
-            (System.Text.Json.Serialization.Metadata.JsonTypeInfo<Page<AuditorRequestSummaryView>>)ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(Page<AuditorRequestSummaryView>))!)!;
+            (System.Text.Json.Serialization.Metadata.JsonTypeInfo<Page<AuditorRequestSummaryView>>)ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(Page<AuditorRequestSummaryView>))!)!;
         Assert.NotNull(page.NextCursor);
         var otherProgram = Uuid.CreateVersion4();
         await fixture.SeedProgramAsync(otherProgram);
@@ -263,7 +263,7 @@ public sealed class AuditorRequestScopedReadHttpTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, next.StatusCode);
         var last = JsonSerializer.Deserialize(await next.Content.ReadAsStringAsync(),
-            (System.Text.Json.Serialization.Metadata.JsonTypeInfo<Page<AuditorRequestSummaryView>>)ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(Page<AuditorRequestSummaryView>))!)!;
+            (System.Text.Json.Serialization.Metadata.JsonTypeInfo<Page<AuditorRequestSummaryView>>)ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(Page<AuditorRequestSummaryView>))!)!;
         Assert.NotEqual(Assert.Single(page.Items).AuditorRequestId, Assert.Single(last.Items).AuditorRequestId);
         Assert.Null(last.NextCursor);
         Assert.Equal(HttpStatusCode.BadRequest, wrong.StatusCode);

@@ -114,7 +114,7 @@ public static class ImmutableSelectionManifests
         store.ReadSelectionAsync<T>(realm, manifest, ct);
 
     static JsonTypeInfo Info<T>() =>
-        ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T[]))
-        ?? ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(IReadOnlyList<T>))
+        ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T[]))
+        ?? ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(IReadOnlyList<T>))
         ?? throw new InvalidOperationException($"No serialization metadata is registered for a selection of {typeof(T).FullName}.");
 }

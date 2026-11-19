@@ -1,0 +1,47 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "context": "Proposed Compliance domain is event sourced. Each aggregate stream replays in full; current cross-aggregate reads and projections may lag. User requires small focused aggregates, no unbounded child rosters or catalog-sized state/content; protect authoritative invariants, use per-participant durable outcomes and exact fencing. Technical processes cannot establish business truth by themselves.",
+    "parent": "A campaign has one independent child item per person. Each item may reject closing if unfinished. Campaign completes only if every admitted item has durably closed. A child can be created concurrently with closure unless admission is fenced. An arbitrary number of children may exist.",
+    "hold": "An organization-wide or specific hold can be placed while disposal of one artifact is underway. No disposal may be authorized while the hold covers it. Holds must not be refused merely because disposal is in progress.",
+    "proof": "A coordinator can record one cut reference and lifecycle status. Independent children own their own outcomes. Source pagination and traversal can use bounded memory but source completeness and absence need authoritative guarantees; a projection can be stale. Unknown outcome stays pending; cancellation must fence delayed child append, even on an empty stream."
+  },
+  "questions": {
+    "parent_rows": {
+      "type": "noul",
+      "instructions": "If a campaign aggregate appends one event for every independent child outcome, can its event history grow with the number of children even if the campaign eventually closes?"
+    },
+    "projection_absence": {
+      "type": "noul",
+      "instructions": "Does a projection count of zero unresolved children prove no unresolved child exists when the projection may lag?"
+    },
+    "read_race": {
+      "type": "noul",
+      "instructions": "Can child admission or a child write race with campaign completion if closure relies only on a previous cross-aggregate read and there is no admission fence?"
+    },
+    "hash_complete": {
+      "type": "noul",
+      "instructions": "Does a content hash by itself prove that every required child was included?"
+    },
+    "independent_owners": {
+      "type": "noul",
+      "instructions": "Can independently owned child outcomes preserve an authoritative all-children-closed invariant when a complete frozen admission set and every exact participant outcome are proven?"
+    },
+    "bounded_memory": {
+      "type": "noul",
+      "instructions": "Can complete source traversal operate with bounded working memory without loading every child or sorting the full history?"
+    },
+    "hold_advisory": {
+      "type": "noul",
+      "instructions": "Can a prior read showing no active hold guarantee authorization is safe if a hold commits before the disposal decision?"
+    },
+    "unknown_pending": {
+      "type": "noul",
+      "instructions": "When an earlier child write may have committed but acknowledgement was lost, is it safe to release its reservation solely because of timeout?"
+    },
+    "per_run": {
+      "type": "noul",
+      "instructions": "Does moving per-child events from a long-lived parent to one short-lived run aggregate automatically guarantee a finite bound on the number of events in that run?"
+    }
+  }
+}

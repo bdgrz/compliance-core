@@ -1,0 +1,65 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "pre_revoke_allowed": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "aba_ignored": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "aba_passes": {
+      "type": "noul",
+      "noul": 0.12
+    },
+    "disjoint_allowed": {
+      "type": "noul",
+      "noul": 0.16
+    },
+    "post_t_allowed": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "post_success_valid": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "stale_safe": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "expired_allowed": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "index_absence_proven": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "stale_discovery_grant": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "omitted_veto_safe": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "unknown_safe": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "cross_realm_possible": {
+      "type": "noul",
+      "noul": 0.78
+    },
+    "all_children_required": {
+      "type": "noul",
+      "noul": 0.03
+    }
+  },
+  "usage": {
+    "input_tokens": 1302,
+    "output_tokens": 266
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "launch": "A campaign fixes the version, audience rule and due date. It stores no list of people. Each qualifying person gets a separate participant record keyed by tenant, campaign and person; a launch origin records membership as evaluated at the authoritative launch cut. Amendments are attributed facts in that person record, never in the campaign stream. A list is projected for display.",
+    "incomplete": "A roster projection contains Alice but is delayed and omits Bob, who qualified at the campaign launch. The campaign enumerates the projection and creates Alice only. The aggregate IDs are deterministic.",
+    "late": "A qualifying workforce join is committed before a campaign close starts. Its notification is delayed. The closer fences currently known participant admissions and gets a successful close vote from every known participant, then closes. The join notification arrives afterwards.",
+    "multiple": "A person has two concurrently active qualifying work relationships. One ends while the other remains qualifying.",
+    "participant_race": "A participant is pending within their due date when a closer reads their status. The person then acknowledges, and the close attempt later retries. Their participant stream serializes both commands by expected revision.",
+    "unknown": "A participant close command times out. The coordinator cannot tell if it committed. It treats the timeout as refusal, releases the operation, and later a delayed copy of the command can still reach an unfenced participant.",
+    "time": "A participant is pending and their due date is tomorrow when a close check occurs. Closing happens the next day after their due date. The campaign rule permits closure if no participant is pending within their due date.",
+    "boundary": "Campaign stores its fixed policy version, due date, audience rule, and lifecycle. Participant records each store one person and their attributed outcomes. Launch-source capture and closing coordination need separately established complete source cuts and durable terminal participant outcomes; the proposal does not claim that current infrastructure supplies them."
+  },
+  "questions": {
+    "split_audit": {
+      "type": "noul",
+      "instructions": "In launch, can the frozen launch audience be reconstructed from the individual participant records if the launch cut was complete?"
+    },
+    "missing_projection": {
+      "type": "noul",
+      "instructions": "In incomplete, does the projection enumeration omit someone who belonged in the frozen audience?"
+    },
+    "determinism": {
+      "type": "noul",
+      "instructions": "In incomplete, does deterministic identity alone ensure that Bob receives a participant record?"
+    },
+    "late_join": {
+      "type": "noul",
+      "instructions": "In late, can the campaign close before a qualifying pre-close join is represented?"
+    },
+    "two_relationships": {
+      "type": "noul",
+      "instructions": "In multiple, should the person remain in the campaign audience while the remaining relationship still qualifies?"
+    },
+    "participant_serialization": {
+      "type": "noul",
+      "instructions": "In participant_race, can the participant stream serialize that person\u2019s acknowledgement against a participant close command?"
+    },
+    "timeout_fence": {
+      "type": "noul",
+      "instructions": "In unknown, can an unfenced delayed command still be accepted after the coordinator has treated it as finished?"
+    },
+    "time_changes": {
+      "type": "noul",
+      "instructions": "In time, can the result of the closing rule differ between the earlier check and the later closing time?"
+    },
+    "small_records": {
+      "type": "noul",
+      "instructions": "In boundary, does the campaign record hold a growing list of participants?"
+    },
+    "evidence_gap": {
+      "type": "noul",
+      "instructions": "In boundary, does identifying the missing source and coordination guarantees by itself prove those guarantees exist?"
+    }
+  }
+}

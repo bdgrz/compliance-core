@@ -1,0 +1,29 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "revision_after_start": {
+      "type": "noul",
+      "noul": 0.85
+    },
+    "absence_needs_fence": {
+      "type": "noul",
+      "noul": 0.16
+    },
+    "returned_episode_loses_unchanged_result": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "open_check_races_close": {
+      "type": "noul",
+      "noul": 0.78
+    },
+    "cut_supports_finding_fanout": {
+      "type": "noul",
+      "noul": 0.7
+    }
+  },
+  "usage": {
+    "input_tokens": 684,
+    "output_tokens": 109
+  }
+}

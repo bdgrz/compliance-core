@@ -30,6 +30,7 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Work.Contracts;
 using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Work.Aggregates;
 using Bdgrz.Compliance.Features.Work.Commands;
@@ -50,6 +51,7 @@ public static class WorkAssignmentNativeHistory
         var escalated = false;
         WorkAssignmentLegacyHistoryImported? imported = null;
         IWorkAssignmentFact? latest = null;
+        WorkItemAutomaticallyEscalated? automatic = null;
         foreach (var fact in facts)
         {
             digest = FirmIndependenceReplayDigest.Append(digest, fact);
@@ -61,6 +63,17 @@ public static class WorkAssignmentNativeHistory
                     throw Invalid("Legacy import differs from its single empty native owner and exact schema.");
                 imported = legacy;
                 (revision, assignee, escalated) = (legacy.Revision, legacy.AssigneeMemberId, legacy.Escalated);
+                continue;
+            }
+            if (fact is WorkItemAutomaticallyEscalated system)
+            {
+                if (system.TenantId != owner.TenantId || system.ProgramId != owner.ProgramId ||
+                    system.WorkItemId != owner.WorkItemId || escalated || system.Revision != revision + 1 ||
+                    system.AssigneeMemberId != assignee || system.CommandId != WorkItemAssignment.AutomaticEscalationId(owner.ProgramId, owner.WorkItemId) ||
+                    system.SourceId == Uuid.Empty || string.IsNullOrWhiteSpace(system.SourceKind) || system.SourceKind.Length > 128 ||
+                    system.DueOn == default || DateOnly.FromDateTime(system.EscalatedAt.UtcDateTime).DayNumber - system.DueOn.DayNumber < WorkQueueReader.SystemEscalationDays)
+                    throw Invalid("The system escalation differs from its item, predecessor assignment or overdue source round.");
+                (revision, escalated, automatic) = (system.Revision, true, system);
                 continue;
             }
             if (fact is not IWorkAssignmentFact native || native.TenantId != owner.TenantId || native.ProgramId != owner.ProgramId ||
@@ -79,7 +92,7 @@ public static class WorkAssignmentNativeHistory
             (revision, assignee, escalated, latest) = (native.Revision, native.AssigneeMemberId, native.Escalated, native);
         }
         if (revision != owner.Revision || assignee != owner.AssigneeMemberId || escalated != owner.Escalated ||
-            imported != owner.LegacyImport || !Equals(latest, owner.Latest) || imported is not null && latest is null)
+            imported != owner.LegacyImport || !Equals(latest, owner.Latest) || automatic != owner.AutomaticEscalation || imported is not null && latest is null)
             throw Invalid("The complete native history differs from compact current assignment authority.");
         owner.ReplayCut.Confirm(owner, digest);
         return facts;

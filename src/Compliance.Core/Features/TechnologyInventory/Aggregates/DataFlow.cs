@@ -82,6 +82,11 @@ public sealed class DataFlow : Aggregate
         });
         On<TechnologyComponentRevisionRecorded>(_ => _foreign = true);
         On<InformationAssetRevisionRecorded>(_ => _foreign = true);
+        On<InformationAssetRecorded>(_ => _foreign = true);
+        On<InformationAssetDetailsChanged>(_ => _foreign = true);
+        On<InformationAssetClassified>(_ => _foreign = true);
+        On<InformationAssetOwnerChanged>(_ => _foreign = true);
+        On<InformationAssetRetired>(_ => _foreign = true);
     }
 
     /// <summary>Checks a creation against hydrated state without raising anything; returns the normalized content.</summary>
@@ -128,6 +133,9 @@ public sealed class DataFlow : Aggregate
             return Failure(CommandFailure.MissingRecord("The data flow was not found."));
         if (expectedRevision != _revision)
             return Failure(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("data flow", _revision)));
+        if (_content!.Lifecycle == TechnologyInventoryRules.Retired)
+            return Result<DataFlowContent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A retired data flow cannot change; record a new identity."));
         var content = TechnologyInventoryRules.Normalize(change(_content!));
         var error = TechnologyInventoryRules.Validate(content) ??
                     (content.EffectiveFrom < _content!.EffectiveFrom

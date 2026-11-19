@@ -4,4 +4,6 @@ public sealed record ControlDraftContent(string Title, string Objective, string 
     string ImplementationNarrative, IReadOnlyList<string> ExpectedEvidenceDescriptions,
     string? OwnerReference = null,
     IReadOnlyList<ControlApplicabilityReference>? Applicability = null,
-    ControlContentProvenance? Provenance = null);
+    ControlContentProvenance? Provenance = null,
+    string Kind = "preventive", string Nature = "manual", string Cadence = "monthly",
+    string OccurrenceSubject = "none");

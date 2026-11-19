@@ -67,6 +67,12 @@ sealed class FindingClosureFences(IRequestBus bus, IImmutableContentStore conten
         ImmutableContentRef intentReference, string reason, Uuid? actionId, IExecutionContext context, CancellationToken ct)
     {
         var (finding, intent, decision) = (closure.Finding!, closure.Intent!, closure.Decision!);
+        if (finding.TerminalClosure(intent.Header.RootOperationId) is FindingClosureWithdrawn withdrawn)
+        {
+            var terminal = NativeFactReference.Of(finding.Stream, withdrawn);
+            var settledWithdrawal = await SettleCanceledAsync(closure, terminal, source, intentReference, context, ct).ConfigureAwait(false);
+            return settledWithdrawal.IsSuccess ? SourceUseReceiverSupport.Superseded("The closure proposal was withdrawn.", terminal) : settledWithdrawal;
+        }
         var episode = intent.Header.Episode;
         var proof = finding.TerminalClosure(intent.Header.RootOperationId) is FindingClosureCanceled canceledClosure
             ? canceledClosure.SourceProofs ?? throw new ImmutableContentIntegrityException("The cancellation has no exact failure proof.")

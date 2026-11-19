@@ -26,7 +26,7 @@ public sealed class RemoveTeamRoleHandler(IAggregateExecutor executor) : IReques
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The Administrators team keeps the Tenant Administration role.")));
         return executor.ExecuteAsync(
-            new TeamRole(request.TenantId, request.TeamId, request.RoleId, request.CommandId),
+            new TeamRole(request.TenantId, request.TeamId, request.RoleId, request.CommandId, request.Scope),
             assignment => AggregateOutcome.CommitOnSuccess(assignment.Remove(request.CommandId, request.ExpectedRevision,
                 request.AssignmentId, RbacOperationActor.From(context.Actor))), context, ct);
     }

@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "missing_complete": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "late_included": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "ack_truthful": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "post_quarantine": {
+      "type": "noul",
+      "noul": 0.55
+    },
+    "recall_possible": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "attachment_guarantee": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "projection_complete": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "parent_items": {
+      "type": "noul",
+      "noul": 0.09
+    },
+    "conditional_claim": {
+      "type": "noul",
+      "noul": 0.89
+    }
+  },
+  "usage": {
+    "input_tokens": 869,
+    "output_tokens": 166
+  }
+}

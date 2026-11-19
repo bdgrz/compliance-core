@@ -1,25 +1,24 @@
-using Cntryl.Fitz.Testing;
-using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using System.Text.Json;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Content.Persistence;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Criteria.Services;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
@@ -28,6 +27,11 @@ using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Handlers;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Programs.Rules;
 using Bdgrz.Compliance.Features.Providers.History;
@@ -38,16 +42,18 @@ using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -80,16 +86,10 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
-using Bdgrz.Compliance.Features.Programs.Aggregates;
-using Bdgrz.Compliance.Features.Programs.Commands;
-using Bdgrz.Compliance.Features.Programs.Events;
-using Bdgrz.Compliance.Features.Programs.Handlers;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
 namespace Bdgrz.Compliance.Tests.Features.Criteria.Tests;
 
 public sealed class CriteriaCatalogTests
@@ -253,28 +253,25 @@ public sealed class CriteriaCatalogTests
     }
 
     [Fact]
-    public async Task ShouldRejectSelectionGivenEditionIsIncomplete()
+    public async Task ShouldRejectSelectionGivenEditionHasNoPublishedSource()
     {
         // Arrange
         await using var fixture = new StoreFixture();
         var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
-        var incomplete = CriteriaCatalog.Platform.Edition with
-        {
-            EditionId = Uuid.CreateVersion4(),
-            EditionLabel = "test_incomplete",
-            IsComplete = false,
-        };
-        var catalog = new CriteriaCatalog(incomplete,
-        [
-            new(incomplete.EditionId, "CC6.1", "CC6.1", "security", "criterion", null,
-                "Test incomplete edition."),
-        ]);
-        var handler = new SelectProgramCriteriaEditionHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content), catalog);
+        var published = Uuid.CreateVersion4();
+        var unpublished = Uuid.CreateVersion4();
+        var authority = new ProgramSeeds.FixturePublicationAuthority(published);
+        var operations = ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content,
+            publication: authority);
         var actor = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())],
             "BdgrzSession"));
+        var create = new RequestContext<CreateProgram>(new CreateProgram(ProgramId, TenantId, "SOC 2",
+            new ProgramPlan(null, null, null, null, null, null), published), actor);
+        Assert.True((await new CreateProgramHandler(operations).HandleAsync(create, CancellationToken.None)).IsSuccess);
+        var handler = new SelectProgramCriteriaEditionHandler(operations);
         var request = new SelectProgramCriteriaEdition(Uuid.CreateVersion4(), TenantId, ProgramId, 1,
-            incomplete.EditionId);
+            unpublished);
 
         // Act
         var result = await handler.HandleAsync(new RequestContext<SelectProgramCriteriaEdition>(
@@ -283,13 +280,11 @@ public sealed class CriteriaCatalogTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
-        Assert.Equal("The criteria edition is incomplete and cannot be selected.",
-            result.Error.Message);
-        await foreach (var _ in fixture.Store.ReadAsync(
+        Assert.Equal(RequestErrorKind.NotFound, result.Error.Kind);
+        await foreach (var record in fixture.Store.ReadAsync(
                            new ComplianceProgram(TenantId, ProgramId).Stream, 0,
                            CancellationToken.None))
-            Assert.Fail("An incomplete edition must not append a Program event.");
+            Assert.IsNotType<ProgramCriteriaEditionSelected>(record.Event);
     }
 
     [Fact]
@@ -345,21 +340,19 @@ public sealed class CriteriaCatalogTests
         var content = new FitzKvImmutableContentStore(new InMemoryKvClient());
         var first = CriteriaCatalog.Platform.Edition;
         var second = first with { EditionId = Uuid.CreateVersion4(), EditionLabel = "test_second" };
-        var catalog = new CriteriaCatalog([first, second],
-        [
-            .. CriteriaCatalog.Platform.Entries,
-            new(second.EditionId, "CC6.1", "CC6.1", "security", "criterion", null,
-                "Test second edition."),
-        ]);
+        var initialEdition = Uuid.CreateVersion4();
+        var authority = new ProgramSeeds.FixturePublicationAuthority(initialEdition, first.EditionId, second.EditionId);
+        var operations = ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content,
+            publication: authority);
         var actor = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())],
             "BdgrzSession"));
-        var create = new CreateProgramHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content));
+        var create = new CreateProgramHandler(operations);
         var creation = new RequestContext<CreateProgram>(new CreateProgram(Uuid.CreateVersion4(), TenantId, "SOC 2",
-            new ProgramPlan(null, null, null, null, null, null)), actor);
+            new ProgramPlan(null, null, null, null, null, null), initialEdition), actor);
         Assert.True((await create.HandleAsync(creation, CancellationToken.None)).IsSuccess);
         var programId = creation.Request.ProgramId;
-        var select = new SelectProgramCriteriaEditionHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content), catalog);
+        var select = new SelectProgramCriteriaEditionHandler(operations);
         Task<Result> SelectAsync(long revision, Uuid editionId) => select.HandleAsync(
             new RequestContext<SelectProgramCriteriaEdition>(
                 new SelectProgramCriteriaEdition(Uuid.CreateVersion4(), TenantId, programId, revision, editionId),
@@ -385,7 +378,7 @@ public sealed class CriteriaCatalogTests
         Assert.True(retried.IsSuccess);
         Assert.Equal(RequestErrorKind.Conflict, staleRemap.Error?.Kind);
         Assert.True(remapped.IsSuccess);
-        Assert.Equal(RequestErrorKind.Validation, unknown.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, unknown.Error?.Kind);
         Assert.Collection(stored,
             ev => Assert.Equal((2L, first.EditionId), (ev.Revision, ev.EditionId)),
             ev => Assert.Equal((3L, second.EditionId), (ev.Revision, ev.EditionId)));

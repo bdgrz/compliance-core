@@ -12,16 +12,16 @@ Application schema startup, native Cassie configuration, a pinned development/te
 
 | Existing source | Conversion state |
 | --- | --- |
-| [FitzPermissionAuthorizer.cs](../../src/Compliance.Core/Features/AccessControl/Authorizers/FitzPermissionAuthorizer.cs) | Remaining |
+| [CassiePermissionAuthorizer.cs](../../src/Compliance.Core/Features/AccessControl/Authorizers/CassiePermissionAuthorizer.cs) | Remaining |
 | [FitzAccessGrantDirectory.cs](../../src/Compliance.Core/Features/AccessControl/Readers/FitzAccessGrantDirectory.cs) | Remaining |
 | [FitzFirmProfessionalDutyDirectory.cs](../../src/Compliance.Core/Features/AccessControl/Readers/FitzFirmProfessionalDutyDirectory.cs) | Remaining |
 | [FitzFirmStaffDirectory.cs](../../src/Compliance.Core/Features/AccessControl/Readers/FitzFirmStaffDirectory.cs) | Remaining |
-| [FitzRoleDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/FitzRoleDirectoryReader.cs) | Remaining |
-| [FitzRolePermissionDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/FitzRolePermissionDirectoryReader.cs) | Remaining |
-| [FitzRoleTeamDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/FitzRoleTeamDirectoryReader.cs) | Remaining |
-| [FitzTeamDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/FitzTeamDirectoryReader.cs) | Remaining |
-| [FitzTeamMemberDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/FitzTeamMemberDirectoryReader.cs) | Remaining |
-| [FitzTeamRoleDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/FitzTeamRoleDirectoryReader.cs) | Remaining |
+| [CassieRoleDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/CassieRoleDirectoryReader.cs) | Remaining |
+| [CassieRolePermissionDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/CassieRolePermissionDirectoryReader.cs) | Remaining |
+| [CassieRoleTeamDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/CassieRoleTeamDirectoryReader.cs) | Remaining |
+| [CassieTeamDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/CassieTeamDirectoryReader.cs) | Remaining |
+| [CassieTeamMemberDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/CassieTeamMemberDirectoryReader.cs) | Remaining |
+| [CassieTeamRoleDirectoryReader.cs](../../src/Compliance.Core/Features/AccessControl/Readers/CassieTeamRoleDirectoryReader.cs) | Remaining |
 | [FitzActualStaffEngagementLocator.cs](../../src/Compliance.Core/Features/AccessControl/Services/FitzActualStaffEngagementLocator.cs) | Remaining |
 | [FitzAccessPopulationDirectory.cs](../../src/Compliance.Core/Features/AccessReviews/Readers/FitzAccessPopulationDirectory.cs) | Remaining |
 | [FitzAccessReviewCampaignDirectory.cs](../../src/Compliance.Core/Features/AccessReviews/Readers/FitzAccessReviewCampaignDirectory.cs) | Remaining |
@@ -40,7 +40,7 @@ Application schema startup, native Cassie configuration, a pinned development/te
 | [FitzApplicationRelationshipDirectory.cs](../../src/Compliance.Core/Features/Applications/Readers/FitzApplicationRelationshipDirectory.cs) | Remaining |
 | [FitzAuditPackageDirectory.cs](../../src/Compliance.Core/Features/AuditPackages/Readers/FitzAuditPackageDirectory.cs) | Remaining |
 | [FitzAuditorRequestDirectory.cs](../../src/Compliance.Core/Features/AuditorRequests/Readers/FitzAuditorRequestDirectory.cs) | Remaining |
-| [FitzBoundaryDirectory.cs](../../src/Compliance.Core/Features/Boundaries/Readers/FitzBoundaryDirectory.cs) | Remaining |
+| [CassieBoundaryDirectory.cs](../../src/Compliance.Core/Features/Boundaries/Readers/CassieBoundaryDirectory.cs) | Remaining |
 | [FitzSignificantChangeDirectory.cs](../../src/Compliance.Core/Features/Changes/Readers/FitzSignificantChangeDirectory.cs) | Remaining |
 | [FitzCommitmentDraftHistoryDirectoryV1.cs](../../src/Compliance.Core/Features/Commitments/History/FitzCommitmentDraftHistoryDirectoryV1.cs) | Remaining |
 | [FitzCommitmentDraftDirectory.cs](../../src/Compliance.Core/Features/Commitments/Readers/FitzCommitmentDraftDirectory.cs) | Remaining |
@@ -56,16 +56,16 @@ Application schema startup, native Cassie configuration, a pinned development/te
 | [FitzPolicyDirectory.cs](../../src/Compliance.Core/Features/Policies/Readers/FitzPolicyDirectory.cs) | Remaining |
 | [FitzCampaignDirectory.cs](../../src/Compliance.Core/Features/PolicyDistribution/Readers/FitzCampaignDirectory.cs) | Remaining |
 | [FitzTrainingRequirementDirectory.cs](../../src/Compliance.Core/Features/PolicyDistribution/Readers/FitzTrainingRequirementDirectory.cs) | Remaining |
-| [FitzClientServiceDirectory.cs](../../src/Compliance.Core/Features/Programs/Readers/FitzClientServiceDirectory.cs) | Remaining |
-| [FitzProgramDirectory.cs](../../src/Compliance.Core/Features/Programs/Readers/FitzProgramDirectory.cs) | Remaining |
+| [CassieClientServiceDirectory.cs](../../src/Compliance.Core/Features/Programs/Readers/CassieClientServiceDirectory.cs) | Remaining |
+| [CassieProgramDirectory.cs](../../src/Compliance.Core/Features/Programs/Readers/CassieProgramDirectory.cs) | Remaining |
 | [FitzAssuranceDirectory.cs](../../src/Compliance.Core/Features/Providers/Readers/FitzAssuranceDirectory.cs) | Remaining |
 | [FitzProviderDirectory.cs](../../src/Compliance.Core/Features/Providers/Readers/FitzProviderDirectory.cs) | Remaining |
 | [FitzResponsibilitySetDirectory.cs](../../src/Compliance.Core/Features/Responsibilities/Readers/FitzResponsibilitySetDirectory.cs) | Remaining |
 | [FitzMemberResponsibilityIndex.cs](../../src/Compliance.Core/Features/Responsibilities/Services/FitzMemberResponsibilityIndex.cs) | Remaining |
 | [RiskDraftProjectionStore.cs](../../src/Compliance.Core/Features/Risks/Projections/RiskDraftProjectionStore.cs) | Remaining |
 | [FitzRiskEvaluationDirectory.cs](../../src/Compliance.Core/Features/Risks/Readers/FitzRiskEvaluationDirectory.cs) | Remaining |
-| [FitzPopulationSnapshotDirectory.cs](../../src/Compliance.Core/Features/Snapshots/Readers/FitzPopulationSnapshotDirectory.cs) | Remaining |
-| [FitzSnapshotDirectory.cs](../../src/Compliance.Core/Features/Snapshots/Readers/FitzSnapshotDirectory.cs) | Remaining |
+| [CassiePopulationSnapshotDirectory.cs](../../src/Compliance.Core/Features/Snapshots/Readers/CassiePopulationSnapshotDirectory.cs) | Remaining |
+| [CassieSnapshotDirectory.cs](../../src/Compliance.Core/Features/Snapshots/Readers/CassieSnapshotDirectory.cs) | Remaining |
 | [FitzInventoryRegisterDirectory.cs](../../src/Compliance.Core/Features/TechnologyInventory/Readers/FitzInventoryRegisterDirectory.cs) | Remaining |
 | [FitzTechnologyInventoryDirectory.cs](../../src/Compliance.Core/Features/TechnologyInventory/Readers/FitzTechnologyInventoryDirectory.cs) | Remaining |
 | [FitzTenantDirectoryReader.cs](../../src/Compliance.Core/Features/Tenants/Readers/FitzTenantDirectoryReader.cs) | Remaining |

@@ -1,0 +1,20 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "domain": "One tenant Member has at most one linked Person; a Person may have any number of Members. A Member's membership has numbered episodes, and all its link and lifecycle decisions append to the same versioned Member stream. A Person is permanent once recorded. A workforce source record has independently recorded observations of ordered revisions; a source-record gate admits a revision by comparing and advancing its highest accepted revision in one optimistic-concurrency append. A revision may update a Person and a WorkRelationship separately. Each target keeps a single bound authoritative source record and its greatest applied revision; each update includes the full source-owned target facts. Target decisions append to the target's versioned stream. A conflicting source binding is refused for reconciliation. Actors or user-owned fields are not overwritten by source-owned fields. Unknown command outcomes stay pending."
+  },
+  "questions": {
+    "member_uniqueness": {"type": "noul", "instructions": "Two different Person links race for one Member, and the Member accepts at most one link in its versioned stream. Can both links be current at the same time?"},
+    "person_roster": {"type": "noul", "instructions": "Does deciding at most one Person per Member require the Person stream to maintain a roster of its linked Members?"},
+    "stale_unlink": {"type": "noul", "instructions": "An unlink carrying an old link generation arrives after the Member was unlinked and linked again to the same Person. If Member checks that generation, can the old unlink remove the new link?"},
+    "episode": {"type": "noul", "instructions": "A Member deprovisions and rejoins under a new episode. Does the historical identity link by itself authorize the new episode to access business records?"},
+    "stale_projection": {"type": "noul", "instructions": "Two observations concurrently read a projection showing no accepted revision. Does that prove both may accept their different revisions while respecting highest accepted revision?"},
+    "gate_serializes": {"type": "noul", "instructions": "For one source record, both revision admissions must compare and atomically append against the same versioned gate stream. Can a lower revision become newly accepted after a higher revision committed?"},
+    "target_reordering": {"type": "noul", "instructions": "A target has applied revision 5 and atomically refuses source updates with revision below its watermark 5. Can a delayed revision 4 update overwrite that target's revision 5 facts?"},
+    "accepted_not_applied": {"type": "noul", "instructions": "The source gate has accepted revision 5, but a target has only applied revision 3. Does accepting revision 5 prove the target already has revision 5 facts?"},
+    "fence_insufficient": {"type": "noul", "instructions": "Revision 5 is accepted at the source gate but not yet applied to a target, whose watermark is 3. Can a delayed revision 4 still apply to the target before revision 5?"},
+    "partial_revision": {"type": "noul", "instructions": "Revision 5 contains only changes from revision 4, and the target rejects revision 4 after applying revision 5. Is the target guaranteed to contain revision 4's other changes?"},
+    "preserves_manual_fields": {"type": "noul", "instructions": "A source update replaces every field on a Person, including user-owned fields absent from the source. Can this destroy user-entered facts?"},
+    "independent_results": {"type": "noul", "instructions": "One accepted source revision updates two target streams. The first has succeeded and the second has an unknown append outcome. Is the revision fully applied to both targets?"}
+  }
+}

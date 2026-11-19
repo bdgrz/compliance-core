@@ -1,0 +1,4 @@
+{
+  "src/Compliance.Core/Features/Programs/Rules/ProgramRules.cs": "c49c33594b34c96d8171c7f481d700a38a0bd1f944c36706034c6a345559fec6",
+  "test/Compliance.Tests/Features/Programs/Tests/ProgramTargetDateTests.cs": "a1532c67864613e11503892cd63276caf5f0f99114decd2ef35997543e478f7e"
+}

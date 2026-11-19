@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "digest_metadata": {
+      "type": "noul",
+      "noul": 0.17
+    },
+    "digest_ambiguous": {
+      "type": "noul",
+      "noul": 0.73
+    },
+    "boundary_race": {
+      "type": "noul",
+      "noul": 0.75
+    },
+    "boundary_reference": {
+      "type": "noul",
+      "noul": 0.17
+    },
+    "review_bounded": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "review_race": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "assignment_race": {
+      "type": "noul",
+      "noul": 0.46
+    }
+  },
+  "usage": {
+    "input_tokens": 684,
+    "output_tokens": 131
+  }
+}

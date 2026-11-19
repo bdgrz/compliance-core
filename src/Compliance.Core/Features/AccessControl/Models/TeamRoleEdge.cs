@@ -1,4 +1,4 @@
 using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
-sealed record TeamRoleEdge(Uuid TeamId, Uuid RoleId);
+sealed record TeamRoleEdge(Uuid TeamId, Uuid RoleId, AccessGrantScope? Scope = null);

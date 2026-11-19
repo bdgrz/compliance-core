@@ -1,0 +1,49 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rules": "A readiness rule set evaluates independently owned mutable subjects. A complete assessment means all required rule-subject results are present, with unknowns and gaps disclosed. An Org Admin may enter Type I using an exact completed historical assessment, including one with gaps; the decision lists the gaps with their plans. Gaps and plans are separately owned. The meaning of a missing plan is undecided.",
+    "proposal": "Each rule-subject-result is independently recorded. A paged read service derives the aggregate verdict and lists gaps. A decision owner stores a reference to one assessment and rationale. No aggregate owns a child list, and no write decision may require inspecting or waiting for every child. A materialized result is eventually consistent unless a validated immutable source cut proves the required set and every result. Neither zero projection rows nor counts guarantee source completeness."
+  },
+  "questions": {
+    "projected_zero": {
+      "type": "noul",
+      "instructions": "Can a lagging projection containing zero gaps prove that an assessment with required but not yet projected subjects has no gaps?"
+    },
+    "read_rollup": {
+      "type": "noul",
+      "instructions": "Can a read service show a calculated rollup and stream individual results without placing those individual results into a parent aggregate?"
+    },
+    "gate_still_global": {
+      "type": "noul",
+      "instructions": "If a write is refused until the status of every individual result is complete, does the write decision still depend on all those results even when another service computed the status?"
+    },
+    "weakened_guard": {
+      "type": "noul",
+      "instructions": "Does allowing a management decision when the cited assessment is incomplete weaken the stated requirement to use a complete assessment?"
+    },
+    "previous_snapshot": {
+      "type": "noul",
+      "instructions": "Under the stated policy, can an exactly reproducible complete historical assessment remain eligible even after newer source facts exist?"
+    },
+    "latest_plan": {
+      "type": "noul",
+      "instructions": "Does showing a gap plan as it exists today necessarily show the plan as it existed at the time of a decision made last week?"
+    },
+    "pending_unknown": {
+      "type": "noul",
+      "instructions": "If required subjects may be missing from the projection, is it justified to mark assessment completeness as unknown rather than complete?"
+    },
+    "key_collision": {
+      "type": "noul",
+      "instructions": "If one rule can emit two distinct gaps for one subject, can keying both gap plans only by the rule and subject cause the two gaps to share a plan identity?"
+    },
+    "cut_claim": {
+      "type": "noul",
+      "instructions": "Does citing an assessment identifier alone prove an immutable complete snapshot exists with all required evidence?"
+    },
+    "unknown_verdict": {
+      "type": "noul",
+      "instructions": "Given a policy that any unknown required input yields incomplete, can an assessment with one known gap and one unknown required input be called not_ready instead of incomplete under that policy?"
+    }
+  }
+}

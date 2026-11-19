@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Boundaries.Projections;
 using System.Security.Claims;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
@@ -63,8 +64,9 @@ public sealed class BoundaryConsumerAuthorityTests
         var facts = await native.PublishAsync(rules);
         var fault = new FaultingContent(native.Content, unavailable);
         var sources = new BoundaryReader(native.Reader, native.Events, fault);
-        var directory = new FitzBoundaryDirectory(native.Kv, sources);
-        await native.ProjectAsync(directory, directory.ApplyAsync, FitzBoundaryDirectory.ProjectorName, tenant, facts);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieBoundarySchema.Statements);
+        await using var directory = new CassieBoundaryDirectory(database.Database, sources);
+        await native.ProjectAsync(directory, directory.ApplyAsync, CassieBoundaryDirectory.ProjectorName, tenant, facts);
         var handler = new GetBoundaryHandler(directory, sources);
 
         // Act

@@ -1,44 +1,64 @@
-using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Fitz;
-using Cntryl.Fitz.Testing;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.Boundaries.Commands;
+using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Projections;
+using Bdgrz.Compliance.Features.Boundaries.Queries;
 using Bdgrz.Compliance.Features.Boundaries.Readers;
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
+using Bdgrz.Compliance.Features.Commitments.Commands;
+using Bdgrz.Compliance.Features.ControlMappings.Commands;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Commands;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Evaluations.Commands;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Policies.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
+using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
 using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
 using Bdgrz.Compliance.Features.PolicyDistribution.Services;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Commands;
 using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Projections;
 using Bdgrz.Compliance.Features.Programs.Rules;
+using Bdgrz.Compliance.Features.Readiness.Commands;
 using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Contracts;
 using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Readers;
 using Bdgrz.Compliance.Features.Work.Rules;
 using Bdgrz.Compliance.Features.Workforce.Rules;
+using Bdgrz.Compliance.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -70,32 +90,13 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Authorizers;
-using Bdgrz.Compliance.Features.Boundaries.Commands;
-using Bdgrz.Compliance.Features.Boundaries.Models;
-using Bdgrz.Compliance.Features.Boundaries.Projections;
-using Bdgrz.Compliance.Features.Boundaries.Queries;
-using Bdgrz.Compliance.Features.Commitments.Aggregates;
-using Bdgrz.Compliance.Features.Commitments.Commands;
-using Bdgrz.Compliance.Features.ControlMappings.Commands;
-using Bdgrz.Compliance.Features.Criteria.Commands;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Evaluations.Commands;
-using Bdgrz.Compliance.Features.Incidents.Commands;
-using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
-using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
-using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
-using Bdgrz.Compliance.Features.Programs.Commands;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.Readiness.Commands;
-using Bdgrz.Compliance.Features.Remediation.Commands;
-using Bdgrz.Compliance.Features.Remediation.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Readers;
-using Bdgrz.Compliance.Tests;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
 public sealed class AttestProgramManagementWriteWallTests
@@ -119,7 +120,9 @@ public sealed class AttestProgramManagementWriteWallTests
     public async Task ShouldDenyClientManagementRecordGivenActualAttestHistoryAndOrdinaryProgramGrant(string operation)
     {
         // Arrange
-        await using var provider = Compose();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+        await using var provider = Compose(database);
         await ProgramManagementServices.SeedAsync(provider, new ProgramRules(Tenant, Program), source =>
         {
             Assert.Null(source.Create("Security", new ProgramPlan(null, null, null, null, null, null),
@@ -136,7 +139,7 @@ public sealed class AttestProgramManagementWriteWallTests
         var error = operation switch
         {
             "program" => (await bus.DispatchAsync(new CreateProgram(Uuid.CreateVersion4(), Tenant, "New program",
-                new ProgramPlan(null, null, null, null, null, null)), context, CancellationToken.None)).Error,
+                new ProgramPlan(null, null, null, null, null, null), Uuid.CreateVersion4()), context, CancellationToken.None)).Error,
             "service" => (await bus.DispatchAsync(new CreateClientService(Uuid.CreateVersion4(), Tenant, Program, "Service",
                 "Client service purpose", "Client owner"), context, CancellationToken.None)).Error,
             "boundary" => (await bus.DispatchAsync(new CreateBoundary(Uuid.CreateVersion4(), Tenant, Program,
@@ -170,7 +173,9 @@ public sealed class AttestProgramManagementWriteWallTests
     public async Task ShouldPreserveOwnPersonalPolicyAcknowledgementGivenActualAttestHistoryAndOnlyOrdinaryReadGrant()
     {
         // Arrange
-        await using var provider = Compose(readOnly: true);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+        await using var provider = Compose(database, readOnly: true);
         await SeedProgramAsync(provider);
         var personId = Uuid.CreateVersion4();
         var campaignId = Uuid.CreateVersion4();
@@ -220,14 +225,16 @@ public sealed class AttestProgramManagementWriteWallTests
         bool sameClient)
     {
         // Arrange
-        await using var provider = Compose();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+        await using var provider = Compose(database);
         await AttestAssignmentHistoryFixture.SeedAsync(provider, sameClient ? Tenant : Uuid.CreateVersion4(),
             User, revoked: true, practice: practice);
         await using var scope = provider.CreateAsyncScope();
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(
-            new CreateProgram(Uuid.CreateVersion4(), Tenant, "New program", new ProgramPlan(null, null, null, null, null, null)),
+            new CreateProgram(Uuid.CreateVersion4(), Tenant, "New program", new ProgramPlan(null, null, null, null, null, null), Uuid.CreateVersion4()),
             ProgramManagementServices.Actor(User));
 
         // Assert
@@ -238,7 +245,9 @@ public sealed class AttestProgramManagementWriteWallTests
     public async Task ShouldPreserveSharedBoundaryReadGivenActualAttestHistoryAndOrdinaryProgramGrant()
     {
         // Arrange
-        await using var provider = Compose();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(
+            [.. CassieProgramSchema.Statements, .. CassieBoundarySchema.Statements]);
+        await using var provider = Compose(database);
         await SeedProgramAsync(provider);
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
@@ -269,7 +278,7 @@ public sealed class AttestProgramManagementWriteWallTests
     {
         var events = services.GetRequiredService<IDomainEventReader>();
         var projection = services.GetRequiredService<IBoundaryDirectoryProjection>();
-        var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName, EventStreamPattern.ForPattern(Tenant.ToString()));
+        var identity = new CheckpointIdentity(CassieBoundaryDirectory.ProjectorName, EventStreamPattern.ForPattern(Tenant.ToString()));
         await using var batch = await projection.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
         var cursor = ProjectionCheckpoint.Start.Cursor;
         await foreach (var record in events.ReadAsync(identity.Pattern, cursor, CancellationToken.None))
@@ -280,13 +289,14 @@ public sealed class AttestProgramManagementWriteWallTests
         await batch.CommitAsync(new ProjectionCheckpoint(cursor));
     }
 
-    static ServiceProvider Compose(bool readOnly = false)
+    static ServiceProvider Compose(CassieRepositoryTestDatabase database, bool readOnly = false)
     {
         var services = new ServiceCollection();
         services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
             ["Fitz:ApplicationName"] = "compliance",
+            ["Cassie:ConnectionString"] = database.ConnectionString,
         }).Build(), developerAuthentication: true);
         var events = new InMemoryEventStore();
         services.AddSingleton<IEventStore>(events);
@@ -294,6 +304,8 @@ public sealed class AttestProgramManagementWriteWallTests
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<ITenantActivity>(new ActiveTenant());
         services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships());
+        services.AddSingleton<ICriteriaPublicationAuthority>(new ProgramSeeds.FixturePublicationAuthority());
+        services.AddSingleton<IAccessAdmissionAuthority>(new ProgramSeeds.FixtureAdmissionAuthority(TimeProvider.System));
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(
             readOnly ? new ReadOnlyPermissions() : new RecordingPermissionAuthorizer(true)));
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });

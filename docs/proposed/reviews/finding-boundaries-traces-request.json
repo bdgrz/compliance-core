@@ -1,0 +1,26 @@
+{
+  "model": "jev-latest",
+  "state": "For each named independent trace, determine the direct consequence of the steps stated. Do not assume unstated fences, deduplication, or protocol rules.",
+  "questions": {
+    "empty_fence": {
+      "type": "noul",
+      "instructions": "An admission operation X sends Add to an empty action stream. Before that message arrives, a read finds the stream empty and the coordinator treats the absence as refusal, releases the gate, verifies no actions and closes the finding. The original Add X then arrives, and the empty action stream accepts it. Did the finding close while action X became open?"
+    },
+    "late_proposal": {
+      "type": "noul",
+      "instructions": "A frozen gate checks all existing actions and dispatches closure proposal P. The delivery of P is delayed. Its coordinator times out, releases the gate without writing a target-side fence, and an additional open action is admitted. P then arrives at the still-open Finding stream, which has no fence, and is accepted. Was a closure proposal accepted while an action was unresolved?"
+    },
+    "duplicate_count": {
+      "type": "noul",
+      "instructions": "A gate has unresolved count 2, for actions A and B. A completes. One delivery decrements count from 2 to 1; a duplicate delivery of the same terminal fact decrements from 1 to 0, and there is no durable action-specific deduplication. B remains open. Does checking count zero give an unsafe approval?"
+    },
+    "checker_late": {
+      "type": "noul",
+      "instructions": "A verifier reads a frozen admission chain and sees all actions resolved but has not committed its result. Another worker releases the freeze, admits open action B, and then the old verifier commits an accepted proof for the earlier cut. If the Finding accepts this proof without checking a current gate or exact fence, can it accept closure while B remains open?"
+    },
+    "fixed_chain": {
+      "type": "noul",
+      "instructions": "An immutable linked sequence starts at a known stream ID. Each turn closes with either exactly one deterministic successor ID or a freeze. Direct exact source reads follow one successor at a time until the confirmed frozen cut. Does this require storing the entire list in memory?"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "aggregate": "using Bdgrz.Compliance.Features.Criteria.Events;\nusing Bdgrz.Compliance.Features.Kernel.Services;\nusing Cntryl.Portia;\n\nnamespace Bdgrz.Compliance.Features.Criteria.Aggregates;\n\n/// <summary>One immutable metadata fact for one platform criteria seed edition.</summary>\n/// <remarks>\n/// A trusted seed participant must verify the exact committed edition request and\n/// its version and fingerprint before calling <see cref=\"Record\" />. A source\n/// event ID or actor supplied by an untrusted caller is not source authority.\n/// </remarks>\npublic sealed class CriteriaSeedMetadata : Aggregate\n{\n    readonly Uuid _editionId;\n    CriteriaSeedMetadataRecorded? _recorded;\n\n    /// <summary>Opens the initial metadata owner for one edition.</summary>\n    public CriteriaSeedMetadata(Uuid editionId)\n        : base(IdentityOf(editionId), AddressOf(editionId))\n    {\n        _editionId = editionId;\n        On<CriteriaSeedMetadataRecorded>(Apply);\n    }\n\n    /// <summary>Whether the initial metadata fact has been raised or replayed.</summary>\n    public bool IsRecorded => _recorded is not null;\n\n    /// <summary>The exact initial metadata fact, if recorded.</summary>\n    public CriteriaSeedMetadataRecorded? Recorded => _recorded;\n\n    /// <summary>Returns one edition's deterministic metadata identity.</summary>\n    public static Uuid IdentityOf(Uuid editionId)\n    {\n        EnsureIdentity(editionId);\n        return AggregateIdentity.Create(nameof(CriteriaSeedMetadata), editionId);\n    }\n\n    /// <summary>Returns the metadata stream in the edition's ordered source area.</summary>\n    public static EventStreamAddress AddressOf(Uuid editionId)\n    {\n        EnsureIdentity(editionId);\n        return new EventStreamAddress(\"bdgrz\", $\"criteria-{editionId}\", $\"seed-metadata-{editionId}\");\n    }\n\n    /// <summary>Records the initial source-verified metadata or returns its exact prior outcome.</summary>\n    public Result Record(Uuid operationId, string seedVersion, string seedFingerprint,\n        Uuid editionRequestEventId, string framework, DateTimeOffset publishedAt, string coverageNote,\n        string sourceUrl, string contentRights, bool numberedCriteriaComplete, ActorAttribution recordedBy)\n    {\n        if (!Valid(operationId, seedVersion, seedFingerprint, editionRequestEventId, framework, publishedAt,\n                coverageNote, sourceUrl, contentRights, recordedBy))\n            return Failure(RequestErrorKind.Validation,\n                \"Seed metadata needs an operation, exact binding and request, source metadata, and actor.\");\n\n        var fact = new CriteriaSeedMetadataRecorded(_editionId, operationId, seedVersion, seedFingerprint,\n            editionRequestEventId, framework, publishedAt, coverageNote, sourceUrl, contentRights,\n            numberedCriteriaComplete, recordedBy);\n        if (_recorded is not null)\n            return _recorded == fact\n                ? Result.Success\n                : Failure(RequestErrorKind.Conflict, \"The edition metadata identity already has a different seed intent.\");\n\n        RaiseEvent(fact);\n        return Result.Success;\n    }\n\n    void Apply(CriteriaSeedMetadataRecorded fact)\n    {\n        if (_recorded is not null || fact.EditionId != _editionId ||\n            !Valid(fact.OperationId, fact.SeedVersion, fact.SeedFingerprint, fact.EditionRequestEventId,\n                fact.Framework, fact.PublishedAt, fact.CoverageNote, fact.SourceUrl, fact.ContentRights,\n                fact.RecordedBy))\n            throw new InvalidOperationException(\"Seed metadata must be one valid fact for its exact edition identity.\");\n\n        _recorded = fact;\n    }\n\n    static bool Valid(Uuid operationId, string? seedVersion, string? fingerprint, Uuid editionRequestEventId,\n        string? framework, DateTimeOffset publishedAt, string? coverageNote, string? sourceUrl,\n        string? contentRights, ActorAttribution? actor) =>\n        operationId != Uuid.Empty && editionRequestEventId != Uuid.Empty &&\n        !string.IsNullOrWhiteSpace(seedVersion) && IsFingerprint(fingerprint) && framework == \"tsc\" &&\n        publishedAt != default && publishedAt.Offset == TimeSpan.Zero &&\n        !string.IsNullOrWhiteSpace(coverageNote) && !string.IsNullOrWhiteSpace(sourceUrl) &&\n        contentRights == \"identifiers_and_original_summaries\" && actor is not null &&\n        !string.IsNullOrWhiteSpace(actor.Subject) && !string.IsNullOrWhiteSpace(actor.Issuer);\n\n    static bool IsFingerprint(string? value) => value is { Length: 64 } &&\n        value.All(static character => character is >= '0' and <= '9' or >= 'a' and <= 'f');\n\n    static void EnsureIdentity(Uuid editionId)\n    {\n        if (editionId == Uuid.Empty)\n            throw new ArgumentException(\"Seed metadata requires a non-empty edition identity.\", nameof(editionId));\n    }\n\n    static Result Failure(RequestErrorKind kind, string message) => Result.Failure(new RequestError(kind, message));\n}\n",
+    "event": "using Cntryl.Portia;\n\nnamespace Bdgrz.Compliance.Features.Criteria.Events;\n\n/// <summary>One platform seed edition's immutable initial source and coverage metadata.</summary>\n[Discriminator(\"bdgrz.criteria.seed-metadata-recorded\", 1)]\npublic sealed record CriteriaSeedMetadataRecorded(Uuid EditionId, Uuid OperationId, string SeedVersion,\n    string SeedFingerprint, Uuid EditionRequestEventId, string Framework, DateTimeOffset PublishedAt,\n    string CoverageNote, string SourceUrl, string ContentRights, bool NumberedCriteriaComplete,\n    ActorAttribution RecordedBy) : DomainEvent;\n",
+    "notes": "The actor and source request ID passed to the aggregate are ordinary supplied arguments. The trusted caller must separately verify the request source and principal. Portia expected-position append handles competing stream writers."
+  },
+  "questions": {
+    "exact_retry": {
+      "type": "noul",
+      "instructions": "Given one existing metadata fact, does calling Record with the exact same business payload return success without raising another fact?"
+    },
+    "changed_source": {
+      "type": "noul",
+      "instructions": "After one metadata fact, can the same operation with a different edition request event ID be accepted as an exact retry?"
+    },
+    "changed_note": {
+      "type": "noul",
+      "instructions": "After one metadata fact, can a changed coverage note under the same operation be accepted as an exact retry?"
+    },
+    "different_op": {
+      "type": "noul",
+      "instructions": "After one metadata fact, can a different operation ID record another metadata fact on this owner?"
+    },
+    "empty_source": {
+      "type": "noul",
+      "instructions": "Can Record accept an empty edition request event ID?"
+    },
+    "bad_hash": {
+      "type": "noul",
+      "instructions": "Can Record accept a non-lowercase or non-64-character hexadecimal seed fingerprint?"
+    },
+    "foreign_replay": {
+      "type": "noul",
+      "instructions": "Can Apply accept a metadata fact whose edition ID differs from the aggregate edition ID?"
+    },
+    "duplicate_replay": {
+      "type": "noul",
+      "instructions": "Can Apply accept a second metadata fact after one was already applied?"
+    },
+    "forged_source": {
+      "type": "noul",
+      "instructions": "Does the aggregate itself read and verify that a nonempty edition request event ID is a real committed seed request?"
+    },
+    "actor_proves_system": {
+      "type": "noul",
+      "instructions": "Does a nonempty ActorAttribution subject and issuer, by itself, prove the caller is a trusted system principal?"
+    },
+    "full_coverage": {
+      "type": "noul",
+      "instructions": "Does recording one metadata fact prove that every seed entry and support disclosure exists in durable source?"
+    },
+    "separate_disclosures": {
+      "type": "noul",
+      "instructions": "Does the metadata event carry a collection of support disclosures or criteria entries?"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "src/Compliance.Core/Features/Workforce/Readers/CassiePersonDirectory.cs": "6355442833b806272d00c1e46c37d816ffe4b4ebb346f7d98f3d240f29a8f36e",
+  "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyAcknowledgementIndependenceTests.cs": "df0e3da3e25ebc924b8f8c3ea474f95ad8bff505754869443fdc1c31a49f6056",
+  "test/Compliance.Tests/Features/Work/Tests/ConcurrentOccurrenceSubmissionTests.cs": "e8691ffeb40a3d9010ba56d6c8ccb0b40dc6c36b865189389adc29467a7217a3",
+  "test/Compliance.Tests/Features/Work/Tests/NotApplicableOccurrenceReviewTests.cs": "3c07df7b206057924c7aec8e624b6bfb9900bcac64cf1f0690728ed24add5bd4",
+  "test/Compliance.Tests/Features/Work/Tests/OccurrencePopulationPaginationTests.cs": "a0bd892012471d6455f5fa85dccca37c840f531556e741f08ef34f1ed850c752",
+  "test/Compliance.Tests/Features/Work/Tests/WorkSourceCompositionTests.cs": "ee84267aa48c48ed8371b27269f90c9b355d9fa0fe4a9d1937c3498d7d7194c1",
+  "test/Compliance.Tests/Features/Workforce/Tests/CassiePersonDirectoryTests.cs": "00f63c205cc7e79ee8f346dccb357fe7b2bacd3f0fe38be70552a3e986ad9dc3",
+  "test/Compliance.Tests/Hosting/Persistence/CassieReadModelSchemaTests.cs": "d507abed5c31d9418120aff2d8f6c542ec90c03e7132e686ebc4a8ed6d946dba",
+  "test/Compliance.Tests/Testing/CassieRepositoryTestDatabase.cs": "0a46831c2e1a6926b0dea77b40b18ff3d32fb7dd691393988c32f8df6b428fab"
+}

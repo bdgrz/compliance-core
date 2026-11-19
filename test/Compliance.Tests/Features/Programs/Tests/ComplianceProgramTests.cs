@@ -1,15 +1,13 @@
 using System.Security.Claims;
 using System.Text.Json;
-using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
@@ -19,6 +17,11 @@ using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Handlers;
 using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Rules;
 using Bdgrz.Compliance.Features.Providers.Rules;
@@ -29,17 +32,20 @@ using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceUse.Handlers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Services;
 using Bdgrz.Compliance.Features.Versioning.Models;
+using Bdgrz.Compliance.Features.Work.Authorizers;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -72,15 +78,10 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.Programs.Aggregates;
-using Bdgrz.Compliance.Features.Programs.Commands;
-using Bdgrz.Compliance.Features.Programs.Events;
-using Bdgrz.Compliance.Features.Programs.Handlers;
-using Bdgrz.Compliance.Features.SourceUse.Handlers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Work.Authorizers;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 namespace Bdgrz.Compliance.Tests.Features.Programs.Tests;
 
 public sealed class ComplianceProgramTests
@@ -88,6 +89,7 @@ public sealed class ComplianceProgramTests
     static readonly Uuid TenantId = Uuid.CreateVersion4();
     static readonly Uuid ProgramId = Uuid.CreateVersion4();
     static readonly Uuid MemberId = Uuid.CreateVersion4();
+    static readonly Uuid EditionId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = new(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
@@ -366,14 +368,18 @@ public sealed class ComplianceProgramTests
 
     static ServiceProvider Services() => ProgramManagementServices.Build(
         new RecordingPermissionAuthorizer(allowed: true),
-        portia => portia.AddRequestHandler<CreateProgramHandler>());
+        portia => portia.AddRequestHandler<CreateProgramHandler>(), services =>
+        {
+            services.AddSingleton<ICriteriaPublicationAuthority>(new ProgramSeeds.FixturePublicationAuthority());
+            services.AddSingleton<IAccessAdmissionAuthority>(new ProgramSeeds.FixtureAdmissionAuthority(TimeProvider.System));
+        });
 
     static RequestExpectations<ProgramRegistration> Create(IServiceProvider provider,
         ClaimsPrincipal actor, Uuid requestId, string name) => RequestScenario.For(provider)
         .GivenActor(actor)
         .GivenMetadata(new RequestMetadata(requestId, requestId, null))
         .When(new CreateProgram(requestId, TenantId, name,
-            new ProgramPlan(null, null, null, null, null, null)))
+            new ProgramPlan(null, null, null, null, null, null), EditionId))
         .ExpectAuthorized()
         .ExpectHandled();
 
@@ -383,7 +389,8 @@ public sealed class ComplianceProgramTests
         await foreach (var record in provider.GetRequiredService<IEventStore>().ReadAsync(
                            new ComplianceProgram(TenantId, programId).Stream, 0,
                            CancellationToken.None))
-            events.Add(record.Event);
+            if (record.Event is not ProgramCreationAttemptFenced)
+                events.Add(record.Event);
         return events;
     }
 }

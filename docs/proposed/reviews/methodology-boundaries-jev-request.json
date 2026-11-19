@@ -1,0 +1,54 @@
+{
+  "model": "jev-1.14.0",
+  "state": "Firm methodology has immutable published template versions composed of independently owned, small entry facts. A draft starts from an immutable prior version and applies independent entry edits. Each accepted edit is admitted through a bounded, sequential draft change window, which holds one in-flight participant; each window closes before a successor opens. Review freezes admission and waits for every admitted edit to have an authoritative target acceptance or a target-side durable refusal fence. The exact frozen chain and base determine the complete source cut. A reviewer who authored no revision and a distinct approver approve the frozen cut. Beginning a further edit epoch must invalidate the review on the draft owner first; approval and invalidation compete by expected revision. No roster or entry list is held by the draft or application. A version application pins its exact published source cut and last applied version. It pages immutable source facts and deterministic per-entry outcome records. Each expected entry has a single immutable terminal created, proposed, or target-fenced refused result bound to its exact source and operation. Completion is recorded only after authoritative enumeration proves every expected outcome; then the ordering owner can start the next later version. Program active and template not retired are mutable conditions at application acceptance. All retries use the same exact intent and operation id.",
+  "questions": {
+    "projection_completeness": {
+      "type": "noul",
+      "instructions": "Can an eventually consistent projection showing no outstanding outcomes establish that all expected entries have completed?"
+    },
+    "immutable_completion": {
+      "type": "noul",
+      "instructions": "If the complete published source cut and each expected terminal outcome are authoritative and immutable, can a paged exhaustive verification safely authorize a completion fact without an application aggregate holding every entry?"
+    },
+    "skipped_versions": {
+      "type": "noul",
+      "instructions": "If version 3 is applied after version 1, must change detection compare version 3 to version 1 rather than only version 2 to avoid missing still-effective version 2 changes?"
+    },
+    "negative_refusal": {
+      "type": "noul",
+      "instructions": "If a destination refuses without recording a durable token fence, can that refusal be terminal even though a delayed original create request might still succeed?"
+    },
+    "review_invalidation": {
+      "type": "noul",
+      "instructions": "Could starting a child edit without first invalidating an accepted review let approval incorrectly sign a changed draft?"
+    },
+    "roster_necessary": {
+      "type": "noul",
+      "instructions": "Must the application root persist a roster of every entry and append every entry result to enforce completeness when it can verify a complete immutable source cut and terminal independent outcomes?"
+    },
+    "freeze_pending": {
+      "type": "noul",
+      "instructions": "Can draft review safely freeze while an admitted child write remains unresolved and unfenced?"
+    },
+    "source_paging": {
+      "type": "noul",
+      "instructions": "Can complete source verification be performed with bounded working memory through authoritative paging or streaming, rather than loading the entire dataset into memory?"
+    },
+    "mutable_guards": {
+      "type": "noul",
+      "instructions": "Can two independent reads proving a program active and a template not retired atomically guarantee both are still true at a later application append?"
+    },
+    "remove_client": {
+      "type": "noul",
+      "instructions": "Does a source template removing an entry by itself justify deleting an already approved client record?"
+    },
+    "candidate_authors": {
+      "type": "noul",
+      "instructions": "When checking one named reviewer, can traversal of all authors in the complete immutable draft source cut establish whether that candidate authored a revision while holding only a boolean in working memory?"
+    },
+    "approved_fence": {
+      "type": "noul",
+      "instructions": "Does a child-side durable refusal fence prevent a previously delayed request with the same operation token from being accepted later, assuming the child enforces the fence atomically?"
+    }
+  }
+}

@@ -98,7 +98,7 @@ public sealed class TenantInvitationReactorTests
     }
 
     [Fact]
-    public async Task ShouldProvisionEveryGrantedProgramGivenGuestAcceptsInvitation()
+    public async Task ShouldRetainProgramCapAndAssignViewerTeamGivenGuestAcceptsInvitation()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -122,21 +122,14 @@ public sealed class TenantInvitationReactorTests
         var registration = Assert.Single(TypedReactionBus.Sent(scenario).OfType<RegisterMember>());
         Assert.Equal("guest", registration.Affiliation);
         Assert.Equal(new DateOnly(2026, 11, 30), registration.MembershipExpiresOn);
-        var grants = TypedReactionBus.Sent(scenario).OfType<ProvisionGuestProgramAccess>().ToArray();
-        Assert.Equal(programIds.Length, grants.Length);
-        Assert.All(grants, grant => Assert.Equal(invitationId, grant.InvitationId));
-        Assert.Equal(programIds.OrderBy(id => id.ToString(), StringComparer.Ordinal),
-            grants.Select(grant => grant.ProgramId).OrderBy(id => id.ToString(), StringComparer.Ordinal));
-        Assert.All(grants, grant =>
-        {
-            Assert.Equal(tenantId, grant.TenantId);
-            Assert.Equal(userId, grant.UserId);
-            Assert.Equal(invitedBy, grant.InvitedBy);
-            Assert.Equal("Org Admin", grant.InvitedByDisplay);
-            Assert.Equal(new DateOnly(2026, 11, 30), grant.ExpiresOn);
-            Assert.Equal(new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero), grant.AcceptedAt);
-        });
-        Assert.Empty(TypedReactionBus.Sent(scenario).OfType<AssignTeamMember>());
+        Assert.NotNull(registration.ProgramIds);
+        Assert.True(programIds.ToHashSet().SetEquals(registration.ProgramIds));
+        var viewer = Assert.Single(TypedReactionBus.Sent(scenario).OfType<AssignTeamMember>());
+        Assert.Equal(tenantId, viewer.TenantId);
+        Assert.Equal(BuiltInRbac.ViewersTeamId(tenantId), viewer.TeamId);
+        Assert.Equal(RbacIds.Member(tenantId, userId), viewer.MemberId);
+        Assert.Equal(registration.CommandId, viewer.MemberEpisodeId);
+        Assert.Empty(TypedReactionBus.Sent(scenario).OfType<ProvisionGuestProgramAccess>());
         Assert.Empty(TypedReactionBus.Sent(scenario).OfType<ActivateTenant>());
     }
 
@@ -519,6 +512,7 @@ public sealed class TenantInvitationReactorTests
             {
                 ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
                 ["Fitz:ApplicationName"] = "compliance",
+                ["Cassie:ConnectionString"] = "Host=127.0.0.1;Port=1;Database=postgres;Username=root;Password=test;SSL Mode=Disable",
             })
             .Build();
 
@@ -527,11 +521,11 @@ public sealed class TenantInvitationReactorTests
         var registrations = services
             .Where(descriptor => descriptor.ServiceType == typeof(WorkloadRegistration))
             .Select(descriptor => (WorkloadRegistration)descriptor.ImplementationInstance!)
-            .Where(registration => registration.Name is "TenantInvitation" or "TenantSelfServiceActivationV1")
+            .Where(registration => registration.Name is "TenantInvitation" or "TenantSelfServiceActivationV2" or "TenantSlugActivationV1")
             .ToArray();
 
         // Assert
-        Assert.Equal(2, registrations.Length);
+        Assert.Equal(3, registrations.Length);
         Assert.All(registrations, registration =>
             Assert.Equal(TenantActivationPolicy.WorkloadFailureAttemptLimit, registration.FailureAttemptLimit));
         Assert.Equal(int.MaxValue, TenantActivationPolicy.WorkloadFailureAttemptLimit);

@@ -13,4 +13,5 @@ namespace Bdgrz.Compliance.Features.Operations.Events;
 [Discriminator("bdgrz.control.occurrence.reviewed", 2)]
 public sealed record ControlOccurrenceReviewed(Uuid TenantId, Uuid ProgramId, Uuid ControlId, Uuid OccurrenceId,
     long Revision, ImmutableContentRef ReviewContent, OperationProvenance Operation,
-    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult,
+    string Outcome = "approved") : DomainEvent, INativeOperationFact;

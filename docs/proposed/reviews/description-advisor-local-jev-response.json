@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "reviewer_independence": {
+      "type": "noul",
+      "noul": 0.13
+    },
+    "late_reviewer": {
+      "type": "noul",
+      "noul": 0.74
+    },
+    "anchor_nonempty": {
+      "type": "noul",
+      "noul": 0.8
+    },
+    "open_race": {
+      "type": "noul",
+      "noul": 0.6
+    },
+    "citation_coverage": {
+      "type": "noul",
+      "noul": 0.01
+    },
+    "version_stability": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "revoke": {
+      "type": "noul",
+      "noul": 0.05
+    }
+  },
+  "usage": {
+    "input_tokens": 761,
+    "output_tokens": 136
+  }
+}

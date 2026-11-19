@@ -1,0 +1,55 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "naive": "An active organization-wide legal hold is committed on its own stream. An artifact disposal relies on a previously read projection and commits authorization on a separate artifact stream without coordination. The projection has not yet observed the hold.",
+    "ordered": "An organization has one active short-lived protection window, with one operation at a time. All hold activation, scope change, release, engagement delivery coverage, and each individual artifact disposal authorization enter the same window. Closed windows are linked in order and cannot accept further operations. Before acknowledging an operation, the process records the exact outcome of its named participant or remains pending and fences delayed copies. Each hold and each artifact outcome is independently owned; the window has no hold or artifact roster.",
+    "lookup": "While the protection window exclusively orders one disposal, the decision process reads the complete sealed source history of all preceding hold admissions, finds the relevant hold and scope facts from independent owners using bounded-memory paging, and refuses disposal if any active hold covers the artifact. The source chain is complete and source outcomes are immutable and verifiable; these are explicit infrastructure assumptions, not verified facts.",
+    "unknown": "A hold activation is in flight. The coordinator times out, treats the timeout as rejection, releases the window, and authorizes a disposal. A delayed unfenced hold activation then commits with its original operation token.",
+    "scope": "A request to place a legal hold on a selected set of artifacts builds separate artifact membership facts, seals an exact complete source cut, then submits one activation for that cut to the protection window. The window does not accept a competing disposal until the activation outcome is durable. The hold is called active only at activation, not while preparing the scope.",
+    "batch": "A disposition approval names a sealed, complete immutable source cut of separately recorded selected artifact requests. Each artifact has an independent terminal disposed or refused owner outcome. A completion reads the closed cut and exact terminal outcomes, verifies no late additions can commit, and only then records one completion. No parent keeps a list or records an event per artifact.",
+    "growth": "Every protection window has a fixed maximum number of operations before it permanently closes and points to the next. No event contains a list of arbitrary size and no owner stores a growing child roster. Total history and the time needed to traverse the complete chain can still grow without a lifetime bound.",
+    "practical": "The event store has not yet been shown to provide complete authoritative source cuts and discovery, exact token fencing, durable acknowledgement reconciliation, and the necessary ordering and optimistic concurrency. A model judgment evaluates the described hypothetical protocol, not the actual event store implementation."
+  },
+  "questions": {
+    "naive_race": {
+      "type": "noul",
+      "instructions": "In naive, could the later disposal be authorized despite an already active hold?"
+    },
+    "ordering_needed": {
+      "type": "noul",
+      "instructions": "For a tenant-wide hold that must order against all artifact authorizations, does independently checking a possibly stale projection establish the required race ordering?"
+    },
+    "shared_roster": {
+      "type": "noul",
+      "instructions": "In ordered, must the protection window store a roster of all holds or all artifacts to provide the shared ordering point?"
+    },
+    "complete_lookup": {
+      "type": "noul",
+      "instructions": "If every stated condition in lookup holds, can the decision safely refuse authorization when any earlier active covering hold exists?"
+    },
+    "unknown_danger": {
+      "type": "noul",
+      "instructions": "In unknown, can the delayed unfenced activation make the ordering unsafe or ambiguous?"
+    },
+    "scope_visibility": {
+      "type": "noul",
+      "instructions": "In scope, is activation the first point at which the selected-set hold is active for the invariant?"
+    },
+    "batch_closure": {
+      "type": "noul",
+      "instructions": "In batch, do a complete sealed cut, immutable terminal outcomes, and a late-addition fence establish which individual requests must finish before completion?"
+    },
+    "bounded_lifetime": {
+      "type": "noul",
+      "instructions": "In growth, do fixed-size windows prove the total history and total traversal cost are bounded?"
+    },
+    "proof_gap": {
+      "type": "noul",
+      "instructions": "In practical, does a favorable model judgment prove the actual infrastructure assumptions?"
+    },
+    "god_object": {
+      "type": "noul",
+      "instructions": "In ordered and growth, does the window by itself own all holds, all artifacts, or a growing roster of its children?"
+    }
+  }
+}

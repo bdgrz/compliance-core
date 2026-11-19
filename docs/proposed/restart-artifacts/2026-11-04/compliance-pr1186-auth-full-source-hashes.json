@@ -1,0 +1,10 @@
+{
+  "src/Compliance.Core/Features/Remediation/Handlers/ChangeCorrectiveActionHandler.cs": "2d8511a2d1b1ec4321230756dcfe0ca144c7764e7c2306915ec6362e7881e5bf",
+  "src/Compliance.Core/Features/Workforce/Authorizers/WorkforceAuthorizer.cs": "d48d53157e772a3eb869135097c8bac6f5a388665a5b70fda449b7cb7ebf13cd",
+  "src/Compliance.Core/Features/Workforce/Handlers/ReviewServiceIdentityHandler.cs": "e04f856e62c305e4438281ec451e4a4cca6d08b923e09b9ed51e477031b01ed3",
+  "src/Compliance.Core/Features/Workforce/Services/ServiceIdentityReviewAccess.cs": "2f7a8cc993db505a433f56ff39f8cf6fa104c2f75ffde42c1bb4cf070ba0baaa",
+  "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionChangeWorkflowTests.cs": "b2b13631041c97a0a55476484fbf423514ba4780509a0f9623f5cbeda3e78efa",
+  "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityAuthorizationTests.cs": "16074cd11e513cd03a0ec032e822a4b9d62687610485d20d32ac55d4a9cd70a9",
+  "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityNamedHandlerTests.cs": "3f0d1ad7b0ee1eed6431463adbefa76e1834bcc686df4a75f01f2c2f71b796b5",
+  "test/Compliance.Tests/Features/Workforce/Tests/ServiceIdentityReviewMembershipTests.cs": "3054c24f31254501cebdf545e97976a68af58886e64f391ebbe125468d9fac2c"
+}

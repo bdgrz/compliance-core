@@ -42,8 +42,6 @@ public sealed class ActivateTenantReadinessTests
         var creatorId = Uuid.CreateVersion4();
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
-        services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships { Ready = true });
-        services.AddSingleton<IPermissionAuthorizer>(new Permissions { Ready = true });
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<Bdgrz.Compliance.Features.Content.Contracts.IImmutableContentStore>(
             new Bdgrz.Compliance.Features.Content.Persistence.FitzKvImmutableContentStore(new Cntryl.Fitz.Testing.InMemoryKvClient()));
@@ -86,8 +84,6 @@ public sealed class ActivateTenantReadinessTests
         var creatorId = Uuid.CreateVersion4();
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
-        services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships());
-        services.AddSingleton<IPermissionAuthorizer>(new Permissions());
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<Bdgrz.Compliance.Features.Content.Contracts.IImmutableContentStore>(
             new Bdgrz.Compliance.Features.Content.Persistence.FitzKvImmutableContentStore(new Cntryl.Fitz.Testing.InMemoryKvClient()));
@@ -124,8 +120,6 @@ public sealed class ActivateTenantReadinessTests
         var creatorId = Uuid.CreateVersion4();
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
-        services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships());
-        services.AddSingleton<IPermissionAuthorizer>(new Permissions());
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<Bdgrz.Compliance.Features.Content.Contracts.IImmutableContentStore>(
             new Bdgrz.Compliance.Features.Content.Persistence.FitzKvImmutableContentStore(new Cntryl.Fitz.Testing.InMemoryKvClient()));
@@ -153,80 +147,52 @@ public sealed class ActivateTenantReadinessTests
     }
 
     [Fact]
-    public async Task ShouldKeepCreatorProvisioningGivenUnmaterializedAdministratorGrant()
+    public async Task ShouldActivateFromPrimarySourcesGivenAbsentAuthorizationProjections()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var creatorId = Uuid.CreateVersion4();
-        var memberId = RbacIds.Member(tenantId, creatorId);
-        var memberships = new Memberships();
-        var permissions = new Permissions();
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
-        services.AddSingleton<ITenantMembershipDirectoryReader>(memberships);
-        services.AddSingleton<IPermissionAuthorizer>(permissions);
         services.AddSingleton(TimeProvider.System);
-        services.AddSingleton<Bdgrz.Compliance.Features.Content.Contracts.IImmutableContentStore>(
-            new Bdgrz.Compliance.Features.Content.Persistence.FitzKvImmutableContentStore(new Cntryl.Fitz.Testing.InMemoryKvClient()));
-        services.AddScoped<Bdgrz.Compliance.Features.NativeOperations.Models.NativeOperationExecutor>();
-        services.AddPortia()
-            .AddRequestHandler<ActivateTenantHandler>()
-            .AddRequestAuthorizer<ActivateTenantAuthorizer>();
+        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(new Cntryl.Fitz.Testing.InMemoryKvClient()));
+        services.AddScoped<NativeOperationExecutor>();
+        services.AddPortia().AddRequestHandler<ActivateTenantHandler>().AddRequestAuthorizer<ActivateTenantAuthorizer>();
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
+        var context = new RequestDispatchContext(RequestActor.System);
         var tenant = new Tenant(tenantId);
-        Assert.True(tenant.Register(creatorId, "Acme", "acme",
-            creatorIsAdministrator: true).IsSuccess);
+        Assert.True(tenant.Register(creatorId, "Acme", "acme", creatorIsAdministrator: true).IsSuccess);
         Assert.True(tenant.ConfirmSlug("acme").IsSuccess);
-        await writer.SaveAsync(tenant, new RequestDispatchContext(RequestActor.System));
+        await writer.SaveAsync(tenant, context);
         var member = new Member(tenantId, creatorId);
         Assert.True(member.Register().IsSuccess);
-        await writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
-        var teamMember = new TeamMember(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), memberId);
-        Assert.True(teamMember.Assign(member.MembershipEpisodeId).IsSuccess);
-        await writer.SaveAsync(teamMember, new RequestDispatchContext(RequestActor.System));
+        await writer.SaveAsync(member, context);
+        var designation = Uuid.CreateVersion4();
+        var primaries = new PrimaryOrgAdmins(tenantId, designation);
+        Assert.True(primaries.Designate(designation, creatorId, member.MembershipEpisodeId).IsSuccess);
+        await writer.SaveAsync(primaries, context);
 
-        // Act: event streams exist, but the two authorization projections have not caught up.
-        var before = await bus.SendAsync(new ActivateTenant(Uuid.CreateVersion4(), tenantId, creatorId), RequestActor.System);
-        memberships.Ready = true;
-        permissions.Ready = true;
-        var after = await bus.SendAsync(new ActivateTenant(Uuid.CreateVersion4(), tenantId, creatorId), RequestActor.System);
+        // Act: a reservation alone is not a completed primary designation.
+        var pending = await bus.SendAsync(new ActivateTenant(Uuid.CreateVersion4(), tenantId, creatorId), RequestActor.System);
+        Assert.True(member.MarkPrimary(designation, member.MembershipEpisodeId).IsSuccess);
+        await writer.SaveAsync(member, context);
+        var markedOnly = await bus.SendAsync(new ActivateTenant(Uuid.CreateVersion4(), tenantId, creatorId), RequestActor.System);
+        primaries = await reader.HydrateAsync(new PrimaryOrgAdmins(tenantId));
+        Assert.True(primaries.RecordOutcome(designation, creatorId, member.MembershipEpisodeId, null).IsSuccess);
+        await writer.SaveAsync(primaries, context);
+        var completed = await bus.SendAsync(new ActivateTenant(Uuid.CreateVersion4(), tenantId, creatorId), RequestActor.System);
 
         // Assert
-        Assert.False(before.IsSuccess);
-        Assert.Equal(RequestErrorKind.Conflict, before.Error.Kind);
-        Assert.True(before.Error.IsTransient);
-        Assert.True(after.IsSuccess);
-        var hydrated = await reader.HydrateAsync(new Tenant(tenantId));
-        Assert.True(hydrated.IsActive);
+        Assert.False(pending.IsSuccess);
+        Assert.True(pending.Error.IsTransient);
+        Assert.False(markedOnly.IsSuccess);
+        Assert.True(markedOnly.Error.IsTransient);
+        Assert.True(completed.IsSuccess, completed.Error?.Message);
+        Assert.True((await reader.HydrateAsync(new Tenant(tenantId))).IsActive);
     }
 
-    sealed class Memberships : ITenantMembershipDirectoryReader
-    {
-        public bool Ready { get; set; }
-
-        public ValueTask<TenantMembershipView?> GetAsync(string tenantId, Uuid userId,
-            CancellationToken ct = default) => ValueTask.FromResult<TenantMembershipView?>(
-                Ready ? new TenantMembershipView(userId,
-                    Uuid.Parse(tenantId, CultureInfo.InvariantCulture), "client_personnel") : null);
-
-        public ValueTask<bool> IsMemberAsync(string tenantId, Uuid userId,
-            CancellationToken ct = default) => ValueTask.FromResult(Ready);
-
-        public ValueTask<Page<TenantMembershipView>> ListAsync(Uuid tenantId, int limit,
-            string? cursor, CancellationToken ct = default) =>
-            ValueTask.FromResult(new Page<TenantMembershipView>([], null));
-    }
-
-    sealed class Permissions : IPermissionAuthorizer
-    {
-        public bool Ready { get; set; }
-
-        public ValueTask<bool> IsAllowedAsync(Uuid tenantId, Uuid userId, Uuid memberId,
-            string permission,
-            CancellationToken ct = default) => ValueTask.FromResult(Ready);
-    }
 }

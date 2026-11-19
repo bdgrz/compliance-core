@@ -520,7 +520,7 @@ public sealed class ControlEvaluationTests
     }
 
     [Fact]
-    public async Task ShouldReportPassedGivenLaterAbandonedRetest()
+    public async Task ShouldRefuseAnotherRetestGivenSelectedDeviationsAlreadyPassed()
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
@@ -539,13 +539,16 @@ public sealed class ControlEvaluationTests
                 await RecordAllAsync(fixture, retest))), "accepted"));
 
         // Act
-        await StartAsync(fixture, retestOf: accepted.EvaluationId);
+        var plan = await fixture.GetOrDefineEvaluationPlanAsync();
+        await fixture.Scenario(fixture.OwnerUserId).When(new StartControlEvaluation(Uuid.CreateVersion4(),
+            fixture.TenantId, fixture.ProgramId, fixture.ControlId, plan.PlanVersionId, accepted.EvaluationId))
+            .ExpectFailure(RequestErrorKind.Conflict);
 
         // Assert
         var original = await fixture.AsAsync(fixture.OutsiderUserId, new GetControlEvaluation(
             fixture.TenantId, fixture.ProgramId, fixture.ControlId, accepted.EvaluationId));
         Assert.Equal("passed", original.RetestStatus);
-        Assert.Equal(2, original.RetestEvaluationIds.Count);
+        Assert.Single(original.RetestEvaluationIds);
     }
 
     [Fact]

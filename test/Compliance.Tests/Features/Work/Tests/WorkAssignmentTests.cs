@@ -35,6 +35,7 @@ using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
@@ -380,12 +381,23 @@ public sealed class WorkAssignmentTests
         await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId,
             fixture.Today.AddDays(-7), fixture.Today.AddDays(-6));
 
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var sweep = new Bdgrz.Compliance.Features.Work.Services.WorkEscalationSweep(
+            services.GetRequiredService<Bdgrz.Compliance.Features.Tenants.Readers.ITenantDirectoryReader>(),
+            services.GetRequiredService<Bdgrz.Compliance.Features.Tenants.Contracts.ITenantActivity>(),
+            services.GetRequiredService<IProgramDirectoryReader>(), services.GetRequiredService<WorkQueueReader>(),
+            services.GetRequiredService<IAggregateExecutor>(), services.GetRequiredService<TimeProvider>());
+
         // Act
+        await sweep.ProcessProgramAsync(fixture.TenantId, fixture.ProgramId, CancellationToken.None);
+        await sweep.ProcessProgramAsync(fixture.TenantId, fixture.ProgramId, CancellationToken.None);
         var lead = await fixture.AsAsync(fixture.LeadUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId, "escalated"));
 
         // Assert
         var item = Assert.Single(lead.Items);
+        Assert.Equal(1, item.AssignmentRevision);
         Assert.Equal("system", item.EscalatedBy);
         Assert.Equal(fixture.OwnerMemberId, item.AssigneeMemberId);
         await fixture.Scenario(fixture.OwnerUserId).When(new EscalateWorkItem(Uuid.CreateVersion4(), fixture.TenantId,

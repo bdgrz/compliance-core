@@ -5,8 +5,8 @@ using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
 
 /// <summary>
-///     One governed component at account and environment granularity (M0-D08). A
-///     <c>cloud_account</c> component shares its identity with its system instance.
+///     One governed environment, network, data store, repository or endpoint class.
+///     An optional system instance reference names the cloud account containing it.
 /// </summary>
 public sealed record TechnologyComponentContent(string Category, string Name,
     Uuid OwnerPersonId, string? EnvironmentReference, string? LocationReference,

@@ -14,4 +14,4 @@ namespace Bdgrz.Compliance.Features.Remediation.Events;
 public sealed record FindingClosedV2(Uuid RequestId, Uuid TenantId, Uuid ProgramId, Uuid FindingId, long Revision,
     ImmutableContentRef ClosureContent, OperationProvenance Operation, long FindingGeneration,
     ImmutableContentRef ActionCompletionProofs, ImmutableContentRef Intent, ImmutableContentRef? FirstResponse,
-    ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;
+    ImmutableContentRef? OperationResult, FindingClosureReviewBinding? Review = null) : DomainEvent, INativeOperationFact;

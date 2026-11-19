@@ -77,6 +77,11 @@ public sealed class TechnologyComponent : Aggregate
             _content = ev.Content;
         });
         On<InformationAssetRevisionRecorded>(_ => _foreign = true);
+        On<InformationAssetRecorded>(_ => _foreign = true);
+        On<InformationAssetDetailsChanged>(_ => _foreign = true);
+        On<InformationAssetClassified>(_ => _foreign = true);
+        On<InformationAssetOwnerChanged>(_ => _foreign = true);
+        On<InformationAssetRetired>(_ => _foreign = true);
         On<DataFlowRevisionRecorded>(_ => _foreign = true);
     }
 
@@ -87,11 +92,7 @@ public sealed class TechnologyComponent : Aggregate
         {
             Lifecycle = TechnologyInventoryRules.Active,
         });
-        var error = TechnologyInventoryRules.Validate(content) ??
-                    (content.Category == TechnologyInventoryRules.CloudAccount &&
-                     content.SystemInstanceId != Id
-                        ? "A cloud_account component shares its system instance identity."
-                        : null);
+        var error = TechnologyInventoryRules.Validate(content);
         if (error is not null)
             return Result<TechnologyComponentContent>.Failure(new RequestError(RequestErrorKind.Validation, error));
         if (_foreign)
@@ -129,6 +130,9 @@ public sealed class TechnologyComponent : Aggregate
         if (expectedRevision != _revision)
             return Failure(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("technology component",
                 _revision)));
+        if (_content!.Lifecycle == TechnologyInventoryRules.Retired)
+            return Result<TechnologyComponentContent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A retired technology component cannot change; record a new identity."));
         var content = TechnologyInventoryRules.Normalize(change(_content!));
         var error = TechnologyInventoryRules.Validate(content) ??
                     (content.Category != _content!.Category ||

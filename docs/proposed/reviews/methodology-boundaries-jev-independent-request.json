@@ -1,0 +1,34 @@
+{
+  "model": "jev-1.14.0",
+  "state": "Evaluate each independent domain scenario and its stated conditions.",
+  "questions": {
+    "atomic_change": {
+      "type": "noul",
+      "instructions": "A previously published methodology version was one complete approved set of template entries, visible together. In a proposed model a template contains independently published entry revisions, and different entries can appear to users at different times. Does this change the previously promised whole-version publication semantics?"
+    },
+    "global_review": {
+      "type": "noul",
+      "instructions": "The previous policy required a reviewer of a whole draft to have authored none of its revisions. A new model checks only whether the reviewer authored revisions of the particular entry being reviewed. The reviewer authored another entry in the same template. Can the new rule permit a reviewer who would have been disqualified under the previous whole-draft rule?"
+    },
+    "latest_listing": {
+      "type": "noul",
+      "instructions": "A UI pages through an eventually consistent listing of independently published template entries while other entries are published. It has no frozen complete snapshot, and does not inspect an authoritative global catalog. Can it truthfully claim to show every entry in a specific immutable whole-template version?"
+    },
+    "per_entry_progress": {
+      "type": "noul",
+      "instructions": "A tenant applies template entry A, and the target owner has an unknown pending outcome. The tenant independently applies unrelated entry B using a separately owned operation. There is no rule requiring B to wait for A. Can entry B proceed without waiting for the outcome of A?"
+    },
+    "global_completion": {
+      "type": "noul",
+      "instructions": "A process starts independent application operations as entries are discovered in an eventually consistent listing. There is no authoritative complete membership and no fixed globally ordered source cut. Can the process authoritatively declare that every entry of a particular template version has completed?"
+    },
+    "parent_race": {
+      "type": "noul",
+      "instructions": "An entry reads a template is active; the template is retired; then the entry publishes without further participation from the template owner or equivalent atomic fence. Can publication occur after retirement?"
+    },
+    "entry_race": {
+      "type": "noul",
+      "instructions": "Two authors concurrently publish different successors of the same exact immutable entry version. Both check the same old version without a common atomic decision or expected-version conflict. Can both successors be accepted, creating a fork?"
+    }
+  }
+}

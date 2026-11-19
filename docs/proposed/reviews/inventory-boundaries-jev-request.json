@@ -1,0 +1,57 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "original": "A source application must not retire while any of its instances is active. The merge first retires that application; only afterward may its active instances move to the survivor.",
+    "projection": "A source application closes instance admissions. An asynchronous instance list says zero active instances, but a previously admitted instance has not yet appeared in the list.",
+    "late_admission": "A source application closes admissions. An instance declaration admitted before closing has not yet committed or been fenced. The source retires. That declaration then commits.",
+    "target_race": "A move reads that the target application is active. The target then retires, and the move commits to it.",
+    "target_hold": "A target application durably admits one exact move and prevents its own retirement until that admission has a terminal outcome. The instance move commits before the admission is released.",
+    "unknown": "A move command times out. Its sender does not know whether it committed and releases the target admission, without preventing a delayed copy from committing.",
+    "enumeration": "For a closed source, an authoritative, complete and immutable cut identifies every active instance and every earlier accepted admission has committed, been cancelled, or been durably fenced. Every identified active instance has a terminal authoritative moved-or-retired outcome. No unbounded list is stored in the application.",
+    "alias": "Application names are display values. Duplicate aliases are visible and repairable; uniqueness is advice, not an authoritative tenant-wide rule. Each application alias is a separate record keyed by application and normalized alias.",
+    "ordering": "A large result set is read from a source that provides a stable ordered cursor. A worker processes one page and continues with the cursor, never accumulating all pages in memory.",
+    "unproved": "A design requires an authoritative complete source cut and durable participant outcomes but has not shown how the existing runtime provides either."
+  },
+  "questions": {
+    "contradiction": {
+      "type": "noul",
+      "instructions": "In original, can the first move happen without breaking at least one stated rule?"
+    },
+    "stale_projection": {
+      "type": "noul",
+      "instructions": "In projection, can the zero count omit an active instance?"
+    },
+    "delayed_creation": {
+      "type": "noul",
+      "instructions": "In late_admission, can an active instance be left on the retired application?"
+    },
+    "target_race": {
+      "type": "noul",
+      "instructions": "In target_race, can the move leave an active instance on a retired application?"
+    },
+    "target_hold": {
+      "type": "noul",
+      "instructions": "In target_hold, is the target protected from retirement during that exact move?"
+    },
+    "unknown_outcome": {
+      "type": "noul",
+      "instructions": "In unknown, can a delayed move still commit after the hold is released?"
+    },
+    "complete_cut": {
+      "type": "noul",
+      "instructions": "In enumeration, do the stated conditions exclude an active instance remaining on the source at that cut?"
+    },
+    "alias_ownership": {
+      "type": "noul",
+      "instructions": "In alias, does the application record need to store a growing list of its aliases?"
+    },
+    "streamed_ordering": {
+      "type": "noul",
+      "instructions": "In ordering, must the worker hold the complete result set in memory?"
+    },
+    "missing_proof": {
+      "type": "noul",
+      "instructions": "In unproved, does the design establish that the runtime provides the required guarantees?"
+    }
+  }
+}

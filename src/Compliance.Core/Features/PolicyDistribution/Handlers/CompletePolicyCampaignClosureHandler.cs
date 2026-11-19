@@ -243,6 +243,9 @@ sealed class CompletePolicyCampaignClosureHandler(IAggregateReader reader, IAggr
             return Built.Failed(state.Error!);
         var closedOn = DateOnly.FromDateTime(intent.Header.AcceptedAt.UtcDateTime);
         var totals = state.Value!.Totals(closedOn);
+        if (totals.Pending > 0)
+            return Built.Failed(SourceUseReceiverSupport.Permanent(
+                "A campaign cannot close while a participant is pending within their due date.").Error!);
         var rationale = authored.Rationale.Trim();
         var totalsContent = await PolicyCampaignContent.WriteDerivedAsync(content, tenantId, command.CommandId,
             "closing-totals", PolicyCampaignContent.TotalsSchema, totals, ct).ConfigureAwait(false);

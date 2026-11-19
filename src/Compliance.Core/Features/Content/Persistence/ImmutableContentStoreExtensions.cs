@@ -63,6 +63,6 @@ public static class ImmutableContentStoreExtensions
     }
 
     static JsonTypeInfo<T> Info<T>() =>
-        ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T)) as JsonTypeInfo<T>
+        ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T)) as JsonTypeInfo<T>
         ?? throw new InvalidOperationException($"No serialization metadata is registered for {typeof(T).FullName}.");
 }

@@ -1,0 +1,16 @@
+{
+  "src/Compliance.App/ComplianceJsonContext.cs": "15c385c5717324aaf87dc8c6965c3d3534641bb75fda3199a3b817450f69b3cc",
+  "src/Compliance.App/Features/Workforce/PersonHttp.cs": "d1a2a703524b5d1e2915d682e340aad6134a3db30e120f3f3700f9d8e1e90137",
+  "src/Compliance.App/Hosting/NativeResponses/NativeFirstResponseContracts.cs": "8aaa0990ea27a4676981c32253f7ecb4da8d763acb14934a3b3ca4909e6471e3",
+  "src/Compliance.App/Program.cs": "431ac3a8cf8dc41216249f68f5f0c7c8d2b63c5f4ec916353fcadfe85da30cfd",
+  "src/Compliance.Core/Features/Workforce/Handlers/RevisePersonHandler.cs": "d1158e8293119d5555eb1e34fcf5e058e403edef1bd4fedc5e31405f76c4e048",
+  "src/Compliance.Core/Features/Workforce/Services/PersonOperations.cs": "70ecc8b8f3e96c6be5d1afac2594c0c5d6c21b23a823da0a3a0f51d3a1f877bf",
+  "test/Compliance.Tests/Features/AccessControl/Tests/AttestClientRbacManagementWallTests.cs": "254e1702eaafc18d6b843c6247e7c683d04d6dc5bfd3ecee0c83ce8fc0153376",
+  "test/Compliance.Tests/Features/AccessControl/Tests/RbacMcpScenarioTests.cs": "8a62f0d64ac32a0cb489ddce808196d43b0341426f4587eb286e78499de5b22a",
+  "test/Compliance.Tests/Features/Workforce/Tests/PersonLegacyMutationTests.cs": "a9f65464b116a3bd1276b80714b95203a167470e0ed689ebcf2bb303bf21bdaa",
+  "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeHistoryTests.cs": "72ef7c605f4089b99b3719db5b90d16d2575727bb5e97a1881cf778d3b8bf719",
+  "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeHttpTests.cs": "aaca6a19d329b7e6c888b6ba8daa148c0fa57e25a5e08a6908ff1bd3c4807b05",
+  "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeIdentityTests.cs": "7c35da83f6f50b3354029c613dd0c8dd06a13c2e182e395ea80259272a560c53",
+  "test/Compliance.Tests/Fixtures/aggregate-command-coverage.json": "4276c177cdd293323b79f205e02f3313cc530f6ce07c4efea950f0aacb9abbc9",
+  "test/Compliance.Tests/Testing/PersonSeeds.cs": "0b8ec916ca54d8ff70bd81a6258b944a05cc2d85d79ebfbc53359f3a62e08392"
+}

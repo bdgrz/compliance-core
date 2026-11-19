@@ -261,7 +261,8 @@ public sealed class ControlEvaluationProtocolTests
         var plan = await fixture.GetOrDefineEvaluationPlanAsync();
 
         // Act
-        var retest = await fixture.AsAsync(fixture.OwnerUserId, StartRequest(fixture, plan, accepted.EvaluationId));
+        var retest = await fixture.AsAsync(fixture.OwnerUserId,
+            StartRequest(fixture, plan, accepted.EvaluationId));
         var predecessorAfter = await StreamAsync(fixture, accepted.EvaluationId);
         var read = await fixture.AsAsync(fixture.OutsiderUserId, new GetControlEvaluation(fixture.TenantId,
             fixture.ProgramId, fixture.ControlId, accepted.EvaluationId));
@@ -375,6 +376,6 @@ public sealed class ControlEvaluationProtocolTests
         Assert.Equal(items, read.Steps[0].Result!.InspectedItems);
         var fact = Assert.IsType<ControlEvaluationStepRecorded>(stream[^1].Event);
         Assert.True(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(fact, fact.GetType(),
-            ComplianceCoreJsonContext.Default).Length < 6 * 1024);
+            ComplianceCoreJsonMetadata.Default).Length < 6 * 1024);
     }
 }

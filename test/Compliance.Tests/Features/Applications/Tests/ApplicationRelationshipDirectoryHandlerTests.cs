@@ -232,7 +232,7 @@ public sealed class ApplicationRelationshipDirectoryHandlerTests
                 tenantId, sourceId, "outgoing"), actor), CancellationToken.None);
         var removed = await removeHandler.HandleAsync(
             new RequestContext<RemoveGovernedApplicationRelationship>(new RemoveGovernedApplicationRelationship(
-                tenantId, sourceId, targetId, "depends_on", recorded.Value.Revision,
+                tenantId, sourceId, targetId, "depends_on", recorded.Value!.Value.Revision,
                 "No longer required"), actor), CancellationToken.None);
         var sourceEventsAfterRemoval = await ReadApplicationEventsAsync(eventStore, tenantId,
             sourceId);

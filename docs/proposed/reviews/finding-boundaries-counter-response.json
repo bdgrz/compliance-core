@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "unsafe_retry": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "freeze": {
+      "type": "noul",
+      "noul": 0.23
+    },
+    "bounded": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "unknown": {
+      "type": "noul",
+      "noul": 0.8
+    },
+    "late": {
+      "type": "noul",
+      "noul": 0.24
+    },
+    "missing": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "god": {
+      "type": "noul",
+      "noul": 0.35
+    },
+    "unbounded_history": {
+      "type": "noul",
+      "noul": 0.7
+    }
+  },
+  "usage": {
+    "input_tokens": 869,
+    "output_tokens": 137
+  }
+}

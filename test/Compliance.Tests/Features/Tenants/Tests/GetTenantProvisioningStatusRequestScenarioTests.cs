@@ -87,7 +87,7 @@ public sealed class GetTenantProvisioningStatusRequestScenarioTests
         var tenant = new Tenant(tenantId);
         Assert.True(tenant.Register(creatorId, "Acme", "acme", creatorIsAdministrator: true).IsSuccess);
         Assert.True(tenant.RejectSlug("acme").IsSuccess);
-        Assert.False(tenant.IsRegistered);
+        Assert.True(tenant.IsRegistered);
         await using (var scope = provider.CreateAsyncScope())
             await scope.ServiceProvider.GetRequiredService<IAggregateWriter>()
                 .SaveAsync(tenant, new RequestDispatchContext(RequestActor.System));
@@ -202,7 +202,7 @@ public sealed class GetTenantProvisioningStatusRequestScenarioTests
 
         // Assert
         Assert.False(tenant.IsActive);
-        Assert.False(tenant.IsRegistered);
+        Assert.True(tenant.IsRegistered);
         Assert.Equal(new TenantProvisioningStatusView(tenantId, "completed", null), result.Value);
     }
 

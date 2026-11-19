@@ -33,6 +33,7 @@ static class BuiltInRolePermissions
         string[] managerPermissions =
         [
             RbacPermissions.ProgramManage,
+            "policies.approve",
             RbacPermissions.ApplicationInventoryManage,
             RbacPermissions.ApplicationRestrictedRead,
             RbacPermissions.ComplianceRecordRestrictedRead,
@@ -72,6 +73,8 @@ static class BuiltInRolePermissions
             Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Manage);
         yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
             Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Review);
+        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+            Bdgrz.Compliance.Features.Evidence.Services.EvidenceSupportPermissions.Withdraw);
         yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, viewer, RbacPermissions.EvidenceArtifactRead);
     }
 }

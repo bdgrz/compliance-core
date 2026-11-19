@@ -1,0 +1,25 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "original_fact_and_view_unchanged_by_withdraw": {
+      "type": "noul",
+      "noul": 0.78
+    },
+    "no_owner_fixture_precondition_mask_visible": {
+      "type": "noul",
+      "noul": 0.54
+    },
+    "withdrawal_handler_lead_gate_precedes_execution": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "partial_enablement_is_required": {
+      "type": "noul",
+      "noul": 0.83
+    }
+  },
+  "usage": {
+    "input_tokens": 13610,
+    "output_tokens": 100
+  }
+}

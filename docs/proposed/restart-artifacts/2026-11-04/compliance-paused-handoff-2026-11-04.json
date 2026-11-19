@@ -1,0 +1,33 @@
+{
+  "status": "paused by explicit user request; do not resume implementation until instructed",
+  "branch": "feat/proposed-domain-impl",
+  "head": "1deb9cf7121f9d49ab1ee0e60bda4ea52f223455",
+  "delivered": {
+    "pr": 1187,
+    "main": "4e4c9d0129e0390df270695565ea4b21291df66c",
+    "local_unit_pass": 8707,
+    "exact_head_ci": "success",
+    "post_merge_ci": "success"
+  },
+  "unfinished": {
+    "program_dates": "uncommitted6line rule repair and35tests;6behavioralREDfailures;65focused/native/history/HTTPpassed;fullruninterruptedonpause,notqualified",
+    "support_withdrawal": "held source3c81d366, authored/unexecuted, consumer/publicwiringgaps",
+    "other_held_work": "preserved; no cleanup/deletion"
+  },
+  "working_tree": [
+    " M docs/proposed/README.md",
+    " M docs/proposed/delivery-reset.md",
+    " M docs/proposed/implementation-progress.md",
+    " M docs/proposed/requirement-coverage.md",
+    " M src/Compliance.Core/Features/Programs/Rules/ProgramRules.cs",
+    "?? docs/proposed/reviews/program-target-date-ordering.md",
+    "?? test/Compliance.Tests/Features/Programs/Tests/ProgramTargetDateTests.cs"
+  ],
+  "local_test_process": "Program fullrun stopped with SIGINT; no dotnet test Compliance.slnx process remains",
+  "agents": "allcompleted/stopped",
+  "coverage_manifest": "/tmp/compliance-all-context-coverage-manifest.json",
+  "program_log": "/tmp/compliance-program-dates-full-unit.log",
+  "support_handoff": "/tmp/compliance-evidence-support-withdrawal-handoff.json",
+  "support_integration_review": "/tmp/compliance-evidence-support-withdrawal-integration-review.md",
+  "access_checklist": "/tmp/compliance-access-cassie-integration-checklist.md"
+}

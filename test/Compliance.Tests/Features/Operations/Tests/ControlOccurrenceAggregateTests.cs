@@ -162,18 +162,20 @@ public sealed class ControlOccurrenceAggregateTests
         // Act
         Assert.True(owner.Attest(Root(owner, "AttestControlOccurrence", 1), NativeFacts.Ref(), NativeFacts.Ref(),
             NativeFacts.Ref(), null).IsSuccess);
+        Assert.True(owner.Review(Root(owner, "ReviewControlOccurrence", 2), NativeFacts.Ref(), NativeFacts.Ref(),
+            NativeFacts.Ref(), "returned").IsSuccess);
         var second = owner.NextAttestationId;
-        Assert.True(owner.Attest(Root(owner, "AttestControlOccurrence", 2), NativeFacts.Ref(), NativeFacts.Ref(),
+        Assert.True(owner.Attest(Root(owner, "CorrectControlAttestation", 3), NativeFacts.Ref(), NativeFacts.Ref(),
             NativeFacts.Ref(), null).IsSuccess);
-        var reviewed = owner.Review(Root(owner, "ReviewControlOccurrence", 3), NativeFacts.Ref(), NativeFacts.Ref(),
+        var reviewed = owner.Review(Root(owner, "ReviewControlOccurrence", 4), NativeFacts.Ref(), NativeFacts.Ref(),
             NativeFacts.Ref());
 
         // Assert
         Assert.True(reviewed.IsSuccess);
         Assert.NotEqual(first, second);
         Assert.Equal(2, owner.AttestationCount);
-        Assert.Equal(4, owner.Revision);
-        long[] expectedRevisions = [1L, 2L, 3L, 4L];
+        Assert.Equal(5, owner.Revision);
+        long[] expectedRevisions = [1L, 2L, 3L, 4L, 5L];
         Assert.Equal(expectedRevisions, Pending(owner).Select(RevisionOf).ToArray());
     }
 
@@ -203,6 +205,74 @@ public sealed class ControlOccurrenceAggregateTests
         Assert.True(current.IsSuccess);
     }
 
+    [Theory]
+    [InlineData("approved")]
+    [InlineData("accepted")]
+    [InlineData("action_requested")]
+    [InlineData("deferred")]
+    public void ShouldRefuseAnotherProofGivenOccurrenceReviewIsTerminal(string outcome)
+    {
+        // Arrange
+        var owner = Opened();
+        Assert.True(owner.Attest(Root(owner, "AttestControlOccurrence", 1), NativeFacts.Ref(), NativeFacts.Ref(),
+            NativeFacts.Ref(), null).IsSuccess);
+        Assert.True(owner.Review(Root(owner, "ReviewControlOccurrence", 2), NativeFacts.Ref(), NativeFacts.Ref(),
+            NativeFacts.Ref(), outcome).IsSuccess);
+        var before = Pending(owner).Length;
+
+        // Act
+        var correction = owner.Attest(Root(owner, "CorrectControlAttestation", 3), NativeFacts.Ref(),
+            NativeFacts.Ref(), NativeFacts.Ref(), null);
+        var review = owner.Review(Root(owner, "ReviewControlOccurrence", 3), NativeFacts.Ref(),
+            NativeFacts.Ref(), NativeFacts.Ref());
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, correction.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, review.Error?.Kind);
+        Assert.Equal(before, Pending(owner).Length);
+        Assert.Equal(3, owner.Revision);
+    }
+
+    [Fact]
+    public void ShouldCancelOpenOccurrenceAndRefuseFutureProofsGivenReasonedCancellation()
+    {
+        // Arrange
+        var owner = Opened();
+
+        // Act
+        var cancelled = owner.Cancel(Root(owner, "CancelControlOccurrence", 1), "Control retired",
+            NativeFacts.Ref(), NativeFacts.Ref());
+        var attested = owner.Attest(Root(owner, "AttestControlOccurrence", 2), NativeFacts.Ref(),
+            NativeFacts.Ref(), NativeFacts.Ref(), null);
+        var repeated = owner.Cancel(Root(owner, "CancelControlOccurrence", 2), "Again",
+            NativeFacts.Ref(), NativeFacts.Ref());
+
+        // Assert
+        Assert.True(cancelled.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, attested.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, repeated.Error?.Kind);
+        Assert.Equal(2, owner.Revision);
+        Assert.IsType<ControlOccurrenceCancelled>(Pending(owner)[^1]);
+    }
+
+    [Fact]
+    public void ShouldRefuseCancellationGivenAttestationAwaitingReview()
+    {
+        // Arrange
+        var owner = Opened();
+        Assert.True(owner.Attest(Root(owner, "AttestControlOccurrence", 1), NativeFacts.Ref(), NativeFacts.Ref(),
+            NativeFacts.Ref(), null).IsSuccess);
+        var before = Pending(owner).Length;
+
+        // Act
+        var result = owner.Cancel(Root(owner, "CancelControlOccurrence", 2), "Cannot erase submitted work",
+            NativeFacts.Ref(), NativeFacts.Ref());
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(before, Pending(owner).Length);
+    }
+
     static ControlOccurrence Fresh(ControlBusinessWindow? window = null) =>
         new(Tenant, Program, Control, window ?? Window);
 
@@ -222,6 +292,7 @@ public sealed class ControlOccurrenceAggregateTests
         ControlOccurrenceOpened opened => opened.Revision,
         ControlOccurrenceAttested attested => attested.Revision,
         ControlOccurrenceReviewed reviewed => reviewed.Revision,
+        ControlOccurrenceCancelled cancelled => cancelled.Revision,
         _ => throw new InvalidOperationException("Not an occurrence fact."),
     };
 

@@ -1,0 +1,20 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "independent_links": "An incident has one record with its own title, dates, flags and current assessment. Each affected record reference and each supporting artifact reference has its own small owner. Neither the incident nor its events store a list of references.",
+    "unchecked_race": "An assessor reads the incident's current revision and confirms a projected list of independently owned affected records. Another user changes an affected record while the assessment is being accepted. The two owners do not coordinate.",
+    "source_history": "Every revision author is recorded in durable authoritative source facts. A reviewer is compared against each author while the retained facts are streamed. One fact and a reviewer ID are held at a time. The scan is over a complete frozen source cut.",
+    "incomplete_history": "A user records a new affected-record link in a separate owner. The incident's revision stream records no event for that link and does not identify its author. The reviewer scan examines only the incident's revision stream.",
+    "uncertain_admission": "A link change is admitted to a frozen-boundary process. The process times out waiting for the link owner. It assumes the operation failed, seals the assessment boundary, then the delayed link command arrives and succeeds.",
+    "fenced_admission": "A link change is admitted to a boundary process. Before the boundary can seal, that exact token must have either a durable accepted link fact or a durable refusal or fence from the link owner. The fence rejects a delayed command and reports if it already succeeded. Unknown outcomes remain pending."
+  },
+  "questions": {
+    "links_roster": {"type":"noul","instructions":"Does `independent_links` require the incident record to contain every reference?"},
+    "race_stale": {"type":"noul","instructions":"Can `unchecked_race` accept an assessment that omits a concurrent link change?"},
+    "source_authors": {"type":"noul","instructions":"Does `source_history` find whether the reviewer authored any recorded revision within the complete frozen source cut?"},
+    "history_memory": {"type":"noul","instructions":"Must `source_history` keep a list of every author in memory to compare one reviewer against all recorded authors?"},
+    "history_incomplete": {"type":"noul","instructions":"Can `incomplete_history` prove that the reviewer did not author the separate link?"},
+    "timeout_race": {"type":"noul","instructions":"Can the delayed link succeed after the assessment boundary seals in `uncertain_admission`?"},
+    "fenced_race": {"type":"noul","instructions":"Can a previously admitted link command succeed for the first time after the assessment boundary seals in `fenced_admission`?"}
+  }
+}

@@ -1,6 +1,6 @@
 # Work queue
 
-Status: **locked**, 2026-11-03. Hand-authored source of truth for this context.
+Status: **design under review**, 2026-11-05. Hand-authored source of truth for this context.
 It follows the [context conventions](conventions.md).
 
 ## Purpose
@@ -36,14 +36,17 @@ work always happens in the source.
 **Identity:** `TenantId` + `WorkItemKey`.
 
 **Invariant:** one work item has one current assignee and at most one
-escalation. Every action is attributed, and none assigns a person the source
-workflow would refuse (checked against current state,
-[CV-05](conventions.md#guards-and-reviews)).
+escalation. Every action is attributed. The accepted M0-D15 rule also prohibits
+assigning a person the source workflow would refuse; a read of another owner
+alone cannot enforce that rule against a concurrent source change. Its
+authoritative admission protocol is unresolved below.
 
 - A new round of source work, such as a reopened finding, has a new key, so an
   earlier assignment never carries over (M0-D15).
 - An item 7 days overdue is escalated by the scheduler once, with an ID derived
   from the item ([CV-09](conventions.md#reactors), WQ-01).
+- Assignment does not grant permission to act. Source commands independently
+  enforce their current eligibility and authorization rules.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
@@ -76,23 +79,52 @@ time zone (or none, meaning UTC). In-app reminders cannot be turned off.
 
 **Identity:** `TenantId` + `MemberId` + `WeekOf` (R2 digest decision).
 
-**Invariant:** one member gets at most one digest per week, sent or skipped once,
-and a missed week is never backfilled. Membership, verified email, preference
-and queue visibility are rechecked just before sending.
+**Invariant:** one tenant/member/week has one durable dispatch, claimed once;
+its outcome is recorded against that identity and a missed week is never
+backfilled. SMTP acceptance is not recipient delivery, and there is no
+exactly-once physical delivery guarantee. Membership, verified email, preference
+and queue visibility are rechecked just before composing and sending.
 
-- The scheduler issues it at Monday 09:00 in the member's time zone, freezing the
-  zone and week (CV-09).
-- An unknown delivery outcome is retried automatically with the same message
-  identity (WQ-02).
+- At first claim, freeze the member's local week, resolved time zone and Monday
+  09:00 scheduled UTC instant; later preference changes apply to an unclaimed
+  week. Resume the same claim on replay (CV-09).
+- The R2 delivery decision governs retry, including a configured attempt limit
+  and deadline. A definite transient non-acceptance may be retried; an
+  ambiguous outcome is **not** automatically resent. IT may authorize a retry
+  in the same window only after evidence establishes non-acceptance. SMTP has
+  no atomic commit with our outcome and a stable message identity does not
+  deduplicate delivery (WQ-02).
+- The email contains the selected authorized work across eligible programs.
+  Page or stream the source-derived queue; do not build one aggregate or event
+  containing all item keys. Ordered paging and deduplication in bounded memory
+  require a qualified stable sort/keyset or an explicit external workspace; the
+  word "stream" does not by itself prove either property.
+  Each source continues to own its work. A dispatch outcome records no roster,
+  item payloads, or message body; individual work references remain with their
+  respective source owners. A recorded outcome alone does not reconstruct the
+  exact email's item set. Exact cross-source visibility at send remains an open
+  implementation design question, not a guarantee supplied by a projection.
+- The nonempty check is a candidate single authorized work-item witness, not a
+  write decision that enumerates all work. The witness must still be valid at
+  the decision point; source closure, permission revocation and send can race.
+  No current product rule has been changed to permit stale or unauthorized
+  content, and the authoritative dispatch/disclosure boundary remains open.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| SendWeeklyWorkDigest | Scheduler | Not sent or skipped; checks pass and the digest is not empty | WeeklyWorkDigestSent |
-| SkipWeeklyWorkDigest | Scheduler | Not sent or skipped; a check fails or the digest is empty | WeeklyWorkDigestSkipped |
+| ClaimWeeklyWorkDigest | Scheduler | First claim for member and week | WeeklyWorkDigestClaimed |
+| SendWeeklyWorkDigest | Scheduler | Claimed; checks pass; digest nonempty; no unresolved attempt | WeeklyWorkDigestAttemptStarted; then WeeklyWorkDigestSent, WeeklyWorkDigestAttemptFailed or WeeklyWorkDigestOutcomeUnknown |
+| SkipWeeklyWorkDigest | Scheduler | Claimed; no attempt that may have been accepted; a check fails or the digest is empty | WeeklyWorkDigestSkipped |
+| AuthorizeWeeklyWorkDigestRetry | IT operator | Unknown attempt; same window; evidence establishes non-acceptance; limits permit | WeeklyWorkDigestRetryAuthorized |
 
 | Event | Carries |
 | --- | --- |
-| WeeklyWorkDigestSent | tenant, member, week of, time zone, items listed (keys), destination, sent at |
+| WeeklyWorkDigestClaimed | tenant, member, week of, time zone, scheduled UTC instant, stable message identity |
+| WeeklyWorkDigestAttemptStarted | tenant, member, week of, attempt identity, started at |
+| WeeklyWorkDigestSent | tenant, member, week of, attempt identity, relay accepted at |
+| WeeklyWorkDigestAttemptFailed | tenant, member, week of, attempt identity, definite transient or permanent failure, redacted category, terminal retry exhaustion if applicable |
+| WeeklyWorkDigestOutcomeUnknown | tenant, member, week of, attempt identity, time, redacted category |
+| WeeklyWorkDigestRetryAuthorized | tenant, member, week of, attempt identity, operator, time, evidence reference, rationale |
 | WeeklyWorkDigestSkipped | tenant, member, week of, reason (`empty`, `opted_out`, `no_verified_email`, `inactive_member`) |
 
 ## Flows
@@ -102,26 +134,35 @@ Diagrams follow [CV-01](conventions.md#flow-diagrams).
 ```mermaid
 flowchart LR
     X1[[Source contexts: open work]] -. projected .-> Q[[Work items]]
-    Q -. "eligible per source" .-> C1[/AssignWorkItem/] --> E1([WorkItemAssigned])
+    Q -. "candidate; source admission unresolved" .-> C1[/AssignWorkItem/] --> E1([WorkItemAssigned])
     S1{{"Scheduler: 7 days overdue (ID from item)"}} --> C2[/EscalateWorkItem/] --> E2([WorkItemEscalated])
-    S2{{"Scheduler: Monday 09:00 local (ID from member and week)"}} --> C3[/SendWeeklyWorkDigest/] --> E3([WeeklyWorkDigestSent])
-    S2 --> C4[/SkipWeeklyWorkDigest/] --> E4([WeeklyWorkDigestSkipped])
+    S2{{"Scheduler: Monday 09:00 local (ID from member and week)"}} --> CL[/ClaimWeeklyWorkDigest/] --> EL([WeeklyWorkDigestClaimed])
+    EL --> C3[/SendWeeklyWorkDigest/] --> E3([WeeklyWorkDigestSent])
+    EL --> C4[/SkipWeeklyWorkDigest/] --> E4([WeeklyWorkDigestSkipped])
     P([WorkDigestPreferenceSet]) -. checks .-> C3
 ```
 
 ## Decisions
 
-Jev answers are from `jev-1.14.0`, 2026-11-03. A yes is ≥ 0.8 and a no is ≤ 0.2.
-Anything in between is settled by common sense, with the reasoning stated.
+Jev answers are from `jev-1.14.0`, 2026-11-03. The historical 0.8 and 0.2
+thresholds were triage conventions, not calibrated probabilities of correctness;
+conflicting or inconclusive cases remain open until source evidence resolves them.
 
 | ID | Decision | Evidence |
 | --- | --- | --- |
 | WQ-01 | An overdue item is escalated automatically once; escalation adds visibility and never reassigns. | 0.57. M0-D15. |
-| WQ-02 | An unknown digest delivery is retried automatically with the same message identity, not held for an operator. | Holding for an operator: 0.30. Common sense: CV-03; a rare duplicate email does little harm. |
+| WQ-02 | An ambiguous SMTP outcome is held for IT; a same-window retry needs evidence of non-acceptance. | Accepted [R2 delivery decision](../decisions/r2-weekly-work-digest-delivery.md), which supersedes the earlier model-based retry choice. |
 
 ## Open questions
 
-None at this time.
+- **Assignment admission:** specify how the source owner authoritatively admits
+  an assignee while eligibility or open state changes concurrently, including
+  refusal, delayed or duplicate messages and recovery. A stale source read and
+  later source-action refusal do not prove M0-D15's assignment rule.
+- **Digest visibility and enumeration:** specify a bounded-memory, paged
+  cross-program enumeration and deduplication with current authorization at
+  dispatch, including how a change during assembly or sending is handled. Do
+  not claim a globally atomic cross-source snapshot without a mechanism.
 
 ## Superseded owners
 
@@ -129,4 +170,4 @@ None at this time.
 | --- | --- |
 | WorkItemAssignment | WorkItemAssignment (`WorkAssignmentLegacyHistoryImported` removed) |
 | WorkDigestPreference | WorkDigestPreference |
-| WeeklyWorkDigest, WorkDigestDispatch | WeeklyWorkDigest (sent or skipped; delivery attempts are technical) |
+| WeeklyWorkDigest, WorkDigestDispatch | WeeklyWorkDigest (one member/week dispatch and its bounded attempt outcomes) |

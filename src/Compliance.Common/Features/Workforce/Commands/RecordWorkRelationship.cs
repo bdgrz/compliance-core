@@ -16,4 +16,4 @@ public sealed record RecordWorkRelationship(Uuid TenantId, Uuid PersonId, string
     string WorkerType, string LifecycleStatus, DateOnly StartDate, DateOnly? EndDate = null,
     string? Department = null, Uuid? ManagerPersonId = null, Uuid? SponsorPersonId = null,
     string? EmploymentStatusReason = null, WorkforceSourceIdentity? Source = null)
-    : IRequest<WorkRelationshipRegistration>, IWorkforceRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest<PortiaCreateOutcome<WorkRelationshipRegistration>>, IWorkforceRequest, IClientManagementMutationRequest, ICallable;

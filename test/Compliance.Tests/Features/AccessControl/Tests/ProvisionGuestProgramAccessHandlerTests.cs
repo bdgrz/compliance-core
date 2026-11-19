@@ -110,7 +110,7 @@ public sealed class ProvisionGuestProgramAccessHandlerTests
         var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var member = new Member(tenantId, userId);
-        Assert.True(member.Register("guest", expiresOn).IsSuccess);
+        Assert.True(member.Register("guest", expiresOn, programIds: [programId]).IsSuccess);
         var membershipEpisodeId = member.MembershipEpisodeId;
         await writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
         var handler = new ProvisionGuestProgramAccessHandler(
@@ -161,7 +161,7 @@ public sealed class ProvisionGuestProgramAccessHandlerTests
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
         var member = new Member(tenantId, userId);
-        Assert.True(member.Register("guest", expiresOn).IsSuccess);
+        Assert.True(member.Register("guest", expiresOn, programIds: [programId]).IsSuccess);
         await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(member,
             new RequestDispatchContext(RequestActor.System));
         var handler = new ProvisionGuestProgramAccessHandler(

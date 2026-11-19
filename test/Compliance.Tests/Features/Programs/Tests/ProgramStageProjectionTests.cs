@@ -1,40 +1,46 @@
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
-using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Fitz;
-using Cntryl.Fitz.Testing;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Persistence;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Commands;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Handlers;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Projections;
+using Bdgrz.Compliance.Features.Programs.Projectors;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Events;
 using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Readers;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -65,19 +71,13 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.Controls.Models;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
-using Bdgrz.Compliance.Features.Programs.Commands;
-using Bdgrz.Compliance.Features.Programs.Events;
-using Bdgrz.Compliance.Features.Programs.Handlers;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.Programs.Projections;
-using Bdgrz.Compliance.Features.Programs.Projectors;
-using Bdgrz.Compliance.Features.Readiness.Aggregates;
-using Bdgrz.Compliance.Features.Readiness.Events;
-using Bdgrz.Compliance.Features.Readiness.Readers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 namespace Bdgrz.Compliance.Tests.Features.Programs.Tests;
 
 public sealed class ProgramStageProjectionTests
@@ -97,7 +97,8 @@ public sealed class ProgramStageProjectionTests
         await DeferAsync(fixture, content, tenantId, deferredProgram);
         var approvedDecision = await ApproveWithExceptionsAsync(fixture, content, tenantId,
             approvedProgram);
-        using var replay = BuildReplayWorker(fixture.Store, content, tenantId);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieProgramSchema.Statements);
+        using var replay = BuildReplayWorker(fixture.Store, content, database.Database, tenantId);
 
         // Act
         await replay.StartAsync();
@@ -140,7 +141,7 @@ public sealed class ProgramStageProjectionTests
             [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())],
             "BdgrzSession"));
         var creation = new RequestContext<CreateProgram>(new CreateProgram(Uuid.CreateVersion4(), tenantId, "SOC 2",
-            new ProgramPlan(null, null, null, null, null, null)), actor);
+            new ProgramPlan(null, null, null, null, null, null), Uuid.CreateVersion4()), actor);
         Assert.True((await new CreateProgramHandler(ProgramSeeds.Operations(fixture.Repository, fixture.Repository, fixture.Store, content))
             .HandleAsync(creation, CancellationToken.None)).IsSuccess);
         return creation.Request.ProgramId;
@@ -184,30 +185,33 @@ public sealed class ProgramStageProjectionTests
             "Acknowledged.", Decider, DateTimeOffset.UtcNow, unresolved);
     }
 
-    static IHost BuildReplayWorker(IDomainEventReader reader, IImmutableContentStore content, Uuid tenant)
+    static IHost BuildReplayWorker(IDomainEventReader reader, IImmutableContentStore content,
+        CassieProjectionDatabase database, Uuid tenant)
     {
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {
             EnvironmentName = "Development",
         });
         builder.Services.AddSingleton(reader);
+        builder.Services.AddSingleton(database);
         builder.Services.AddSingleton(content);
         builder.Services.AddSingleton<IKvClient, InMemoryKvClient>();
         builder.Services.AddSingleton<ITenantDirectory>(new StaticTenantDirectory(
             new TenantId(tenant.ToString())));
-        builder.Services.AddScoped<FitzProgramDirectory>();
+        builder.Services.AddScoped<CassieProgramDirectory>();
         builder.Services.AddScoped<IProgramDirectoryProjection>(provider =>
-            provider.GetRequiredService<FitzProgramDirectory>());
+            provider.GetRequiredService<CassieProgramDirectory>());
         builder.Services.AddScoped<IProgramDirectoryReader>(provider =>
-            provider.GetRequiredService<FitzProgramDirectory>());
+            provider.GetRequiredService<CassieProgramDirectory>());
         builder.Services.AddPortiaEvent<ProgramCreated>(2, "bdgrz.program.created");
+        builder.Services.AddPortiaEvent<ProgramCreationAttemptFenced>(1, "bdgrz.program.creation_attempt.fenced");
         builder.Services.AddPortiaEvent<ProgramRevised>(2, "bdgrz.program.revised");
         builder.Services.AddPortiaEvent<ProgramCriteriaEditionSelected>(2,
             "bdgrz.program.criteria.selected");
         builder.Services.AddPortiaEvent<TypeIEntryDecisionRecorded>(1,
             "bdgrz.readiness.type_i_entry.decided");
         builder.Services.AddPortia()
-            .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant,
+            .AddCassieProjection<ProgramDirectoryProjector, CassieProgramDirectory>("ProgramDirectory", WorkloadScope.PerTenant,
                 options => options.PollInterval = TimeSpan.FromMilliseconds(10))
             .UseSingleProcessWorkloads()
             .AddWorkers();

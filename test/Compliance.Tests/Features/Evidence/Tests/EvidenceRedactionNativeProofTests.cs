@@ -177,7 +177,8 @@ public sealed partial class EvidenceRedactionCompositionTests
                 preparation.CommandId, 1, SeparationOfDutiesActions.Approve), lead,
             "Exact independent exception", ArtifactMetadataAccessTests.Fixture.Now.AddHours(1)));
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
-        var waived = await DispatchAsync(fixture, approver, new ApproveSeparationOfDutiesWaiver(fixture.TenantId, recorded.Value.WaiverId));
+        var waived = await DispatchAsync(fixture, approver,
+            new ApproveSeparationOfDutiesWaiver(fixture.TenantId, recorded.Value!.Value.WaiverId));
         Assert.True(waived.IsSuccess, waived.Error?.Message);
         var clock = new MutableClock { Now = ArtifactMetadataAccessTests.Fixture.Now };
         var content = new DeadlineContent(fixture.Provider.GetRequiredService<IImmutableContentStore>(), clock);
@@ -187,7 +188,7 @@ public sealed partial class EvidenceRedactionCompositionTests
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
             new ApproveEvidenceRedaction(Uuid.CreateVersion4(), fixture.TenantId, preparation.RedactionId, 1,
-                preparation.CommandId, 1, recorded.Value.WaiverId),
+                preparation.CommandId, 1, recorded.Value!.Value.WaiverId),
             new RequestDispatchContext(ProgramManagementServices.Actor(lead), new HttpInvocation("PUT", "/test", "/test", "test")));
         var history = await ReadHistoryAsync(fixture.Provider, fixture.TenantId, preparation.RedactionId);
 

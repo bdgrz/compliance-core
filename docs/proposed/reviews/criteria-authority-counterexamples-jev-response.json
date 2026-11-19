@@ -1,0 +1,25 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "case_1_simultaneous_claims": {
+      "type": "noul",
+      "noul": 0.92
+    },
+    "case_1_unknown_release": {
+      "type": "noul",
+      "noul": 0.77
+    },
+    "case_2_delayed_write": {
+      "type": "noul",
+      "noul": 0.32
+    },
+    "case_3_order": {
+      "type": "noul",
+      "noul": 0.08
+    }
+  },
+  "usage": {
+    "input_tokens": 561,
+    "output_tokens": 89
+  }
+}

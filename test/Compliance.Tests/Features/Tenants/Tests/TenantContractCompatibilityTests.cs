@@ -13,11 +13,12 @@ namespace Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 public sealed class TenantContractCompatibilityTests
 {
     [Fact]
-    public void ShouldReadSelfServiceAndLegacyRegistrationBodiesGivenOptionalInvitationField()
+    public void ShouldRetainExplicitIdentityGivenSelfServiceAndRejectedLegacyInvitationFields()
     {
         // Arrange
-        const string selfService = """{"name":"Acme","slug":"acme","legal_name":"Acme LLC"}""";
-        const string legacy = """{"name":"Acme","slug":"acme","first_administrator_email":"admin@example.com"}""";
+        var tenantId = Uuid.CreateVersion4();
+        var selfService = $$"""{"tenant_id":"{{tenantId}}","name":"Acme","slug":"acme","legal_name":"Acme LLC"}""";
+        var legacy = $$"""{"tenant_id":"{{tenantId}}","name":"Acme","slug":"acme","first_administrator_email":"admin@example.com"}""";
 
         // Act
         var newRequest = JsonSerializer.Deserialize(selfService,
@@ -26,8 +27,11 @@ public sealed class TenantContractCompatibilityTests
             ComplianceCoreJsonContext.Default.RegisterTenant);
 
         // Assert
+        Assert.Equal(tenantId, newRequest?.TenantId);
+        Assert.Equal(tenantId, oldRequest?.TenantId);
         Assert.Null(newRequest?.FirstAdministratorEmail);
         Assert.Equal("admin@example.com", oldRequest?.FirstAdministratorEmail);
+        Assert.Equal(tenantId, ((IIdentifiedRequest)newRequest!).RequestId);
     }
 
     [Fact]

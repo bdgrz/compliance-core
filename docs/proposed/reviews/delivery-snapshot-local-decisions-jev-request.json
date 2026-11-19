@@ -1,0 +1,51 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "missing": "A source contains A and B. A builder reads a projection that contains only A, computes a valid archive digest for A, and signs a receipt that says all entries it saw were included. No coverage proof or authoritative source cursor exists.",
+    "late": "Each independent draft row is an edit proposal. An ordered source commits a freeze marker at offset 100. An edit proposal commits later at offset 101. The rule explicitly excludes proposals after the marker. No success was acknowledged for the late proposal.",
+    "lying_ack": "A row edit was reported as accepted before it was appended to the authoritative ordered source. A freeze marker is then committed at 100 and the edit is appended at 101. The frozen view contains only edits committed before the marker.",
+    "transfer": "A recipient has received chunk 1 of an artifact. The artifact owner then durably quarantines the artifact. A technical transfer attempts to send chunk 2 after quarantine; the former one-time download authorization has not been rechecked or fenced.",
+    "terminal": "An artifact transfer authority serializes begin-or-send and quarantine. Quarantine wins before the attempted send. The authority refuses the send, but bytes delivered before quarantine cannot be recalled.",
+    "selection": "A response is considered delivered when its text is delivered; each attachment is independently delivered later and has its own success or refusal. One attachment is still pending.",
+    "readmodel": "A dashboard says all requests are complete because every response currently visible in a lagging projection is delivered. A draft response was committed but has not appeared in the projection.",
+    "builder": "A technical builder streams an already proven complete exact immutable source selection, retrieves and checks each exact version, then writes one durable signed result referring to the precise selection and archive. The package aggregate only accepts that one verified result and never reads all selected items."
+  },
+  "questions": {
+    "missing_complete": {
+      "type": "noul",
+      "instructions": "Does the signed receipt in missing prove that source record B was included?"
+    },
+    "late_included": {
+      "type": "noul",
+      "instructions": "Is the proposal at offset 101 in late a member of the frozen view?"
+    },
+    "ack_truthful": {
+      "type": "noul",
+      "instructions": "In lying_ack, was the reported acceptance consistent with the frozen-view rule?"
+    },
+    "post_quarantine": {
+      "type": "noul",
+      "instructions": "Can the attempted transfer in transfer send chunk 2 after the artifact owner quarantined it?"
+    },
+    "recall_possible": {
+      "type": "noul",
+      "instructions": "Does the refusal in terminal undo delivery of chunk 1 before quarantine?"
+    },
+    "attachment_guarantee": {
+      "type": "noul",
+      "instructions": "Does the response delivery fact in selection prove every selected attachment has been delivered?"
+    },
+    "projection_complete": {
+      "type": "noul",
+      "instructions": "Does readmodel prove there are no committed draft responses?"
+    },
+    "parent_items": {
+      "type": "noul",
+      "instructions": "Must the aggregate in builder own a list of all entries to verify the one signed result?"
+    },
+    "conditional_claim": {
+      "type": "noul",
+      "instructions": "Does builder already assume the exact immutable selection is complete before its construction starts?"
+    }
+  }
+}

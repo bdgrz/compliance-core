@@ -79,6 +79,7 @@ sealed class SettleCorrectiveActionFindingClosureUseHandler(IAggregateReader rea
         {
             FindingClosedV2 => SourceUseSettlementDisposition.ParentClosed,
             FindingClosureCanceled => SourceUseSettlementDisposition.Canceled,
+            FindingClosureWithdrawn => SourceUseSettlementDisposition.Canceled,
             _ => (SourceUseSettlementDisposition?)null,
         };
         return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, request.Intent,

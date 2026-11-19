@@ -90,7 +90,7 @@ public static class WorkDigestRetryContent
     public static bool Matches<T>(ImmutableContentRef reference, T value, string schema) where T : notnull =>
         Reference(reference, schema) && reference.Sha256 == ContentDigest.OfJson(value) &&
         reference.Bytes == JsonSerializer.SerializeToUtf8Bytes(value,
-            ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!).Length;
+            ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!).Length;
     static bool AttributionMatches(ActorAttribution? attribution, Uuid userId) => attribution is not null &&
         !string.IsNullOrWhiteSpace(attribution.Issuer) && Uuid.TryParse(attribution.Subject,
             global::System.Globalization.CultureInfo.InvariantCulture, out var original) && original == userId;

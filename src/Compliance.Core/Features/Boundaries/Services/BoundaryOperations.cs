@@ -88,7 +88,7 @@ public sealed partial class BoundaryOperations(IAggregateReader reader, Boundary
                 async (owner, token) =>
                 {
                     var scope = programId ?? owner.ProgramId;
-                    var valid = owner.Prepare(scope, kind == nameof(CreateBoundary));
+                    var valid = owner.Prepare(scope, kind == nameof(CreateBoundary) || kind == nameof(DraftBoundary) && !owner.IsCreated);
                     if (!valid.IsSuccess)
                         return Result<FirstResponseDescriptor>.Failure(valid.Error!);
                     var snapshot = await boundarys.ReadAsync(owner, scope, token).ConfigureAwait(false);
@@ -127,7 +127,7 @@ public sealed partial class BoundaryOperations(IAggregateReader reader, Boundary
             if (descriptor is null)
                 return Result<TOut>.Failure(new RequestError(RequestErrorKind.Conflict,
                     "The boundary logical operation is already bound to another actor, revision or authored intent."));
-            var schema = kind is nameof(CreateBoundary) or nameof(ProposeBoundarySuccessor) ? BoundaryResponses.Registration : UnitResult.Schema;
+            var schema = kind is nameof(CreateBoundary) or nameof(ProposeBoundarySuccessor) or nameof(DraftBoundary) ? BoundaryResponses.Registration : UnitResult.Schema;
             if (descriptor.ResultSchema != schema || descriptor.Body is not StandardResponseBody body || body.Content.Schema != schema)
                 throw new ImmutableContentIntegrityException("The boundary original response has another result schema.");
             var value = await content.ReadJsonAsync<TOut>(tenantId.ToString(), body.Content, ct).ConfigureAwait(false);

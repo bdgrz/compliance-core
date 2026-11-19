@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -12,4 +13,7 @@ public sealed record CreateRiskDraft(Uuid RiskId, Uuid TenantId, Uuid ProgramId,
     : IRequest<RiskRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest
 {
     Uuid IIdentifiedRequest.RequestId => RiskId;
+
+    /// <summary>The exact published source entry, when created by an admitted template application.</summary>
+    public MethodologyTemplateEntryProvenance? TemplateOrigin { get; init; }
 }

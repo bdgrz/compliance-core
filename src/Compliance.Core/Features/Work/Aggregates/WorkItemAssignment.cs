@@ -59,6 +59,7 @@ public sealed class WorkItemAssignment : Aggregate
         });
         On<WorkItemAssignmentRecorded>(ApplyFact);
         On<WorkItemAssignmentEscalated>(ApplyFact);
+        On<WorkItemAutomaticallyEscalated>(ApplyAutomaticEscalation);
     }
 
     public static Uuid IdFor(Uuid programId, Uuid workItemId) => Uuid.CreateVersion5(programId, $"work-item-assignment:{workItemId}");
@@ -71,7 +72,42 @@ public sealed class WorkItemAssignment : Aggregate
     public NativeAcceptance Acceptance { get; }
     public WorkAssignmentLegacyHistoryImported? LegacyImport { get; private set; }
     public IWorkAssignmentFact? Latest { get; private set; }
+    public WorkItemAutomaticallyEscalated? AutomaticEscalation { get; private set; }
     internal FirmIndependenceReplayCut ReplayCut { get; } = new();
+
+    public static Uuid AutomaticEscalationId(Uuid programId, Uuid workItemId) =>
+        Uuid.CreateVersion5(IdFor(programId, workItemId), "seven-days-overdue");
+
+    public Result<bool> EscalateAutomatically(Uuid commandId, long expectedRevision, Uuid sourceId,
+        string sourceKind, DateOnly dueOn, DateOnly observedOn, DateTimeOffset at)
+    {
+        if (commandId != AutomaticEscalationId(ProgramId, WorkItemId) || sourceId == Uuid.Empty ||
+            string.IsNullOrWhiteSpace(sourceKind) || sourceKind.Length > 128 ||
+            observedOn != DateOnly.FromDateTime(at.UtcDateTime) || dueOn == default)
+            return Result<bool>.Failure(new RequestError(RequestErrorKind.Validation,
+                "An automatic escalation requires its exact item-derived identity and current source due date."));
+        if (Escalated)
+            return Result<bool>.Success(false);
+        if (!ReplayCut.Allows(this) || expectedRevision != Revision)
+            return Result<bool>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The work assignment changed before its overdue escalation; retry.", true));
+        if (observedOn.DayNumber - dueOn.DayNumber < WorkQueueReader.SystemEscalationDays)
+            return Result<bool>.Success(false);
+        RaiseEvent(new WorkItemAutomaticallyEscalated(TenantId, ProgramId, WorkItemId, Revision + 1,
+            commandId, sourceId, sourceKind, dueOn, AssigneeMemberId, at));
+        return Result<bool>.Success(true);
+    }
+
+    void ApplyAutomaticEscalation(WorkItemAutomaticallyEscalated value)
+    {
+        RequireScope(value.TenantId, value.ProgramId, value.WorkItemId);
+        if (Escalated || value.Revision != Revision + 1 || value.AssigneeMemberId != AssigneeMemberId ||
+            value.CommandId != AutomaticEscalationId(ProgramId, WorkItemId) || value.SourceId == Uuid.Empty ||
+            string.IsNullOrWhiteSpace(value.SourceKind) || value.SourceKind.Length > 128 || value.DueOn == default ||
+            DateOnly.FromDateTime(value.EscalatedAt.UtcDateTime).DayNumber - value.DueOn.DayNumber < WorkQueueReader.SystemEscalationDays)
+            throw new InvalidOperationException("An automatic escalation preserves the assignee and records one overdue source round.");
+        (Revision, Escalated, AutomaticEscalation) = (value.Revision, true, value);
+    }
 
     public Result Record(OperationProvenance operation, WorkAssignmentEntryView entry, ImmutableContentRef change,
         ImmutableContentRef firstResponse, ImmutableContentRef result, WorkAssignmentLegacyHistoryImported? legacy)

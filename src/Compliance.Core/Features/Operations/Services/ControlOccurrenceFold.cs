@@ -101,10 +101,13 @@ public static class ControlOccurrenceFold
                         review.DecisionId != reviewed.Operation.LogicalId || review.AttestationId != attestations[^1].AttestationId ||
                         review.AttestationVersion != attestations[^1].Version || review.ReviewedBy != reviewed.Operation.Actor ||
                         review.ReviewedAt != reviewed.Operation.AcceptedAt || review.ReviewerMemberId.ToString() != reviewed.Operation.Actor.Id ||
-                        review.RequestedActions is null)
+                        review.RequestedActions is null || review.Outcome != reviewed.Outcome)
                         throw new ImmutableContentIntegrityException("The immutable review differs from its exact attestation or original reviewer.");
                     reviews.Add(review);
                     state = review.Outcome;
+                    break;
+                case ControlOccurrenceCancelled:
+                    state = "cancelled";
                     break;
             }
 
@@ -117,7 +120,8 @@ public static class ControlOccurrenceFold
     public static ControlOccurrenceView Present(ControlOccurrenceView view, DateOnly? today)
     {
         ArgumentNullException.ThrowIfNull(view);
-        return view.State == ControlOperationStates.Open && view.DueOn is { } due && today is { } asOf && due < asOf
+        return view.State == ControlOperationStates.Open && (view.PeriodEnd ?? view.DueOn) is { } end &&
+            today is { } asOf && end < asOf
             ? view with { State = ControlOperationStates.Missed }
             : view;
     }

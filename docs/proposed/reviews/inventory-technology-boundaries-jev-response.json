@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "edge_owners": {
+      "type": "noul",
+      "noul": 0.84
+    },
+    "one_anchor": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "edge_anchor": {
+      "type": "noul",
+      "noul": 0.14
+    },
+    "classification_race": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "waiver_race": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "bulk_publication": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "later_change": {
+      "type": "noul",
+      "noul": 0.78
+    },
+    "atomic_owner": {
+      "type": "noul",
+      "noul": 0.03
+    }
+  },
+  "usage": {
+    "input_tokens": 696,
+    "output_tokens": 148
+  }
+}

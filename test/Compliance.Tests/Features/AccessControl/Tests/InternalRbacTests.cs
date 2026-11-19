@@ -70,7 +70,7 @@ public sealed class InternalRbacTests
     static readonly Uuid TenantId = Id("11f455d2-fb10-4f28-a157-23e18e706e70");
     static readonly Uuid UserId = Id("0862062f-97e9-45de-a312-0f884c48180d");
     static readonly Uuid TeamId = Id("2cc8e854-a49a-42a1-9581-d0622de3d5c3");
-    static readonly Uuid RoleId = BuiltInRbac.ComplianceManagementRoleId(TenantId);
+    static readonly Uuid RoleId = Uuid.CreateVersion4();
 
     [Fact]
     public void ShouldGrantAdditivePermissionsGivenTeamRolePath()
@@ -82,8 +82,8 @@ public sealed class InternalRbacTests
         var role = new Role(TenantId, RoleId);
         var readId = Uuid.CreateVersion4();
         var manageId = Uuid.CreateVersion4();
-        var read = new RolePermission(TenantId, RoleId, "controls.read", readId);
-        var manage = new RolePermission(TenantId, RoleId, "controls.manage", manageId);
+        var read = new RolePermission(TenantId, RoleId, "program.manage", readId);
+        var manage = new RolePermission(TenantId, RoleId, "application_inventory.manage", manageId);
         var teamRoleId = Uuid.CreateVersion4();
         var teamRole = new TeamRole(TenantId, TeamId, RoleId, teamRoleId);
         _ = member.Register();
@@ -98,7 +98,7 @@ public sealed class InternalRbacTests
         var permissions = PermissionsFor(member.Id, member, team, teamMember, role, read, manage, teamRole);
 
         // Assert
-        Assert.Equal(["controls.manage", "controls.read"], permissions);
+        Assert.Equal(["application_inventory.manage", "program.manage"], permissions);
     }
 
     [Fact]
@@ -121,8 +121,8 @@ public sealed class InternalRbacTests
     {
         // Arrange
         var id = Uuid.CreateVersion4();
-        var first = new RolePermission(TenantId, RoleId, " Controls.Read ", id);
-        var repeated = new RolePermission(TenantId, RoleId, "controls.read");
+        var first = new RolePermission(TenantId, RoleId, " Program.Manage ", id);
+        var repeated = new RolePermission(TenantId, RoleId, "program.manage");
         var member = new Member(TenantId, UserId);
 
         // Act
@@ -133,7 +133,7 @@ public sealed class InternalRbacTests
         Assert.Equal(member.Id, new Member(TenantId, UserId).Id);
         Assert.True(assignment.IsSuccess);
         var assigned = Assert.Single(new AggregateScenario<RolePermission>(first).PendingEvents);
-        Assert.Equal("controls.read", assigned.GetType().GetProperty("Permission")?.GetValue(assigned));
+        Assert.Equal("program.manage", assigned.GetType().GetProperty("Permission")?.GetValue(assigned));
     }
 
     [Fact]
@@ -168,8 +168,8 @@ public sealed class InternalRbacTests
         state.Apply(TeamMemberFacts.Assigned(TenantId, TeamId, memberId));
         state.Apply(RbacTeamRoleFacts.Assigned(TenantId, TeamId, RoleId));
 
-        state.Apply(RbacPermissionFacts.Assigned(TenantId, RoleId, "controls.read"));
-        Assert.Contains(new PermissionGrant(memberId, "controls.read"), state.Materialize());
+        state.Apply(RbacPermissionFacts.Assigned(TenantId, RoleId, "program.manage"));
+        Assert.Contains(new PermissionGrant(memberId, "program.manage"), state.Materialize());
 
         // Act
         state.Apply(RbacFacts.RoleDeletedFact(TenantId, RoleId));
@@ -191,8 +191,8 @@ public sealed class InternalRbacTests
         state.Apply(TeamMemberFacts.Assigned(TenantId, TeamId, memberId));
         state.Apply(RbacTeamRoleFacts.Assigned(TenantId, TeamId, RoleId));
 
-        state.Apply(RbacPermissionFacts.Assigned(TenantId, RoleId, "controls.read"));
-        Assert.Contains(new PermissionGrant(memberId, "controls.read"), state.Materialize());
+        state.Apply(RbacPermissionFacts.Assigned(TenantId, RoleId, "program.manage"));
+        Assert.Contains(new PermissionGrant(memberId, "program.manage"), state.Materialize());
 
         // Act
         state.Apply(TeamMemberFacts.Removed(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
@@ -209,8 +209,8 @@ public sealed class InternalRbacTests
         var memberId = RbacIds.Member(TenantId, UserId);
 
         // Act
-        var first = PermissionProjectionKeys.Grant(memberId, " Controls.Read ").ToArray();
-        var second = PermissionProjectionKeys.Grant(memberId, "controls.read").ToArray();
+        var first = PermissionProjectionKeys.Grant(memberId, " Program.Manage ").ToArray();
+        var second = PermissionProjectionKeys.Grant(memberId, "program.manage").ToArray();
 
         // Assert
         Assert.Equal(first, second);

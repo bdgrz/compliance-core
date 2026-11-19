@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "citation_parent": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "frozen_cut": {
+      "type": "noul",
+      "noul": 0.74
+    },
+    "review_race": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "handoff_race": {
+      "type": "noul",
+      "noul": 0.75
+    },
+    "reply": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "review_author": {
+      "type": "noul",
+      "noul": 0.83
+    },
+    "instant_access": {
+      "type": "noul",
+      "noul": 0.02
+    }
+  },
+  "usage": {
+    "input_tokens": 764,
+    "output_tokens": 126
+  }
+}

@@ -9,6 +9,7 @@ using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
@@ -102,6 +103,21 @@ public sealed class PersonReader(IAggregateReader reader, IDomainEventReader eve
             if (beforeView is null || PersonContent.Header(beforeView) != before ||
                 PersonContent.DetailChanges(beforeView, view) != changed.ChangedFields)
                 throw new ImmutableContentIntegrityException("The named person changed fields differ from their exact historical values.");
+        }
+        if (fact is PersonLinkedToMember or PersonUnlinkedFromMember)
+        {
+            var beforeView = prior is not null
+                ? await content.ReadJsonAsync<PersonView>(realm, prior, ct).ConfigureAwait(false)
+                : Legacy(new Person(native.Header.TenantId, native.Header.PersonId), facts.Take(index).ToArray());
+            var link = fact is PersonLinkedToMember added ? added.Link : ((PersonUnlinkedFromMember)fact).Link;
+            if (beforeView is null || PersonContent.Header(beforeView) != before || mutation.MemberLink != link)
+                throw new ImmutableContentIntegrityException("The person member fact differs from its exact prior content or admitted link.");
+            var rules = new PersonRules(native.Header.TenantId, native.Header.PersonId, beforeView);
+            var failure = fact is PersonLinkedToMember
+                ? rules.LinkMember(link, native.Operation.Actor, native.Operation.AcceptedAt)
+                : rules.UnlinkMember(link, native.Operation.Actor, native.Operation.AcceptedAt);
+            if (failure is not null || !rules.HasChanges || ContentDigest.OfJson(rules.Current!) != ContentDigest.OfJson(view))
+                throw new ImmutableContentIntegrityException("The person member fact has another exact many-member transition.");
         }
         return view;
     }

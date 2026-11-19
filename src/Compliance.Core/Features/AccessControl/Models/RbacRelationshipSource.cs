@@ -1,4 +1,5 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
@@ -84,7 +85,7 @@ static class RbacRelationshipSource
             {
                 case TeamRoleAssigned assigned when assigned.TenantId == tenantId && assigned.RoleId == roleId:
                     live[record.Stream] = new RoleTeamView(roleId, assigned.TeamId, assigned.CommandId,
-                        record.Event.Metadata.AggregateVersion);
+                        record.Event.Metadata.AggregateVersion, TeamRoleScopes.Normalize(tenantId, assigned.Scope));
                     break;
                 case TeamRoleRemoved removed when removed.TenantId == tenantId && removed.RoleId == roleId:
                     live[record.Stream] = null;

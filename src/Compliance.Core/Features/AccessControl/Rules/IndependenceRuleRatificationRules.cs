@@ -128,7 +128,7 @@ public sealed class IndependenceRuleRatificationRules
         value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f');
     static bool Bounded(string value, int maximum) => !string.IsNullOrWhiteSpace(value) &&
         value.Length <= maximum && !value.Any(char.IsControl) && value == value.Trim();
-    static string Intent<T>(T value) => JsonSerializer.Serialize(value, value!.GetType(), ComplianceCoreJsonContext.Default);
+    static string Intent<T>(T value) => JsonSerializer.Serialize(value, value!.GetType(), ComplianceCoreJsonMetadata.Default);
     static Result<IndependenceRuleRatificationView> Failure(RequestErrorKind kind, string message) =>
         Result<IndependenceRuleRatificationView>.Failure(new RequestError(kind, message));
 }

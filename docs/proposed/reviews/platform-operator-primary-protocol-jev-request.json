@@ -1,0 +1,49 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "proposal": "A platform has per-user operator streams O[u], each atomically decides grant/revoke and a primary designation mark. Primary-seat stream P holds at most two reserved or confirmed seats. A marked operator cannot be revoked. A seat is confirmed only after exact matching operator mark acceptance. Release of a confirmed seat requires a different confirmed seat on P. A released operator mark is removed later only for its exact designation generation. Unknown outcomes are pending. The system intends at least one active operator after bootstrap.",
+    "cas": "An expected-position conditional append is atomic on one stream only. Delayed commands and messages can be duplicated and reordered; acknowledgements can be lost. There is no cross-stream transaction. An empty read or timeout does not prove a delayed append cannot commit.",
+    "race": "A and B are both confirmed seats and marked active operators. Two workers simultaneously read P at position p and attempt respectively to release A and release B at position p. Each retries after a conflict only by re-reading P and applying the rule to its current state.",
+    "bootstrap": "An initial seat and operator grant+mark were attempted. The write timed out. A source read currently finds no acceptance, but the write can still commit later. A worker now wants to abandon it and seed a different user.",
+    "redesignation": "A release for user A generation g1 is committed. Later the same user A has a new mark generation g2. A delayed unmark for g1 must compare the current target generation before changing the target.",
+    "failure": "A target mark has a durable refusal for generation g. A later delayed mark for g can still execute if no terminal generation fence is enforced on the target stream.",
+    "untrusted": "A worker sees an event identifier naming a purported operator mark but has not read the exact committed target stream or verified its user, designation, outcome and stream version.",
+    "migration": "The legacy global operator roster remains writable while a migration scans it and creates per-user grants and primary seats. No barrier or dual-write sequencing is specified.",
+    "cleanup": "The seat owner has released A, but the corresponding exact-generation unmark on O[A] has not happened. Another request wants A to be designated again; the operator owner allows only one current mark and refuses any new mark while the old mark remains.",
+    "history": "P holds at most two current seats but appends a new event for each designation, confirmation and release; aggregate hydration loads its full stream."
+  },
+  "questions": {
+    "both_releases": {
+      "type": "noul",
+      "instructions": "In state.race and state.cas, can both releases validly commit and leave no confirmed seat?"
+    },
+    "bootstrap_risk": {
+      "type": "noul",
+      "instructions": "In state.bootstrap and state.cas, can the supposedly abandoned first write still commit after the second seed starts?"
+    },
+    "stale_unmark": {
+      "type": "noul",
+      "instructions": "In state.redesignation, can the delayed g1 unmark remove g2 if the target atomically requires an exact current generation match?"
+    },
+    "unfenced_refusal": {
+      "type": "noul",
+      "instructions": "In state.failure, can a delayed mark contradict the durable refusal without a target-owned terminal fence?"
+    },
+    "unverified_id": {
+      "type": "noul",
+      "instructions": "In state.untrusted, does the event identifier by itself establish the matching committed operator mark?"
+    },
+    "migration_race": {
+      "type": "noul",
+      "instructions": "In state.migration, can a concurrent legacy revocation be missed by the migration and leave an incorrectly active new grant?"
+    },
+    "cleanup_liveness": {
+      "type": "noul",
+      "instructions": "In state.cleanup, can the attempted new designation remain blocked until the old unmark is completed or another explicit transition is designed?"
+    },
+    "history_bound": {
+      "type": "noul",
+      "instructions": "In state.history, does the two-seat state limit bound the lifetime length of the event stream?"
+    }
+  }
+}

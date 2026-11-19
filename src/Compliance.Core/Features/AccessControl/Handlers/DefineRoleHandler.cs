@@ -41,7 +41,7 @@ using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 /// <summary>
-///     Defines a built-in role as a native operation on the role owner, accepted under the role id as its immutable
+///     Defines a role as a native operation on the role owner, accepted under the role id as its immutable
 ///     creation identity. An exact retry replays the original acceptance, even after later renames or deletion, and
 ///     the same role id with a different name conflicts instead of being silently ignored.
 /// </summary>
@@ -54,9 +54,9 @@ public sealed class DefineRoleHandler(NativeOperationExecutor operations, IImmut
     public ValueTask<Result> HandleAsync(IRequestContext<DefineRole> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (!BuiltInRbac.IsBuiltInRole(request.TenantId, request.RoleId) || !RequestActor.IsSystem(context.Actor))
+        if (BuiltInRbac.IsBuiltInRole(request.TenantId, request.RoleId) && !RequestActor.IsSystem(context.Actor))
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "The role catalog is fixed and managed by the system.")));
+                "Built-in roles are defined only during system setup.")));
 
         return UnitOperations.RunAsync(operations, content, clock, context, RegisterMemberHandler.ActorOf(context.Actor),
             request.RoleId, CommandKind, InitialEpisode, null,

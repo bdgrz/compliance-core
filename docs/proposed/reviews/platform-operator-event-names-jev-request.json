@@ -1,0 +1,19 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "grant": "A single user's previously inactive platform-operator grant becomes active. The event is on that user's independent operator stream, not the legacy global roster.",
+    "revoke": "An active non-primary user's exact platform-operator grant episode becomes inactive; a marked primary cannot be revoked.",
+    "bootstrap": "The first bootstrap decision atomically activates one user's platform-operator grant and marks that exact grant as the reserved primary generation.",
+    "mark": "An already active operator grant is marked as the primary for an exact seat reservation and monotonically allocated generation.",
+    "unmark": "A platform operator's exact current primary generation is removed after the matching committed seat release.",
+    "fence": "The target durably fences one reserved primary generation so delayed attempts to mark that generation cannot later succeed. This fact does not grant or revoke access."
+  },
+  "questions": {
+    "grant_name": {"type": "noul", "instructions": "Does PlatformOperatorAccessGranted precisely name state.grant without implying the legacy global-roster event?"},
+    "revoke_name": {"type": "noul", "instructions": "Does PlatformOperatorAccessRevoked precisely name state.revoke without implying the legacy global-roster event?"},
+    "bootstrap_name": {"type": "noul", "instructions": "Does PlatformOperatorBootstrapGranted clearly convey state.bootstrap includes a primary mark as well as an access grant?"},
+    "mark_name": {"type": "noul", "instructions": "Does PlatformOperatorPrimaryMarked precisely name state.mark?"},
+    "unmark_name": {"type": "noul", "instructions": "Does PlatformOperatorPrimaryUnmarked precisely name state.unmark without suggesting revocation of the grant?"},
+    "fence_name": {"type": "noul", "instructions": "Does PlatformOperatorDesignationFenced precisely name state.fence without implying a completed designation?"}
+  }
+}

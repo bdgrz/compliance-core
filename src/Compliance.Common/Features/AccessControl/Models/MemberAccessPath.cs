@@ -2,4 +2,4 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl.Models;
 
 public sealed record MemberAccessPath(Uuid TeamId, string TeamName,
-    Uuid RoleId, string RoleName, IReadOnlyList<string> Permissions);
+    Uuid RoleId, string RoleName, IReadOnlyList<string> Permissions, AccessGrantScope? Scope = null);

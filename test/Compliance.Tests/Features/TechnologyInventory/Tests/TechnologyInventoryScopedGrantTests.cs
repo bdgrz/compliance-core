@@ -257,8 +257,8 @@ public sealed class TechnologyInventoryScopedGrantTests
             Assert.Equal(RequestErrorKind.NotFound, result.Error!.Kind);
     }
 
-    sealed class Fixture(ServiceProvider services, Uuid tenantId, Uuid userId, Uuid resourceId,
-        Uuid otherAssetId, Uuid otherFlowId) : IAsyncDisposable
+    sealed class Fixture(ServiceProvider services, CassieRepositoryTestDatabase database, Uuid tenantId, Uuid userId,
+        Uuid resourceId, Uuid otherAssetId, Uuid otherFlowId) : IAsyncDisposable
     {
         public ServiceProvider Services { get; } = services;
         public Uuid TenantId { get; } = tenantId;
@@ -275,34 +275,53 @@ public sealed class TechnologyInventoryScopedGrantTests
             var userId = Uuid.CreateVersion4();
             var resourceId = Uuid.CreateVersion4();
             var store = new InMemoryEventStore();
-            var collection = new ServiceCollection();
-            collection.AddSingleton<IEventStore>(store);
-            collection.AddSingleton<IDomainEventReader>(store);
-            collection.AddSingleton<IKvClient>(new InMemoryKvClient());
-            collection.AddSingleton<TimeProvider>(new Clock());
-            collection.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships(tenantId, userId));
-            collection.AddSingleton<ITeamMemberDirectoryReader, NoTeams>();
-            collection.AddScoped<IMemberAccessEligibility, EventSourcedMemberAccessEligibility>();
-            collection.AddScoped<ITenantActivity, EventSourcedTenantActivity>();
-            collection.AddScoped<FitzPermissionAuthorizer>();
-            collection.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());
-            collection.AddScoped<FitzAccessGrantDirectory>();
-            collection.AddScoped<IAccessGrantDirectory>(provider => provider.GetRequiredService<FitzAccessGrantDirectory>());
-            collection.AddScoped<FitzRolePermissionDirectoryReader>();
-            collection.AddScoped<IRolePermissionDirectoryReader>(provider => provider.GetRequiredService<FitzRolePermissionDirectoryReader>());
-            collection.AddScoped<IAccessGrantScopePermissionAuthorizer, AccessGrantPermissionAuthorizer>();
-            collection.AddScoped<FitzTechnologyInventoryDirectory>();
-            collection.AddScoped<ITechnologyInventoryReader>(provider => provider.GetRequiredService<FitzTechnologyInventoryDirectory>());
-            collection.AddScoped<TechnologyInventoryReadConsistency>();
-            collection.AddScoped<TechnologyInventoryRestrictedVisibility>();
-            collection.AddPortia().AddRequestAuthorizer<TechnologyInventoryAuthorizer>()
-                .AddRequestHandler<GetInformationAssetHandler>().AddRequestHandler<GetDataFlowHandler>()
-                .AddRequestHandler<ListInformationAssetsHandler>().AddRequestHandler<ListDataFlowsHandler>();
-            var services = collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
-            var fixture = new Fixture(services, tenantId, userId, resourceId,
-                Uuid.CreateVersion4(), Uuid.CreateVersion4());
-            await fixture.SeedAsync(resourceType, classification, condition, store);
-            return fixture;
+            var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+            ServiceProvider? services = null;
+            try
+            {
+                var collection = new ServiceCollection();
+                collection.AddSingleton(database.Database);
+                collection.AddSingleton<IEventStore>(store);
+                collection.AddSingleton<IDomainEventReader>(store);
+                collection.AddSingleton<IKvClient>(new InMemoryKvClient());
+                collection.AddSingleton<TimeProvider>(new Clock());
+                collection.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships(tenantId, userId));
+                collection.AddSingleton<ITeamMemberDirectoryReader, NoTeams>();
+                collection.AddScoped<IMemberAccessEligibility, EventSourcedMemberAccessEligibility>();
+                collection.AddScoped<ITenantActivity, EventSourcedTenantActivity>();
+                collection.AddScoped<CassiePermissionAuthorizer>();
+                collection.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<CassiePermissionAuthorizer>());
+                collection.AddScoped<FitzAccessGrantDirectory>();
+                collection.AddScoped<IAccessGrantDirectory>(provider => provider.GetRequiredService<FitzAccessGrantDirectory>());
+                collection.AddScoped<CassieRolePermissionDirectoryReader>();
+                collection.AddScoped<IRolePermissionDirectoryReader>(provider => provider.GetRequiredService<CassieRolePermissionDirectoryReader>());
+                collection.AddScoped<IAccessGrantScopePermissionAuthorizer, AccessGrantPermissionAuthorizer>();
+                collection.AddScoped<FitzTechnologyInventoryDirectory>();
+                collection.AddScoped<ITechnologyInventoryReader>(provider => provider.GetRequiredService<FitzTechnologyInventoryDirectory>());
+                collection.AddScoped<TechnologyInventoryReadConsistency>();
+                collection.AddScoped<TechnologyInventoryRestrictedVisibility>();
+                collection.AddPortia().AddRequestAuthorizer<TechnologyInventoryAuthorizer>()
+                    .AddRequestHandler<GetInformationAssetHandler>().AddRequestHandler<GetDataFlowHandler>()
+                    .AddRequestHandler<ListInformationAssetsHandler>().AddRequestHandler<ListDataFlowsHandler>();
+                services = collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+                var fixture = new Fixture(services, database, tenantId, userId, resourceId,
+                    Uuid.CreateVersion4(), Uuid.CreateVersion4());
+                await fixture.SeedAsync(resourceType, classification, condition, store);
+                return fixture;
+            }
+            catch
+            {
+                try
+                {
+                    if (services is not null)
+                        await services.DisposeAsync();
+                }
+                finally
+                {
+                    await database.DisposeAsync();
+                }
+                throw;
+            }
         }
 
         async Task SeedAsync(string resourceType, string classification, string condition,
@@ -360,9 +379,9 @@ public sealed class TechnologyInventoryScopedGrantTests
                     grant => grant.Revoke(author, Now.AddMinutes(-1)));
 
             await using var scope = Services.CreateAsyncScope();
-            var permissions = scope.ServiceProvider.GetRequiredService<FitzPermissionAuthorizer>();
+            var permissions = scope.ServiceProvider.GetRequiredService<CassiePermissionAuthorizer>();
             var grants = scope.ServiceProvider.GetRequiredService<FitzAccessGrantDirectory>();
-            var rolePermissions = scope.ServiceProvider.GetRequiredService<FitzRolePermissionDirectoryReader>();
+            var rolePermissions = scope.ServiceProvider.GetRequiredService<CassieRolePermissionDirectoryReader>();
             var inventory = scope.ServiceProvider.GetRequiredService<FitzTechnologyInventoryDirectory>();
             var tenantPattern = EventStreamPattern.ForPattern(TenantId.ToString());
             var events = new List<DomainEvent>();
@@ -404,7 +423,17 @@ public sealed class TechnologyInventoryScopedGrantTests
             await batch.CommitAsync(checkpoint);
         }
 
-        public ValueTask DisposeAsync() => Services.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            try
+            {
+                await Services.DisposeAsync();
+            }
+            finally
+            {
+                await database.DisposeAsync();
+            }
+        }
     }
 
     sealed class Memberships(Uuid tenantId, Uuid userId) : ITenantMembershipDirectoryReader

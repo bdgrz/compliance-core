@@ -131,27 +131,26 @@ public sealed class PolicyLifecycleTests
     }
 
     [Fact]
-    public void ShouldRejectApprovalGivenApproverAuthoredOrReviewedRevision()
+    public void ShouldAllowApprovalGivenAcceptedReviewerAuthoredNoRevision()
     {
         // Arrange
         var policy = Draft();
         var review = Accept(policy, ReviewerId);
 
         // Act
-        var byReviewer = policy.Approve(ProgramId, 1, Uuid.CreateVersion4(), review, January,
-            true, "Approve", null, Actor(ReviewerId), ReviewerId, Now.AddMinutes(2));
-        var byAuthor = policy.Approve(ProgramId, 1, Uuid.CreateVersion4(), review, January,
+        var author = policy.Approve(ProgramId, 1, Uuid.CreateVersion4(), review, January,
             true, "Approve", null, Actor(AuthorId), AuthorId, Now.AddMinutes(2));
-        var wrongReview = policy.Approve(ProgramId, 1, Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), January, true, "Approve", null, Actor(ApproverId), ApproverId,
-            Now.AddMinutes(2));
+        var wrongReview = policy.Approve(ProgramId, 1, Uuid.CreateVersion4(), Uuid.CreateVersion4(), January,
+            true, "Approve", null, Actor(ReviewerId), ReviewerId, Now.AddMinutes(2));
+        var reviewer = policy.Approve(ProgramId, 1, Uuid.CreateVersion4(), review, January,
+            true, "Approve", null, Actor(ReviewerId), ReviewerId, Now.AddMinutes(2));
 
         // Assert
-        Assert.Equal(CommandFailureCode.ActorProhibited, Assert.IsType<CommandFailure>(byReviewer).Code);
-        Assert.Equal(CommandFailureCode.ActorProhibited, Assert.IsType<CommandFailure>(byAuthor).Code);
+        Assert.Equal(CommandFailureCode.ActorProhibited, Assert.IsType<CommandFailure>(author).Code);
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(wrongReview).Code);
-        Assert.Null(policy.CurrentVersion);
-        Assert.Equal("awaiting_approval", policy.PendingStatus);
+        Assert.Null(reviewer);
+        Assert.NotNull(policy.CurrentVersion);
+        Assert.Equal(ReviewerId.ToString(), policy.ReadDecisions()[^1].Actor.Id);
     }
 
     [Fact]
@@ -412,11 +411,11 @@ public sealed class PolicyLifecycleTests
     }
 
     static string Json<T>(T value) => JsonSerializer.Serialize(value, typeof(T),
-        ComplianceCoreJsonContext.Default);
+        ComplianceCoreJsonMetadata.Default);
 
     static DomainEvent RoundTrip(DomainEvent ev) => (DomainEvent)JsonSerializer.Deserialize(
-        JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonContext.Default),
-        ev.GetType(), ComplianceCoreJsonContext.Default)!;
+        JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonMetadata.Default),
+        ev.GetType(), ComplianceCoreJsonMetadata.Default)!;
 
     static SeparationOfDutiesWaiverProof CreateWaiver(SeparationOfDutiesWaiverScope scope,
         Uuid beneficiary)

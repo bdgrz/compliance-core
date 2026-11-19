@@ -564,11 +564,14 @@ public sealed class RecordWorkRelationshipHandlerTests
                     CancellationToken.None);
             if (!authorized.IsSuccess)
                 return Result<WorkRelationshipRegistration>.Failure(authorized.Error);
-            return await new RecordWorkRelationshipHandler(executor ?? Executor, Reader,
+            var recorded = await new RecordWorkRelationshipHandler(executor ?? Executor, Reader,
                     permissions, Roster, new WorkforceObservationReadConsistency(Roster,
                         _scope.ServiceProvider.GetRequiredService<IDomainEventReader>()), TimeProvider.System)
                 .HandleAsync(new RequestContext<RecordWorkRelationship>(request, actor),
                     CancellationToken.None);
+            return recorded.IsSuccess
+                ? Result<WorkRelationshipRegistration>.Success(recorded.Value!.Value)
+                : Result<WorkRelationshipRegistration>.Failure(recorded.Error!);
         }
 
         public async Task ProjectSponsorAsync(string status, string workerType = "employee", Uuid? tenantId = null)

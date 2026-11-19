@@ -81,7 +81,7 @@ public sealed class EventSourcedMemberAccessEligibilityTests
         var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         var source = new EventSourcedMemberAccessEligibility(reader, clock);
         var member = new Member(tenantId, userId);
-        Assert.True(member.Register("guest", expiresOn).IsSuccess);
+        Assert.True(member.Register("guest", expiresOn, programIds: [Uuid.CreateVersion4()]).IsSuccess);
         await writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
         Assert.True(await source.IsEligibleAsync(tenantId, userId));
         Assert.NotNull(await source.GetMembershipEpisodeIdAsync(tenantId, member.Id));

@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "parent_rows": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "projection_absence": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "read_race": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "hash_complete": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "independent_owners": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "bounded_memory": {
+      "type": "noul",
+      "noul": 0.77
+    },
+    "hold_advisory": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "unknown_pending": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "per_run": {
+      "type": "noul",
+      "noul": 0.1
+    }
+  },
+  "usage": {
+    "input_tokens": 793,
+    "output_tokens": 165
+  }
+}

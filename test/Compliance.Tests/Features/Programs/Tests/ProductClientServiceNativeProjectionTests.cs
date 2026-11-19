@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Programs.Projections;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -53,7 +54,8 @@ public sealed class ProductClientServiceNativeProjectionTests
             await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(), ProductClientServiceContent.Schema,
                 new ProductClientServiceContent("Another service", "Purpose", "Owner"));
         var malformed = second with { Content = wrong };
-        var directory = new FitzClientServiceDirectory(kv, content);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieProgramSchema.Statements);
+        await using var directory = new CassieClientServiceDirectory(database.Database, content);
         var identity = new CheckpointIdentity("ClientServiceDirectory", EventStreamPattern.ForPattern(tenant.ToString()));
         Exception? failure;
 

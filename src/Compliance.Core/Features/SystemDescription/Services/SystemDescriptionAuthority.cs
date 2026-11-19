@@ -120,7 +120,7 @@ public static class SystemDescriptionAuthority
     {
         if (reference.Schema != schema || reference.MediaType != ImmutableContentStoreExtensions.JsonMediaType || reference.ContentId == Uuid.Empty)
             return false;
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!);
         return reference.Bytes == bytes.LongLength && reference.Sha256 == ContentDigest.Sha256(bytes);
     }
     public static bool Equal<T>(T? left, T? right) where T : class => left is null || right is null ? left is null && right is null :

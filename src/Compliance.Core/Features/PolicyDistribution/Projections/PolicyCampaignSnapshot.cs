@@ -46,6 +46,8 @@ public sealed class PolicyCampaignSnapshot(PolicyDistributionCampaign owner, IRe
         Amendments.Any(value => value.RosterSnapshotId == snapshotId);
     public PolicyParticipantResultAdmitted? AdmittedFor(Uuid rootOperationId) =>
         Admitted.SingleOrDefault(value => value.Operation.RootOperationId == rootOperationId);
+    public IReadOnlyList<PolicyCampaignWorkforceAudienceAmended> WorkforceAmendments { get; } =
+        [.. facts.OfType<PolicyCampaignWorkforceAudienceAmended>()];
     public IReadOnlyList<PolicyParticipantResultAdmitted> AdmittedFor(EventStreamAddress participant) =>
         [.. Admitted.Where(value => value.Operation.AffectedOwner == participant)];
     public PolicyCampaignClosureAccepted? ClosureFor(Uuid rootOperationId) => Facts.OfType<PolicyCampaignClosureAccepted>()

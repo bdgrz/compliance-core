@@ -58,6 +58,9 @@ using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
 using Bdgrz.Compliance.Features.TechnologyInventory.Commands;
 using Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
+using Bdgrz.Compliance.Features.TechnologyInventory.Services;
+using Bdgrz.Compliance.Features.Remediation.Aggregates;
+using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
 
@@ -69,6 +72,76 @@ namespace Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
 public sealed class InventoryRetryTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 23, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void ShouldShowCurrentEncryptionGapGivenRaisedAssetClassification()
+    {
+        // Arrange
+        var asset = Uuid.CreateVersion4();
+        var flow = new DataFlowView(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1,
+            new DataFlowContent("system_instance", Uuid.CreateVersion4(), "external_party", null, "Payroll",
+                [asset], "Export", false, false, "unverified exception", new DateOnly(2026, 10, 23),
+                Uuid.CreateVersion4(), "active", "internal"), "manual",
+            ActorReference.ForMember(Uuid.CreateVersion4(), "Owner"), Now);
+
+        // Act
+        var impact = InformationAssetImpact.Evaluate(flow, asset, "restricted", "active", new Dictionary<Uuid, InformationAssetContent>());
+
+        // Assert
+        Assert.Equal("restricted", impact.RecomputedClassification);
+        Assert.True(impact.ClassificationChanged);
+        Assert.True(impact.EncryptionViolation);
+        Assert.Equal("internal", flow.Content.Classification);
+    }
+
+    [Fact]
+    public void ShouldSuppressEncryptionViolationGivenRecordedExceptionReference()
+    {
+        // Arrange
+        var asset = Uuid.CreateVersion4();
+        var flowId = Uuid.CreateVersion4();
+        var flow = new DataFlowView(Uuid.CreateVersion4(), flowId, 1,
+            new DataFlowContent("system_instance", Uuid.CreateVersion4(), "external_party", null, "Payroll",
+                [asset], "Export", false, false, "waiver-ref", new DateOnly(2026, 10, 23),
+                Uuid.CreateVersion4(), "active", "internal"), "manual",
+            ActorReference.ForMember(Uuid.CreateVersion4(), "Owner"), Now);
+
+        // Act
+        var impact = InformationAssetImpact.Evaluate(flow, asset, "restricted", "active", new Dictionary<Uuid, InformationAssetContent>());
+        var withoutReference = flow with { Content = flow.Content with { ExceptionReference = null } };
+        var unexcepted = InformationAssetImpact.Evaluate(withoutReference, asset, "restricted", "active",
+            new Dictionary<Uuid, InformationAssetContent>());
+
+        // Assert
+        Assert.False(impact.EncryptionViolation);
+        Assert.True(unexcepted.EncryptionViolation);
+    }
+
+    [Fact]
+    public async Task ShouldReplayOriginalClassificationGivenLaterNamedDetailsChange()
+    {
+        // Arrange
+        await using var host = await Host.CreateAsync();
+        var asset = Uuid.CreateVersion4();
+        Assert.True((await host.RecordAssetAsync(new RecordInformationAsset(asset, host.TenantId,
+            "Customers", "internal", "RET-1", host.OwnerId))).IsSuccess);
+        var request = new ClassifyInformationAsset(Uuid.CreateVersion4(), host.TenantId, asset, 1, "restricted");
+        Assert.True((await host.ClassifyAsync(request)).IsSuccess);
+        Assert.True((await host.ChangeDetailsAsync(new ChangeInformationAssetDetails(Uuid.CreateVersion4(),
+            host.TenantId, asset, 2, "Renamed", "RET-2"))).IsSuccess);
+
+        // Act
+        var retry = await host.ClassifyAsync(request);
+        var changed = await host.ClassifyAsync(request with { Classification = "public" });
+        var current = await host.Reader.HydrateAsync(new InformationAsset(host.TenantId, asset));
+
+        // Assert
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.Equal(3, current.Revision);
+        Assert.Equal("restricted", current.Content!.Classification);
+        Assert.Equal("Renamed", current.Content.Name);
+    }
 
     [Fact]
     public async Task ShouldReplayOriginalRegistrationGivenExactComponentRetryAfterLaterRevision()
@@ -208,6 +281,9 @@ public sealed class InventoryRetryTests
 
         public IAggregateReader Reader => _provider.GetRequiredService<IAggregateReader>();
 
+        public ValueTask SaveAsync(Aggregate owner) => _provider.GetRequiredService<IAggregateWriter>()
+            .SaveAsync(owner, new RequestDispatchContext(RequestActor.System));
+
         static readonly System.Security.Claims.ClaimsPrincipal Author =
             ProgramManagementServices.Actor(Uuid.CreateVersion4());
 
@@ -233,6 +309,14 @@ public sealed class InventoryRetryTests
         T Get<T>() where T : notnull => _provider.GetRequiredService<T>();
 
         TechnologyInventoryReferences References() => new(Reader, null!, null!, Get<IImmutableContentStore>());
+
+        public ValueTask<Result> ClassifyAsync(ClassifyInformationAsset request) =>
+            new InformationAssetChangesHandler(NewOperations(), References(), Get<IImmutableContentStore>(), TimeProvider.System)
+                .HandleAsync(new RequestContext<ClassifyInformationAsset>(request, Author), CancellationToken.None);
+
+        public ValueTask<Result> ChangeDetailsAsync(ChangeInformationAssetDetails request) =>
+            new InformationAssetChangesHandler(NewOperations(), References(), Get<IImmutableContentStore>(), TimeProvider.System)
+                .HandleAsync(new RequestContext<ChangeInformationAssetDetails>(request, Author), CancellationToken.None);
 
         public ValueTask<Result<TechnologyComponentRegistration>> RecordComponentAsync(RecordTechnologyComponent request) =>
             new RecordTechnologyComponentHandler(NewOperations(), Reader, References(),

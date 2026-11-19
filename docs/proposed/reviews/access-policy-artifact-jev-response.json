@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "duplicate": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "unknown": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "same_generation": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "scheme_both": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "developer_allowed": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "scope_creation": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "digest_proof": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "legacy_replay": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "rollout_proven": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "roster": {
+      "type": "noul",
+      "noul": 0.08
+    }
+  },
+  "usage": {
+    "input_tokens": 895,
+    "output_tokens": 177
+  }
+}

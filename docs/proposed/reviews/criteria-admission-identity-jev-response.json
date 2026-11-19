@@ -1,0 +1,53 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "jwt_authorizes": {
+      "type": "noul",
+      "noul": 0.84
+    },
+    "aba_equal": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "pass_common": {
+      "type": "noul",
+      "noul": 0.55
+    },
+    "changed_allow": {
+      "type": "noul",
+      "noul": 0.48
+    },
+    "wronguser_allow": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "expired_allow": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "expirelater_cancel": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "localpolicy_proves": {
+      "type": "noul",
+      "noul": 0.02
+    },
+    "missing_allow": {
+      "type": "noul",
+      "noul": 0.02
+    },
+    "retry_allow": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "provider_proven": {
+      "type": "noul",
+      "noul": 0.05
+    }
+  },
+  "usage": {
+    "input_tokens": 966,
+    "output_tokens": 203
+  }
+}

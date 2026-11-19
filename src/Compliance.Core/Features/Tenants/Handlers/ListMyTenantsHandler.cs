@@ -136,8 +136,22 @@ public sealed class ListMyTenantsHandler(
                 .ConfigureAwait(false);
             if (!member.IsAccessEligibleOn(asOfDate))
                 continue;
+            var designationId = Uuid.Empty;
+            if (member.IsPrimary)
+            {
+                var primaries = await reader.HydrateAsync(new PrimaryOrgAdmins(resolvedTenantId), ct)
+                    .ConfigureAwait(false);
+                if (primaries.HasDesignated(userId, member.MembershipEpisodeId, member.PrimaryDesignationId))
+                    designationId = member.PrimaryDesignationId;
+                var current = await reader.HydrateAsync(new Member(resolvedTenantId, userId), ct)
+                    .ConfigureAwait(false);
+                if (!current.IsAccessEligibleOn(asOfDate) || current.MembershipEpisodeId != member.MembershipEpisodeId)
+                    continue;
+                if (current.PrimaryDesignationId != designationId)
+                    designationId = Uuid.Empty;
+            }
             items.Add(new TenantMembershipSummary(tenant.TenantId, tenant.Name, tenant.Slug,
-                tenant.Status));
+                tenant.Status, member.MembershipEpisodeId, designationId));
         }
 
         return Result<Page<TenantMembershipSummary>>.Success(new Page<TenantMembershipSummary>(items, nextCursor));

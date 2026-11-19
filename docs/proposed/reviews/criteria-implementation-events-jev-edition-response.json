@@ -1,0 +1,61 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "draft_requested_name": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "draft_activated_ambiguity": {
+      "type": "noul",
+      "noul": 0.47
+    },
+    "drafted_name": {
+      "type": "noul",
+      "noul": 0.97
+    },
+    "started_name": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "published_name": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "aborted_cleanup": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "cleanup_name": {
+      "type": "noul",
+      "noul": 0.97
+    },
+    "proposed_name": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "changed_name": {
+      "type": "noul",
+      "noul": 0.98
+    },
+    "refused_name": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "pin_name": {
+      "type": "noul",
+      "noul": 0.97
+    },
+    "fence_name": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "uuid_proof": {
+      "type": "noul",
+      "noul": 0.02
+    }
+  },
+  "usage": {
+    "input_tokens": 1345,
+    "output_tokens": 239
+  }
+}

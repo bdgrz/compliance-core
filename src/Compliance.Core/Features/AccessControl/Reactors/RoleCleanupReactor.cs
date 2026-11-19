@@ -80,7 +80,7 @@ public sealed partial class RoleCleanupReactor(
                 context, ct).ConfigureAwait(false);
             if (removal.IsSuccess)
                 continue;
-            var owner = await reader.HydrateAsync(new TeamRole(tenantId, team.TeamId, roleId), ct)
+            var owner = await reader.HydrateAsync(new TeamRole(tenantId, team.TeamId, roleId, scope: team.Scope), ct)
                 .ConfigureAwait(false);
             if (owner.AssignmentId == team.AssignmentId)
                 throw new ReactionCommandFailedException(removal.Error);

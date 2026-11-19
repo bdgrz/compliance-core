@@ -1,0 +1,51 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "policy": "An attest engagement must not be accepted when ANY of the client\u2019s nonattest service records within the 12-month look-back are classified impairing by the active rule version. Recording a truthful service is never prohibited just because it impairs.",
+    "ordered_counterexample": "At 10:00 an evaluator reads all currently visible service records and concludes compatible. At 10:01 an independently owned service records a truthful impairing service. At 10:02 an attest engagement accepts using the earlier evaluation without an atomic ordering or fence against the intervening service.",
+    "window_chain": "Each service record opens its own small coordinator stream, recording its target, intent and settlement. All coordinators are linked into a client-wide sequence that is inspected before an acceptance.",
+    "partial_facts": "Each nonattest service has its own stream and can be independently classified. One observed impairing record in the relevant time interval is enough to identify impairment. Conversely, there may be unobserved independent records.",
+    "partner_declaration": "A partner signs a statement that no impairing service exists, and the engagement accepts that statement without an authoritative check against independently recorded services. The accepted policy requires the platform itself to enforce the look-back guard.",
+    "read_model": "A paged UI reports results derived from independent service classification facts. Its projection may lag behind a committed service fact.",
+    "person_compartment": "For each client and staff person, a single dedicated owner records their first practice, advisor or attest. Later requests of the same practice cause no owner event; requests of the other practice are refused. Assignment outcomes live with each independent assignment.",
+    "ratification": "The active classification for the same service kind changes from compatible to impairing after an evaluation and before an engagement acceptance. The acceptance uses the older evaluation with no ordered authority for the current active rule."
+  },
+  "questions": {
+    "race_violates": {
+      "type": "noul",
+      "instructions": "In ordered_counterexample, does the acceptance violate the stated policy?"
+    },
+    "window_ledger": {
+      "type": "noul",
+      "instructions": "In window_chain, does the linked sequence collectively retain a client-wide record of each service change?"
+    },
+    "witness_sufficient": {
+      "type": "noul",
+      "instructions": "In partial_facts, does one valid impairing record in the look-back demonstrate impairment?"
+    },
+    "absence_sufficient": {
+      "type": "noul",
+      "instructions": "In partial_facts, does seeing no impairing record in only the observed records prove none exists?"
+    },
+    "partner_equivalent": {
+      "type": "noul",
+      "instructions": "In partner_declaration, does the signed statement by itself preserve the stated platform-enforced policy?"
+    },
+    "projection_authority": {
+      "type": "noul",
+      "instructions": "In read_model, does the UI showing no impairment prove no impairing service is already committed?"
+    },
+    "compartment_history": {
+      "type": "noul",
+      "instructions": "In person_compartment, must the owner append one new fact for each later assignment of the same practice?"
+    },
+    "rule_race": {
+      "type": "noul",
+      "instructions": "In ratification, can the acceptance use a rule set that is no longer active?"
+    },
+    "rule_race_safe": {
+      "type": "noul",
+      "instructions": "In ratification, does the old evaluation alone prove acceptance used the current active rule version?"
+    }
+  }
+}

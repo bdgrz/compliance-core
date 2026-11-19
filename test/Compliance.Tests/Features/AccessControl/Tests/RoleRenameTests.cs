@@ -55,7 +55,7 @@ public sealed class RoleRenameTests
     }
 
     [Fact]
-    public void ShouldCreateRoleGivenMigrationForAnUninitializedTenant()
+    public void ShouldRefuseBuiltinCreationGivenRenameOnUninitializedTenant()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -67,30 +67,24 @@ public sealed class RoleRenameTests
         var result = role.Rename(BuiltInRbac.TenantAdministrationRoleName);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Contains(scenario.PendingEvents, ev => ev is RoleDefined
-        {
-            RoleId: var definedId, Name: BuiltInRbac.TenantAdministrationRoleName,
-        } && definedId == roleId);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Empty(scenario.PendingEvents);
     }
 
     [Fact]
-    public void ShouldRefuseRedefinitionGivenAMigratedRoleName()
+    public void ShouldRejectBuiltInRenameHistoryGivenImmutableRoleIdentity()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
-        var role = new Role(tenantId, roleId);
-        var history = new AggregateScenario<Role>(role)
-            .Given(DomainEventSeed.Attach(RbacFacts.RoleDefinedFact(tenantId, roleId, "Compliance Manager"), roleId, 1))
-            .Given(DomainEventSeed.Attach(RbacFacts.RoleRenamedFact(tenantId, roleId,
-                BuiltInRbac.ComplianceManagementRoleName), roleId, 2));
+        var history = new AggregateScenario<Role>(new Role(tenantId, roleId))
+            .Given(DomainEventSeed.Attach(RbacFacts.RoleDefinedFact(tenantId, roleId, "Compliance Manager"), roleId, 1));
+        var renamed = DomainEventSeed.Attach(RbacFacts.RoleRenamedFact(tenantId, roleId,
+            BuiltInRbac.ComplianceManagementRoleName), roleId, 2);
 
-        // Act: a new definition after migration is refused instead of silently ignoring changed content.
-        var result = role.Define("Compliance Manager");
-
-        // Assert: the aggregate remains unchanged and does not reintroduce the legacy name.
-        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        // Act
+        // Assert
+        Assert.Throws<InvalidOperationException>(() => history.Given(renamed));
         Assert.Empty(history.PendingEvents);
     }
 }

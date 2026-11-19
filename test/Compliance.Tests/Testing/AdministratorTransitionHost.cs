@@ -264,11 +264,11 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
     /// <summary>Sends any of the five public requests through its handler as <paramref name="actor" />.</summary>
     public Task<Result<AdministratorTransitionResponse>> SubmitAsync(Person actor, IRequestBase request) => request switch
     {
-        SuspendMember suspend => new SuspendMemberHandler(_gate, _admissions, _clock).HandleAsync(
+        SuspendMember suspend => new HistoricalSuspendMemberHandler(_gate, _admissions, _clock).HandleAsync(
             new RequestContext<SuspendMember>(suspend, Actor(actor)), CancellationToken.None).AsTask(),
-        DeprovisionMember deprovision => new DeprovisionMemberHandler(_gate, _admissions, _clock).HandleAsync(
+        DeprovisionMember deprovision => new HistoricalDeprovisionMemberHandler(_gate, _admissions, _clock).HandleAsync(
             new RequestContext<DeprovisionMember>(deprovision, Actor(actor)), CancellationToken.None).AsTask(),
-        ReinstateMember reinstate => new ReinstateMemberHandler(_gate, _admissions, _clock).HandleAsync(
+        ReinstateMember reinstate => new HistoricalReinstateMemberHandler(_gate, _admissions, _clock).HandleAsync(
             new RequestContext<ReinstateMember>(reinstate, Actor(actor)), CancellationToken.None).AsTask(),
         AssignTeamMember assign => AssignHandler().HandleAsync(new RequestContext<AssignTeamMember>(assign, Actor(actor)),
             CancellationToken.None).AsTask(),
@@ -281,7 +281,7 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
         Uuid? commandId = null, string reason = "Employment ended.", long? revision = null, Uuid? episode = null)
     {
         var member = await MemberAsync(target);
-        return await new SuspendMemberHandler(_gate, _admissions, _clock).HandleAsync(
+        return await new HistoricalSuspendMemberHandler(_gate, _admissions, _clock).HandleAsync(
             new RequestContext<SuspendMember>(new SuspendMember(commandId ?? Uuid.CreateVersion4(), TenantId,
                 target.UserId, reason, episode ?? target.EpisodeId, revision ?? (long)member.MemberRevision),
                 Actor(actor)), CancellationToken.None);
@@ -291,7 +291,7 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
         Uuid? commandId = null, string reason = "Access is no longer required.", long? revision = null)
     {
         var member = await MemberAsync(target);
-        return await new DeprovisionMemberHandler(_gate, _admissions, _clock).HandleAsync(
+        return await new HistoricalDeprovisionMemberHandler(_gate, _admissions, _clock).HandleAsync(
             new RequestContext<DeprovisionMember>(new DeprovisionMember(commandId ?? Uuid.CreateVersion4(), TenantId,
                 target.UserId, reason, target.EpisodeId, revision ?? (long)member.MemberRevision), Actor(actor)),
             CancellationToken.None);
@@ -301,7 +301,7 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
         Uuid? commandId = null, long? revision = null)
     {
         var member = await MemberAsync(target);
-        return await new ReinstateMemberHandler(_gate, _admissions, _clock).HandleAsync(
+        return await new HistoricalReinstateMemberHandler(_gate, _admissions, _clock).HandleAsync(
             new RequestContext<ReinstateMember>(new ReinstateMember(commandId ?? Uuid.CreateVersion4(), TenantId,
                 target.UserId, target.EpisodeId, revision ?? (long)member.MemberRevision), Actor(actor)),
             CancellationToken.None);
@@ -335,19 +335,19 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
         RemoveHandler().HandleAsync(new RequestContext<RemoveTeamMember>(request, RequestActor.System),
             CancellationToken.None).AsTask();
 
-    AssignTeamMemberHandler AssignHandler()
+    HistoricalAssignTeamMemberHandler AssignHandler()
     {
         var content = Content;
         var executor = Provider.GetRequiredService<IAggregateExecutor>();
-        return new AssignTeamMemberHandler(new NativeOperationExecutor(_gate, executor, content), _admissions, _gate,
+        return new HistoricalAssignTeamMemberHandler(new NativeOperationExecutor(_gate, executor, content), _admissions, _gate,
             new MemberAuthorityCleanup(_gate, executor, Events, new InMemoryProjectionCheckpointStore(), _clock),
             content, _clock);
     }
 
-    RemoveTeamMemberHandler RemoveHandler()
+    HistoricalRemoveTeamMemberHandler RemoveHandler()
     {
         var executor = Provider.GetRequiredService<IAggregateExecutor>();
-        return new RemoveTeamMemberHandler(new NativeOperationExecutor(_gate, executor, Content), _admissions, _gate,
+        return new HistoricalRemoveTeamMemberHandler(new NativeOperationExecutor(_gate, executor, Content), _admissions, _gate,
             Content, _clock);
     }
 

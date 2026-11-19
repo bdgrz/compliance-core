@@ -1,0 +1,31 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "current_rule": "A reviewer approves one exact boundary draft revision, and must not have authored any revision in that entire draft unless a waiver covers the reviewer. The revision includes all scope decisions in the draft.",
+    "candidate_a": "Each scope decision is independently authored and approved by a reviewer who did not author that decision. There is no approval by a single reviewer of the entire exact draft.",
+    "candidate_b": "A reviewer may approve an exact whole draft only after checking every scope decision and every draft author. The check is implemented by following a chain of bounded window records and reading every relevant child fact.",
+    "requirement": "No write decision may depend on examining or managing all children. Reads and reports can page through independently owned records."
+  },
+  "questions": {
+    "whole_scan_write": {
+      "type": "noul",
+      "instructions": "Does candidate B make the whole-draft approval write decision depend on checking all scope decisions?"
+    },
+    "ledger_smell": {
+      "type": "noul",
+      "instructions": "Does splitting the chain in candidate B into small windows avoid the requirement to check every decision before approval?"
+    },
+    "review_semantics": {
+      "type": "noul",
+      "instructions": "Is candidate A equivalent to the current rule requiring one reviewer who authored none of the entire draft?"
+    },
+    "independent_owner": {
+      "type": "noul",
+      "instructions": "Can each scope decision enforce its own author-review separation without checking the other scope decisions?"
+    },
+    "read_only": {
+      "type": "noul",
+      "instructions": "Can a read-only report page over many independently approved decisions without making its assembly a write decision?"
+    }
+  }
+}

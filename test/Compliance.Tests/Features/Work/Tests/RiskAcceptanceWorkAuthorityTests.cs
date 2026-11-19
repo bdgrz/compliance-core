@@ -330,7 +330,7 @@ public sealed class RiskAcceptanceWorkAuthorityTests
             var events = operations.Provider.GetRequiredService<IEventStore>();
             DomainEvent registered = MemberFacts.Registered(operations.TenantId, guestMemberId,
                 guestUserId, "guest", Uuid.CreateVersion4(),
-                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30));
+                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30), [operations.ProgramId]);
             registered.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), guestMemberId,
                 1, DateTimeOffset.UtcNow));
             await events.AppendAsync(new EventStreamAddress(operations.TenantId.ToString(), "rbac-members",

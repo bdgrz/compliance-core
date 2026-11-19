@@ -77,8 +77,8 @@ static class MappingRuleFacts
     public static object[] Raised(ControlCriterionMappingRules rules) => RoundTrip(rules.Changes);
     public static object[] Raised(CriterionApplicabilityRules rules) => RoundTrip(rules.Changes);
     static object[] RoundTrip(IReadOnlyList<object> changes) => [.. changes.Select(change =>
-        JsonSerializer.Deserialize(JsonSerializer.Serialize(change, change.GetType(), ComplianceCoreJsonContext.Default),
-            change.GetType(), ComplianceCoreJsonContext.Default)!)];
+        JsonSerializer.Deserialize(JsonSerializer.Serialize(change, change.GetType(), ComplianceCoreJsonMetadata.Default),
+            change.GetType(), ComplianceCoreJsonMetadata.Default)!)];
     public static ControlCriterionMappingRules Replay(ControlCriterionMappingRules fresh, IEnumerable<object> changes)
     { foreach (var change in changes) fresh.Apply(change); return fresh; }
     public static CriterionApplicabilityRules Replay(CriterionApplicabilityRules fresh, IEnumerable<object> changes)

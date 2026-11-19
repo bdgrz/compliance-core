@@ -56,6 +56,7 @@ namespace Bdgrz.Compliance.Features.Tenants.Aggregates;
 public sealed class Tenant : Aggregate
 {
     bool _registered;
+    TenantRegistered? _registration;
     string? _slug;
     TenantSlugState _slugState;
     bool _suspended;
@@ -130,6 +131,8 @@ public sealed class Tenant : Aggregate
         {
             Accept(ev, ev.CommandId, ev.Operation);
             _slug = ev.NewSlug;
+            _slugState = TenantSlugState.Confirmed;
+            _slugEverConfirmed = true;
             _pendingSlug = null;
             _pendingSlugChangeRequester = null;
             _pendingSlugChangeRequestedAt = null;
@@ -145,7 +148,12 @@ public sealed class Tenant : Aggregate
 
     public bool IsActive => _slugState == TenantSlugState.Confirmed && !_suspended && !_offboarding &&
                             (!_requiresActivation || _activated);
-    public bool IsRegistered => _slug is not null && _slugState != TenantSlugState.Rejected;
+    public bool IsRegistered => _registered;
+    /// <summary>Creator-only address recovery before the tenant has ever entered service.</summary>
+    public bool CanRequestInitialSlug => _registered && !HasEnteredService && !_suspended && !_offboarding &&
+        _slugState == TenantSlugState.Rejected && _pendingSlug is null;
+    /// <summary>The source prerequisites local to this owner are ready; primary completion is checked separately.</summary>
+    public bool CanActivateCreator => NeedsCreatorActivation && _slugState == TenantSlugState.Confirmed && !_suspended && !_offboarding;
     public bool IsRegistrationRejected => _slugState == TenantSlugState.Rejected;
 
     /// <summary>True once a confirmed tenant needs no further activation.</summary>
@@ -167,7 +175,7 @@ public sealed class Tenant : Aggregate
     public bool WasRegisteredByCreator(Uuid userId) => _creatorIsAdministrator && _ownerUserId == userId;
 
     /// <summary>Initial provisioning outcome; completion grants no current workspace access.</summary>
-    public TenantProvisioningStatusView GetProvisioningStatus() => IsRegistrationRejected
+    public TenantProvisioningStatusView GetProvisioningStatus() => IsRegistrationRejected && _pendingSlug is null
         ? new(Id, "rejected", "slug_unavailable")
         : new(Id, _activated || (_slugEverConfirmed && !_requiresActivation) ? "completed" : "provisioning", null);
 
@@ -188,8 +196,12 @@ public sealed class Tenant : Aggregate
         if (creatorIsAdministrator && normalizedEmail is not null)
             return Failure<TenantRegistration>(RequestErrorKind.Validation,
                 "Creator administration cannot also invite a first administrator.");
-        if (_registered)
-            return Failure<TenantRegistration>(RequestErrorKind.Conflict, "The tenant is already registered.");
+        if (_registration is { } original)
+            return original.OwnerUserId == ownerUserId && original.Name == name.Trim() && original.Slug == normalizedSlug &&
+                   (original.LegalName ?? original.Name) == (string.IsNullOrWhiteSpace(legalName) ? name.Trim() : legalName.Trim()) &&
+                   original.FirstAdministratorEmail == normalizedEmail && original.CreatorIsAdministrator == creatorIsAdministrator
+                ? Result<TenantRegistration>.Success(new TenantRegistration(Id, original.Slug))
+                : Failure<TenantRegistration>(RequestErrorKind.Conflict, "The registration identity already has different intent.");
 
         RaiseEvent(new TenantRegistered(Id, ownerUserId, name.Trim(), normalizedSlug,
             string.IsNullOrWhiteSpace(legalName) ? name.Trim() : legalName.Trim(),
@@ -247,8 +259,8 @@ public sealed class Tenant : Aggregate
 
     Result ValidateActivation(Uuid firstAdministratorUserId, string? firstAdministratorEmail)
     {
-        if (_offboarding)
-            return Failure(RequestErrorKind.Conflict, "The tenant is being offboarded.");
+        if (_offboarding || _suspended)
+            return Failure(RequestErrorKind.Conflict, "The tenant is suspended or being offboarded.");
         if (!_requiresActivation)
             return Failure(RequestErrorKind.Conflict, "The tenant is not ready to activate.");
         if (_slugState != TenantSlugState.Confirmed)
@@ -319,8 +331,8 @@ public sealed class Tenant : Aggregate
             return Failure(RequestErrorKind.Validation, reason);
         if (expectedRevision >= 0 && (ulong)expectedRevision != Revision)
             return Failure(RequestErrorKind.Conflict, "The tenant changed since it was read.");
-        if (!IsActive)
-            return Failure(RequestErrorKind.Conflict, "The tenant is not active.");
+        if (!IsActive && !CanRequestInitialSlug)
+            return Failure(RequestErrorKind.Conflict, "The tenant is not active or waiting for a replacement initial address.");
         if (normalized == _slug)
             return Result.Failure(SlugUnchanged);
         if (_pendingSlug is not null)
@@ -558,6 +570,7 @@ public sealed class Tenant : Aggregate
     void Apply(TenantRegistered registered)
     {
         _registered = true;
+        _registration = registered;
         _slug = registered.Slug;
         _slugState = TenantSlugState.Pending;
         _requiresInvitation = registered.FirstAdministratorEmail is not null &&

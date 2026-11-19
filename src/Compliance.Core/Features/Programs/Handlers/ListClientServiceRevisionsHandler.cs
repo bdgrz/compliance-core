@@ -49,7 +49,7 @@ public sealed class ListClientServiceRevisionsHandler(IClientServiceDirectoryRea
             page = await directory.ListRevisionsAsync(request.TenantId, request.ServiceId,
                 request.Limit ?? 50, request.Cursor, ct).ConfigureAwait(false);
         }
-        catch (KvDirectoryQueryException)
+        catch (ProgramScopeDirectoryQueryException)
         {
             return Result<Page<ClientServiceRevisionView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The client service revision cursor is invalid."));

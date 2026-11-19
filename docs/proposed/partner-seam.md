@@ -20,6 +20,14 @@ The manual workforce observation path is separately captured in [workforce sourc
 
 A future source adapter must write observations through the canonical source shape and the staged all-or-nothing acceptance boundary described by [ADR 0005](../architecture/decisions/0005-import-reconciliation-and-background-processing.md). A callback or status endpoint is an observation, not proof of complete partner state.
 
+**Boundary refinement:** ADR 0005's all-or-nothing visibility is an accepted
+product requirement, not a license for a batch aggregate to own every row or
+wait for a child-outcome ledger. The mechanism that establishes its validation,
+marker ordering, and visibility without a collection-wide write decision is not
+yet qualified. Independent per-row owners and a marker are candidates; they do
+not by themselves establish the ADR's guarantee. Reconcile that authority before
+implementing import acceptance, without weakening the accepted requirement.
+
 ## Connector proposal record
 
 M0-D20 requires a proposal to answer the recorded integration questions below before connector implementation. The source heading says ten questions, but it numbers thirteen; all thirteen are preserved here pending reconciliation.

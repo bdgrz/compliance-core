@@ -1,0 +1,32 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "revision_race": "At time 1 revision R reads the plan as unfrozen. At time 2 start S reads the plan and commits EvaluationStarted. At time 3 R commits StepChanged to a different step stream. Both writes have correct expected versions for their own streams. No admission window or shared transaction exists.",
+    "empty_target": "A previously unused step stream has no events. An admission A has been dispatched but is delayed. The process sees no event, declares A refused, and starts a freeze. Then A arrives and creates the step stream.",
+    "return_case": "Evaluation E submitted with step X met and step Y not_met. Reviewer returns that submission. The new work episode records only X as not_met. Submission reads only that new episode, with no reference to the previously submitted exact cut.",
+    "retest_race": "Deviation D is open. A retest creation process reads D as open. A different process closes D. The first process then records a retest link in a separate stream, with no admission or acceptance from the deviation owner.",
+    "submitted_cut": "An evaluation submission contains only a precise pointer to a retained, verified immutable source cut. The cut enumerates accepted individual step results, deviations and dispositions. A reactor reads that cut and derives each finding identity from the associated material deviation."
+  },
+  "questions": {
+    "revision_after_start": {
+      "type": "noul",
+      "instructions": "In `revision_race`, can StepChanged commit after EvaluationStarted?"
+    },
+    "absence_needs_fence": {
+      "type": "noul",
+      "instructions": "In `empty_target`, does observing an empty target stream prevent the delayed admitted command from later committing?"
+    },
+    "returned_episode_loses_unchanged_result": {
+      "type": "noul",
+      "instructions": "In `return_case`, does reading only the new work episode omit the previously recorded result for Y?"
+    },
+    "open_check_races_close": {
+      "type": "noul",
+      "instructions": "In `retest_race`, can the retest link commit after the deviation closes?"
+    },
+    "cut_supports_finding_fanout": {
+      "type": "noul",
+      "instructions": "In `submitted_cut`, can the reactor identify each material deviation without a deviations list embedded in the submission event?"
+    }
+  }
+}

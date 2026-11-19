@@ -43,7 +43,7 @@ public sealed class EvaluationPlanNativeRecoveryTests
         ControlEvaluationPlanVersionView? winner = null;
         var content = new CommitThenFailContent(fixture.Content, async () =>
         {
-            winner = await fixture.AsAsync(fixture.LeadUserId, request);
+            winner = (await fixture.AsAsync(fixture.LeadUserId, request)).Value;
         });
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;

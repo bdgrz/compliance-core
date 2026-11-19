@@ -13,4 +13,4 @@ namespace Bdgrz.Compliance.Features.AccessControl.Events;
 [Discriminator("bdgrz.rbac.member.registered", 1)]
 public sealed record MemberRegistered(Uuid TenantId, Uuid MemberId, Uuid UserId, string Affiliation,
     Uuid MembershipEpisodeId, DateOnly? MembershipExpiresOn, Uuid CommandId, OperationProvenance Operation,
-    ImmutableContentRef? FirstResponse) : DomainEvent, INativeOperationFact;
+    ImmutableContentRef? FirstResponse, IReadOnlyList<Uuid>? ProgramIds = null) : DomainEvent, INativeOperationFact;

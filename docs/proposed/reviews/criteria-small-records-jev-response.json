@@ -1,0 +1,33 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "criterion_independence": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "cut_without_bulk": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "cut_alone": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "single_inflight": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "per_window_total": {
+      "type": "noul",
+      "noul": 0.11
+    },
+    "fence_required": {
+      "type": "noul",
+      "noul": 0.26
+    }
+  },
+  "usage": {
+    "input_tokens": 771,
+    "output_tokens": 116
+  }
+}

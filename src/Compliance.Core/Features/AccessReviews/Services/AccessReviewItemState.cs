@@ -111,6 +111,8 @@ public sealed class AccessReviewItemState(AccessReviewItemView item, Uuid? campa
     {
         if (CurrentReviewerMemberId != reviewerMemberId)
             return "not_assigned";
+        if (Verification is not null)
+            return "already_verified";
         if (Item.SubjectUserId == reviewerUserId)
             return "self_review";
         return bulk && Item.Privileged ? "privileged_requires_individual_decision" : null;

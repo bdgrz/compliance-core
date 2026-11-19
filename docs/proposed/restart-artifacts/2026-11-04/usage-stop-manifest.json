@@ -1,0 +1,301 @@
+{
+  "status": "stopped conservatively because included-usage boundary is not visible; no automatic resumption",
+  "saved_at_utc": "2026-11-04T22:20:54.974942+00:00",
+  "integration_branch": "feat/proposed-domain-impl",
+  "program_acceptance": {
+    "commit": "5feb9922d4a30d226f1706173398212146c1deb9",
+    "units": 8742,
+    "failed": 0,
+    "cassie_digest": "c179afabb7051e19629cfd1ecc6b83fa88bfb4deb6a391060aa1f472f7a0d1de",
+    "delivery": "local only; no PR/CI/merge"
+  },
+  "latest_cassie": {
+    "digest": "14c99b2e05209eaa7a7e85dafe8be30f089564b0e6fabd77bbeb5427655a2778",
+    "source_revision": "a402c7220e58ff5152f1e3e1edc9ff250145c9b2",
+    "native_blocker": "Fresh database Portia initialization failed rebuilding cardinality statistics for portia_projection_checkpoints: transactional DDL cannot access multiple databases. Not behavioral RED. No application workaround."
+  },
+  "combined_validation": {
+    "base": "6bf619e5",
+    "pin_commit": "944426bb",
+    "log_directory": "/tmp/compliance-resume-combined-validation",
+    "status": "restore passed; first compile missing Cntryl.Fitz.Extensions for Page<> in ListEvidenceSupports; one-line fix preserved only in validation worktree; subsequent build interrupted at agent boundary, inspect logs"
+  },
+  "worktrees": [
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core",
+      "branch": "feat/proposed-domain-impl",
+      "head": "944426bbad27b4e4e263c1bc4f03bf71f63069cd",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/access-cassie-integration",
+      "branch": "feat/access-cassie-resume",
+      "head": "2f98bf88098566d8740720449e325a31d97ee1b2",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/assurance",
+      "branch": "work/proposed-assurance",
+      "head": "ffd926ec855766f8cc39de9b83ac789c2921142a",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/assurance-cassie-person-guard",
+      "branch": "fix/cassie-person-identity-guard",
+      "head": "2737df4a6ecdb1923eb27f33d5ecec140b47f396",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/controls-code",
+      "branch": "work/resume-controls-code",
+      "head": "6ae2677454f910fa67e09a42bd4e17f8f59e79a1",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/evidence-code",
+      "branch": "work/resume-evidence-code",
+      "head": "2322936ab97ce41705a7ade30533018e4eb8da71",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/evidence-support-withdrawal",
+      "branch": "work/evidence-support-withdrawal",
+      "head": "aa102abc2af4cda09b097b6aa4dfada71f8f0b03",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/examinations-code",
+      "branch": "work/resume-examinations-code",
+      "head": "f90bb360e36e1af7b8dbfaf670f4630c686331a1",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/firm-services-code",
+      "branch": "work/resume-firm-services",
+      "head": "863df173e7225cc4fe912b9c5d2bc3f3dc782613",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/methodology",
+      "branch": "work/proposed-methodology",
+      "head": "d0eed4061c4c9949abcf1e41138f72c92675c5f0",
+      "preserved_status": [
+        " M src/Compliance.Core/Features/MethodologyTemplates/Handlers/ApplyMethodologyTemplateEntryHandler.cs"
+      ]
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/person-named-writer-cutover",
+      "branch": "work/person-named-writer-cutover",
+      "head": "c2e06cf77bf9ae9070bb6e7f384804990e85404a",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/platform-access",
+      "branch": "work/proposed-access-cassie",
+      "head": "686b415c6c6865f0367a4c5a55f756fb42d16376",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/policies-code",
+      "branch": "work/resume-policies-code",
+      "head": "1f9f55aa918d70a5b0bdc89c4820538af5df5d64",
+      "preserved_status": [
+        " M src/Compliance.Common/Features/PolicyDistribution/Models/CampaignAmendmentView.cs",
+        " M src/Compliance.Core/Features/PolicyDistribution/Aggregates/PolicyDistributionCampaign.cs",
+        " M src/Compliance.Core/Features/PolicyDistribution/History/PolicyCampaignHistory.cs",
+        " M src/Compliance.Core/Features/PolicyDistribution/Projections/PolicyCampaignSnapshot.cs",
+        " M src/Compliance.Core/Features/PolicyDistribution/Services/CampaignRoster.cs",
+        "?? src/Compliance.Common/Features/PolicyDistribution/Commands/ApplyCampaignWorkforceChange.cs",
+        "?? src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignWorkforceAudienceAmended.cs",
+        "?? src/Compliance.Core/Features/PolicyDistribution/Rules/CampaignWorkforceChangeRules.cs",
+        "?? src/Compliance.Core/Features/PolicyDistribution/Services/CampaignWorkforceSource.cs"
+      ]
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/program-date-validation",
+      "branch": "feat/program-target-date-ordering-resume",
+      "head": "5feb9922d4a30d226f1706173398212146c1deb9",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/program-dates",
+      "branch": "work/proposed-program-dates",
+      "head": "784bfca2a4c8dbc222466fbf2b3b362aa5a6f385",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/program-scope",
+      "branch": "work/proposed-program-scope-cassie",
+      "head": "4d16bf8a87d269cd74e47641614a0dcec1843cf7",
+      "preserved_status": [
+        " M src/Compliance.Common/Features/Boundaries/Models/BoundaryAuthorityContent.cs",
+        " M src/Compliance.Core/Features/Boundaries/Aggregates/SystemBoundary.cs",
+        " M src/Compliance.Core/Features/Boundaries/Readers/CassieBoundaryDirectory.cs",
+        " M src/Compliance.Core/Features/Boundaries/Rules/BoundaryRules.cs",
+        " M src/Compliance.Core/Features/Boundaries/Services/BoundaryFactContent.cs",
+        " M src/Compliance.Core/Features/Boundaries/Services/BoundaryFactFactory.cs",
+        " M src/Compliance.Core/Features/Boundaries/Services/BoundaryOperations.cs",
+        " M src/Compliance.Core/Features/Boundaries/Services/BoundaryResponses.cs",
+        " M src/Compliance.Core/Features/Programs/Aggregates/ComplianceProgram.cs",
+        " M src/Compliance.Core/Features/Programs/History/ProgramHistory.cs",
+        " M src/Compliance.Core/Features/Programs/Projections/ProgramHistorySnapshot.cs",
+        " M src/Compliance.Core/Features/Programs/Readers/ProgramReader.cs",
+        " M src/Compliance.Core/Features/Programs/Rules/ProgramRuleChange.cs",
+        " M src/Compliance.Core/Features/Programs/Rules/ProgramRules.cs",
+        " M test/Compliance.Tests/Features/Programs/Tests/ProgramNamedLifecycleTests.cs",
+        "?? src/Compliance.Common/Features/Boundaries/Commands/DraftBoundary.cs",
+        "?? src/Compliance.Common/Features/Boundaries/Commands/ReviewBoundaryDraft.cs",
+        "?? src/Compliance.Common/Features/Boundaries/Events/BoundaryChangesRequested.cs",
+        "?? src/Compliance.Common/Features/Boundaries/Events/BoundaryDrafted.cs",
+        "?? src/Compliance.Common/Features/Boundaries/Events/BoundaryVersionApproved.cs",
+        "?? src/Compliance.Common/Features/Programs/Commands/ChangeProgramStage.cs",
+        "?? src/Compliance.Common/Features/Programs/Commands/CreateProgramV3.cs",
+        "?? src/Compliance.Common/Features/Programs/Commands/RenameProgram.cs",
+        "?? src/Compliance.Common/Features/Programs/Commands/ReviseProgramTargets.cs",
+        "?? src/Compliance.Common/Features/Programs/Contracts/IProgramLeadMutationRequest.cs",
+        "?? src/Compliance.Common/Features/Programs/Events/ProgramCreatedV3.cs",
+        "?? src/Compliance.Common/Features/Programs/Events/ProgramRenamed.cs",
+        "?? src/Compliance.Common/Features/Programs/Events/ProgramStageChanged.cs",
+        "?? src/Compliance.Common/Features/Programs/Events/ProgramTargetsRevised.cs",
+        "?? src/Compliance.Common/Features/Programs/Models/ProgramStageSupport.cs",
+        "?? src/Compliance.Core/Features/Boundaries/Services/BoundaryFactShape.cs",
+        "?? src/Compliance.Core/Features/Programs/Services/ProgramNamedOperations.cs"
+      ]
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/readiness-code",
+      "branch": "work/resume-readiness-code",
+      "head": "68999da8ee30b2faa519d10895ba4fe3d7e4a035",
+      "preserved_status": [
+        " M src/Compliance.Common/Features/Readiness/Models/ReadinessAssessmentView.cs",
+        " M src/Compliance.Core/Features/Readiness/Models/ReadinessEvaluation.cs",
+        " M src/Compliance.Core/Features/Readiness/Rules/ReadinessRules.cs",
+        "?? src/Compliance.Common/Features/Readiness/Commands/DecideTypeIEntryV3.cs",
+        "?? src/Compliance.Common/Features/Readiness/Commands/RecordReadinessAssessment.cs",
+        "?? src/Compliance.Common/Features/Readiness/Commands/RunDailyReadinessAssessments.cs",
+        "?? src/Compliance.Common/Features/Readiness/Events/ReadinessAssessmentRecordedV2.cs",
+        "?? src/Compliance.Common/Features/Readiness/Events/TypeIEntryDecided.cs",
+        "?? src/Compliance.Common/Features/Readiness/Models/ReadinessAssessmentResult.cs",
+        "?? src/Compliance.Common/Features/Readiness/Models/ReadinessCompleteness.cs",
+        "?? src/Compliance.Common/Features/Readiness/Models/ReadinessComputedGapSet.cs",
+        "?? src/Compliance.Common/Features/Readiness/Models/ReadinessIncompleteInput.cs",
+        "?? src/Compliance.Common/Features/Readiness/Models/TypeIEntryAssessmentSnapshot.cs",
+        "?? src/Compliance.Common/Features/Readiness/Models/TypeIEntryDecisionRecord.cs",
+        "?? src/Compliance.Common/Features/Readiness/Queries/GetReadinessAssessmentV2.cs",
+        "?? src/Compliance.Common/Features/Readiness/Queries/GetTypeIEntryDecision.cs",
+        "?? src/Compliance.Common/Features/Readiness/Queries/ListTypeIEntryDecisionsV2.cs",
+        "?? src/Compliance.Core/Features/Readiness/Aggregates/ReadinessAssessmentRecord.cs",
+        "?? src/Compliance.Core/Features/Readiness/Aggregates/TypeIEntryDecision.cs",
+        "?? src/Compliance.Core/Features/Readiness/Handlers/DecideTypeIEntryV3Handler.cs",
+        "?? src/Compliance.Core/Features/Readiness/Handlers/GetReadinessAssessmentV2Handler.cs",
+        "?? src/Compliance.Core/Features/Readiness/Handlers/GetTypeIEntryDecisionHandler.cs",
+        "?? src/Compliance.Core/Features/Readiness/Handlers/ListTypeIEntryDecisionsV2Handler.cs",
+        "?? src/Compliance.Core/Features/Readiness/Handlers/RecordReadinessAssessmentHandler.cs",
+        "?? src/Compliance.Core/Features/Readiness/Handlers/RunDailyReadinessAssessmentsHandler.cs",
+        "?? src/Compliance.Core/Features/Readiness/Models/ReadinessComputedGapFingerprint.cs",
+        "?? src/Compliance.Core/Features/Readiness/Readers/IReadinessComputedGapSource.cs",
+        "?? src/Compliance.Core/Features/Readiness/Readers/ReadinessAssessmentRecordReader.cs",
+        "?? src/Compliance.Core/Features/Readiness/Readers/TechnologyInventoryReadinessGapSource.cs",
+        "?? src/Compliance.Core/Features/Readiness/Readers/TypeIEntryDecisionReader.cs",
+        "?? src/Compliance.Core/Features/Readiness/Rules/ReadinessCompletenessRules.cs",
+        "?? src/Compliance.Core/Features/Readiness/Rules/ReadinessComputedGapComposition.cs",
+        "?? src/Compliance.Core/Features/Readiness/Services/DailyReadinessAssessment.cs",
+        "?? src/Compliance.Core/Features/Readiness/Services/ReadinessAssessmentCalculator.cs",
+        "?? src/Compliance.Core/Features/Readiness/Services/ReadinessDailySchedule.cs"
+      ]
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/record-governance-code",
+      "branch": "work/resume-record-governance-code",
+      "head": "e826f773c7d6cc269d57d50b047e3b35e6797ae0",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/resume-combined-validation",
+      "branch": "work/resume-combined-validation",
+      "head": "6ed1d663b21744ca290c62116c55094b70b0d92e",
+      "preserved_status": [
+        " M src/Compliance.Common/Features/Evidence/Queries/ListEvidenceSupports.cs"
+      ]
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/risk-provider-code",
+      "branch": "work/resume-risk-provider-code",
+      "head": "e7becc78b2b790cb94816ba72913dab9ebcb6c8b",
+      "preserved_status": [
+        " M src/Compliance.Core/Features/Risks/Handlers/AcceptRiskHandler.cs",
+        " M test/Compliance.Tests/Features/Risks/Tests/ProgramRiskTriggerTests.cs",
+        "?? src/Compliance.Common/Features/Risks/Commands/RaiseRiskReassessmentTrigger.cs",
+        "?? src/Compliance.Common/Features/Risks/Commands/TriageRiskReassessmentTrigger.cs",
+        "?? src/Compliance.Common/Features/Risks/Events/RiskReassessmentTriggerRaised.cs",
+        "?? src/Compliance.Common/Features/Risks/Events/RiskReassessmentTriggerTriaged.cs",
+        "?? src/Compliance.Core/Features/Risks/Aggregates/RiskReassessmentTrigger.cs",
+        "?? src/Compliance.Core/Features/Risks/Handlers/ProgramRiskTriggerHandler.cs"
+      ]
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/service-review-membership",
+      "branch": "work/proposed-service-review-membership",
+      "head": "0acd25ddb32e4fb91def4fd27ad3f5f8d741ccce",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/technology-code",
+      "branch": "work/resume-technology-code",
+      "head": "56021f776ba0d7003faef14eeafb8779b33d8e5a",
+      "preserved_status": []
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/work-code",
+      "branch": "work/resume-work-code",
+      "head": "2da81b5f812bcc0e00f02ad33c8c99e825de9eed",
+      "preserved_status": [
+        " M src/Compliance.Core/Features/Work/Aggregates/WeeklyWorkDigest.cs",
+        " M src/Compliance.Core/Features/Work/Models/WorkDigestContentComposer.cs",
+        " M src/Compliance.Core/Features/Work/Models/WorkDigestTransportOutcome.cs",
+        " M src/Compliance.Core/Features/Work/Processes/WorkDigestDispatchSweep.cs",
+        " M src/Compliance.Core/Features/Work/Readers/WorkDigestAggregateReader.cs",
+        " M src/Compliance.Core/Features/Work/Readers/WorkDigestContentReader.cs",
+        " M src/Compliance.Core/Features/Work/Rules/WorkDigestDispatchRules.cs",
+        "?? src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestSent.cs",
+        "?? src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestSkipped.cs",
+        "?? src/Compliance.Core/Features/Work/Aggregates/WeeklyWorkDigest.Delivery.cs",
+        "?? src/Compliance.Core/Features/Work/Processes/WeeklyWorkDigestProcessor.cs"
+      ]
+    },
+    {
+      "path": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/workforce",
+      "branch": "work/proposed-workforce",
+      "head": "54404d459401a6f6b4c6724550553ca135e03780",
+      "preserved_status": [
+        " M src/Compliance.Common/Features/Workforce/Models/PersonView.cs",
+        " M src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs",
+        " M src/Compliance.Core/Features/Workforce/Aggregates/Person.cs",
+        " M src/Compliance.Core/Features/Workforce/Authorizers/WorkforceAuthorizer.cs",
+        " M src/Compliance.Core/Features/Workforce/Handlers/CorrelatePersonMembershipHandler.cs",
+        " M src/Compliance.Core/Features/Workforce/History/PersonHistory.cs",
+        " M src/Compliance.Core/Features/Workforce/Models/PersonChangeContent.cs",
+        " M src/Compliance.Core/Features/Workforce/Projectors/PersonDirectoryProjector.cs",
+        " M src/Compliance.Core/Features/Workforce/Readers/CassiePersonDirectory.cs",
+        " M src/Compliance.Core/Features/Workforce/Readers/PersonReader.cs",
+        " M src/Compliance.Core/Features/Workforce/Rules/PersonRules.cs",
+        " M src/Compliance.Core/Features/Workforce/Services/PersonContent.cs",
+        " M src/Compliance.Core/Features/Workforce/Services/PersonOperations.cs",
+        " M test/Compliance.Tests/Features/Workforce/Tests/PersonMemberLinkRulesTests.cs",
+        "?? src/Compliance.Common/Features/Workforce/Commands/ApplyPersonMemberLink.cs",
+        "?? src/Compliance.Common/Features/Workforce/Commands/ConcludeMemberPersonLink.cs",
+        "?? src/Compliance.Common/Features/Workforce/Commands/LinkPersonToMember.cs",
+        "?? src/Compliance.Common/Features/Workforce/Commands/UnlinkPersonFromMember.cs",
+        "?? src/Compliance.Core/Features/Workforce/Handlers/ApplyPersonMemberLinkHandler.cs",
+        "?? src/Compliance.Core/Features/Workforce/Handlers/ConcludeMemberPersonLinkHandler.cs",
+        "?? src/Compliance.Core/Features/Workforce/Handlers/LinkPersonToMemberHandler.cs",
+        "?? src/Compliance.Core/Features/Workforce/Handlers/UnlinkPersonFromMemberHandler.cs",
+        "?? src/Compliance.Core/Features/Workforce/Reactors/",
+        "?? src/Compliance.Core/Features/Workforce/Services/PersonMemberLinkAccess.cs",
+        "?? src/Compliance.Core/Features/Workforce/Services/PersonMemberLinks.cs",
+        "?? test/Compliance.Tests/Features/Workforce/Tests/PersonMemberLinkNativeTests.cs",
+        "?? test/Compliance.Tests/Features/Workforce/Tests/RetiredPersonCorrelationTests.cs"
+      ]
+    }
+  ]
+}

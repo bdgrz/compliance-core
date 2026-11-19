@@ -97,7 +97,7 @@ public sealed class WorkforceSourceHandlerTests
         var facts = new WorkforceSourceFacts(Person: new WorkforcePersonSourceFacts("Ada King", "ada@example.com"));
         var request = new RecordWorkforceSourceObservation(fixture.TenantId, source, "person",
             fixture.PersonId, 1, facts, DateTimeOffset.UtcNow.AddDays(-1));
-        var registration = (await fixture.As().When(request).ExpectSuccess()).Value;
+        var registration = (await fixture.As().When(request).ExpectSuccess()).Value.Value;
 
         // Act
         var lagged = await fixture.As().When(new GetWorkforceSourceObservation(fixture.TenantId,
@@ -141,7 +141,7 @@ public sealed class WorkforceSourceHandlerTests
         var registered = (await fixture.As().When(new RecordWorkforceSourceObservation(fixture.TenantId,
             new WorkforceSourceIdentity("idp", "system", "100", "v1"), "person", fixture.PersonId,
             1, new WorkforceSourceFacts(Person: new WorkforcePersonSourceFacts("Ada", "ada@example.com")),
-            DateTimeOffset.UtcNow.AddDays(-1))).ExpectSuccess()).Value;
+            DateTimeOffset.UtcNow.AddDays(-1))).ExpectSuccess()).Value.Value;
         await fixture.ProjectSourcesAsync();
 
         // Act
@@ -171,7 +171,7 @@ public sealed class WorkforceSourceHandlerTests
         var registered = (await fixture.As().When(new RecordWorkforceSourceObservation(fixture.TenantId,
             new WorkforceSourceIdentity("hris", "system", "100", "v1"), "work_relationship", jobId,
             1, new WorkforceSourceFacts(WorkRelationship: terms), DateTimeOffset.UtcNow.AddDays(-1)))
-            .ExpectSuccess()).Value;
+            .ExpectSuccess()).Value.Value;
         await fixture.ProjectSourcesAsync();
 
         // Act
@@ -211,7 +211,7 @@ public sealed class WorkforceSourceHandlerTests
             terms.DisplayName, terms.IdentityKind, terms.Environment, terms.LifecycleStatus, terms.ExpiresOn));
         var registered = (await fixture.As().When(new RecordWorkforceSourceObservation(fixture.TenantId,
             new WorkforceSourceIdentity("provider", "github", "bot-100", "v1"), "service_identity",
-            identityId, 1, facts, DateTimeOffset.UtcNow.AddDays(-1))).ExpectSuccess()).Value;
+            identityId, 1, facts, DateTimeOffset.UtcNow.AddDays(-1))).ExpectSuccess()).Value.Value;
 
         // Act
         var preview = (await fixture.As().When(new PreviewWorkforceSourceObservation(fixture.TenantId,
@@ -242,7 +242,7 @@ public sealed class WorkforceSourceHandlerTests
             new WorkforceSourceIdentity("hris", "system", "100", "v1"), "person", fixture.PersonId,
             1, new WorkforceSourceFacts(Person: new WorkforcePersonSourceFacts("Ada", "ada@example.com")),
             DateTimeOffset.UtcNow.AddDays(-1));
-        var registration = (await fixture.As().When(request).ExpectSuccess()).Value;
+        var registration = (await fixture.As().When(request).ExpectSuccess()).Value.Value;
         var decision = new ReconcileWorkforceSourceObservation(fixture.TenantId,
             registration.ObservationId, 1, 1, "accepted", "Source checked");
         _ = await PersonalWorkforceObservationTransportTests.HttpAsync(fixture.Provider, fixture.UserId, decision);
@@ -256,7 +256,7 @@ public sealed class WorkforceSourceHandlerTests
         fixture.Permissions.OtherUserId = retryingUser;
 
         // Act
-        var retry = (await fixture.As(retryingUser).When(request).ExpectSuccess()).Value;
+        var retry = (await fixture.As(retryingUser).When(request).ExpectSuccess()).Value.Value;
         _ = await PersonalWorkforceObservationTransportTests.HttpAsync(fixture.Provider, retryingUser, decision);
         var hydrated = await ProgramManagementServices.HydrateAsync(fixture.Provider,
             new WorkforceSourceObservation(fixture.TenantId, registration.ObservationId));
@@ -294,7 +294,7 @@ public sealed class WorkforceSourceHandlerTests
         var registration = (await fixture.As().When(new RecordWorkforceSourceObservation(fixture.TenantId,
             new WorkforceSourceIdentity("hris", "system", "200", "v1"), "work_relationship",
             relationshipId, 1, new WorkforceSourceFacts(WorkRelationship: terms), DateTimeOffset.UtcNow.AddDays(-1)))
-            .ExpectSuccess()).Value;
+            .ExpectSuccess()).Value.Value;
         await fixture.ProjectSourcesAsync();
         fixture.Permissions.SetRestrictedPermissions(canReadManager
             ? FieldClasses.WorkforceManagerChain.ReadPermission : FieldClasses.WorkforcePersonalDetails.ReadPermission);
@@ -385,7 +385,7 @@ public sealed class WorkforceSourceHandlerTests
         var registration = (await fixture.As().When(new RecordWorkforceSourceObservation(fixture.TenantId,
             new WorkforceSourceIdentity("hris", "system", "301", "v1"), "work_relationship",
             relationshipId, 1, new WorkforceSourceFacts(WorkRelationship: facts), DateTimeOffset.UtcNow.AddDays(-1)))
-            .ExpectSuccess()).Value;
+            .ExpectSuccess()).Value.Value;
         fixture.Permissions.SetRestrictedPermissions(managerOnly
             ? FieldClasses.WorkforceManagerChain.ReadPermission : FieldClasses.WorkforcePersonalDetails.ReadPermission);
 
@@ -418,7 +418,7 @@ public sealed class WorkforceSourceHandlerTests
         var registration = (await fixture.As().When(new RecordWorkforceSourceObservation(fixture.TenantId,
             new WorkforceSourceIdentity("hris", "system", "302", "v1"), "work_relationship",
             relationshipId, 1, new WorkforceSourceFacts(WorkRelationship: facts), DateTimeOffset.UtcNow.AddDays(-1)))
-            .ExpectSuccess()).Value;
+            .ExpectSuccess()).Value.Value;
         var accepted = new ReconcileWorkforceSourceObservation(fixture.TenantId, registration.ObservationId,
             1, 1, "accepted", "Checked source facts");
         var dismissed = accepted with { Outcome = "dismissed", Note = "Keep the canonical facts" };

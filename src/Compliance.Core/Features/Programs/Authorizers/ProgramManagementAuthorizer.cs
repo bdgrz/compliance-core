@@ -144,7 +144,7 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
                 return complianceLead
                     ? Result.Success
                     : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                        "This advisor handoff operation requires a current Compliance Lead grant."));
+                        "This operation requires a current Compliance Lead grant."));
             }
             var scopedAllowed = await scopedPermissions.IsAllowedAsync(tenantId, userId, memberId,
                     scoped.ProgramId, scoped.RequiredPermission, ct)
@@ -218,7 +218,7 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
 
         // Program creation is organization-scoped; a grant to one existing program cannot
         // authorize creating another. Existing program records must carry or resolve that scope.
-        if (context.Request is CreateProgram or SetCriteriaTextOverlay)
+        if (context.Request is CreateProgram or CreateProgramV3 or SetCriteriaTextOverlay)
         {
             var organizationAccess = await scopedPermissions.GetProgramVisibilityAsync(tenantId,
                     userId, memberId, IProgramScopedRequest.ManagementPermission, ct)
@@ -234,6 +234,6 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
     }
 
     static bool RequiresComplianceLead(IProgramManagementRequest request) => request is
-        CreateAdvisorHandoff or ReviseAdvisorHandoffSelection or MarkAdvisorHandoffReadyForReview or
-        PreviewAdvisorHandoff;
+        IProgramLeadMutationRequest or CreateAdvisorHandoff or ReviseAdvisorHandoffSelection or MarkAdvisorHandoffReadyForReview or
+        PreviewAdvisorHandoff or Bdgrz.Compliance.Features.Evidence.Commands.WithdrawEvidenceSupport;
 }

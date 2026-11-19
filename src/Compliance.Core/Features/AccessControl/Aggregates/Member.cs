@@ -47,6 +47,8 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AttestRecords.Commands;
@@ -60,9 +62,16 @@ public sealed class Member : Aggregate
     readonly Uuid _tenantId;
     readonly Uuid _selectedEpisodeId;
     Uuid _userId;
+    Uuid _primaryDesignationId;
+    readonly Dictionary<Uuid, DomainEvent> _primaryOutcomes = [];
+    public bool IsPrimary => _primaryDesignationId != Uuid.Empty;
+    public Uuid PrimaryDesignationId => _primaryDesignationId;
+    public DomainEvent? PrimaryOutcome(Uuid designationId) => _primaryOutcomes.GetValueOrDefault(designationId);
+
     bool _isRegistered;
     string? _affiliation;
     DateOnly? _membershipExpiresOn;
+    Uuid[] _guestProgramIds = [];
     Uuid _membershipEpisodeId;
     bool _isSuspended;
     bool _isDeprovisioned;
@@ -74,13 +83,22 @@ public sealed class Member : Aggregate
     MemberDeprovisioned? _currentTermination;
     MemberDeprovisioned? _selectedTermination;
     bool _selectedCleanupCompleted;
+    Uuid? _linkedPersonId;
+    Uuid? _pendingPersonId;
+    long _personLinkGeneration;
+    MemberPersonLinkAdmitted? _personLinkAdmission;
 
     /// <summary>Acceptance of the logical registration this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
 
+    public Uuid? LinkedPersonId => _linkedPersonId;
+    public Uuid? PendingPersonId => _pendingPersonId;
+    public long PersonLinkGeneration => _personLinkGeneration;
+    public MemberPersonLinkAdmitted? PersonLinkAdmission => _personLinkAdmission;
     public bool IsRegistered => _isRegistered;
     public string? Affiliation => _affiliation;
     public DateOnly? MembershipExpiresOn => _membershipExpiresOn;
+    public IReadOnlyList<Uuid> GuestProgramIds => _guestProgramIds.ToArray();
     public Uuid UserId => _userId;
     public Uuid MembershipEpisodeId => _membershipEpisodeId;
     public bool IsSuspended => _isSuspended;
@@ -122,6 +140,83 @@ public sealed class Member : Aggregate
         _selectedEpisodeId = selectedEpisodeId;
         _userId = userId;
         Acceptance = new NativeAcceptance(selectedCommandId);
+        On<MemberMarkedPrimary>(ev =>
+        {
+            RequirePrimaryIdentity(ev.TenantId, ev.MemberId, ev.UserId, ev.MembershipEpisodeId, ev.DesignationId);
+            if (!_isRegistered || _isSuspended || _isDeprovisioned || _affiliation == "guest" || IsPrimary ||
+                ev.MembershipEpisodeId != _membershipEpisodeId || _primaryOutcomes.ContainsKey(ev.DesignationId))
+                throw new MemberHistoryIntegrityException("Only an active non-guest member episode can accept a primary designation once.");
+            _primaryDesignationId = ev.DesignationId;
+            _primaryOutcomes.Add(ev.DesignationId, ev);
+        });
+        On<MemberPrimaryMarkRefused>(ev =>
+        {
+            RequirePrimaryIdentity(ev.TenantId, ev.MemberId, ev.UserId, ev.MembershipEpisodeId, ev.DesignationId);
+            if (ev.Reason is not ("not_active" or "guest") || _primaryOutcomes.ContainsKey(ev.DesignationId))
+                throw new MemberHistoryIntegrityException("A primary mark refusal must answer one designation with a known outcome.");
+            _primaryOutcomes.Add(ev.DesignationId, ev);
+        });
+        On<MemberPrimaryMarkRemoved>(ev =>
+        {
+            RequirePrimaryIdentity(ev.TenantId, ev.MemberId, ev.UserId, ev.MembershipEpisodeId, ev.DesignationId);
+            if (_primaryDesignationId != ev.DesignationId || _membershipEpisodeId != ev.MembershipEpisodeId)
+                throw new MemberHistoryIntegrityException("Primary mark removal must close the exact marked membership episode.");
+            _primaryDesignationId = Uuid.Empty;
+        });
+        On<MemberPersonLinkAdmitted>(fact =>
+        {
+            RequireMemberIdentity(fact.TenantId, fact.MemberId, fact.UserId);
+            RequireOwnOperation(fact.Operation);
+            if (fact.PersonId == Uuid.Empty || fact.LinkId != fact.Operation.LogicalId ||
+                fact.Generation != _personLinkGeneration + 1 || _linkedPersonId is not null || _pendingPersonId is not null)
+                throw new MemberHistoryIntegrityException("A member person admission must advance one unbound generation.");
+            _pendingPersonId = fact.PersonId;
+            _personLinkGeneration = fact.Generation;
+            _personLinkAdmission = fact;
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkRefused>(fact =>
+        {
+            RequireMemberIdentity(fact.TenantId, fact.MemberId, fact.UserId);
+            RequireOwnOperation(fact.Operation);
+            if (fact.PersonId == Uuid.Empty || fact.LinkId != fact.Operation.LogicalId || fact.Generation != _personLinkGeneration ||
+                string.IsNullOrWhiteSpace(fact.Reason))
+                throw new MemberHistoryIntegrityException("A refused person admission cannot alter the member binding.");
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkConfirmed>(fact =>
+        {
+            RequirePersonConclusion(fact.TenantId, fact.MemberId, fact.UserId, fact.PersonId, fact.Link);
+            RequireOwnOperation(fact.Operation);
+            if (_pendingPersonId != fact.PersonId || _linkedPersonId is not null)
+                throw new MemberHistoryIntegrityException("A person link confirmation needs the exact pending admission.");
+            _pendingPersonId = null;
+            _linkedPersonId = fact.PersonId;
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkAdmissionCancelled>(fact =>
+        {
+            RequirePersonConclusion(fact.TenantId, fact.MemberId, fact.UserId, fact.PersonId, fact.Link);
+            RequireOwnOperation(fact.Operation);
+            if (_pendingPersonId != fact.PersonId || _linkedPersonId is not null || fact.Generation != _personLinkGeneration + 1)
+                throw new MemberHistoryIntegrityException("A cancelled admission must release its exact pending generation.");
+            _pendingPersonId = null;
+            _personLinkGeneration = fact.Generation;
+            _personLinkAdmission = null;
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkReleased>(fact =>
+        {
+            RequirePersonConclusion(fact.TenantId, fact.MemberId, fact.UserId, fact.PersonId, fact.Link);
+            RequireOwnOperation(fact.Operation);
+            if ((_pendingPersonId ?? _linkedPersonId) != fact.PersonId || fact.Generation != _personLinkGeneration + 1)
+                throw new MemberHistoryIntegrityException("A released link must release its exact admitted generation.");
+            _pendingPersonId = null;
+            _linkedPersonId = null;
+            _personLinkGeneration = fact.Generation;
+            _personLinkAdmission = null;
+            Acceptance.Observe(fact);
+        });
         On<MemberRegistered>(registered =>
         {
             if (_isRegistered || _isDeprovisioned && !_isDeprovisionCleanupComplete)
@@ -137,12 +232,14 @@ public sealed class Member : Aggregate
                                   expiresOn != DateOnly.MinValue && expiresOn != DateOnly.MaxValue;
             if (registered.Affiliation is not ("client_personnel" or "firm_staff" or "guest") ||
                 registered.Affiliation == "guest" && !hasFiniteExpiry ||
-                registered.Affiliation != "guest" && registered.MembershipExpiresOn is not null)
+                registered.Affiliation != "guest" && registered.MembershipExpiresOn is not null ||
+                !ValidProgramCap(registered.Affiliation, registered.ProgramIds))
                 throw new MemberHistoryIntegrityException("The member registration event has invalid affiliation or expiry terms.");
             Acceptance.Observe(registered);
             _isRegistered = true;
             _affiliation = registered.Affiliation;
             _membershipExpiresOn = registered.MembershipExpiresOn;
+            _guestProgramIds = registered.ProgramIds?.Distinct().OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray() ?? [];
             _userId = registered.UserId;
             _membershipEpisodeId = registered.MembershipEpisodeId;
             _isSuspended = false;
@@ -157,6 +254,8 @@ public sealed class Member : Aggregate
         });
         On<MemberSuspended>(suspended =>
         {
+            if (IsPrimary)
+                throw new MemberHistoryIntegrityException("A marked primary administrator cannot be suspended.");
             RequireOwnOperation(suspended.Operation);
             RequireMemberIdentity(suspended.TenantId, suspended.MemberId, suspended.UserId);
             Acceptance.Observe(suspended);
@@ -171,6 +270,8 @@ public sealed class Member : Aggregate
         });
         On<MemberDeprovisioned>(deprovisioned =>
         {
+            if (IsPrimary)
+                throw new MemberHistoryIntegrityException("A marked primary administrator cannot be deprovisioned.");
             Acceptance.Observe(deprovisioned);
             RequireOwnOperation(deprovisioned.Operation);
             if (deprovisioned.TenantId != _tenantId || deprovisioned.MemberId != Id ||
@@ -213,7 +314,7 @@ public sealed class Member : Aggregate
     ///     Checks the registration guards against hydrated state without raising anything; the first half of the
     ///     native acceptance pair.
     /// </summary>
-    public Result PrepareRegister(string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null)
+    public Result PrepareRegister(string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null, IReadOnlyList<Uuid>? programIds = null)
     {
         EnsureUserIdentity();
         if (affiliation is not ("client_personnel" or "firm_staff" or "guest"))
@@ -221,9 +322,9 @@ public sealed class Member : Aggregate
         var hasFiniteExpiry = membershipExpiresOn is { } endDate &&
                               endDate != DateOnly.MinValue && endDate != DateOnly.MaxValue;
         if (affiliation == "guest" && !hasFiniteExpiry ||
-            affiliation != "guest" && membershipExpiresOn is not null)
+            affiliation != "guest" && membershipExpiresOn is not null || !ValidProgramCap(affiliation, programIds))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "Guest membership requires a finite end date; other affiliations cannot have one."));
+                "Guest membership requires a finite end date and at least one program; other affiliations have no guest terms."));
         if (_isDeprovisioned && !_isDeprovisionCleanupComplete)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Membership authority cleanup must finish before a new invitation can take effect."));
@@ -231,6 +332,44 @@ public sealed class Member : Aggregate
             return Result.Failure(LiveEpisodeConflict);
         return Result.Success;
     }
+
+    /// <summary>The member owns admission of its primary mark; negative outcomes let the seat reservation end.</summary>
+    public Result MarkPrimary(Uuid designationId, Uuid episodeId)
+    {
+        EnsureUserIdentity();
+        if (designationId == Uuid.Empty || episodeId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A designation and membership episode are required."));
+        if (_primaryOutcomes.TryGetValue(designationId, out var prior))
+            return prior switch
+            {
+                MemberMarkedPrimary accepted when accepted.MembershipEpisodeId == episodeId => Result.Success,
+                MemberPrimaryMarkRefused refused when refused.MembershipEpisodeId == episodeId => Result.Success,
+                _ => Result.Failure(new RequestError(RequestErrorKind.Conflict, "The designation already has different intent."))
+            };
+        var refusal = !IsRegistered || IsSuspended || IsDeprovisioned || _membershipEpisodeId != episodeId || IsPrimary
+            ? "not_active" : _affiliation == "guest" ? "guest" : null;
+        if (refusal is null)
+            RaiseEvent(new MemberMarkedPrimary(_tenantId, Id, _userId, episodeId, designationId));
+        else
+            RaiseEvent(new MemberPrimaryMarkRefused(_tenantId, Id, _userId, episodeId, designationId, refusal));
+        return Result.Success;
+    }
+
+    /// <summary>A delayed release removes only the exact designation it answered.</summary>
+    public Result UnmarkPrimary(Uuid designationId, Uuid episodeId)
+    {
+        EnsureUserIdentity();
+        if (designationId == Uuid.Empty || episodeId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A designation and membership episode are required."));
+        if (_primaryDesignationId != designationId || _membershipEpisodeId != episodeId)
+            return Result.Success;
+        RaiseEvent(new MemberPrimaryMarkRemoved(_tenantId, Id, _userId, episodeId, designationId));
+        return Result.Success;
+    }
+
+    static bool ValidProgramCap(string affiliation, IReadOnlyList<Uuid>? programs) => affiliation == "guest"
+        ? programs is { Count: > 0 } && programs.All(static id => id != Uuid.Empty)
+        : programs is null or { Count: 0 };
 
     /// <summary>
     ///     The one live-episode conflict a new registration can meet. Dispatchers that register as a side effect of
@@ -244,18 +383,18 @@ public sealed class Member : Aggregate
     ///     operation is the membership episode id.
     /// </summary>
     public Result Register(OperationProvenance operation, ImmutableContentRef firstResponse,
-        string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null)
+        string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null, IReadOnlyList<Uuid>? programIds = null)
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(firstResponse);
         if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A member registration requires its own logical operation."));
-        var prepared = PrepareRegister(affiliation, membershipExpiresOn);
+        var prepared = PrepareRegister(affiliation, membershipExpiresOn, programIds);
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new MemberRegistered(_tenantId, Id, _userId, affiliation, operation.LogicalId,
-            membershipExpiresOn, operation.LogicalId, operation, firstResponse));
+            membershipExpiresOn, operation.LogicalId, operation, firstResponse, programIds?.Distinct().ToArray()));
         return Result.Success;
     }
 
@@ -267,6 +406,9 @@ public sealed class Member : Aggregate
     public Result PrepareSuspend(Uuid episodeId, long expectedRevision, string reason, bool suspensionPending = false)
     {
         EnsureUserIdentity();
+        if (IsPrimary)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Release this primary administrator after designating a replacement before changing their membership."));
         var current = CheckEpisode(episodeId, expectedRevision);
         if (!current.IsSuccess)
             return current;
@@ -281,7 +423,7 @@ public sealed class Member : Aggregate
     /// <summary>Accepts the suspension as the native fact of <paramref name="operation" />.</summary>
     public Result Suspend(OperationProvenance operation, ImmutableContentRef intent, ImmutableContentRef? operationResult,
         Uuid actorMemberId, string actorDisplay, DateTimeOffset suspendedAt, string reason, Uuid episodeId,
-        long expectedRevision)
+        long expectedRevision, ImmutableContentRef? firstResponse = null)
     {
         var accepted = CheckOperation(operation, intent, actorMemberId, actorDisplay);
         if (!accepted.IsSuccess)
@@ -290,7 +432,7 @@ public sealed class Member : Aggregate
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new MemberSuspended(_tenantId, Id, _userId, actorMemberId, actorDisplay.Trim(), suspendedAt,
-            reason.Trim(), operation, intent, null, operationResult));
+            reason.Trim(), operation, intent, firstResponse, operationResult));
         return Result.Success;
     }
 
@@ -312,7 +454,8 @@ public sealed class Member : Aggregate
 
     /// <summary>Accepts the reinstatement as the native fact of <paramref name="operation" />.</summary>
     public Result Reinstate(OperationProvenance operation, ImmutableContentRef intent, ImmutableContentRef? operationResult,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset reinstatedAt, Uuid episodeId, long expectedRevision)
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset reinstatedAt, Uuid episodeId, long expectedRevision,
+        ImmutableContentRef? firstResponse = null)
     {
         var accepted = CheckOperation(operation, intent, actorMemberId, actorDisplay);
         if (!accepted.IsSuccess)
@@ -321,7 +464,7 @@ public sealed class Member : Aggregate
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new MemberReinstated(_tenantId, Id, _userId, _affiliation!, actorMemberId, actorDisplay.Trim(),
-            reinstatedAt, operation, intent, null, operationResult));
+            reinstatedAt, operation, intent, firstResponse, operationResult));
         return Result.Success;
     }
 
@@ -333,6 +476,9 @@ public sealed class Member : Aggregate
     public Result PrepareDeprovision(Uuid episodeId, long expectedRevision, string reason, bool deprovisionPending = false)
     {
         EnsureUserIdentity();
+        if (IsPrimary)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Release this primary administrator after designating a replacement before changing their membership."));
         var current = CheckEpisode(episodeId, expectedRevision);
         if (!current.IsSuccess)
             return current;
@@ -350,7 +496,7 @@ public sealed class Member : Aggregate
     /// <summary>Accepts the deprovisioning as the native fact of <paramref name="operation" />.</summary>
     public Result Deprovision(OperationProvenance operation, ImmutableContentRef intent,
         ImmutableContentRef? operationResult, Uuid actorMemberId, string actorDisplay, DateTimeOffset deprovisionedAt,
-        string reason, Uuid episodeId, long expectedRevision)
+        string reason, Uuid episodeId, long expectedRevision, ImmutableContentRef? firstResponse = null)
     {
         var accepted = CheckOperation(operation, intent, actorMemberId, actorDisplay);
         if (!accepted.IsSuccess)
@@ -361,7 +507,7 @@ public sealed class Member : Aggregate
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new MemberDeprovisioned(_tenantId, Id, _userId, actorMemberId, actorDisplay.Trim(), deprovisionedAt,
-            reason.Trim(), _membershipEpisodeId, operation, intent, null, operationResult));
+            reason.Trim(), _membershipEpisodeId, operation, intent, firstResponse, operationResult));
         return Result.Success;
     }
 
@@ -433,6 +579,100 @@ public sealed class Member : Aggregate
             : Result.Success;
     }
 
+    public Result RequestPersonLink(OperationProvenance operation, ImmutableContentRef firstResponse,
+        Uuid personId, long expectedGeneration)
+    {
+        var selected = PersonLinkOperation(operation, firstResponse);
+        if (selected is { } accepted)
+            return accepted;
+        if (!_isRegistered || _affiliation == "firm_staff")
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The workforce member was not found."));
+        if (personId == Uuid.Empty || expectedGeneration < 0)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A person and nonnegative link generation are required."));
+        if (_linkedPersonId is not null || _pendingPersonId is not null || expectedGeneration != _personLinkGeneration)
+        {
+            RaiseEvent(new MemberPersonLinkRefused(_tenantId, Id, _userId, personId, operation.LogicalId,
+                expectedGeneration, _personLinkGeneration, "The member is already linked, has a pending admission, or its generation changed.",
+                operation, firstResponse));
+            return Result.Success;
+        }
+        RaiseEvent(new MemberPersonLinkAdmitted(_tenantId, Id, _userId, personId, operation.LogicalId,
+            _personLinkGeneration + 1, operation, firstResponse));
+        return Result.Success;
+    }
+
+    public Result ConfirmPersonLink(OperationProvenance operation, ImmutableContentRef firstResponse,
+        VerifiedSourceProof<PersonLinkedToMember> source) => ConcludePersonLink(operation, firstResponse,
+            source, source.Facts.Header, source.Facts.Link, source.Facts.Operation, "confirm");
+
+    public Result CancelPersonLinkAdmission(OperationProvenance operation, ImmutableContentRef firstResponse,
+        VerifiedSourceProof<PersonMemberLinkRefused> source) => ConcludePersonLink(operation, firstResponse,
+            source, source.Facts.Header, source.Facts.Link, source.Facts.Operation, "cancel");
+
+    public Result ReleasePersonLink(OperationProvenance operation, ImmutableContentRef firstResponse,
+        VerifiedSourceProof<PersonUnlinkedFromMember> source) => ConcludePersonLink(operation, firstResponse,
+            source, source.Facts.Header, source.Facts.Link, source.Facts.Operation, "release");
+
+    Result ConcludePersonLink<T>(OperationProvenance operation, ImmutableContentRef firstResponse,
+        VerifiedSourceProof<T> source, PersonHeader person, PersonMemberLink link, OperationProvenance sourceOperation,
+        string conclusion) where T : DomainEvent
+    {
+        var selected = PersonLinkOperation(operation, firstResponse);
+        if (selected is { } accepted)
+            return accepted;
+        if (source.EventId == Uuid.Empty || source.EventId != operation.CausationEventId ||
+            source.Source != new EventStreamAddress(_tenantId.ToString(), "people", person.PersonId.ToString()) ||
+            person.TenantId != _tenantId || link.UserId != _userId || link.MemberId != Id ||
+            link.Generation != _personLinkGeneration || _personLinkAdmission is not { } admission ||
+            link.LinkId != admission.LinkId || link.AdmissionEventId != admission.Metadata.EventId ||
+            person.PersonId != admission.PersonId || conclusion != "release" && sourceOperation.RootOperationId != link.LinkId ||
+            (conclusion is "confirm" or "cancel" ? _pendingPersonId : _pendingPersonId ?? _linkedPersonId) != person.PersonId)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The person conclusion must match the exact current member admission."));
+        var reference = new NativeFactReference(source.Source, source.EventId, source.OwnerRevision);
+        switch (conclusion)
+        {
+            case "confirm":
+                RaiseEvent(new MemberPersonLinkConfirmed(_tenantId, Id, _userId, person.PersonId, link,
+                    reference, operation, firstResponse));
+                break;
+            case "cancel":
+                RaiseEvent(new MemberPersonLinkAdmissionCancelled(_tenantId, Id, _userId, person.PersonId,
+                    link, _personLinkGeneration + 1, reference, operation, firstResponse));
+                break;
+            default:
+                RaiseEvent(new MemberPersonLinkReleased(_tenantId, Id, _userId, person.PersonId,
+                    link, _personLinkGeneration + 1, reference, operation, firstResponse));
+                break;
+        }
+        return Result.Success;
+    }
+
+    Result? PersonLinkOperation(OperationProvenance operation, ImmutableContentRef firstResponse)
+    {
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream || firstResponse is null)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A member link requires its own identified operation."));
+        if (Acceptance.SelectedLogicalId != operation.LogicalId)
+            return null;
+        return Acceptance.Decide(AcceptedOperationBinding.Of(operation)) switch
+        {
+            NativeAcceptanceDecision.Replayed => Result.Success,
+            NativeAcceptanceDecision.Conflict => Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The member link operation has different intent.")),
+            _ => (Result?)null,
+        };
+    }
+
+    void RequirePersonConclusion(Uuid tenant, Uuid member, Uuid user, Uuid person, PersonMemberLink link)
+    {
+        RequireMemberIdentity(tenant, member, user);
+        if (_personLinkAdmission is not { } admission || person != admission.PersonId || link.UserId != user ||
+            link.MemberId != member || link.LinkId != admission.LinkId || link.Generation != _personLinkGeneration ||
+            link.AdmissionEventId != admission.Metadata.EventId)
+            throw new MemberHistoryIntegrityException("The person conclusion differs from the member's exact admitted binding.");
+    }
+
     void RequireOwnOperation(OperationProvenance operation)
     {
         if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
@@ -443,6 +683,18 @@ public sealed class Member : Aggregate
     {
         if (tenantId != _tenantId || memberId != Id || userId == Uuid.Empty || userId != _userId)
             throw new MemberHistoryIntegrityException("The member lifecycle fact must retain the exact tenant and user identity.");
+    }
+
+    void RequirePrimaryIdentity(Uuid tenantId, Uuid memberId, Uuid userId, Uuid episodeId, Uuid designationId)
+    {
+        if (tenantId != _tenantId || memberId != Id || userId == Uuid.Empty || RbacIds.Member(_tenantId, userId) != Id)
+            throw new MemberHistoryIntegrityException("A primary member fact must retain its canonical tenant and user identity.");
+        // A refused designation can be this stream's first fact, before any membership exists.
+        if (_userId == Uuid.Empty)
+            _userId = userId;
+        RequireMemberIdentity(tenantId, memberId, userId);
+        if (episodeId == Uuid.Empty || designationId == Uuid.Empty)
+            throw new MemberHistoryIntegrityException("A primary member fact requires its exact designation and membership episode.");
     }
 
     void EnsureUserIdentity()

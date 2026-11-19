@@ -150,17 +150,17 @@ public sealed class RoleTeamContentOperationTests
     {
         // Arrange
         await using var host = new Host();
-        var roleId = BuiltInRbac.ViewerRoleId(TenantId);
+        var roleId = Uuid.CreateVersion4();
         Assert.True((await host.SendAsync(new DefineRole(TenantId, roleId, BuiltInRbac.ViewerRoleName),
-            RequestActor.System)).IsSuccess);
+            FixedActor)).IsSuccess);
         var commandId = Uuid.CreateVersion4();
         var rename = new RenameRole(commandId, TenantId, roleId, "Read only");
-        Assert.True((await host.SendAsync(rename, RequestActor.System)).IsSuccess);
+        Assert.True((await host.SendAsync(rename, FixedActor)).IsSuccess);
         var before = (await host.FactsAsync("rbac-roles")).Count;
 
         // Act
-        var retry = await host.SendAsync(rename, RequestActor.System);
-        var changed = await host.SendAsync(new RenameRole(commandId, TenantId, roleId, "Observer"), RequestActor.System);
+        var retry = await host.SendAsync(rename, FixedActor);
+        var changed = await host.SendAsync(new RenameRole(commandId, TenantId, roleId, "Observer"), FixedActor);
 
         // Assert
         Assert.True(retry.IsSuccess);
@@ -173,13 +173,13 @@ public sealed class RoleTeamContentOperationTests
     {
         // Arrange
         await using var host = new Host();
-        var roleId = BuiltInRbac.ViewerRoleId(TenantId);
+        var roleId = Uuid.CreateVersion4();
         Assert.True((await host.SendAsync(new DefineRole(TenantId, roleId, BuiltInRbac.ViewerRoleName),
-            RequestActor.System)).IsSuccess);
+            FixedActor)).IsSuccess);
 
         // Act
         var result = await host.SendAsync(
-            new RenameRole(Uuid.CreateVersion4(), TenantId, roleId, BuiltInRbac.ViewerRoleName), RequestActor.System);
+            new RenameRole(Uuid.CreateVersion4(), TenantId, roleId, BuiltInRbac.ViewerRoleName), FixedActor);
 
         // Assert
         Assert.True(result.IsSuccess);

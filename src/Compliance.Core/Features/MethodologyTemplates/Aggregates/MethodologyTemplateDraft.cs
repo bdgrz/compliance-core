@@ -3,6 +3,7 @@ using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Services;
 using Bdgrz.Compliance.Features.Proofs.Models;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
@@ -218,7 +219,7 @@ public sealed class MethodologyTemplateDraft : Aggregate
     {
         if (!ValidEntries(entries) || content is null || !ValidReference(content))
             return false;
-        var info = ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(IReadOnlyList<MethodologyTemplateRecordContent>))
+        var info = ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(IReadOnlyList<MethodologyTemplateRecordContent>))
             ?? throw new InvalidOperationException("Methodology entry serialization metadata is missing.");
         var bytes = JsonSerializer.SerializeToUtf8Bytes(entries, info);
         return content.Bytes == bytes.LongLength && content.Sha256 == ContentDigest.Sha256(bytes);
@@ -228,6 +229,7 @@ public sealed class MethodologyTemplateDraft : Aggregate
         entries is { Count: <= 100 } && entries.All(entry => entry is not null && Key(entry.EntryKey) &&
             (entry.RecordKind is "control" or "policy" or "risk") && Text(entry.Title, 200) &&
             Text(entry.Summary, 2000) && entry.ContributionApprovalId is null &&
+            MethodologyTemplateDestinationCommands.ValidatePayload(entry, requirePayload: false) is null &&
             entry.CriteriaReferences is { Count: <= 50 } references && references.All(reference =>
                 reference is not null && reference.EditionId != Uuid.Empty && Key(reference.Identifier))) &&
         entries.Select(entry => entry.EntryKey).Distinct(StringComparer.Ordinal).Count() == entries.Count;

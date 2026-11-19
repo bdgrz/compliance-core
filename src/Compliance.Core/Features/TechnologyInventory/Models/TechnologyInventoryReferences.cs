@@ -82,7 +82,7 @@ public sealed class TechnologyInventoryReferences(IAggregateReader reader,
         return instance is { Kind: TechnologyInventoryRules.CloudAccount }
             ? null
             : new RequestError(RequestErrorKind.Validation,
-                "A cloud_account component requires a declared cloud_account system instance in this tenant.");
+                "A component's cloud account reference requires a declared cloud_account system instance in this tenant.");
     }
 
     /// <summary>Resolves a flow's endpoints and assets, returning the highest carried classification.</summary>

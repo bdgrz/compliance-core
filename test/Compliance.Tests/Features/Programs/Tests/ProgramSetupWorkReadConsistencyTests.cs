@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Boundaries.Projections;
+using Bdgrz.Compliance.Features.Programs.Projections;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -78,8 +80,8 @@ public sealed class ProgramSetupWorkReadConsistencyTests
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
-        var directory = new FitzProgramDirectory(new InMemoryKvClient(),
-            new Bdgrz.Compliance.Features.Content.Persistence.FitzKvImmutableContentStore(new InMemoryKvClient()));
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieProgramSchema.Statements);
+        await using var directory = new CassieProgramDirectory(database.Database, new Bdgrz.Compliance.Features.Content.Persistence.FitzKvImmutableContentStore(new InMemoryKvClient()));
         var identity = new CheckpointIdentity("ProgramDirectory",
             EventStreamPattern.ForPattern(tenantId.ToString()));
         var checkpoint = new ProjectionCheckpoint(new EventCursor("1"));
@@ -104,7 +106,8 @@ public sealed class ProgramSetupWorkReadConsistencyTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         await using var native = new BoundaryProjectionScenario();
-        var directory = new FitzBoundaryDirectory(native.Kv, native.Boundaries);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieBoundarySchema.Statements);
+        await using var directory = new CassieBoundaryDirectory(database.Database, native.Boundaries);
         var identity = new CheckpointIdentity("BoundaryDirectoryV3",
             EventStreamPattern.ForPattern(tenantId.ToString()));
         var checkpoint = new ProjectionCheckpoint(new EventCursor("1"));

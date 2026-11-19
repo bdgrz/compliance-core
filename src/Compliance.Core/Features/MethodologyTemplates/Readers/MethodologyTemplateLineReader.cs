@@ -6,6 +6,7 @@ using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Services;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Projections;
@@ -36,6 +37,32 @@ public sealed class MethodologyTemplateLineReader(IAuthoritativeSnapshotReader s
             return null;
         var version = source.Publication is { } publication ? await ReadVersionAsync(publication, ct).ConfigureAwait(false) : null;
         return new MethodologyTemplatePublicationView(source.Line, version);
+    }
+
+    internal async ValueTask<ResolvedSourceFact?> CreationSourceAsync(Uuid templateId, CancellationToken ct)
+    {
+        var capture = await snapshots.CaptureAsync(ct).ConfigureAwait(false);
+        var source = await snapshots.ReadAtAsync(new SnapshotSelector(MethodologyTemplate.Area, templateId.ToString()),
+            MethodologyTemplate.Realm, capture.Cut, null, ct).ConfigureAwait(false);
+        if (!source.IsComplete)
+            throw new SourceFactVerificationException("The identity creation source did not reach its captured cut.");
+        var stream = new MethodologyTemplate(templateId).Stream;
+        foreach (var record in source.Facts)
+        {
+            var metadata = record.Event.Metadata;
+            if (record.Locator.Source != stream || record.Locator.GlobalPosition >= capture.Cut.GlobalWatermarkExclusive ||
+                record.Locator.EventId != metadata.EventId || metadata.AggregateId != templateId || metadata.IsAudit ||
+                record.Locator.AggregateVersion != metadata.AggregateVersion ||
+                record.Locator.PayloadSha256 != ContentDigest.Sha256(record.Event, record.Event.GetType()))
+                throw new SourceFactVerificationException("The identity creation source differs from its exact native tuple.");
+            if (record.Event is MethodologyTemplateCreatedV4 or MethodologyTemplateCreated)
+            {
+                if (metadata.AggregateVersion != 1)
+                    throw new SourceFactVerificationException("An immutable template identity must start with its creation.");
+                return record;
+            }
+        }
+        return null;
     }
 
     async ValueTask<LineSource?> ReadSourceAsync(Uuid templateId, long? requestedVersion, CancellationToken ct)
@@ -110,10 +137,8 @@ public sealed class MethodologyTemplateLineReader(IAuthoritativeSnapshotReader s
             MethodologyTemplate.PublishedVersionIdentity(published.TemplateId, published.Version), published.Version,
             published.DraftId, published.DraftRevision, published.ApprovalEventId, published.ApprovedBy,
             published.Metadata.OccurredOn, published.EntriesContent,
-            Array.AsReadOnly(entries.Select(entry => entry with
-            {
-                CriteriaReferences = Array.AsReadOnly(entry.CriteriaReferences.ToArray()),
-            }).ToArray()), Array.AsReadOnly(published.ChangedEntryKeys.ToArray()),
+            Array.AsReadOnly(entries.Select(MethodologyTemplateDestinationCommands.Freeze).ToArray()),
+            Array.AsReadOnly(published.ChangedEntryKeys.ToArray()),
             NativeFactReference.Of(source.Locator.Source, published), source.Locator.ResourcePosition);
     }
 

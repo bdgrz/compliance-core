@@ -1,0 +1,25 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "race_1_late_child": {
+      "type": "noul",
+      "noul": 0.72
+    },
+    "race_2_empty_target": {
+      "type": "noul",
+      "noul": 0.33
+    },
+    "gate_must_not_seal_pending": {
+      "type": "noul",
+      "noul": 0.8
+    },
+    "window_limit": {
+      "type": "noul",
+      "noul": 0.19
+    }
+  },
+  "usage": {
+    "input_tokens": 652,
+    "output_tokens": 84
+  }
+}

@@ -1,10 +1,11 @@
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
+using System.Globalization;
+using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
@@ -12,29 +13,38 @@ using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Services;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Commands;
 using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Programs.Events;
 using Bdgrz.Compliance.Features.Programs.History;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Programs.Rules;
 using Bdgrz.Compliance.Features.Programs.Services;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -68,15 +78,8 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.NamedRecords.Processes;
-using Bdgrz.Compliance.Features.Programs.Aggregates;
-using Bdgrz.Compliance.Features.Programs.Commands;
-using Bdgrz.Compliance.Features.Programs.Events;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.Programs.Readers;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Tests;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
 namespace Bdgrz.Compliance.Tests.Testing;
 
 static class ProgramSeeds
@@ -87,11 +90,13 @@ static class ProgramSeeds
             new ProgramContent(name, plan), null, ActorReference.ForMember(member, display), at), 1);
 
     public static ProgramOperations Operations(IAggregateReader reader, IAggregateWriter writer, IDomainEventReader events,
-        IImmutableContentStore content, TimeProvider? clock = null)
+        IImmutableContentStore content, TimeProvider? clock = null, ICriteriaPublicationAuthority? publication = null)
     {
         var verified = new ProgramAggregateReader(reader, events);
-        return new ProgramOperations(new NativeOperationExecutor(verified, new AggregateExecutor(verified, writer), content),
-            content, clock ?? TimeProvider.System);
+        var executor = new AggregateExecutor(verified, writer);
+        return new ProgramOperations(new NativeOperationExecutor(verified, executor, content),
+            content, clock ?? TimeProvider.System, publication ?? new FixturePublicationAuthority(), new FixtureAdmissionAuthority(clock ?? TimeProvider.System),
+            verified, executor);
     }
 
     public static async Task<ComplianceProgram> OwnerAsync(IImmutableContentStore content, ProgramRules rules)
@@ -117,15 +122,11 @@ static class ProgramSeeds
             _ = await ProgramHistory.ReadAsync(events, owner);
             var frozen = await FreezeAsync(content, rules.TenantId, rules.Id, change, owner.NativeSequence + 1,
                 owner.CurrentContent, logical);
-            var result = frozen switch
-            {
-                ProgramCreated fact => owner.Create(fact.Operation, fact.Content, fact.FirstResponse!, fact.OperationResult!),
-                ProgramRevised fact => owner.Revise(fact.Operation, fact.Content, fact.FirstResponse!, fact.OperationResult!),
-                ProgramCriteriaEditionSelected fact => owner.SelectCriteriaEdition(fact.Operation, fact.EditionId, fact.FirstResponse!, fact.OperationResult!),
-                _ => throw new InvalidOperationException("Another program fixture fact."),
-            };
-            Assert.True(result.IsSuccess, result.Error?.Message);
-            await writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System));
+            if (events is not IDomainEventWriter source)
+                throw new InvalidOperationException("Historical program fixtures require a writable event source.");
+            frozen.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), owner.Id, owner.Version + 1,
+                change.ChangedAt));
+            await source.AppendAsync(owner.Stream, owner.CommittedStreamPosition, [frozen]);
         }
         rules.ClearPendingChanges();
     }
@@ -183,5 +184,51 @@ static class ProgramSeeds
         SelectProgramCriteriaEdition value => AuthoredIntentDigest.Compute(value),
         _ => throw new InvalidOperationException("Another program authored intent."),
     };
+
+    // Explicitly synthetic test authorities: production admissions must use qualified source providers.
+    public sealed class FixturePublicationAuthority(params Uuid[] published) : ICriteriaPublicationAuthority
+    {
+        public ValueTask<Result<CriteriaPublicationProof>> ReadPublishedAsync(Uuid editionId, CancellationToken ct = default) =>
+            ValueTask.FromResult(published.Length == 0 || published.Contains(editionId)
+                ? Result<CriteriaPublicationProof>.Success(new CriteriaPublicationProof(editionId, Uuid.CreateVersion4(), 0))
+                : Result<CriteriaPublicationProof>.Failure(new RequestError(RequestErrorKind.NotFound, "Edition is not published.")));
+    }
+
+    public sealed class FixtureAdmissionAuthority(TimeProvider clock) : IAccessAdmissionAuthority
+    {
+        public ValueTask<AccessAdmissionEvidence?> AdmitCriteriaOperatorAsync(IRequestContext context, Uuid operationId,
+            string target, string intentSha256, CancellationToken ct = default) => ValueTask.FromResult<AccessAdmissionEvidence?>(null);
+
+        public ValueTask<AccessAdmissionEvidence?> AdmitProgramCreationAsync(IRequestContext context, Uuid tenantId,
+            Uuid programId, string target, string intentSha256, CancellationToken ct = default) =>
+            Admission(context.Actor, tenantId, programId, target, intentSha256);
+
+        public ValueTask<AccessAdmissionEvidence?> AdmitProgramSelectionAsync(IRequestContext context, Uuid tenantId,
+            Uuid programId, Uuid operationId, string target, string intentSha256, CancellationToken ct = default) =>
+            Admission(context.Actor, tenantId, operationId, target, intentSha256);
+
+        ValueTask<AccessAdmissionEvidence?> Admission(ClaimsPrincipal actor, Uuid tenantId, Uuid operationId,
+            string target, string intentSha256)
+        {
+            var identity = actor.Identities.FirstOrDefault(candidate => candidate.IsAuthenticated &&
+                candidate.FindFirst("iss")?.Value == "bdgrz");
+            var subject = identity?.FindFirst("sub")?.Value;
+            var issuer = identity?.FindFirst("iss")?.Value;
+            if (!Uuid.TryParse(subject, CultureInfo.InvariantCulture, out var userId) || issuer is null)
+                return ValueTask.FromResult<AccessAdmissionEvidence?>(null);
+            static AccessAdmissionSourceVersion Source(string realm, string area, string resource) =>
+                new(new EventStreamAddress(realm, area, resource).ToString(), "fixture", 1);
+            return ValueTask.FromResult<AccessAdmissionEvidence?>(new AccessAdmissionEvidence(userId, subject!, issuer,
+                operationId, target, intentSha256, clock.GetUtcNow(), "fixture",
+                Source("bdgrz", "identities", userId.ToString()), Source("bdgrz", "policies", "current"))
+            {
+                FormatVersion = 1,
+                PolicyContentSha256 = new string('a', 64),
+                Tenant = Source("bdgrz", "tenants", tenantId.ToString()),
+                Member = Source(tenantId.ToString(), "members", userId.ToString()),
+                Primary = Source(tenantId.ToString(), "primary", "current"),
+            });
+        }
+    }
 
 }

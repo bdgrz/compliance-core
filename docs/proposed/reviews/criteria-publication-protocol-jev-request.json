@@ -1,0 +1,29 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "identity": "An edition criterion owner decides one normalized identifier and permits only one in-flight mutation. On the same resource, an intent is appended at the expected revision. A competing request with the same expected revision cannot append; it reloads and reports conflict. An unknown append outcome must be recovered under the same token and exact intent; a changed intent is not an exact retry. A later attempt may begin only after the previous intent has a durable accepted or refused outcome.",
+    "sequence": "A single committed ordered source contains each relevant intent, edition publication request, parent lifecycle fact and operator grant/revocation. All are bound to the same edition generation where relevant. A qualified durable timeline index processes this source without gaps, can locate an exact earlier event position for an item and can read one subject's state as of that position. A reader that has not observed and indexed a target event has unknown coverage. These guarantees are assumptions, not facts about a deployed provider.",
+    "publication": "A publication request is a marker, not yet a successful publication. It names one exact accepted criterion incarnation as a nonempty witness. A separate decision checks only that witness and the required actor and edition facts as of the marker. If all are valid it accepts publication and freezes the logical edition at the marker; otherwise it durably refuses publication and the edition remains draft. It never scans other criteria. Individual pre-marker entry outcomes can settle afterward, and consumers report pending until the exact entry is accepted or refused.",
+    "parent_lifecycle": "Each point of focus names one exact parent incarnation. Parent removal makes points of focus that name that incarnation ineffective at later cuts without changing their own records. A re-added criterion has a new incarnation. A point of focus referencing the old incarnation does not silently attach to the new one.",
+    "duplicate": "Two clients send different proposed contents for the same criterion at expected revision zero. B commits the initial intent. A's append with expected revision zero fails. The publisher later requests publication.",
+    "remove_before": "The chosen witness criterion is accepted and then removed at source position 30. The edition publication request names that old witness at position 31. The requested witness is not active at position 31.",
+    "remove_after": "The chosen witness criterion is accepted at 29. The edition publication request names it at position 31; its removal is proposed at position 32. Every relevant source fact is in the stated common committed order.",
+    "unobserved": "A timeline reader has processed through position 30 and sees no later records yet. It has not observed the publication request at position 31 or any later durable coverage checkpoint.",
+    "auth_race": "A platform operator's permission is revoked at position 20 in a different event realm from a criterion proposal at position 21. The criterion proposal has a timestamp and a claim that the operator had permission. There is no cross-realm ordering primitive or serialized authority shared by the two records.",
+    "crash": "An evaluator writes an accepted criterion outcome and then crashes before advancing its durable timeline checkpoint. The evaluator resumes from the previous checkpoint and receives the same intent again. The outcome owner uses the same intent token and rejects changed-intent reuse.",
+    "parent_cut": "A point of focus refers to parent incarnation A. A is removed before publication; the parent identifier is then re-added as incarnation B. No explicit point-of-focus revision occurs."
+  },
+  "questions": {
+    "loser_may_succeed": {"type": "noul", "instructions": "In state.duplicate, can A's original append at expected revision zero also have committed after B at that same revision?"},
+    "before_valid": {"type": "noul", "instructions": "In state.remove_before, does the removed witness satisfy the described publication witness rule?"},
+    "after_at_marker": {"type": "noul", "instructions": "In state.remove_after, was the witness removed as of the publication request at position 31?"},
+    "before_request_seen": {"type": "noul", "instructions": "In state.unobserved, has the reader proven that it has indexed the publication request at position 31?"},
+    "cross_realm_order": {"type": "noul", "instructions": "In state.auth_race, do the timestamp and proposal claim prove that permission was valid when the proposal committed?"},
+    "duplicate_after_crash": {"type": "noul", "instructions": "In state.crash, is processing the same exact token again proof that a second distinct accepted business decision must be written?"},
+    "restore_implicit": {"type": "noul", "instructions": "In state.parent_cut, does the point of focus automatically refer to incarnation B?"},
+    "marker_prevents": {"type": "noul", "instructions": "Does state.publication say that the publication request physically prevents every later entry intent from being appended?"},
+    "assumptions_prove_substrate": {"type": "noul", "instructions": "Do the assumed ordering and index guarantees in state.sequence prove that the deployed infrastructure already provides them?"},
+    "pending_absent": {"type": "noul", "instructions": "Under state.publication, does an entry outcome still pending prove that its entry was refused or absent?"},
+    "witness_all": {"type": "noul", "instructions": "Under state.publication, does one valid witness prove every independently owned point of focus has a valid parent?"}
+  }
+}

@@ -1,9 +1,12 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Services;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
@@ -17,11 +20,8 @@ using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Models;
-using Bdgrz.Compliance.Features.ControlMappings.Readers;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.ControlMappings.Services;
 
 /// <summary>
@@ -32,6 +32,64 @@ public sealed class CriteriaCoverageReadConsistency(IControlMappingDirectoryRead
     ICriterionApplicabilityDirectoryReader applicability, IDomainEventReader events)
 {
     const int PageSize = 200;
+
+    /// <summary>Reads only mappings for the bounded page of requested criterion identities.</summary>
+    public async ValueTask<Result<IReadOnlyList<ControlCriterionMappingView>>> ReadMappingsForAsync(
+        Uuid tenantId, Uuid programId, Uuid editionId, IReadOnlySet<string> identifiers, CancellationToken ct)
+    {
+        var lag = await EnsureCaughtUpAsync(tenantId, await mappings.LoadCheckpointAsync(tenantId, ct).ConfigureAwait(false),
+            FitzControlMappingDirectoryV1.SourceArea, "control mapping", ct).ConfigureAwait(false);
+        if (!lag.IsSuccess)
+            return Result<IReadOnlyList<ControlCriterionMappingView>>.Failure(lag.Error);
+        var items = new List<ControlCriterionMappingView>();
+        string? cursor = null;
+        do
+        {
+            var page = await mappings.ListProgramAsync(tenantId, programId, PageSize, cursor, ct).ConfigureAwait(false);
+            foreach (var item in page.Items)
+            {
+                if (item.TenantId != tenantId || item.ProgramId != programId)
+                    return Result<IReadOnlyList<ControlCriterionMappingView>>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The coverage projection has an invalid scope."));
+                if (item.EditionId == editionId && identifiers.Contains(item.CriterionIdentifier))
+                    items.Add(item);
+            }
+            if (page.NextCursor is not null && page.NextCursor == cursor)
+                return Result<IReadOnlyList<ControlCriterionMappingView>>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The control mapping projection did not advance.", true));
+            cursor = page.NextCursor;
+        } while (cursor is not null);
+        return Result<IReadOnlyList<ControlCriterionMappingView>>.Success(items);
+    }
+
+    /// <summary>Reads only applicability decisions for the bounded page of requested identities.</summary>
+    public async ValueTask<Result<IReadOnlyList<CriterionApplicabilityView>>> ReadDecisionsForAsync(
+        Uuid tenantId, Uuid programId, Uuid editionId, IReadOnlySet<string> identifiers, CancellationToken ct)
+    {
+        var lag = await EnsureCaughtUpAsync(tenantId, await applicability.LoadCheckpointAsync(tenantId, ct).ConfigureAwait(false),
+            FitzCriterionApplicabilityDirectoryV1.SourceArea, "criterion applicability", ct).ConfigureAwait(false);
+        if (!lag.IsSuccess)
+            return Result<IReadOnlyList<CriterionApplicabilityView>>.Failure(lag.Error);
+        var items = new List<CriterionApplicabilityView>();
+        string? cursor = null;
+        do
+        {
+            var page = await applicability.ListProgramAsync(tenantId, programId, PageSize, cursor, ct).ConfigureAwait(false);
+            foreach (var item in page.Items)
+            {
+                if (item.TenantId != tenantId || item.ProgramId != programId)
+                    return Result<IReadOnlyList<CriterionApplicabilityView>>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The coverage projection has an invalid scope."));
+                if (item.EditionId == editionId && identifiers.Contains(item.CriterionIdentifier))
+                    items.Add(item);
+            }
+            if (page.NextCursor is not null && page.NextCursor == cursor)
+                return Result<IReadOnlyList<CriterionApplicabilityView>>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The applicability projection did not advance.", true));
+            cursor = page.NextCursor;
+        } while (cursor is not null);
+        return Result<IReadOnlyList<CriterionApplicabilityView>>.Success(items);
+    }
 
     public async ValueTask<Result<IReadOnlyList<ControlCriterionMappingView>>> ReadMappingsAsync(
         Uuid tenantId, Uuid programId, CancellationToken ct)

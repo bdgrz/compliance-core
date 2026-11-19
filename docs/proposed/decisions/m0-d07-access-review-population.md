@@ -16,6 +16,14 @@ follow-up [#353](https://github.com/bdgrz/compliance/issues/353).
 
 ## Data-shape rules
 
+**Boundary refinement, 2026-11-05:** The `EffectiveAccess` row described below
+defines one deduplicated account–entitlement review result and requires all path
+explanations. Its all-paths-in-one-row physical shape conflicts with the current
+small-record proposal. Independent, paged path and hop records are a candidate;
+preserving completeness and the accepted review semantics is unqualified, and the
+physical-shape change is not yet an approved product-decision amendment. See
+[external access governance](../contexts/external-access-governance.md).
+
 - `AccessPopulationSnapshot`: `system_instance_id` (exact version), `observed_at`, `source` (a manual attestation until imports exist), and `content_hash`. It is immutable once accepted (M0-A02).
 - `Account`: `system_instance_id`, `provider_subject_id` (unique per instance), `principal_kind`, `display_name`, `status`, `classification` (`human | nhi | shared | unclassified`), a correlation to a `Person` or `ServiceIdentity` (required for `human` and `nhi`), and, for `shared` only, a required `accountable_owner_person_id` and `shared_justification`.
 - `GroupMember` (observed): `group_principal_id`, `member_principal_id`, within a snapshot. This is how nesting is recorded.

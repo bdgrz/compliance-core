@@ -42,7 +42,7 @@ sealed class PlatformOperatorOrTenantAdminAuthorizer(
     IPlatformOperatorAccess operators,
     ITenantMembershipDirectoryReader memberships,
     ITenantActivity tenants,
-    IPermissionAuthorizer permissions)
+    IPermissionAuthorizer permissions, IAggregateReader? reader = null)
     : IRequestAuthorizer<IPlatformOperatorOrTenantAdminRequest>
 {
     public async ValueTask<Result> AuthorizeAsync(
@@ -58,6 +58,16 @@ sealed class PlatformOperatorOrTenantAdminAuthorizer(
             return Result.Success;
 
         var tenantId = context.Request.TenantId;
+        // Initial address recovery belongs to the authenticated creator, before tenant-wide access exists.
+        // The source owner admits only a rejected first claim with no other claim pending.
+        if (context.Request is Bdgrz.Compliance.Features.Tenants.Commands.ChangeTenantSlug && reader is not null)
+        {
+            var tenant = await reader.HydrateAsync(new Tenant(tenantId), ct).ConfigureAwait(false);
+            if (tenant.NeedsCreatorActivation && !tenant.IsSuspended && !tenant.IsOffboarding)
+                return tenant.WasRegisteredByCreator(userId)
+                    ? Result.Success
+                    : Result.Failure(new RequestError(RequestErrorKind.NotFound, "The tenant was not found."));
+        }
         var membership = await memberships.GetAsync(tenantId.ToString(), userId, ct)
             .ConfigureAwait(false);
         if (membership is null)
@@ -66,7 +76,8 @@ sealed class PlatformOperatorOrTenantAdminAuthorizer(
         if (membership.IsSuspended || membership.IsDeprovisioned)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The tenant was not found."));
-        if (membership.Affiliation == "firm_staff")
+        if (membership.Affiliation == "firm_staff" &&
+            !await PrimaryOrgAdminAuthority.IsCurrentAsync(reader, tenantId, userId, ct).ConfigureAwait(false))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Firm staff require an accepted engagement to access client work."));
         if (!await tenants.IsActiveAsync(tenantId, ct).ConfigureAwait(false))

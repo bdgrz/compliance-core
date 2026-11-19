@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "witness_nonempty": {
+      "type": "noul",
+      "noul": 0.95
+    },
+    "witness_all_relations": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "wrong_parent_valid": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "race_late_write": {
+      "type": "noul",
+      "noul": 0.76
+    },
+    "draft_read_is_fence": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "retry_exact": {
+      "type": "noul",
+      "noul": 0.11
+    },
+    "bad_identity_fix": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "new_parent_scan": {
+      "type": "noul",
+      "noul": 0.34
+    },
+    "empty_witness": {
+      "type": "noul",
+      "noul": 0.08
+    }
+  },
+  "usage": {
+    "input_tokens": 761,
+    "output_tokens": 173
+  }
+}

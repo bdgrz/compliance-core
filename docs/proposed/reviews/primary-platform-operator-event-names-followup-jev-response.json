@@ -1,0 +1,1 @@
+{"model":"jev-1.14.0","answers":{"designation_confirmed":{"type":"noul","noul":0.53},"reservation_confirmed":{"type":"noul","noul":0.5},"seat_confirmed":{"type":"noul","noul":0.62},"release_completed":{"type":"noul","noul":0.35},"seat_cleanup_completed":{"type":"noul","noul":0.46}},"usage":{"input_tokens":477,"output_tokens":96}}

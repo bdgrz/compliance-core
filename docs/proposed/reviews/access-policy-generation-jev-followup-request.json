@@ -1,0 +1,14 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "timeline": "A single current-policy source provides linearizable reads and strictly increasing non-reusable positions for every policy change. A first read at time 1 returns V1 at position 4. Time T is 2. A second read at time 3 returns position 4. All conditions are established, not assumed from the aggregate implementation.",
+    "changed": "A current-policy source returns V1 at position 4 on the first qualified read. Policy V2 commits before T and advances the position to 5. The qualified second read after T returns position 5.",
+    "stale": "A node reads a lagging cache twice and sees V1 both times. V2 may already have committed before either cache read. No freshness or lineage guarantee is available."
+  },
+  "questions": {
+    "same_through_t": { "type": "noul", "instructions": "In timeline, can the policy have changed at or before T after the first read without changing the position returned by the second read?" },
+    "current_at_t": { "type": "noul", "instructions": "In timeline, was V1 the current policy at T?" },
+    "changed_equal": { "type": "noul", "instructions": "In changed, are the first and second positions equal?" },
+    "stale_proves": { "type": "noul", "instructions": "In stale, do two matching cache reads prove V1 remained current at T?" }
+  }
+}

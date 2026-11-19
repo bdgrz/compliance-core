@@ -317,8 +317,8 @@ public sealed class FitzPolicyDirectoryTests
         EventStreamPattern.ForPattern(tenantId.ToString(), "policies"));
 
     static DomainEvent RoundTrip(DomainEvent ev) => (DomainEvent)JsonSerializer.Deserialize(
-        JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonContext.Default), ev.GetType(),
-        ComplianceCoreJsonContext.Default)!;
+        JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonMetadata.Default), ev.GetType(),
+        ComplianceCoreJsonMetadata.Default)!;
 
     sealed class PolicyAggregateReader(Policy policy) : IAggregateReader
     {

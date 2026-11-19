@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 namespace Bdgrz.Compliance.Features.Policies.Models;
 
 /// <summary>
@@ -10,4 +11,5 @@ namespace Bdgrz.Compliance.Features.Policies.Models;
 public sealed record PolicyContent(string Title, string Purpose, string AudienceKind,
     IReadOnlyList<string>? AudienceTeams, int ReviewCadenceMonths, string? Body,
     string? SourceReference, string? OwnerReference,
-    IReadOnlyList<PolicyApplicabilityReference>? Applicability);
+    IReadOnlyList<PolicyApplicabilityReference>? Applicability,
+    MethodologyTemplateEntryProvenance? TemplateOrigin = null);

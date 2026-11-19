@@ -554,7 +554,7 @@ public sealed class AccessGrantProposalValidatorTests
         {
             guestMember = new Member(tenantId, userId);
             Assert.True(guestMember.Register("guest", guestExpiresOn ??
-                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(90)).IsSuccess);
+                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(90), programIds: [Uuid.CreateVersion4()]).IsSuccess);
         }
         return new AccessGrantProposalValidator(
             new MembershipReader(userId, tenantId, affiliation),

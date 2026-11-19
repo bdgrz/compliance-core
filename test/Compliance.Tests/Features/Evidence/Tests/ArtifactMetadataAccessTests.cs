@@ -517,6 +517,8 @@ public sealed class ArtifactMetadataAccessTests
 
     internal sealed class Fixture : IAsyncDisposable
     {
+        readonly CassieRepositoryTestDatabase _database;
+        public string ConnectionString => _database.ConnectionString;
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public Uuid ArtifactId { get; } = Uuid.CreateVersion4();
@@ -524,13 +526,15 @@ public sealed class ArtifactMetadataAccessTests
         public Faults Faults { get; } = new();
         public static DateTimeOffset Now { get; } = new(2026, 10, 8, 18, 0, 0, TimeSpan.Zero);
 
-        Fixture()
+        Fixture(CassieRepositoryTestDatabase database)
         {
+            _database = database;
             var services = new ServiceCollection();
             services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
-                ["Fitz:ApplicationName"] = "compliance"
+                ["Fitz:ApplicationName"] = "compliance",
+                ["Cassie:ConnectionString"] = database.ConnectionString
             }).Build(), developerAuthentication: true);
             var events = new InMemoryEventStore();
             services.AddSingleton<IEventStore>(events);
@@ -544,21 +548,34 @@ public sealed class ArtifactMetadataAccessTests
 
         public static async Task<Fixture> CreateAsync(string classification = "restricted")
         {
-            var fixture = new Fixture();
-            await ProgramManagementServices.SeedAsync(fixture.Provider, new Tenant(fixture.TenantId), tenant =>
+            var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+            Fixture? fixture = null;
+            try
             {
-                Assert.True(tenant.Register(fixture.UserId, "Artifact test client", "artifact-test").IsSuccess);
-                return tenant.ConfirmSlug("artifact-test");
-            });
-            await fixture.RunReactorAsync("TenantRbacBootstrap");
-            await fixture.DriveAdministratorTransitionsAsync();
-            await fixture.ProjectAsync();
-            await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new EvidenceArtifact(fixture.TenantId, fixture.ArtifactId), artifact => artifact.Register(
-                    new EvidenceArtifactContent("Restricted native evidence", "Source description", "manual", "Native source",
-                        Now, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), classification),
-                    new string('a', 64), 42, ActorReference.ForMember(RbacIds.Member(fixture.TenantId, fixture.UserId), "Collector"), Now));
-            return fixture;
+                fixture = new Fixture(database);
+                await ProgramManagementServices.SeedAsync(fixture.Provider, new Tenant(fixture.TenantId), tenant =>
+                {
+                    Assert.True(tenant.Register(fixture.UserId, "Artifact test client", "artifact-test").IsSuccess);
+                    return tenant.ConfirmSlug("artifact-test");
+                });
+                await fixture.RunReactorAsync("TenantRbacBootstrap");
+                await fixture.DriveAdministratorTransitionsAsync();
+                await fixture.ProjectAsync();
+                await ProgramManagementServices.SeedAsync(fixture.Provider,
+                    new EvidenceArtifact(fixture.TenantId, fixture.ArtifactId), artifact => artifact.Register(
+                        new EvidenceArtifactContent("Restricted native evidence", "Source description", "manual", "Native source",
+                            Now, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), classification),
+                        new string('a', 64), 42, ActorReference.ForMember(RbacIds.Member(fixture.TenantId, fixture.UserId), "Collector"), Now));
+                return fixture;
+            }
+            catch
+            {
+                if (fixture is null)
+                    await database.DisposeAsync();
+                else
+                    await fixture.DisposeAsync();
+                throw;
+            }
         }
 
         public GrantAccess Grant(Uuid artifactId, Uuid roleId) => new(TenantId, Uuid.CreateVersion4(),
@@ -685,7 +702,7 @@ public sealed class ArtifactMetadataAccessTests
                 var store = name switch
                 {
                     "TenantMembership" => (IProjectionStore)services.GetRequiredService<ITenantMembershipDirectoryProjection>(),
-                    "PermissionProjection" => services.GetRequiredService<FitzPermissionAuthorizer>(),
+                    "PermissionProjection" => services.GetRequiredService<CassiePermissionAuthorizer>(),
                     "RoleDirectory" => (IProjectionStore)services.GetRequiredService<IRoleDirectoryProjection>(),
                     "RolePermissionDirectory" => (IProjectionStore)services.GetRequiredService<IRolePermissionDirectoryProjection>(),
                     _ => (IProjectionStore)services.GetRequiredService<IAccessGrantProjection>()
@@ -702,7 +719,17 @@ public sealed class ArtifactMetadataAccessTests
             }
         }
 
-        public ValueTask DisposeAsync() => Provider.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            try
+            {
+                await Provider.DisposeAsync();
+            }
+            finally
+            {
+                await _database.DisposeAsync();
+            }
+        }
     }
 
     internal sealed class Faults

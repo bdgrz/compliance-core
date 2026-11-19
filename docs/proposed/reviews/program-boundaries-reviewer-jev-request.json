@@ -1,0 +1,55 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "baseline": "A draft may have many authors; one approver must have authored none of its revisions unless a valid waiver permits the conflict. The reviewer approves a specific complete immutable draft revision.",
+    "candidate": "At draft creation choose one immutable reviewer R; every accepted draft or scope-decision revision records its author and rejects author R. No reviewer change is allowed within that draft. A freeze marker establishes an immutable revision; an authorized read side presents all accepted pre-marker facts. R personally reviews that version and approves its marker. The approval command checks R, the marker, and the boundary lifecycle; it does not scan or collect every scope decision. Exact revision, read completeness, stream ordering and freeze authority are assumed for these questions only.",
+    "late_change": "A writer reads the draft as open; the draft freezes; the writer later appends a change without any atomic fence or ordered evaluation.",
+    "waiver": "The baseline allows R to author a revision when an appropriate time-bound waiver is accepted at review. The candidate always rejects R as an author."
+  },
+  "questions": {
+    "one_reviewer": {
+      "type": "noul",
+      "instructions": "Under candidate assumptions, is there exactly one named reviewer of the frozen whole draft?"
+    },
+    "multi_author": {
+      "type": "noul",
+      "instructions": "Under candidate assumptions, may two different people other than R both author revisions of the same draft?"
+    },
+    "author_rule": {
+      "type": "noul",
+      "instructions": "If every accepted revision rejects R as author, has R authored any accepted revision of that draft?"
+    },
+    "same_workflows": {
+      "type": "noul",
+      "instructions": "Can a person author a revision and later become the draft reviewer under the candidate as described?"
+    },
+    "waiver_equivalent": {
+      "type": "noul",
+      "instructions": "Does candidate preserve the authoring permitted in waiver without adding a restriction?"
+    },
+    "no_write_scan": {
+      "type": "noul",
+      "instructions": "Must the candidate approval command itself scan every scope decision, given the candidate assumptions?"
+    },
+    "marker_truth": {
+      "type": "noul",
+      "instructions": "Does a marker by itself prove that a lagging projection displays every accepted pre-marker revision?"
+    },
+    "late_append": {
+      "type": "noul",
+      "instructions": "Can the writer in late_change append after the draft freezes?"
+    },
+    "review_not_report": {
+      "type": "noul",
+      "instructions": "Does a complete projection by itself prove that R personally reviewed the frozen version?"
+    },
+    "human_evidence": {
+      "type": "noul",
+      "instructions": "If R explicitly attests review of the exact immutable version, is the attestation R\u2019s recorded statement rather than a computation over every item?"
+    },
+    "source_assumed": {
+      "type": "noul",
+      "instructions": "Do the assumptions in candidate prove that the deployed provider actually supplies atomic ordered freezing?"
+    }
+  }
+}

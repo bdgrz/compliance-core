@@ -1,0 +1,56 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "marker": "In a retained, totally ordered source scope, immutable support facts for one occurrence epoch and an attestation marker M are committed. The attested set is defined as exactly the authorized support facts for that epoch before M. Support S commits after M and uses the same epoch. The attestation writes only M and two exact required references; it does not enumerate support facts.",
+    "incomplete": "A projection sees M but has not yet processed all ordered source events before M. A qualifying support fact occurred before M but is still unprocessed.",
+    "untrusted": "A support fact by a different actor is committed before M, but the signatory never authorized that actor or this fact; the set rule includes every pre-marker fact matching the epoch.",
+    "plan": "A plan epoch accepts step revision facts before a totally ordered start marker; each step has an independent owner. A late revision of that same epoch commits after the marker. The frozen plan includes only accepted revisions before the marker.",
+    "result": "An evaluation submission writes a signed marker and no system-verified effective result. A complete gapless projection processes the frozen plan and the latest accepted per-step results before that marker. It derives effective only when every applicable step is met and otherwise derives an appropriate less-favorable result or pending.",
+    "missing": "The plan contains applicable steps X and Y. Before the submission marker X is met, and Y has no accepted result. The system derives effective if the observed results are all met, without detecting that Y is missing.",
+    "later": "An evaluation is submitted at M with an accepted result for X of not_met. A correction marking X met is accepted only after M in a later work episode. The submitted version is defined by the prefix through M.",
+    "crosswrite": "A command to publish an irreversible downstream decision checks only a lagging projection which currently says the evaluation is effective; it does not bind the source marker or require the projection to be caught up.",
+    "outcome": "One material deviation event causes a request for a finding using a deterministic ID. The finding owner refuses the request, and the deviation process reports pending or refusal; no accepted finding is recorded."
+  },
+  "questions": {
+    "late_member": {
+      "type": "noul",
+      "instructions": "In marker, is S part of the attested pre-marker set?"
+    },
+    "one_marker_lists_every_child": {
+      "type": "noul",
+      "instructions": "In marker, does the attestation event have to contain or enumerate every support fact to define the specified set?"
+    },
+    "lag_proves_complete": {
+      "type": "noul",
+      "instructions": "In incomplete, can the projection honestly claim its visible support list is complete through M?"
+    },
+    "implied_consent": {
+      "type": "noul",
+      "instructions": "In untrusted, does source ordering alone show that the signatory intended to include the other actor's fact?"
+    },
+    "late_plan_revision": {
+      "type": "noul",
+      "instructions": "In plan, does the late revision belong to the frozen plan?"
+    },
+    "verified_outcome_requires_write_scan": {
+      "type": "noul",
+      "instructions": "In result, must the submission write enumerate every step to permit the described separate complete projection to derive an outcome?"
+    },
+    "missing_makes_effective_wrong": {
+      "type": "noul",
+      "instructions": "In missing, can the system incorrectly report effective even though Y has no result?"
+    },
+    "later_changes_old_submission": {
+      "type": "noul",
+      "instructions": "In later, does the correction after M replace the submitted result for X at M?"
+    },
+    "stale_guard_safe": {
+      "type": "noul",
+      "instructions": "In crosswrite, does the stale projection prove the irreversible decision was authorized by the exact submitted outcome?"
+    },
+    "request_equals_accepted_finding": {
+      "type": "noul",
+      "instructions": "In outcome, has a finding been accepted by the finding owner?"
+    }
+  }
+}

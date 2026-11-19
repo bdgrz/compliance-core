@@ -1,0 +1,56 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "publication": "An edition owner publishes a platform-level edition E in a durable committed fact. That publication is irreversible, identifies one valid previously accepted criterion witness, and fixes membership deterministically even if unrelated participant outcomes are still pending. The program binds only E, makes no claim that all edition entries are available, and the published fact cannot be invalidated or removed.",
+    "reversal": "A program reads that edition F is published; afterwards the edition owner is allowed to retract its published status before program creation commits. There is no cross-stream transaction or fence.",
+    "pending": "An edition was published correctly and a pre-marker criterion proposal has an unknown outcome. A program can be created referencing the edition. A mapping command needs the exact criterion acceptance and proof its proposal belongs to the frozen edition. Readiness depends on the full published criteria population.",
+    "outcome_only": "A criterion outcome was committed after the edition publication marker. The consumer only observes the child resource stream and sees CriterionAdded; it does not know whether the original proposal occurred before or after the edition marker, and resource stream positions are not comparable to the edition scope position.",
+    "retry": "A client retries creation with the same tenant ID and program ID, but a different edition ID. Program name and plan match. The original creation event already committed with the first edition.",
+    "legacy": "An old ProgramCreated event contains no edition ID. A newly deployed reader replays that event. An edition may have been selected by a separate historical event, but a fallback value was not part of the creation event.",
+    "authorize": "A caller was authorized to create a program when a handler checked membership. Their program-management permission is then revoked before the program stream append; no authority fence or transactional recheck orders revocation and append.",
+    "incomplete": "The existing fixed catalog marks 61 numbered criteria as present, while disclosure separately says point-of-focus coverage is partial and Privacy lifecycle support is absent.",
+    "missing": "A handler asks an authoritative event store whether an edition has a committed publication fact. The storage call times out; it has not received a conclusive response."
+  },
+  "questions": {
+    "bind_published": {
+      "type": "noul",
+      "instructions": "Under state.publication, can program creation bind E without awaiting unrelated participant outcomes, while truthfully making no completeness claim?"
+    },
+    "retractable": {
+      "type": "noul",
+      "instructions": "Under state.reversal, does the earlier read guarantee the program still references a published edition when its creation commits?"
+    },
+    "pending_absent": {
+      "type": "noul",
+      "instructions": "Under state.pending, is an unknown individual outcome sufficient evidence that this criterion is absent from the edition?"
+    },
+    "pending_mapping": {
+      "type": "noul",
+      "instructions": "Under state.pending, can a criterion-dependent mapping safely accept before the required criterion membership and acceptance proof is available?"
+    },
+    "outcome_membership": {
+      "type": "noul",
+      "instructions": "Under state.outcome_only, does the child outcome alone prove the original proposal was admitted before this edition marker?"
+    },
+    "changed_retry": {
+      "type": "noul",
+      "instructions": "Under state.retry, is changing the edition ID an exact retry of the original creation intent?"
+    },
+    "legacy_fabrication": {
+      "type": "noul",
+      "instructions": "Under state.legacy, can the new reader truthfully claim a default edition was part of the old creation event?"
+    },
+    "auth_fence": {
+      "type": "noul",
+      "instructions": "Under state.authorize, does the earlier authorization read guarantee the append is ordered before revocation?"
+    },
+    "partial_support": {
+      "type": "noul",
+      "instructions": "Under state.incomplete, does the presence of all numbered criteria establish complete points-of-focus coverage and supported Privacy lifecycle?"
+    },
+    "unknown_is_absent": {
+      "type": "noul",
+      "instructions": "Under state.missing, does the timeout prove the edition was not published?"
+    }
+  }
+}

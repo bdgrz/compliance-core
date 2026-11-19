@@ -37,7 +37,7 @@ namespace Bdgrz.Compliance.Features.Work.Processes;
 
 /// <summary>Finds current tenant members and advances their durable weekly digest records.</summary>
 sealed partial class WorkDigestDispatchSweep(ITenantDirectoryReader tenants, ITenantActivity tenantActivity,
-    ITenantMembershipDirectoryReader memberships, WorkDigestDispatchProcessor processor,
+    ITenantMembershipDirectoryReader memberships, WeeklyWorkDigestProcessor processor,
     ILogger<WorkDigestDispatchSweep> logger)
 {
     public async ValueTask RunOnceAsync(CancellationToken ct)

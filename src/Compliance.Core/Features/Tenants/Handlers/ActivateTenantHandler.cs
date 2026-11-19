@@ -31,7 +31,7 @@ using Bdgrz.Compliance.Features.Tenants.Readers;
 namespace Bdgrz.Compliance.Features.Tenants.Handlers;
 
 public sealed class ActivateTenantHandler(NativeOperationExecutor operations, IImmutableContentStore content,
-    TimeProvider clock, IAggregateReader reader, ITenantMembershipDirectoryReader memberships, IPermissionAuthorizer permissions)
+    TimeProvider clock, IAggregateReader reader)
     : IRequestHandler<ActivateTenant>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<ActivateTenant> context, CancellationToken ct)
@@ -55,20 +55,15 @@ public sealed class ActivateTenantHandler(NativeOperationExecutor operations, II
                 if (!prepared.IsSuccess)
                     return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
                 var user = request.FirstAdministratorUserId;
-                var memberId = RbacIds.Member(request.TenantId, user);
                 var member = await reader.HydrateAsync(new Member(request.TenantId, user), token).ConfigureAwait(false);
-                var assignment = await reader.HydrateAsync(new TeamMember(request.TenantId,
-                    BuiltInRbac.AdministratorsTeamId(request.TenantId), memberId), token).ConfigureAwait(false);
+                var primaries = await reader.HydrateAsync(new PrimaryOrgAdmins(request.TenantId), token).ConfigureAwait(false);
                 if (member.IsRegistered && member.Affiliation != "client_personnel")
                     return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                        "The first administrator must be client personnel."));
-                if (!member.IsRegistered || !assignment.IsAssigned || assignment.MembershipEpisodeId != member.MembershipEpisodeId ||
-                    !await memberships.IsMemberAsync(request.TenantId.ToString(), user, token).ConfigureAwait(false) ||
-                    !await permissions.IsAllowedAsync(request.TenantId, user, memberId, RbacPermissions.TenantAccess, token).ConfigureAwait(false) ||
-                    !await permissions.IsAllowedAsync(request.TenantId, user, memberId, RbacPermissions.TenantRbacManage, token).ConfigureAwait(false) ||
-                    !await permissions.IsAllowedAsync(request.TenantId, user, memberId, RbacPermissions.ProgramManage, token).ConfigureAwait(false))
+                        "The creator must be client personnel."));
+                if (!member.IsRegistered || member.IsSuspended || member.Affiliation != "client_personnel" ||
+                    !member.IsPrimary || !primaries.HasDesignated(user, member.MembershipEpisodeId, member.PrimaryDesignationId))
                     return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                        "The first administrator is still being provisioned.", true));
+                        "The creator's primary administrator designation is still being provisioned.", true));
                 return Result<FirstResponseDescriptor>.Success(await UnitResponses.FreezeAsync(content, "bdgrz", token)
                     .ConfigureAwait(false));
             }, (Tenant tenant, ImmutableContentRef response) => tenant.Activate(operation, response,

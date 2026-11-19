@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Boundaries.Projections;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -99,10 +100,11 @@ public sealed class BoundaryOwnerScopedIdentityTests
             }
             await native.PublishAsync(rules);
         }
-        var directory = new FitzBoundaryDirectory(native.Kv, native.Boundaries);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieBoundarySchema.Statements);
+        await using var directory = new CassieBoundaryDirectory(database.Database, native.Boundaries);
 
         // Act
-        await native.ProjectAsync(directory, directory.ApplyAsync, FitzBoundaryDirectory.ProjectorName, tenant);
+        await native.ProjectAsync(directory, directory.ApplyAsync, CassieBoundaryDirectory.ProjectorName, tenant);
 
         // Assert
         foreach (var boundary in boundaries)

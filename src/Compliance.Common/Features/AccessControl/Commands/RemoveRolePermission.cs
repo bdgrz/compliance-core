@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 [Discriminator("bdgrz.rbac.role-permission.remove", 1)]
 public sealed record RemoveRolePermission(Uuid TenantId, Uuid RoleId, string Permission,
     Uuid CommandId, ulong ExpectedRevision, Uuid AssignmentId)
-    : IRequest, IRbacManagementRequest, ICallable, IIdentifiedRequest
+    : IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }

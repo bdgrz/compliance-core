@@ -54,7 +54,7 @@ public sealed class ListProgramsHandler(IProgramDirectoryReader directory,
                     request.Cursor, ct).ConfigureAwait(false);
                 return ValidatePage(request.TenantId, page);
             }
-            catch (KvDirectoryQueryException)
+            catch (ProgramScopeDirectoryQueryException)
             {
                 return Result<Page<ProgramView>>.Failure(new RequestError(RequestErrorKind.Validation,
                     "The program cursor is invalid."));
@@ -72,7 +72,7 @@ public sealed class ListProgramsHandler(IProgramDirectoryReader directory,
                 page = await directory.ListAsync(request.TenantId, remaining, cursor, ct)
                     .ConfigureAwait(false);
             }
-            catch (KvDirectoryQueryException)
+            catch (ProgramScopeDirectoryQueryException)
             {
                 return Result<Page<ProgramView>>.Failure(new RequestError(RequestErrorKind.Validation,
                     "The program cursor is invalid."));

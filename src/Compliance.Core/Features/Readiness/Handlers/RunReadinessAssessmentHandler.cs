@@ -1,23 +1,30 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Services;
 using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
 using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Readers;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Controls.Services;
 using Bdgrz.Compliance.Features.Criteria.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
@@ -28,37 +35,32 @@ using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Projections;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Aggregates;
+using Bdgrz.Compliance.Features.Readiness.Commands;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Projections;
+using Bdgrz.Compliance.Features.Readiness.Readers;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Readiness.Services;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.ControlMappings.Models;
-using Bdgrz.Compliance.Features.ControlMappings.Readers;
-using Bdgrz.Compliance.Features.Controls.Readers;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Readiness.Aggregates;
-using Bdgrz.Compliance.Features.Readiness.Commands;
-using Bdgrz.Compliance.Features.Readiness.Readers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Readiness.Handlers;
 
 /// <summary>
@@ -129,8 +131,12 @@ public sealed class RunReadinessAssessmentHandler(NativeOperationExecutor operat
         var program = await programs.HistoryAsync(tenant, request.ProgramId, ct).ConfigureAwait(false);
         if (!program.Owner.IsCreated)
             return Fail(RequestErrorKind.NotFound, "The program was not found.");
+        if (HasRuntimeCriteriaSelection(program, asOf))
+            return CriteriaCoverageUnavailable();
         var selectedEditionId = program.CriteriaSelectionAt(asOf)?.EditionId;
         var catalogEdition = selectedEditionId is { } selected ? catalog.GetEdition(selected) : null;
+        if (selectedEditionId is not null && catalogEdition is null)
+            return CriteriaCoverageUnavailable();
         var editionId = catalogEdition is not null ? selectedEditionId : null;
         var criteria = editionId is { } edition
             ? catalog.ListEntries(edition, null, "criterion", null)
@@ -180,6 +186,26 @@ public sealed class RunReadinessAssessmentHandler(NativeOperationExecutor operat
 
     static Result<(ImmutableContentRef, FirstResponseDescriptor)> Fail(RequestErrorKind kind, string message) =>
         Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(new RequestError(kind, message));
+
+    // A runtime selection's publication proof identifies the source edition, but does not prove complete
+    // and settled coverage of its criteria. The legacy catalog cannot supply that missing proof.
+    internal static bool HasRuntimeCriteriaSelection(ProgramHistorySnapshot program, DateTimeOffset asOf)
+    {
+        var effective = program.CriteriaSelectionAt(asOf);
+        if (effective is null)
+            return false;
+        var selection = program.CriteriaFactAt(asOf);
+        if (selection is not null && selection.Revision == effective.Revision)
+            return selection.CriteriaPublication is not null;
+
+        return program.Facts.OfType<ProgramCreated>()
+            .Any(created => created.Revision == effective.Revision && created.CriteriaPublication is not null);
+    }
+
+    static Result<(ImmutableContentRef, FirstResponseDescriptor)> CriteriaCoverageUnavailable() =>
+        Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(new RequestError(RequestErrorKind.Conflict,
+            "The selected criteria edition cannot yet be verified for a complete readiness assessment.",
+            isTransient: true));
 
     static Result<OperationAcceptedResponse> Failure(RequestErrorKind kind, string message) =>
         Result<OperationAcceptedResponse>.Failure(new RequestError(kind, message));

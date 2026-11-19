@@ -129,8 +129,8 @@ public sealed class SelectedSnapshotSourceEnvelopeTests
         object after = close ? operating with { PhysicalContentBlobs = [blob] } : finding with { ContentBlobs = [blob] };
 
         // Act
-        var original = JsonSerializer.SerializeToUtf8Bytes(before, ComplianceCoreJsonContext.Default.GetTypeInfo(before.GetType())!);
-        var captured = JsonSerializer.SerializeToUtf8Bytes(after, ComplianceCoreJsonContext.Default.GetTypeInfo(after.GetType())!);
+        var original = JsonSerializer.SerializeToUtf8Bytes(before, ComplianceCoreJsonMetadata.Default.GetTypeInfo(before.GetType())!);
+        var captured = JsonSerializer.SerializeToUtf8Bytes(after, ComplianceCoreJsonMetadata.Default.GetTypeInfo(after.GetType())!);
 
         // Assert
         Assert.Equal(original, captured);

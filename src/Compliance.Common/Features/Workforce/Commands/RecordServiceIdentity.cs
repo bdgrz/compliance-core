@@ -17,4 +17,4 @@ namespace Bdgrz.Compliance.Features.Workforce.Commands;
 public sealed record RecordServiceIdentity(Uuid TenantId, string DisplayName, string IdentityKind,
     string Purpose, string OwnerKind, Uuid OwnerId, DateOnly ReviewBy, string? Environment = null,
     DateOnly? ExpiresOn = null, string? SharedJustification = null)
-    : IRequest<ServiceIdentityRegistration>, IWorkforceRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest<PortiaCreateOutcome<ServiceIdentityRegistration>>, IWorkforceRequest, IClientManagementMutationRequest, ICallable;

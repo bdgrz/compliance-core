@@ -99,7 +99,7 @@ public sealed class RegisterTenantRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(BdgrzActor())
             // Act
-            .When(new RegisterTenant("Acme", "acme"))
+            .When(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme"))
             // Assert
             .ExpectAuthorized()
             .ExpectGuardPassed<RegisterTenantSlugAvailabilityGuard>()
@@ -116,7 +116,7 @@ public sealed class RegisterTenantRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RequestActor.Anonymous)
             // Act
-            .When(new RegisterTenant("Acme", "acme"))
+            .When(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme"))
             // Assert
             .ExpectDenied(RequestErrorKind.Unauthorized)
             .ExpectNotHandled();
@@ -131,7 +131,7 @@ public sealed class RegisterTenantRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(BdgrzActor())
             // Act
-            .When(new RegisterTenant("Acme", "acme"))
+            .When(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme"))
             // Assert
             .ExpectDenied(RequestErrorKind.Forbidden)
             .ExpectNotHandled();
@@ -148,7 +148,7 @@ public sealed class RegisterTenantRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(BdgrzActor(creatorId))
             // Act
-            .When(new RegisterTenant("Acme", "acme", "Acme LLC"))
+            .When(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme", "Acme LLC"))
             // Assert
             .ExpectAuthorized()
             .ExpectGuardPassed<RegisterTenantSlugAvailabilityGuard>()
@@ -168,7 +168,7 @@ public sealed class RegisterTenantRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(actor)
             // Act
-            .When(new RegisterTenant("Acme", "acme"))
+            .When(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme"))
             // Assert
             .ExpectAuthorized()
             .ExpectGuardPassed<RegisterTenantSlugAvailabilityGuard>()
@@ -176,14 +176,14 @@ public sealed class RegisterTenantRequestScenarioTests
             .ExpectFailure();
         await RequestScenario.For(provider)
             .GivenActor(actor)
-            .When(new RegisterTenant("Acme", "acme", "Acme LLC", "creator@example.com"))
+            .When(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme", "Acme LLC", "creator@example.com"))
             .ExpectAuthorized()
             .ExpectGuardPassed<RegisterTenantSlugAvailabilityGuard>()
             .ExpectHandled()
             .ExpectFailure();
         await RequestScenario.For(provider)
             .GivenActor(actor)
-            .When(new RegisterTenant("Acme", "acme", "Acme LLC"))
+            .When(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme", "Acme LLC"))
             .ExpectAuthorized()
             .ExpectGuardPassed<RegisterTenantSlugAvailabilityGuard>()
             .ExpectHandled()
@@ -207,11 +207,73 @@ public sealed class RegisterTenantRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(BdgrzActor())
             // Act
-            .When(new RegisterTenant("Acme", "acme"))
+            .When(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme"))
             // Assert
             .ExpectAuthorized()
             .ExpectGuardFailed<RegisterTenantSlugAvailabilityGuard>(RequestErrorKind.Conflict)
             .ExpectNotHandled();
+    }
+
+    [Fact]
+    public async Task ShouldMakeCreatorAdministratorGivenDeveloperSelfServiceCreation()
+    {
+        // Arrange
+        var creator = Uuid.CreateVersion4();
+        await using var provider = BuildProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var id = Uuid.CreateVersion4();
+        var context = new RequestDispatchContext(BdgrzActor(creator), metadata: new RequestMetadata(id, id));
+
+        // Act
+        var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>()
+            .SendAsync(new RegisterTenant(id, "Company", "company"), context);
+        var tenant = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new Tenant(id));
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.True(tenant.WasRegisteredByCreator(creator));
+        Assert.True(tenant.NeedsCreatorActivation);
+        Assert.False(tenant.IsActive);
+    }
+
+    [Fact]
+    public async Task ShouldRejectInvitedFirstAdministratorGivenDeveloperSelfServiceCreation()
+    {
+        // Arrange
+        await using var provider = BuildProvider();
+
+        // Act
+        // Assert
+        await RequestScenario.For(provider).GivenActor(BdgrzActor())
+            .When(new RegisterTenant(Uuid.CreateVersion4(), "Company", "company", FirstAdministratorEmail: "other@example.test"))
+            .ExpectAuthorized().ExpectGuardPassed<RegisterTenantSlugAvailabilityGuard>()
+            .ExpectHandled().ExpectFailure();
+    }
+
+    [Fact]
+    public async Task ShouldReplayOriginalCreationGivenSameRequestIdentity()
+    {
+        // Arrange
+        var creator = Uuid.CreateVersion4();
+        await using var provider = BuildProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var id = Uuid.CreateVersion4();
+        var context = new RequestDispatchContext(BdgrzActor(creator), metadata: new RequestMetadata(id, id));
+        var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
+        var request = new RegisterTenant(id, "Company", "company");
+
+        // Act
+        var first = await bus.SendAsync(request, context);
+        var exact = await bus.SendAsync(request, context);
+        var changed = await bus.SendAsync(request with { Name = "Other Company" }, context);
+        var tenant = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new Tenant(id));
+
+        // Assert
+        Assert.True(first.IsSuccess);
+        Assert.True(exact.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.Equal(1UL, tenant.Revision);
+        Assert.True(tenant.WasRegisteredByCreator(creator));
     }
 
     static ServiceProvider BuildProvider(bool developerAuthentication = true,

@@ -1,6 +1,19 @@
 # Application inventory
 
-Status: **locked**, 2026-11-03. Hand-authored source of truth for this context.
+Status: **product rules locked**, 2026-11-03; merge and retirement coordination **not implementation-ready**. Hand-authored source of truth for this context; see [AI-08](#decisions) and [open questions](#open-questions).
+
+**2026-11-05 boundary correction:** The prior completion protocol required
+enumerating every instance and matching every terminal outcome. That is an
+all-child write decision even when no event contains a list; it is withdrawn.
+AI-01 and AI-02 remain product requirements, but their coordination is unresolved.
+The alternatives below are for product and protocol review, not approved changes.
+
+[M0-D05](../decisions/m0-d05-application-inventory.md) also states tenant-wide
+alias uniqueness and active instance provider-key uniqueness, while AI-03 below
+previously treated both as advisory. The accepted uniqueness requirements remain
+in force. Their normalized key, admission, release/reuse and retry authority are
+unqualified; a duplicate gap cannot substitute for preventing a concurrent
+duplicate.
 
 ## Purpose
 
@@ -37,46 +50,84 @@ list only corroborates or helps discovery.
 
 **Identity:** `TenantId` + `ApplicationId`.
 
-**Invariant:** one application has one canonical name, its aliases, a kind, a
-criticality, a system owner, an access owner, and a lifecycle: active, then
-retired. A retired application accepts no further changes.
+**Invariant:** one application has one canonical name, a kind, a criticality,
+a system owner, an access owner, and a lifecycle: active, optionally closing
+for retirement or merging, then retired. A retired application accepts no
+further changes. Aliases are separate `ApplicationAlias` records; the
+application never stores an alias or instance roster.
 
 - Every active application has all of these fields (M0-D05).
-- Names and aliases are normalized and should be unique within the tenant across
-  active applications. This is advice checked when a name is set
-  ([CV-05](conventions.md#guards-and-reviews)); a duplicate from two simultaneous
-  changes shows as the `duplicate_application_name` gap and is fixed by a rename
-  or merge (AI-03).
+- Duplicate application display names are advisory and repairable (AI-03).
+  M0-D05 separately requires normalized aliases to be unique within the tenant;
+  a projected duplicate-name gap alone cannot enforce that accepted requirement.
 - A classification declared by the tenant is attributed and stays
   `classification_unverified` until the classification vocabulary is approved; a
   missing one is an explicit `classification_unresolved` gap.
 - Retirement is effective-dated, needs a reason, and is refused while the
   application has active system instances (AI-02). It never deletes history or a
   snapshot reference.
-- A merge retires this application with `merged_into` the survivor, and its
-  aliases and instances move to the survivor (AI-01).
+- AI-01 describes moving the merged application's instances and aliases to the
+  survivor. AI-02 refuses retirement while an active instance remains. Their
+  race-safe interaction without an all-instance decision is unresolved; do not
+  treat a projected zero or an outcome scan as the solution (AI-08).
+
+The commands and event shapes below describe the previous completion candidate,
+not a qualified write contract. In particular, the stated guards for
+`CompleteApplicationRetirement` and `CompleteApplicationMerge` are incompatible
+with the current no-all-child-write direction and must be redesigned.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| DeclareApplication | Compliance Lead or Contributor | `ApplicationId` is new; name and aliases unused; fields complete | ApplicationDeclared |
-| RenameApplication | Compliance Lead or Contributor | Active; name unused | ApplicationRenamed |
-| AddApplicationAlias | Compliance Lead or Contributor | Active; alias unused | ApplicationAliasAdded |
-| RemoveApplicationAlias | Compliance Lead or Contributor | Active; alias held | ApplicationAliasRemoved |
+| DeclareApplication | Compliance Lead or Contributor | `ApplicationId` is new; fields complete; duplicate name check is advisory | ApplicationDeclared |
+| RenameApplication | Compliance Lead or Contributor | Active; duplicate name check is advisory | ApplicationRenamed |
 | ChangeApplicationDetails | Compliance Lead or Contributor | Active | ApplicationDetailsChanged |
 | ChangeApplicationOwners | Compliance Lead | Active; owners are people | ApplicationOwnersChanged |
-| RetireApplication | Compliance Lead | Active; no active instances; reason given | ApplicationRetired |
-| MergeApplication | Compliance Lead | Both active; survivor differs | ApplicationMerged |
+| BeginApplicationRetirement | Compliance Lead | Active; reason given; establish an admission fence | ApplicationRetirementStarted |
+| BeginApplicationMerge | Compliance Lead | Source active; survivor differs; establish an admission fence | ApplicationMergeStarted |
+| RefuseApplicationRetirement | Reactor | Exact authoritative active-instance outcome | ApplicationRetirementRefused |
+| CompleteApplicationRetirement | Reactor | Closed admissions and authoritative proof of no active instances; reason recorded | ApplicationRetired |
+| CompleteApplicationMerge | Reactor | Closed admissions; every source instance has a terminal moved-or-retired outcome; survivor validated by the protocol below | ApplicationMerged |
 
 | Event | Carries |
 | --- | --- |
-| ApplicationDeclared | tenant, application, name, aliases, kind, criticality, classification and its status, system owner, access owner, declared by |
+| ApplicationDeclared | tenant, application, name, kind, criticality, classification and its status, system owner, access owner, declared by |
 | ApplicationRenamed | tenant, application, previous name, new name, renamed by |
-| ApplicationAliasAdded | tenant, application, alias, added by |
-| ApplicationAliasRemoved | tenant, application, alias, removed by |
 | ApplicationDetailsChanged | tenant, application, changed fields (kind, criticality, classification), changed by |
 | ApplicationOwnersChanged | tenant, application, system owner, access owner, changed by |
-| ApplicationRetired | tenant, application, effective at, reason, retired by |
-| ApplicationMerged | tenant, application, merged into, effective at, reason, aliases moved, merged by |
+| ApplicationRetirementStarted | tenant, application, operation ID, admission fence, reason, requested by |
+| ApplicationRetirementRefused | tenant, application, operation ID, exact active instance and version, reason |
+| ApplicationMergeStarted | tenant, application, operation ID, requested survivor, admission fence, reason, requested by |
+| ApplicationRetired | tenant, application, operation ID, effective at, reason, retired by |
+| ApplicationMerged | tenant, application, operation ID, merged into, effective at, reason, merged by |
+
+### ApplicationAlias
+
+**Identity:** `TenantId` + `ApplicationId` + normalized alias.
+
+**Invariant:** one association has one normalized alias, display form and
+attributed active/removed state; at most one association with that identity is
+active. This identity alone does **not** enforce M0-D05's tenant-wide alias
+uniqueness. Its authoritative claim and transfer lifecycle is unqualified; do
+not admit an alias on a projected duplicate check. List and search views are
+projections; neither the application nor an event contains the full alias list.
+Cross-owner admission and merge fencing remain under qualification below.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| AddApplicationAlias | Compliance Lead or Contributor, or merge reactor | Exact association not active; tenant-wide uniqueness authority is required but unqualified | ApplicationAliasAdded |
+| RemoveApplicationAlias | Compliance Lead or Contributor, or merge reactor | Exact association active | ApplicationAliasRemoved |
+
+| Event | Carries |
+| --- | --- |
+| ApplicationAliasAdded | tenant, application, normalized and display alias, actor, merge operation and source alias when applicable |
+| ApplicationAliasRemoved | tenant, application, normalized alias, actor, merge operation when applicable |
+
+The former transfer candidate processes each source alias individually and records the exact target
+association's acceptance or refusal before releasing the source association. A
+refusal is a visible gap. Alias operations racing with closure must be fenced or
+captured in the same complete source cut as the transfer; that does not resolve
+the all-child completion problem. Exact authority is an open implementation gate,
+not an assumed projection property.
 
 ### SystemInstance
 
@@ -89,30 +140,30 @@ kind, platform and provider identifier, and is active, then retired.
   `saas_tenant`, `environment` or `other`; `other` needs a description. Platform
   is required for every kind except `environment` and `other` (M0-D05).
 - Among active instances in the tenant, (kind, platform, provider identifier)
-  should be unique. This is advice checked when the instance is declared or
-  changed; a duplicate shows as the `duplicate_system_instance` gap and is fixed
-  by retiring one or moving it through a merge (AI-03).
+  is unique (M0-D05). Authority for that exact key and its release/reuse is
+  unqualified; an advisory lookup or `duplicate_system_instance` gap cannot
+  enforce concurrent uniqueness.
 - An instance may name its own access owner; otherwise it uses its application's
   (AI-04).
-- It moves to another application only through that application's merge (AI-01),
-  and only to an active application. The move reactor follows `merged_into` to
-  the live survivor, so a chain of merges never leaves an instance on a retired
-  application (AI-07).
+- It moves to another application only through its source application's merge
+  (AI-01), and only to an active application. A durable admission by the exact
+  target must cover the move until its authoritative terminal outcome; a stale
+  active-status read alone cannot enforce this (AI-07, AI-08).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| DeclareSystemInstance | Compliance Lead or Contributor | `SystemInstanceId` is new; application active; key unused | SystemInstanceDeclared |
-| ChangeSystemInstanceDetails | Compliance Lead or Contributor | Active; key unused | SystemInstanceDetailsChanged |
+| DeclareSystemInstance | Compliance Lead or Contributor | `SystemInstanceId` is new; application admission and active-key uniqueness require unqualified authority | SystemInstanceDeclared |
+| ChangeSystemInstanceDetails | Compliance Lead or Contributor | Active; changed provider key requires unqualified uniqueness authority | SystemInstanceDetailsChanged |
 | ChangeSystemInstanceAccessOwner | Compliance Lead | Active | SystemInstanceAccessOwnerChanged |
-| MoveSystemInstance | Reactor on ApplicationMerged | Active; owned by a retired, merged application; target active | SystemInstanceMoved |
+| MoveSystemInstance | Reactor on ApplicationMergeStarted | Active and owned by the closing source; exact merge and target admission valid | SystemInstanceMoved |
 | RetireSystemInstance | Compliance Lead | Active; reason given | SystemInstanceRetired |
 
 | Event | Carries |
 | --- | --- |
-| SystemInstanceDeclared | tenant, instance, application, kind, platform, provider identifier, description, access owner, declared by |
+| SystemInstanceDeclared | tenant, instance, application, admission identity and epoch, kind, platform, provider identifier, description, access owner, declared by |
 | SystemInstanceDetailsChanged | tenant, instance, changed fields, changed by |
 | SystemInstanceAccessOwnerChanged | tenant, instance, access owner (or none), changed by |
-| SystemInstanceMoved | tenant, instance, from application, to application |
+| SystemInstanceMoved | tenant, instance, source and target application, merge operation, target admission, prior instance version |
 | SystemInstanceRetired | tenant, instance, effective at, reason, retired by |
 
 ### AccessReviewScope
@@ -141,35 +192,54 @@ ever edited.
 
 ## Flows
 
-### Merging duplicate applications
+### Independent instance ownership and effective successor — candidate
 
 ```mermaid
 flowchart LR
-    B([Both applications active]) -. checks .-> C1
-    C1[/MergeApplication/] --> E1([ApplicationMerged])
-    E1 --> R1{{"Move instances to the live survivor (follow merged_into)"}} --> C2[/MoveSystemInstance/] --> E2([SystemInstanceMoved])
-    E1 --> R2{{Move aliases to the live survivor}} --> C3[/AddApplicationAlias/]
-    C3 --> E3([ApplicationAliasAdded])
-    C3 -. "alias taken meanwhile: refused" .-> G1[[Visible gap on the survivor: alias not carried over]]
+    C1[/Propose merge of A into B/] --> A([A records one successor decision])
+    I([Independent instance with original application A]) -.-> V[[Read resolves its effective application]]
+    A -.-> V
+    AL([Independent alias association]) -.-> V
 ```
 
-The merged application's aliases are released by the merge itself and then added
-to the survivor. Its canonical name is not carried over automatically. A refused
-alias is a visible gap, never dropped silently ([CV-03](conventions.md#reactors)).
+One possible product change makes the source's `merged_into` a durable successor
+relationship. An instance retains its own exact original application identity;
+its **effective** application is the terminal successor resolved at the requested
+business time. The merge records one source decision and does not issue or collect
+one move per instance. The instance keeps its identity, access-review scope,
+history and independent lifecycle. A view can group instances and aliases under
+their effective application with paged reads.
 
-### Retiring an application
+This is **not equivalent to the current AI-01 contract**: an instance stream has
+not recorded a physical move, and ownership has changed from stored membership to
+derived membership. Product review must choose the meaning of historical
+application membership, inherited versus overridden access owners, alias display,
+merge attribution and whether aliases themselves are physically transferred.
+Snapshot consumers must cite the effective identity and the exact source facts
+used at that time; a current redirect cannot silently rewrite an old snapshot.
 
-```mermaid
-flowchart LR
-    C1[/RetireSystemInstance/] --> E1([SystemInstanceRetired])
-    N([No active instances]) -. checks .-> C2
-    C2[/RetireApplication/] --> E2([ApplicationRetired])
-    E1 -.-> X1[[External access governance]]
-    E2 -.-> X1
-```
+The candidate also does **not** solve survivor and admission races. Concurrent
+`A → B` and `B → A` can form a cycle; an active-target read can become stale;
+a survivor might later retire without a successor; and an old declaration can
+arrive after source closure. Establish an authoritative cycle-safe admission,
+survivor lifecycle, late-command fencing and retry/unknown outcomes without a
+per-instance ledger. A fixed ordering on application IDs could prevent cycles,
+but would restrict which survivor the user may choose; it is not an approved
+rule. Successor traversal may grow with the number of merges and needs explicit
+latency, retention, cycle and history handling, even when performed incrementally.
 
-Each instance is retired deliberately before its application (AI-02), so nothing
-leaves review scope silently.
+For **ordinary retirement**, AI-02's promised refusal while any instance remains
+active is itself a collection-wide condition. A proposed status view or
+eventually consistent zero cannot authorize it; a source-cut scan and an
+Application event for each child are also not acceptable substitutes. A stricter
+candidate would permanently permit ordinary retirement only when instance
+admissions have never opened, using one source-local one-time marker; this would
+refuse retirement even after all instances have retired and therefore changes
+AI-02. An admission race still needs the marker and retirement to compete on the
+same real owner before the instance commits. A failed first admission could leave
+a conservative marker. This does not solve target retirement or approve the
+change. Until the product rule and authoritative ordering are resolved, ordinary
+retirement and merge completion remain **unqualified**.
 
 ## Computed gaps
 
@@ -180,22 +250,34 @@ leaves review scope silently.
 
 ## Decisions
 
-Jev answers are from `jev-1.14.0`, 2026-11-03. A yes is ≥ 0.8 and a no is ≤ 0.2.
-Anything in between is settled by common sense, with the reasoning stated.
+Jev answers are from `jev-1.14.0`, 2026-11-03. Earlier reviews used 0.8 and 0.2
+as triage thresholds, not as measured probabilities of design correctness.
+Inconclusive or conflicting answers need source evidence and remain open.
 
 | ID | Decision | Evidence |
 | --- | --- | --- |
 | AI-01 | A merge moves the merged application's instances and aliases to the survivor. | Instances move: 0.82. |
 | AI-02 | Retiring an application is refused while it has active instances. | 0.72. Common sense: the domain rule that an application never silently leaves review scope. |
-| AI-03 | Name, alias and instance-key uniqueness is advice checked when set, with a duplicate gap and a rename, merge or retirement to repair it; there is no name-claim aggregate. | Check good enough: 0.33. Display names owned by an aggregate: 0.61. Advice for display names, owned identifiers for audit-facing codes: 0.75. Common sense: a duplicate name is visible and repairable (CV-05). |
+| AI-03 | **Corrected against M0-D05:** duplicate display names may be advisory. Tenant alias and active provider-key uniqueness remain required; claim ownership, atomic transfer and release are unqualified. | The older Jev review favored advisory display names, but cannot override M0-D05's explicit uniqueness requirements. |
 | AI-04 | An instance may name its own access owner and otherwise uses its application's. | Instances simply use the application's owner: 0.39. Common sense: production and development accounts often have different owners, so an override is allowed. |
 | AI-05 | Application-to-application relationships and successor approval are not carried forward. | No product rule asks for them (0.51 that M0-D05 requires them). |
 | AI-06 | Import aggregates are deferred with import itself. | M0-D05: no import or connector is built now. |
-| AI-07 | The instance move reactor resolves `merged_into` to the live survivor, and `MoveSystemInstance` refuses a retired target. | Flow audit B6: a merge chain (A into B, then B into C) otherwise strands A's instances on retired B. 0.66. Common sense: the alternative leaves active instances on a retired application, which breaks the instance invariant. |
+| AI-07 | A move admits a currently active target and keeps it protected until its exact terminal outcome. A closing target is refused; a successor needs its own admission. | Flow audit B6 identified merge-chain risk; a stale status read cannot enforce it. See AI-08. |
+| AI-08 | **Reopened:** the former completion protocol still depended on every instance and is withdrawn. Redirect and one-time-admission-marker directions change product behavior and are not approved; AI-01/02 remain in force pending an explicit decision. | [Boundary review](../reviews/inventory-boundaries.md) and [local-invariant scenarios](../reviews/inventory-local-invariants-jev-response.json). The original retire-then-move sequence is independently contradictory. Jev is advisory, not a proof. |
 
 ## Open questions
 
-None at this time.
+- **Blocking:** resolve AI-01/02 product semantics and qualify source/target
+  authority, cycle prevention, retirement, delayed declaration, recovery and
+  ambiguous outcomes. Do not replace the collection-wide guard with a source
+  history or one independently stored admission per instance.
+- **Blocking:** enforce M0-D05's unique alias and active provider-key
+  requirements. Define exact normalized key, independently owned claim,
+  release/reuse and retry semantics; a projected lookup cannot exclude races.
+- Qualify historical effective-membership reads, stable paged presentation and
+  long-stream behavior without inventing business or payload limits.
+  Acceptance requires concurrency, delayed delivery, replay, target closure,
+  chain, and refusal traces, plus executable regressions when implemented.
 
 ## Superseded owners
 

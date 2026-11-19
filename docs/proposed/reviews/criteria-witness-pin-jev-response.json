@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "checkpoint_reads_child": {
+      "type": "noul",
+      "noul": 0.82
+    },
+    "pin_nonempty": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "pin_allchildren": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "cancel_late_publish": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "unknown_release": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "permit_policy": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "no_new_permit": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "prior_read_suffices": {
+      "type": "noul",
+      "noul": 0.07
+    },
+    "late_proven_valid": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "pin_proves_provider": {
+      "type": "noul",
+      "noul": 0.02
+    }
+  },
+  "usage": {
+    "input_tokens": 1117,
+    "output_tokens": 191
+  }
+}

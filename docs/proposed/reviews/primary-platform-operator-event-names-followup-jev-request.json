@@ -1,0 +1,14 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "confirm": "The platform primary authority has read and verified the exact target user's committed primary-mark acceptance and records that the previously reserved seat is now confirmed. This is the seat owner's decision, not the target's original mark.",
+    "cleanup": "A previously released primary seat becomes free because the platform primary authority has read and verified the exact target's committed unmark of that same designation generation."
+  },
+  "questions": {
+    "designation_confirmed": {"type":"noul","instructions":"Does PrimaryPlatformOperatorDesignationConfirmed precisely name state.confirm?"},
+    "reservation_confirmed": {"type":"noul","instructions":"Does PrimaryPlatformOperatorReservationConfirmed precisely name state.confirm?"},
+    "seat_confirmed": {"type":"noul","instructions":"Does PrimaryPlatformOperatorSeatConfirmed precisely name state.confirm as the seat owner's decision?"},
+    "release_completed": {"type":"noul","instructions":"Does PrimaryPlatformOperatorReleaseCompleted clearly name state.cleanup?"},
+    "seat_cleanup_completed": {"type":"noul","instructions":"Does PrimaryPlatformOperatorSeatCleanupCompleted clearly name state.cleanup?"}
+  }
+}

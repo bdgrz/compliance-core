@@ -1,0 +1,89 @@
+{
+  "status": "Implemented in source; controlled flow passes; native and full acceptance blocked",
+  "date": "2026-11-05",
+  "focused": {
+    "passed": 152,
+    "failed": 0,
+    "skipped": 0,
+    "trx": "/tmp/compliance-org-bootstrap-expanded/bootstrap.trx"
+  },
+  "httpMcp": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "trx": "/tmp/compliance-org-bootstrap-transport/transport.trx",
+    "boundary": "Real generated HTTP/MCP adapters and production authorizers; controlled event/KV stores, workers driven separately; no native service qualification"
+  },
+  "releaseBuild": {
+    "warnings": 0,
+    "errors": 0,
+    "log": "/tmp/compliance-org-bootstrap-build-final.log"
+  },
+  "whitespace": {
+    "passed": true,
+    "log": "/tmp/compliance-org-bootstrap-format-final.log"
+  },
+  "tooling": {
+    "nodeCasesPassed": 6,
+    "proposalValidatorPassed": true,
+    "coverageValidatorPassed": true
+  },
+  "fullBackend": {
+    "counts": {
+      "total": 9301,
+      "executed": 9301,
+      "passed": 8221,
+      "failed": 1080,
+      "error": 0,
+      "timeout": 0,
+      "aborted": 0,
+      "inconclusive": 0,
+      "passedButRunAborted": 0,
+      "notRunnable": 0,
+      "notExecuted": 0,
+      "disconnected": 0,
+      "warning": 0,
+      "completed": 0,
+      "inProgress": 0,
+      "pending": 0
+    },
+    "groups": {
+      "transactional DDL": 542,
+      "connection exhaustion": 479,
+      "other assembled failures": 59
+    },
+    "trx": "/tmp/compliance-org-bootstrap-full-final/backend.trx",
+    "excludedCategories": [
+      "BrokerIntegration",
+      "WebIntegration"
+    ],
+    "newFailingNamesComparedWithPreviousFullRun": [],
+    "previousFailedNamesNowAbsent": [
+      "Bdgrz.Compliance.Tests.Features.Evidence.Tests.WithdrawEvidenceSupportHandlerTests.ShouldRefuseWithoutAppendGivenMemberLosesCurrentAuthority(loss: \"expired\", acceptedRetry: False)",
+      "Bdgrz.Compliance.Tests.Features.Evidence.Tests.WithdrawEvidenceSupportHandlerTests.ShouldRefuseWithoutAppendGivenMemberLosesCurrentAuthority(loss: \"expired\", acceptedRetry: True)"
+    ]
+  },
+  "frozenInputs": {
+    "count": 6753,
+    "changed": 0,
+    "manifest": "/tmp/compliance-org-bootstrap-final-inputs.json",
+    "sha256": "e7734fe8561b383e037acf068becbe59b1d95ca49f72655be14ad8c48f9e78b8"
+  },
+  "blockedBy": [
+    "https://github.com/bdgrz/compliance-core/issues/1188",
+    "https://github.com/bdgrz/compliance-core/issues/1189"
+  ],
+  "notClaimed": [
+    "hosted CI",
+    "merge",
+    "release",
+    "production qualification"
+  ],
+  "openApi": {
+    "export": "/tmp/compliance-org-bootstrap-openapi.json",
+    "sha256": "2d4bdfecd620ca5e88fb4c2650098142ecf337a8164440f8e4a28e2315ca5174",
+    "tenantIdRequired": true,
+    "primaryDesignationReleaseAndReadRoutesPresent": true,
+    "boundary": "Real generated contract export; native hosted services excluded by the existing exporter"
+  }
+}

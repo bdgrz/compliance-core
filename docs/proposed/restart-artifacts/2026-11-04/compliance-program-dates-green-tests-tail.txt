@@ -1,0 +1,30 @@
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /Users/jrepanich/Code/bdgrz/compliance-core/src/Compliance.App
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /Users/jrepanich/Code/bdgrz/compliance-core/src/Compliance.App
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+  Passed Bdgrz.Compliance.Tests.Features.Programs.Tests.ProgramNativeHttpTests.ShouldRejectChangedAuthoredIntentGivenExistingProgramIdentity [594 ms]
+  Passed Bdgrz.Compliance.Tests.Features.Programs.Tests.ProgramNativeHttpTests.ShouldPersistNoChangeReceiptGivenIdentifiedCriteriaSelectionAndExactRetry [662 ms]
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /Users/jrepanich/Code/bdgrz/compliance-core/src/Compliance.App
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+[xUnit.net 00:00:10.28]   Finished:    Bdgrz.Compliance.Tests
+  Passed Bdgrz.Compliance.Tests.Features.Programs.Tests.ProgramNativeHttpTests.ShouldReplayOriginalCreationAndUnitBytesGivenLaterRevisionAndCurrentAuthorization [1 s]
+
+Test Run Successful.
+Total tests: 65
+     Passed: 65
+ Total time: 10.6101 Seconds

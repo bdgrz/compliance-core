@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Applications.Models;
@@ -53,7 +54,7 @@ public sealed class ListBoundaryVersionsHandler(IBoundaryDirectoryReader directo
                 page = await directory.ListVersionsAsync(request.TenantId,
                     request.BoundaryId, request.Limit ?? 50, request.Cursor, ct).ConfigureAwait(false);
             }
-            catch (KvDirectoryQueryException)
+            catch (ProgramScopeDirectoryQueryException)
             {
                 return Result<Page<BoundaryVersionView>>.Failure(new RequestError(
                     RequestErrorKind.Validation, "The boundary version cursor is invalid."));

@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 /// </summary>
 [Discriminator("bdgrz.rbac.role.rename", 1)]
 public sealed record RenameRole(Uuid CommandId, Uuid TenantId, Uuid RoleId, string Name)
-    : IRequest, IRbacManagementRequest, ICallable, IIdentifiedRequest
+    : IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }

@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "PrimaryOrgAdminDesignationRequested": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "PrimaryOrgAdminDesignated": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "PrimaryOrgAdminDesignationRefused": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "PrimaryOrgAdminReleased": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "MemberMarkedPrimary": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "MemberPrimaryMarkRefused": {
+      "type": "noul",
+      "noul": 0.92
+    },
+    "MemberPrimaryMarkRemoved": {
+      "type": "noul",
+      "noul": 0.93
+    }
+  },
+  "usage": {
+    "input_tokens": 1749,
+    "output_tokens": 166
+  }
+}

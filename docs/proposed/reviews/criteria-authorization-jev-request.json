@@ -1,0 +1,54 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "policy": "A new operation is admitted only when an authenticated actor has current operator authority at a linearizable source read. The read instant is the authorization decision. The exact actor, grant generation, operation ID and normalized intent are bound to this one operation. A revocation before that read denies admission; a revocation after a successful admission prevents new operations but does not cancel the already-admitted operation. The server is trusted and only acknowledges durable operation intent after it commits. Current authorization is required to disclose retry receipts.",
+    "after": "Actor A passes that authoritative read for operation X. Afterwards the operator owner commits revocation. X then durably commits its bound intent and finishes; no new operation is authorized by X.",
+    "before": "The operator owner durably revokes A. Afterwards A submits operation Y; its authoritative current read is linearizable and observes the committed revocation.",
+    "crash": "A passes the admission read for operation Z, but the process crashes before its intent is appended. The actor is revoked before retry. The retry finds no committed intent for Z.",
+    "unknown": "A was admitted for operation W and the intent append was attempted, but its result is unknown. A later loses operator authority. Recovery has not yet inspected the authoritative operation stream.",
+    "boolean": "A handler reads true from IPlatformOperatorAccess which exposes no source revision and has no stated freshness guarantee. It waits. The operator owner revokes A. The handler appends the operation claiming A was currently authorized at commit.",
+    "reuse": "A is admitted with operation ID P to publish edition E. A different operation attempts to reuse that admitted proof under operation ID Q to remove criterion K."
+  },
+  "questions": {
+    "after_permitted": {
+      "type": "noul",
+      "instructions": "Under policy, may the already-admitted exact operation X complete in after?"
+    },
+    "before_permitted": {
+      "type": "noul",
+      "instructions": "Under policy, may new operation Y be admitted in before?"
+    },
+    "crash_fresh": {
+      "type": "noul",
+      "instructions": "Under policy, must the retry in crash obtain a new authorization decision before appending an intent?"
+    },
+    "unknown_absent": {
+      "type": "noul",
+      "instructions": "In unknown, does the missing response prove the intent was never committed?"
+    },
+    "unknown_reconcile": {
+      "type": "noul",
+      "instructions": "In unknown, must recovery reconcile the exact operation source before assuming refusal or issuing a different intent?"
+    },
+    "boolean_commit_proof": {
+      "type": "noul",
+      "instructions": "In boolean, does the earlier true result prove A was a current operator when the later append committed?"
+    },
+    "reuse_allowed": {
+      "type": "noul",
+      "instructions": "Under policy, can the admission for P authorize the different operation Q in reuse?"
+    },
+    "policy_instant": {
+      "type": "noul",
+      "instructions": "Under policy, is operator authority required to remain current until an already-admitted operation finishes?"
+    },
+    "infra_proof": {
+      "type": "noul",
+      "instructions": "Does stating policy prove that the deployed event store provides a linearizable current source read?"
+    },
+    "early_truth": {
+      "type": "noul",
+      "instructions": "In boolean, does the earlier boolean by itself prove its own value came from a current authoritative source?"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "protocol": "Edition E is an active draft with current label X and current generation G2; claim X has durably confirmed E/G2. A publication attempt P commits on E at its expected version. While P is pending, E rejects rename and abandonment, and E cannot complete P without still holding that attempt. E will record either Published or terminal Refused. After Refused, E remains a draft and may rename. After Published, E never renames or abandons. The claim owner releases a confirmed current X/E/G2 only on an exact committed E rename away from X/G2 or E abandonment. No manual release bypass exists. Every release compares the current E and generation. The same generation is never reused.",
+    "delayed_old": "Before P, X was earlier held by E under G1. That G1 was validly released, and X was subsequently acquired and confirmed by E under G2. A delayed duplicate release message for E/G1 arrives while P is pending.",
+    "bypass": "Same as protocol except the label service permits an administrator to release X/E/G2 directly without an E rename or abandonment event while P is pending.",
+    "concurrent": "Before P begins, E currently has X/G2 and a handler reads E at version 8. A rename from X to Y commits on E at version 9. The publication handler then attempts to append P on E at expected version 8.",
+    "after_refusal": "P durably records Refused on E. The edition remains draft. A new rename changes X/G2 to Y/G3, Y/G3 confirms, and a valid release of X/G2 arrives.",
+    "delayed_success": "Attempt P is durably refused on E. A new rename starts. A delayed worker tries to publish by appending an old expected E version from before the refusal. The writer checks expected version and rechecks the pending attempt after conflicts."
+  },
+  "questions": {
+    "old_release": {
+      "type": "noul",
+      "instructions": "In delayed_old, may the duplicate release for G1 clear the current G2 claim?"
+    },
+    "allowed_current_release": {
+      "type": "noul",
+      "instructions": "In protocol, can a valid release of current E/G2 be created while P is pending?"
+    },
+    "other_edition_reserve": {
+      "type": "noul",
+      "instructions": "In protocol, can a different edition reserve X while P is pending?"
+    },
+    "bypass_danger": {
+      "type": "noul",
+      "instructions": "In bypass, can the claim be released while P remains pending?"
+    },
+    "stale_attempt_commits": {
+      "type": "noul",
+      "instructions": "In concurrent, can P commit at expected edition version 8 after the rename committed at version 9?"
+    },
+    "release_after_refusal": {
+      "type": "noul",
+      "instructions": "In after_refusal, may the exact valid X/G2 release happen after the completed X to Y rename?"
+    },
+    "late_publish": {
+      "type": "noul",
+      "instructions": "In delayed_success, can the stale publication append commit despite the refusal and new rename?"
+    },
+    "separate_pin_needed": {
+      "type": "noul",
+      "instructions": "In protocol, is an additional publication pin event on claim X necessary to prevent release while P is pending?"
+    },
+    "protocol_proves_store": {
+      "type": "noul",
+      "instructions": "Does protocol show that a deployed event store or all release handlers actually enforce the assumptions?"
+    }
+  }
+}

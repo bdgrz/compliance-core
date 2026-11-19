@@ -1,0 +1,77 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "algorithm": "For one positive authorization path, read each required owner exactly once in first pass with a linearizable fresh source read, obtaining eligible state and physical stream position. After all first reads complete choose the admission time T, before any second-pass reads start. Read the exact same owner streams again with linearizable fresh reads. Allow only if each second physical position equals that owner first position and the path facts including time predicates are valid at T. Positions monotonically increase for any source change and never reset. On mismatch or unknown, do not admit; a bounded retry may choose a fresh path and T. The path includes every relevant fixed global veto source. Authorization before T may finish after T.",
+    "pre_revoke": "An operator first reads RolePermission granted at position 7. Revocation appends position 8 before T. Its second read returns position 8.",
+    "aba": "First RolePermission read reports granted at position 7. It is revoked at position 8, then granted again at position 9, all before T. Second read reports granted at position 9.",
+    "disjoint": "Member is eligible at position 4 during its first read but is suspended before TeamRole becomes assigned. TeamRole first read happens after assignment. A second Member read observes the later position 5. There is no instant at which the first eligible membership and assigned role coexisted.",
+    "post_t": "All first owner reads complete. T is captured. A membership revoke commits after T and before the second Member read. The second Member position differs from its first.",
+    "after_success": "All first reads complete, T is captured, and every second physical position equals its first. A role revocation commits after the second pass. The previously admitted operation continues.",
+    "stale": "The source has RolePermission revoked at position 8 before T, but both source reads incorrectly return the same stale granted position 7. The required linearizable current-read contract is violated.",
+    "expiry": "Member has unchanged source version but an expiry at midnight. The first pass is before midnight; T is after midnight; second pass is after midnight. The authorization policy does not allow an expired member at T.",
+    "index_miss": "A lagging read index reports no team-role candidate for an actor; the authoritative grant source may already contain a qualifying assignment.",
+    "candidate": "A lagging index supplies team-role candidate P. Every required owner in P is re-read from authoritative linearizable source with both passes, and all source positions are equal and facts valid at T.",
+    "untested_veto": "All checked team-role owners pass, but the policy also requires the tenant active. Tenant owner is not read and is suspended at T.",
+    "unknown": "All but one owner return equal positions. One owner times out during the second pass; no evidence establishes that owner status or position at T.",
+    "cross_realm": "One fixed positive permission path includes an actor member in tenant realm and tenant lifecycle in global realm. Both source reads use independently linearizable current reads and the two-pass equality algorithm; no common multi-stream transaction or shared cursor is available.",
+    "unrelated": "The two-pass algorithm reads one exact bounded permission path and its fixed veto owners. Thousands of unrelated tenant role grants and criteria entries exist, and are not queried or changed by those exact reads."
+  },
+  "questions": {
+    "pre_revoke_allowed": {
+      "type": "noul",
+      "instructions": "In pre_revoke, does the algorithm allow without a retry?"
+    },
+    "aba_ignored": {
+      "type": "noul",
+      "instructions": "In aba, can matching boolean states alone safely substitute for comparing physical positions?"
+    },
+    "aba_passes": {
+      "type": "noul",
+      "instructions": "In aba, do equal-position guards pass?"
+    },
+    "disjoint_allowed": {
+      "type": "noul",
+      "instructions": "In disjoint, does the specified algorithm allow despite no common eligible instant?"
+    },
+    "post_t_allowed": {
+      "type": "noul",
+      "instructions": "In post_t, do the specified equal-position guards allow that attempt?"
+    },
+    "post_success_valid": {
+      "type": "noul",
+      "instructions": "In after_success, can the previously admitted operation continue under the stated policy?"
+    },
+    "stale_safe": {
+      "type": "noul",
+      "instructions": "In stale, do equal positions establish fresh source authority?"
+    },
+    "expired_allowed": {
+      "type": "noul",
+      "instructions": "In expiry, may unchanged stream position alone authorize the member at T?"
+    },
+    "index_absence_proven": {
+      "type": "noul",
+      "instructions": "In index_miss, does the projection absence prove there is no qualifying grant?"
+    },
+    "stale_discovery_grant": {
+      "type": "noul",
+      "instructions": "In candidate, does the candidate index alone grant authority?"
+    },
+    "omitted_veto_safe": {
+      "type": "noul",
+      "instructions": "In untested_veto, does the checked subset establish the full authorization policy?"
+    },
+    "unknown_safe": {
+      "type": "noul",
+      "instructions": "In unknown, does the algorithm have a complete allow proof?"
+    },
+    "cross_realm_possible": {
+      "type": "noul",
+      "instructions": "In cross_realm, under the explicitly stated assumptions, can the fixed path be shown valid at T?"
+    },
+    "all_children_required": {
+      "type": "noul",
+      "instructions": "In unrelated, do the exact path checks require reading every unrelated role grant and criterion entry?"
+    }
+  }
+}

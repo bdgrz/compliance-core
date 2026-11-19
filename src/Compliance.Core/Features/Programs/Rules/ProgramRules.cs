@@ -1,6 +1,7 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
@@ -10,9 +11,11 @@ using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Commands;
 using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.Rules;
@@ -21,10 +24,7 @@ using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.NamedRecords.Processes;
-using Bdgrz.Compliance.Features.Programs.Commands;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Programs.Rules;
 
 public sealed class ProgramRules
@@ -37,10 +37,13 @@ public sealed class ProgramRules
     readonly List<(long Revision, Uuid EditionId, DateTimeOffset ChangedAt)> _criteriaEditionHistory = [];
     string? _initialName;
     ProgramPlan? _initialPlan;
+    Uuid? _initialCriteriaEditionId;
 
     public bool IsCreated => _created;
+    public string Stage { get; private set; } = "readiness";
+    public ProgramContent? CurrentContent { get; private set; }
     public long Revision => _revision;
-    public Uuid? CriteriaEditionId => _criteriaEditionId;
+    public Uuid? CriteriaEditionId => _criteriaEditionId ?? _initialCriteriaEditionId;
 
     /// <summary>The exact criteria selection recorded at or before the requested time.</summary>
     public ProgramCriteriaEditionSelection? CriteriaSelectionAt(DateTimeOffset asOf)
@@ -76,11 +79,19 @@ public sealed class ProgramRules
         _applied.Add(change);
         _pending.Add(change);
         _revision = change.Revision;
+        if (change.Content is not null)
+            CurrentContent = change.Content;
         if (change.Kind == nameof(CreateProgram))
         {
             _created = true;
             _initialName = change.Content!.Name;
             _initialPlan = change.Content.Plan;
+            _initialCriteriaEditionId = change.EditionId;
+            if (change.EditionId is { } editionId)
+            {
+                _criteriaEditionId = editionId;
+                _criteriaEditionHistory.Add((change.Revision, editionId, change.ChangedAt));
+            }
         }
         else if (change.Kind == nameof(SelectProgramCriteriaEdition))
         {
@@ -88,23 +99,30 @@ public sealed class ProgramRules
             _criteriaEditionHistory.Add((change.Revision, change.EditionId!.Value, change.ChangedAt));
             _lastChangeWasSelection = true;
         }
+        else if (change.Kind == nameof(ChangeProgramStage))
+        {
+            Stage = change.Stage!;
+            _lastChangeWasSelection = false;
+        }
         else
             _lastChangeWasSelection = false;
     }
 
     public CommandFailure? Create(string name, ProgramPlan plan, Uuid actorMemberId,
-        string actorDisplay, DateTimeOffset changedAt)
+        string actorDisplay, DateTimeOffset changedAt, Uuid? editionId = null)
     {
         if (_created)
             return StringComparer.Ordinal.Equals(_initialName, name?.Trim()) &&
-                   Equals(_initialPlan, plan)
+                   Equals(_initialPlan, plan) && _initialCriteriaEditionId == editionId
                 ? null
                 : CommandFailure.StateConflict(
                     "The program already exists with different content.");
         var error = Validate(name, plan);
         if (error is not null)
             return CommandFailure.InvalidContent(error);
-        Add(new ProgramRuleChange(nameof(CreateProgram), 1, new ProgramContent(name.Trim(), plan), null,
+        if (editionId == Uuid.Empty)
+            return CommandFailure.InvalidContent("A criteria edition is required.");
+        Add(new ProgramRuleChange(nameof(CreateProgram), 1, new ProgramContent(name.Trim(), plan), editionId,
             ActorReference.ForMember(actorMemberId, actorDisplay), changedAt));
         return null;
     }
@@ -146,6 +164,81 @@ public sealed class ProgramRules
         return null;
     }
 
+    public CommandFailure? CreateWithEdition(string name, ProgramPlan plan, Uuid editionId,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset changedAt) =>
+        editionId == Uuid.Empty
+            ? CommandFailure.InvalidContent("A program requires an exact published criteria edition.")
+            : Create(name, plan, actorMemberId, actorDisplay, changedAt, editionId);
+
+    public CommandFailure? Rename(long expectedRevision, string name, Uuid actorMemberId,
+        string actorDisplay, DateTimeOffset changedAt)
+    {
+        if (!_created)
+            return CommandFailure.MissingRecord("The program was not found.");
+        if (expectedRevision != Revision)
+            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("program", Revision));
+        var error = Validate(name, CurrentContent!.Plan);
+        if (error is not null)
+            return CommandFailure.InvalidContent(error);
+        if (CurrentContent.Name == name.Trim())
+            return null;
+        Add(new ProgramRuleChange(nameof(RenameProgram), Revision + 1,
+            CurrentContent with { Name = name.Trim() }, null,
+            ActorReference.ForMember(actorMemberId, actorDisplay), changedAt));
+        return null;
+    }
+
+    public CommandFailure? ReviseTargets(long expectedRevision, ProgramPlan plan, Uuid actorMemberId,
+        string actorDisplay, DateTimeOffset changedAt)
+    {
+        if (!_created)
+            return CommandFailure.MissingRecord("The program was not found.");
+        if (expectedRevision != Revision)
+            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("program", Revision));
+        var error = Validate(CurrentContent!.Name, plan);
+        if (error is not null)
+            return CommandFailure.InvalidContent(error);
+        if (CurrentContent.Plan == plan)
+            return null;
+        Add(new ProgramRuleChange(nameof(ReviseProgramTargets), Revision + 1,
+            CurrentContent with { Plan = plan }, null,
+            ActorReference.ForMember(actorMemberId, actorDisplay), changedAt));
+        return null;
+    }
+
+    public CommandFailure? ChangeStage(long expectedRevision, string stage, ProgramStageSupport support,
+        string rationale, Uuid actorMemberId, string actorDisplay, DateTimeOffset changedAt)
+    {
+        if (!_created)
+            return CommandFailure.MissingRecord("The program was not found.");
+        if (expectedRevision != Revision)
+            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("program", Revision));
+        var error = StageError(_tenantId, Id, Stage, stage, support, rationale);
+        if (error is not null)
+            return CommandFailure.InvalidContent(error);
+        Add(new ProgramRuleChange(nameof(ChangeProgramStage), Revision + 1, null, null,
+            ActorReference.ForMember(actorMemberId, actorDisplay), changedAt, stage, support, rationale.Trim()));
+        return null;
+    }
+
+    public static string? StageError(Uuid tenantId, Uuid programId, string currentStage, string stage,
+        ProgramStageSupport? support, string? rationale)
+    {
+        if (stage != (currentStage switch { "readiness" => "type_i", "type_i" => "type_ii", _ => null }))
+            return "A program may change only to its next planned stage.";
+        if (string.IsNullOrWhiteSpace(rationale) || rationale.Trim().Length > 4000)
+            return "A stage decision requires a rationale of at most 4000 characters.";
+        if (support is null || support.Source is null || support.Snapshot is null || support.ProgramId != programId ||
+            support.Kind != (stage == "type_i" ? "readiness" : "examination") ||
+            support.Source.Source is null || support.Source.Source.Realm != tenantId.ToString() ||
+            support.Source.EventId == Uuid.Empty || support.Source.AggregateVersion == 0 ||
+            support.Source.PayloadSha256 is not { Length: 64 } || support.Snapshot.ContentId == Uuid.Empty ||
+            support.Snapshot.Bytes <= 0 || support.Snapshot.MediaType != "application/json" ||
+            support.Snapshot.Sha256 is not { Length: 64 })
+            return "A stage decision requires the exact supporting readiness decision or examination outcome.";
+        return null;
+    }
+
     public static CommandFailure? Validate(ProgramContent? content)
     {
         var error = Validate(content?.Name!, content?.Plan);
@@ -164,6 +257,12 @@ public sealed class ProgramRules
             return "The Type II target end date must follow its start date.";
         if (plan.TargetTypeIAsOfDate > plan.TargetTypeIIStartDate)
             return "The Type II target period must follow the Type I target date.";
+        if (plan.TargetReadinessDate > plan.TargetTypeIIStartDate)
+            return "The Type II target start date cannot precede the readiness target date.";
+        if (plan.TargetReadinessDate > plan.TargetTypeIIEndDate)
+            return "The Type II target end date cannot precede the readiness target date.";
+        if (plan.TargetTypeIAsOfDate > plan.TargetTypeIIEndDate)
+            return "The Type II target end date cannot precede the Type I target date.";
         return null;
     }
 }

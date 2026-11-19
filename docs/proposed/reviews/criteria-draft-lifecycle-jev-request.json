@@ -1,0 +1,28 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "rules": "An edition contains independently owned entries, each identified by edition and identifier. A structural change creates an immutable incarnation of that entry. A point of focus F refers to exactly one immutable parent criterion incarnation in the same edition and category. At a particular ordered edition cut, F is effective only if its own incarnation is included at that cut and its exact parent incarnation is also included at that same cut. Removing a parent ends only its own incarnation. Re-adding the same identifier creates a different incarnation and does not change F. Individual events and the edition publication marker share the same durable total commit order; this is a hypothetical assumption, not an established system guarantee.",
+    "same_cut": "Parent P1 and point of focus F1 referring to P1 are included at position 1. Parent P1 is removed at position 3. Publication marker M commits at position 5. No other operation changes F1.",
+    "late_remove": "Parent P1 and point of focus F1 referring to P1 are included at position 1. Publication marker M commits at position 5. A delayed removal proposal for P1 commits at position 7 and is excluded because it follows M.",
+    "readd": "Parent P1 is removed; a new incarnation P2 with the same identifier is added. Existing F1 still points to P1 and has not been revised.",
+    "pin": "One publication attempt selects one currently included criterion P as its nonempty witness. P's own stream atomically accepts a pin for this exact incarnation and publication token. Every removal or replacement on P checks its own stream and cannot be accepted while this exact pin is held. The edition records publication before the pin is released. Failed or unknown publication outcomes leave the pin held until a definitive terminal publication or a durably fenced abort is verified.",
+    "racing_delete": "A remove-P operation read P as unpinned and paused. A pin for P then commits at expected stream version 4. The remove-P operation attempts to append at the old expected version 4. The event store performs a single-stream compare-and-append and rejects the stale position.",
+    "unknown": "A publisher sends a publish command after pinning the witness and the response times out. The publisher cannot tell whether publication committed or the request failed.",
+    "child_race": "A point of focus F is recorded against an existing parent incarnation P. The parent is concurrently removed. Their exact order relative to the publication cut is resolved from the same complete ordered source. F's effective membership requires P to remain included at that cut.",
+    "missing_order": "A vendor document describes a shared ordered sequence, but the deployed routing, retained history, operation order, failure recovery and exact as-of reads have not been verified. A design assumes those capabilities."
+  },
+  "questions": {
+    "removed_parent_effective": {"type":"noul","instructions":"In same_cut, is F1 effective at publication marker M?"},
+    "remove_needs_children": {"type":"noul","instructions":"Under the rules, must removing P1 write to or enumerate each point of focus that refers to it?"},
+    "late_remove_invalidates": {"type":"noul","instructions":"In late_remove, does the post-publication removal make F1 ineffective at M?"},
+    "readd_revives": {"type":"noul","instructions":"In readd, does adding P2 automatically make F1 effective?"},
+    "witness_safe": {"type":"noul","instructions":"Under pin, do the stated assumptions prevent P's accepted removal between the accepted pin and publication?"},
+    "stale_append": {"type":"noul","instructions":"In racing_delete, can the stale removal append commit at expected stream version 4 after the pin committed there?"},
+    "timeout_release": {"type":"noul","instructions":"In unknown, does the timeout alone prove the publisher can safely release the witness pin?"},
+    "pending_change_parent": {"type":"noul","instructions":"In child_race, can a recorded F remain ineffective at the publication cut because P was removed before that cut?"},
+    "empty_draft": {"type":"noul","instructions":"Does a single valid pinned criterion P prove that the edition contains at least one criterion at publication under pin?"},
+    "witness_all_children": {"type":"noul","instructions":"Under pin, does the single witness by itself prove that every independently proposed point of focus is effective?"},
+    "unverified_provider": {"type":"noul","instructions":"In missing_order, does the vendor document and the design assumption prove the deployed system has the required ordering and failure guarantees?"},
+    "new_product": {"type":"noul","instructions":"Is allowing parent removal to make F ineffective a different user-visible behavior than refusing parent removal whenever F refers to it?"}
+  }
+}

@@ -21,7 +21,7 @@ public sealed class RegisterTenantSlugAvailabilityGuardTests
         // Arrange
         await using var fixture = new StoreFixture();
         var guard = new RegisterTenantSlugAvailabilityGuard(fixture.Repository);
-        var context = Context(new RegisterTenant("Acme", "acme"));
+        var context = Context(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme"));
 
         // Act
         var result = await guard.GuardAsync(context, CancellationToken.None);
@@ -40,7 +40,7 @@ public sealed class RegisterTenantSlugAvailabilityGuardTests
         await fixture.Repository.SaveAsync(
             occupied, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         var guard = new RegisterTenantSlugAvailabilityGuard(fixture.Repository);
-        var context = Context(new RegisterTenant("Acme", "acme"));
+        var context = Context(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme"));
 
         // Act
         var result = await guard.GuardAsync(context, CancellationToken.None);
@@ -55,9 +55,9 @@ public sealed class RegisterTenantSlugAvailabilityGuardTests
     {
         // Arrange
         await using var fixture = new StoreFixture();
-        var context = Context(new RegisterTenant("Acme", "acme"));
+        var context = Context(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "acme"));
         var owned = await fixture.Repository.HydrateAsync(new TenantSlug("acme"), CancellationToken.None);
-        _ = owned.Register(context.RequestId);
+        _ = owned.Register(context.Request.TenantId);
         await fixture.Repository.SaveAsync(
             owned, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         var guard = new RegisterTenantSlugAvailabilityGuard(fixture.Repository);
@@ -75,10 +75,32 @@ public sealed class RegisterTenantSlugAvailabilityGuardTests
         // Arrange
         await using var fixture = new StoreFixture();
         var guard = new RegisterTenantSlugAvailabilityGuard(fixture.Repository);
-        var context = Context(new RegisterTenant("Acme", "!!"));
+        var context = Context(new RegisterTenant(Uuid.CreateVersion4(), "Acme", "!!"));
 
         // Act
         var result = await guard.GuardAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task ShouldReachOriginalOwnerGivenRetryAfterInitialSlugWasLost()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var request = new RegisterTenant(Uuid.CreateVersion4(), "Company", "company");
+        var tenant = new Tenant(request.TenantId);
+        Assert.True(tenant.Register(Uuid.CreateVersion4(), request.Name, request.Slug, creatorIsAdministrator: true).IsSuccess);
+        Assert.True(tenant.RejectSlug(request.Slug).IsSuccess);
+        await fixture.Repository.SaveAsync(tenant, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var occupied = new TenantSlug(request.Slug);
+        Assert.True(occupied.Register(Uuid.CreateVersion4()).IsSuccess);
+        await fixture.Repository.SaveAsync(occupied, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var guard = new RegisterTenantSlugAvailabilityGuard(fixture.Repository);
+
+        // Act
+        var result = await guard.GuardAsync(Context(request), CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);

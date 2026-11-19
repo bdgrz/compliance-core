@@ -136,7 +136,7 @@ public static class ComplianceIncidentContentStore
         content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion5(incident, schema + ":" + ContentDigest.OfJson(value)), schema, value, ct);
     public static bool Matches<T>(ImmutableContentRef reference, T value, string schema) where T : notnull
     {
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!);
         return reference.Schema == schema && reference.MediaType == ImmutableContentStoreExtensions.JsonMediaType &&
             reference.ContentId != Uuid.Empty && reference.Bytes == bytes.LongLength && reference.Sha256 == ContentDigest.Sha256(bytes);
     }

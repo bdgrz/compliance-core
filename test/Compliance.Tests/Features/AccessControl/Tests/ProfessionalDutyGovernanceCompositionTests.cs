@@ -169,7 +169,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
     }
 
     [Fact]
-    public async Task ShouldNotReviveRatifiedRulesGivenRevokedAndReactivatedOrReplacedDutyLineage()
+    public async Task ShouldPreserveRatifiedRulesGivenRevokedAndReactivatedOrReplacedDutyLineage()
     {
         // Arrange
         var at = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
@@ -178,16 +178,16 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var source = await SeedRatifiedRulesAsync(scope.ServiceProvider, at, at.AddMinutes(59));
         Assert.NotNull(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
 
-        // Act: a signed revocation ends the captured lineage.
+        // Act: a signed revocation ends current duty authority.
         var revokedAt = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         var revocation = ProfessionalDutyAssertionTestIssuer.Issue(source.DesignationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 2, "revoked", source.InitialAssertion.Evidence.AssertionId,
             revokedAt.AddMinutes(-1), revokedAt.AddMinutes(29));
         var revoked = await ProfessionalDutyFacts.RevokeAsync(source.Services, revocation, source.OperatorActor, revokedAt);
 
-        // Assert: neither reactivation of the same designation nor a replacement designation restores it.
+        // Assert: historical ratification survives later duty decisions.
         Assert.True(revoked.IsSuccess, revoked.Error?.Message);
-        Assert.Null(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
+        Assert.NotNull(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
         var reactivatedAt = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         var reactivation = ProfessionalDutyAssertionTestIssuer.Issue(source.DesignationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 3, "active", revocation.Evidence.AssertionId,
@@ -199,7 +199,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         Assert.NotNull(currentReactivatedDuty);
         Assert.Equal(source.DesignationId, currentReactivatedDuty.Designation.DesignationId);
         Assert.Equal(3, currentReactivatedDuty.ContinuityStartRevision);
-        Assert.Null(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
+        Assert.NotNull(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
 
         var reRevokedAt = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         var reRevocation = ProfessionalDutyAssertionTestIssuer.Issue(source.DesignationId, User,
@@ -220,11 +220,11 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
             .ReadCurrentAsync(User, FirmProfessionalDuty.RuleRatifier, null, CancellationToken.None);
         Assert.NotNull(currentReplacement);
         Assert.Equal(replacementId, currentReplacement.Designation.DesignationId);
-        Assert.Null(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
+        Assert.NotNull(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
     }
 
     [Fact]
-    public async Task ShouldNotPreserveRatifiedRulesGivenDutyExpiresBeforeRenewal()
+    public async Task ShouldPreserveRatifiedRulesGivenDutyExpiresBeforeRenewal()
     {
         // Arrange
         var at = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
@@ -252,11 +252,11 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
             .ReadCurrentAsync(User, FirmProfessionalDuty.RuleRatifier, null, CancellationToken.None);
         Assert.NotNull(currentDuty);
         Assert.Equal(2, currentDuty.ContinuityStartRevision);
-        Assert.Null(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
+        Assert.NotNull(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
     }
 
     [Fact]
-    public async Task ShouldNotPreserveRatifiedRulesGivenStaffDirectoryRevisionChangesBeforeRenewal()
+    public async Task ShouldPreserveRatifiedRulesGivenStaffDirectoryRevisionChangesBeforeRenewal()
     {
         // Arrange
         var at = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
@@ -288,7 +288,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         Assert.NotNull(currentDuty);
         Assert.Equal(updatedStaff.Revision, currentDuty.Staff.Revision);
         Assert.Equal(2, currentDuty.ContinuityStartRevision);
-        Assert.Null(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
+        Assert.NotNull(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
     }
 
     [Fact]

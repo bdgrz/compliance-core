@@ -24,14 +24,14 @@ public static class RiskEvaluationStatus
             .ToList();
         if (view.Assessments.Count == 0)
             return view with { Status = "unassessed", Acceptances = acceptances, ReassessmentDueAt = null };
-        var due = view.Assessments.Max(assessment => assessment.AssessedAt).AddYears(1);
-        var residual = view.Assessments.LastOrDefault(assessment =>
-            assessment.Phase == RiskEvaluation.Residual);
+        var residual = view.Assessments.Where(assessment => assessment.Phase == RiskEvaluation.Residual)
+            .MaxBy(static assessment => assessment.AssessedAt);
+        var due = residual?.AssessedAt.AddYears(1);
         var acceptance = residual is null
             ? null
             : acceptances.LastOrDefault(item => item.ResidualAssessmentId == residual.AssessmentId);
         var triggered = view.OpenReassessmentTriggers is { Count: > 0 };
-        var status = (now >= due || triggered, view.Treatment, residual, acceptance) switch
+        var status = (residual is null || now >= due || triggered, view.Treatment, residual, acceptance) switch
         {
             (true, _, _, _) => "reassessment_due",
             (_, null, _, _) => "assessed",

@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
@@ -9,19 +9,24 @@ using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
+using Bdgrz.Compliance.Features.ControlMappings.Events;
 using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
 using Bdgrz.Compliance.Features.ControlMappings.Services;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Criteria.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Examinations.Contracts;
 using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Incidents.Rules;
@@ -32,6 +37,7 @@ using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Providers.Rules;
@@ -41,30 +47,26 @@ using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Retention.Commands;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.SourceFacts.Services;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
-using Bdgrz.Compliance.Features.ControlMappings.Events;
-using Bdgrz.Compliance.Features.ControlMappings.Models;
-using Bdgrz.Compliance.Features.ControlMappings.Readers;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Retention.Commands;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Examinations.Services;
 
 /// <summary>Captures control-to-criterion mapping history known on the Type I date.</summary>
 public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
-    ControlMappingReader mappingReader, CriteriaCoverageReadConsistency consistency, ICriteriaCatalog catalog)
+    ControlMappingReader mappingReader, CriteriaCoverageReadConsistency consistency,
+    ICriteriaEntryAuthority criteriaAuthority, ICriteriaPublicationAuthority publicationAuthority)
     : ITypeIBaselineSourceContributor
 {
     const string DigestDomain = "bdgrz.snapshot.source.control_criterion_mapping_version.v1\0";
@@ -114,9 +116,12 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
             selectionSources[0].VersionId != editionId || selectionSources[0].Revision < 1 ||
             !IsDigest(selectionSources[0].ContentSha256))
             return Success([], ["Control mappings were not read from the program's exact criteria selection."], []);
-        if (catalog.GetEdition(editionId) is null)
-            return Success([], ["The captured criteria edition is unavailable for control mappings."], []);
-
+        var publication = await publicationAuthority.ReadPublishedAsync(editionId, ct).ConfigureAwait(false);
+        if (!publication.IsSuccess)
+            return Result<TypeIBaselineSourceContribution>.Failure(publication.Error!);
+        if (publication.Value.EditionId != editionId || publication.Value.EventId == Uuid.Empty)
+            return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(
+                RequestErrorKind.Conflict, "The captured criteria publication evidence is invalid."));
         var controlVersions = new Dictionary<Uuid, Uuid>();
         foreach (var source in context.PreviouslyCapturedSources.Where(static source =>
                      source.Kind == "control_version"))
@@ -145,8 +150,6 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
             !MappingsMatch(projected.Value, projectedConfirmation.Value))
             return SourceConflict();
 
-        var criteria = catalog.ListEntries(editionId, null, null, null)
-            .ToDictionary(static entry => entry.Identifier, StringComparer.Ordinal);
         var through = context.RecordedThrough ?? new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
             DateTimeKind.Utc));
         var sources = new List<TypeIBaselineSourceReference>();
@@ -158,8 +161,12 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
                 continue;
             if (!IsValid(mapping, engagement))
                 return SourceConflict();
-            if (!criteria.TryGetValue(mapping.CriterionIdentifier, out var criterion) ||
-                criterion.Kind != mapping.CriterionKind)
+            var criterion = await CriteriaEntryAuthorityGuard.RequireProofAsync(criteriaAuthority, editionId,
+                mapping.CriterionIdentifier, ct).ConfigureAwait(false);
+            if (!criterion.IsSuccess)
+                return Result<TypeIBaselineSourceContribution>.Failure(criterion.Error!);
+            if (criterion.Value.PublicationEventId != publication.Value.EventId ||
+                criterion.Value.Entry.Kind != mapping.CriterionKind)
                 return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(
                     RequestErrorKind.Conflict,
                     "A control mapping does not identify an entry in the selected criteria edition."));

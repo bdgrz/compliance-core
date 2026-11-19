@@ -1,0 +1,25 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "same_through_t": {
+      "type": "noul",
+      "noul": 0.36
+    },
+    "current_at_t": {
+      "type": "noul",
+      "noul": 0.34
+    },
+    "changed_equal": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "stale_proves": {
+      "type": "noul",
+      "noul": 0.04
+    }
+  },
+  "usage": {
+    "input_tokens": 518,
+    "output_tokens": 78
+  }
+}

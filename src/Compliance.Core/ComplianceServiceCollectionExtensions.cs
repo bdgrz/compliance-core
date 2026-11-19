@@ -1,313 +1,313 @@
-using Bdgrz.Compliance.Hosting.Persistence;
-using Cntryl.Fitz;
-using Cntryl.Portia;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AccessControl.History;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Features.AccessControl.Projectors;
+using Bdgrz.Compliance.Features.AccessControl.Reactors;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.AccessReviews.Authorizers;
 using Bdgrz.Compliance.Features.AccessReviews.Contracts;
+using Bdgrz.Compliance.Features.AccessReviews.Handlers;
 using Bdgrz.Compliance.Features.AccessReviews.Processes;
+using Bdgrz.Compliance.Features.AccessReviews.Projections;
+using Bdgrz.Compliance.Features.AccessReviews.Projectors;
+using Bdgrz.Compliance.Features.AccessReviews.Reactors;
 using Bdgrz.Compliance.Features.AccessReviews.Readers;
 using Bdgrz.Compliance.Features.AccessReviews.Rules;
 using Bdgrz.Compliance.Features.AccessReviews.Services;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Authorizers;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Contracts;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Handlers;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Projections;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Projectors;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Reactors;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Services;
+using Bdgrz.Compliance.Features.Applications.Authorizers;
+using Bdgrz.Compliance.Features.Applications.Commands;
 using Bdgrz.Compliance.Features.Applications.Contracts;
+using Bdgrz.Compliance.Features.Applications.Handlers;
 using Bdgrz.Compliance.Features.Applications.History;
 using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.Applications.Processes;
+using Bdgrz.Compliance.Features.Applications.Projections;
+using Bdgrz.Compliance.Features.Applications.Projectors;
+using Bdgrz.Compliance.Features.Applications.Reactors;
 using Bdgrz.Compliance.Features.Applications.Readers;
 using Bdgrz.Compliance.Features.Applications.Rules;
 using Bdgrz.Compliance.Features.Applications.Services;
 using Bdgrz.Compliance.Features.Artifacts.Contracts;
 using Bdgrz.Compliance.Features.Artifacts.Persistence;
 using Bdgrz.Compliance.Features.Artifacts.Services;
+using Bdgrz.Compliance.Features.AuditorRequests.Authorizers;
+using Bdgrz.Compliance.Features.AuditorRequests.Handlers;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditorRequests.Projections;
+using Bdgrz.Compliance.Features.AuditorRequests.Projectors;
+using Bdgrz.Compliance.Features.AuditorRequests.Reactors;
+using Bdgrz.Compliance.Features.AuditorRequests.Readers;
+using Bdgrz.Compliance.Features.AuditorRequests.Services;
+using Bdgrz.Compliance.Features.AuditPackages.Authorizers;
 using Bdgrz.Compliance.Features.AuditPackages.Contracts;
+using Bdgrz.Compliance.Features.AuditPackages.Handlers;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Projections;
+using Bdgrz.Compliance.Features.AuditPackages.Projectors;
+using Bdgrz.Compliance.Features.AuditPackages.Reactors;
 using Bdgrz.Compliance.Features.AuditPackages.Readers;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPackages.Services;
+using Bdgrz.Compliance.Features.AuditPopulations.Handlers;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
-using Bdgrz.Compliance.Features.AuditorRequests.Readers;
-using Bdgrz.Compliance.Features.AuditorRequests.Services;
+using Bdgrz.Compliance.Features.AuditPopulations.Readers;
 using Bdgrz.Compliance.Features.Boundaries.Contracts;
+using Bdgrz.Compliance.Features.Boundaries.Handlers;
 using Bdgrz.Compliance.Features.Boundaries.History;
 using Bdgrz.Compliance.Features.Boundaries.Models;
+using Bdgrz.Compliance.Features.Boundaries.Projections;
+using Bdgrz.Compliance.Features.Boundaries.Projectors;
 using Bdgrz.Compliance.Features.Boundaries.Readers;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Boundaries.Services;
+using Bdgrz.Compliance.Features.Changes.Authorizers;
+using Bdgrz.Compliance.Features.Changes.Handlers;
+using Bdgrz.Compliance.Features.Changes.Projections;
+using Bdgrz.Compliance.Features.Changes.Projectors;
+using Bdgrz.Compliance.Features.Changes.Reactors;
 using Bdgrz.Compliance.Features.Changes.Readers;
 using Bdgrz.Compliance.Features.Changes.Services;
+using Bdgrz.Compliance.Features.Commitments.Handlers;
 using Bdgrz.Compliance.Features.Commitments.History;
 using Bdgrz.Compliance.Features.Commitments.Projections;
+using Bdgrz.Compliance.Features.Commitments.Projectors;
 using Bdgrz.Compliance.Features.Commitments.Readers;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Commitments.Services;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Models;
 using Bdgrz.Compliance.Features.Content.Persistence;
-using Bdgrz.Compliance.Features.ControlMappings.Services;
-using Bdgrz.Compliance.Features.Controls.Contracts;
-using Bdgrz.Compliance.Features.Controls.History;
-using Bdgrz.Compliance.Features.Controls.Models;
-using Bdgrz.Compliance.Features.Controls.Rules;
-using Bdgrz.Compliance.Features.Controls.Services;
-using Bdgrz.Compliance.Features.Criteria.Contracts;
-using Bdgrz.Compliance.Features.Criteria.Readers;
-using Bdgrz.Compliance.Features.Criteria.Services;
-using Bdgrz.Compliance.Features.Evaluations.Rules;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.Evidence.Rules;
-using Bdgrz.Compliance.Features.Evidence.Services;
-using Bdgrz.Compliance.Features.Examinations.Contracts;
-using Bdgrz.Compliance.Features.Examinations.Models;
-using Bdgrz.Compliance.Features.Examinations.Readers;
-using Bdgrz.Compliance.Features.Examinations.Rules;
-using Bdgrz.Compliance.Features.Examinations.Services;
-using Bdgrz.Compliance.Features.Incidents.Readers;
-using Bdgrz.Compliance.Features.Incidents.Rules;
-using Bdgrz.Compliance.Features.Incidents.Services;
-using Bdgrz.Compliance.Features.Independence.Contracts;
-using Bdgrz.Compliance.Features.Independence.Services;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Services;
-using Bdgrz.Compliance.Features.NamedRecords.Contracts;
-using Bdgrz.Compliance.Features.NamedRecords.Models;
-using Bdgrz.Compliance.Features.NamedRecords.Processes;
-using Bdgrz.Compliance.Features.NativeOperations.Models;
-using Bdgrz.Compliance.Features.Operations.Contracts;
-using Bdgrz.Compliance.Features.Operations.History;
-using Bdgrz.Compliance.Features.Operations.Models;
-using Bdgrz.Compliance.Features.Operations.Processes;
-using Bdgrz.Compliance.Features.Operations.Readers;
-using Bdgrz.Compliance.Features.Operations.Rules;
-using Bdgrz.Compliance.Features.Operations.Services;
-using Bdgrz.Compliance.Features.Policies.Readers;
-using Bdgrz.Compliance.Features.Policies.Rules;
-using Bdgrz.Compliance.Features.PolicyDistribution.Models;
-using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
-using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
-using Bdgrz.Compliance.Features.PolicyDistribution.Rules;
-using Bdgrz.Compliance.Features.PolicyDistribution.Services;
-using Bdgrz.Compliance.Features.Processes.Processes;
-using Bdgrz.Compliance.Features.Programs.Contracts;
-using Bdgrz.Compliance.Features.Programs.History;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.Programs.Readers;
-using Bdgrz.Compliance.Features.Programs.Services;
-using Bdgrz.Compliance.Features.Providers.History;
-using Bdgrz.Compliance.Features.Providers.Models;
-using Bdgrz.Compliance.Features.Providers.Processes;
-using Bdgrz.Compliance.Features.Providers.Readers;
-using Bdgrz.Compliance.Features.Providers.Rules;
-using Bdgrz.Compliance.Features.Providers.Services;
-using Bdgrz.Compliance.Features.Readiness.Models;
-using Bdgrz.Compliance.Features.Readiness.Processes;
-using Bdgrz.Compliance.Features.Readiness.Projections;
-using Bdgrz.Compliance.Features.Readiness.Rules;
-using Bdgrz.Compliance.Features.Remediation.Processes;
-using Bdgrz.Compliance.Features.Remediation.Rules;
-using Bdgrz.Compliance.Features.Responsibilities.Contracts;
-using Bdgrz.Compliance.Features.Responsibilities.Readers;
-using Bdgrz.Compliance.Features.Responsibilities.Rules;
-using Bdgrz.Compliance.Features.Responsibilities.Services;
-using Bdgrz.Compliance.Features.Retention.Services;
-using Bdgrz.Compliance.Features.Risks.History;
-using Bdgrz.Compliance.Features.Risks.Models;
-using Bdgrz.Compliance.Features.Risks.Processes;
-using Bdgrz.Compliance.Features.Risks.Projections;
-using Bdgrz.Compliance.Features.Risks.Readers;
-using Bdgrz.Compliance.Features.Risks.Rules;
-using Bdgrz.Compliance.Features.Risks.Services;
-using Bdgrz.Compliance.Features.Snapshots.Projections;
-using Bdgrz.Compliance.Features.Snapshots.Readers;
-using Bdgrz.Compliance.Features.SourceFacts.Contracts;
-using Bdgrz.Compliance.Features.SourceFacts.Models;
-using Bdgrz.Compliance.Features.SourceFacts.Rules;
-using Bdgrz.Compliance.Features.SourceFacts.Services;
-using Bdgrz.Compliance.Features.SystemDescription.Processes;
-using Bdgrz.Compliance.Features.SystemDescription.Projections;
-using Bdgrz.Compliance.Features.SystemDescription.Services;
-using Bdgrz.Compliance.Features.TechnologyInventory.Contracts;
-using Bdgrz.Compliance.Features.TechnologyInventory.Models;
-using Bdgrz.Compliance.Features.TechnologyInventory.Processes;
-using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
-using Bdgrz.Compliance.Features.TechnologyInventory.Services;
-using Bdgrz.Compliance.Features.Tenants.Contracts;
-using Bdgrz.Compliance.Features.Tenants.History;
-using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.Tenants.Readers;
-using Bdgrz.Compliance.Features.Tenants.Rules;
-using Bdgrz.Compliance.Features.Tenants.Services;
-using Bdgrz.Compliance.Features.UserIdentities.Contracts;
-using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.UserIdentities.Processes;
-using Bdgrz.Compliance.Features.UserIdentities.Readers;
-using Bdgrz.Compliance.Features.UserIdentities.Services;
-using Bdgrz.Compliance.Features.Work.History;
-using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.Work.Processes;
-using Bdgrz.Compliance.Features.Work.Readers;
-using Bdgrz.Compliance.Features.Work.Services;
-using Bdgrz.Compliance.Features.Workforce.Projections;
-using Bdgrz.Compliance.Features.Workforce.Readers;
-using Bdgrz.Compliance.Features.Workforce.Services;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Authorizers;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
-using Bdgrz.Compliance.Features.AccessControl.Projections;
-using Bdgrz.Compliance.Features.AccessControl.Projectors;
-using Bdgrz.Compliance.Features.AccessControl.Reactors;
-using Bdgrz.Compliance.Features.AccessReviews.Authorizers;
-using Bdgrz.Compliance.Features.AccessReviews.Handlers;
-using Bdgrz.Compliance.Features.AccessReviews.Projections;
-using Bdgrz.Compliance.Features.AccessReviews.Projectors;
-using Bdgrz.Compliance.Features.AccessReviews.Reactors;
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Authorizers;
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Handlers;
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Projections;
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Projectors;
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Reactors;
-using Bdgrz.Compliance.Features.Applications.Authorizers;
-using Bdgrz.Compliance.Features.Applications.Commands;
-using Bdgrz.Compliance.Features.Applications.Handlers;
-using Bdgrz.Compliance.Features.Applications.Projections;
-using Bdgrz.Compliance.Features.Applications.Projectors;
-using Bdgrz.Compliance.Features.Applications.Reactors;
-using Bdgrz.Compliance.Features.AuditPackages.Authorizers;
-using Bdgrz.Compliance.Features.AuditPackages.Handlers;
-using Bdgrz.Compliance.Features.AuditPackages.Projections;
-using Bdgrz.Compliance.Features.AuditPackages.Projectors;
-using Bdgrz.Compliance.Features.AuditPackages.Reactors;
-using Bdgrz.Compliance.Features.AuditPopulations.Handlers;
-using Bdgrz.Compliance.Features.AuditPopulations.Readers;
-using Bdgrz.Compliance.Features.AuditorRequests.Authorizers;
-using Bdgrz.Compliance.Features.AuditorRequests.Handlers;
-using Bdgrz.Compliance.Features.AuditorRequests.Projections;
-using Bdgrz.Compliance.Features.AuditorRequests.Projectors;
-using Bdgrz.Compliance.Features.AuditorRequests.Reactors;
-using Bdgrz.Compliance.Features.Boundaries.Handlers;
-using Bdgrz.Compliance.Features.Boundaries.Projections;
-using Bdgrz.Compliance.Features.Boundaries.Projectors;
-using Bdgrz.Compliance.Features.Changes.Authorizers;
-using Bdgrz.Compliance.Features.Changes.Handlers;
-using Bdgrz.Compliance.Features.Changes.Projections;
-using Bdgrz.Compliance.Features.Changes.Projectors;
-using Bdgrz.Compliance.Features.Changes.Reactors;
-using Bdgrz.Compliance.Features.Commitments.Handlers;
-using Bdgrz.Compliance.Features.Commitments.Projectors;
 using Bdgrz.Compliance.Features.ControlMappings.Handlers;
 using Bdgrz.Compliance.Features.ControlMappings.Projections;
 using Bdgrz.Compliance.Features.ControlMappings.Projectors;
 using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.ControlMappings.Services;
+using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Controls.Handlers;
+using Bdgrz.Compliance.Features.Controls.History;
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Controls.Projections;
 using Bdgrz.Compliance.Features.Controls.Projectors;
 using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Controls.Services;
+using Bdgrz.Compliance.Features.Criteria.Contracts;
 using Bdgrz.Compliance.Features.Criteria.Handlers;
 using Bdgrz.Compliance.Features.Criteria.Projections;
 using Bdgrz.Compliance.Features.Criteria.Projectors;
+using Bdgrz.Compliance.Features.Criteria.Readers;
+using Bdgrz.Compliance.Features.Criteria.Services;
 using Bdgrz.Compliance.Features.Evaluations.Handlers;
 using Bdgrz.Compliance.Features.Evaluations.Reactors;
 using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Authorizers;
 using Bdgrz.Compliance.Features.Evidence.Handlers;
+using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Reactors;
 using Bdgrz.Compliance.Features.Evidence.Readers;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Evidence.Services;
+using Bdgrz.Compliance.Features.Examinations.Contracts;
 using Bdgrz.Compliance.Features.Examinations.Handlers;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Examinations.Projections;
 using Bdgrz.Compliance.Features.Examinations.Projectors;
+using Bdgrz.Compliance.Features.Examinations.Readers;
+using Bdgrz.Compliance.Features.Examinations.Rules;
+using Bdgrz.Compliance.Features.Examinations.Services;
 using Bdgrz.Compliance.Features.Exports.Authorizers;
 using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Exports.Handlers;
 using Bdgrz.Compliance.Features.Incidents.Handlers;
 using Bdgrz.Compliance.Features.Incidents.Projections;
 using Bdgrz.Compliance.Features.Incidents.Projectors;
+using Bdgrz.Compliance.Features.Incidents.Readers;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Incidents.Services;
+using Bdgrz.Compliance.Features.Independence.Contracts;
+using Bdgrz.Compliance.Features.Independence.Services;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Handlers;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Projections;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Projectors;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Readers;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Authorizers;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.Authorizers;
+using Bdgrz.Compliance.Features.Operations.Contracts;
 using Bdgrz.Compliance.Features.Operations.Handlers;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Processes;
 using Bdgrz.Compliance.Features.Operations.Projections;
 using Bdgrz.Compliance.Features.Operations.Projectors;
 using Bdgrz.Compliance.Features.Operations.Reactors;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Operations.Services;
 using Bdgrz.Compliance.Features.Policies.Handlers;
 using Bdgrz.Compliance.Features.Policies.Projections;
 using Bdgrz.Compliance.Features.Policies.Projectors;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.Policies.Rules;
 using Bdgrz.Compliance.Features.PolicyDistribution.Authorizers;
 using Bdgrz.Compliance.Features.PolicyDistribution.Handlers;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.PolicyDistribution.Projections;
 using Bdgrz.Compliance.Features.PolicyDistribution.Projectors;
 using Bdgrz.Compliance.Features.PolicyDistribution.Reactors;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
+using Bdgrz.Compliance.Features.PolicyDistribution.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Authorizers;
+using Bdgrz.Compliance.Features.Programs.Contracts;
 using Bdgrz.Compliance.Features.Programs.Handlers;
+using Bdgrz.Compliance.Features.Programs.History;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Projections;
 using Bdgrz.Compliance.Features.Programs.Projectors;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Programs.Services;
 using Bdgrz.Compliance.Features.Providers.Authorizers;
 using Bdgrz.Compliance.Features.Providers.Handlers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Processes;
 using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Projectors;
 using Bdgrz.Compliance.Features.Providers.Reactors;
+using Bdgrz.Compliance.Features.Providers.Readers;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Providers.Services;
 using Bdgrz.Compliance.Features.Readiness.Authorizers;
 using Bdgrz.Compliance.Features.Readiness.Handlers;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Processes;
+using Bdgrz.Compliance.Features.Readiness.Projections;
 using Bdgrz.Compliance.Features.Readiness.Reactors;
 using Bdgrz.Compliance.Features.Readiness.Readers;
+using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Authorizers;
 using Bdgrz.Compliance.Features.Remediation.Handlers;
+using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Remediation.Reactors;
 using Bdgrz.Compliance.Features.Remediation.Readers;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Responsibilities.Contracts;
 using Bdgrz.Compliance.Features.Responsibilities.Handlers;
 using Bdgrz.Compliance.Features.Responsibilities.Projectors;
+using Bdgrz.Compliance.Features.Responsibilities.Readers;
+using Bdgrz.Compliance.Features.Responsibilities.Rules;
+using Bdgrz.Compliance.Features.Responsibilities.Services;
 using Bdgrz.Compliance.Features.Retention.Authorizers;
 using Bdgrz.Compliance.Features.Retention.Handlers;
+using Bdgrz.Compliance.Features.Retention.Services;
 using Bdgrz.Compliance.Features.Risks.Authorizers;
 using Bdgrz.Compliance.Features.Risks.Handlers;
+using Bdgrz.Compliance.Features.Risks.History;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Processes;
+using Bdgrz.Compliance.Features.Risks.Projections;
 using Bdgrz.Compliance.Features.Risks.Projectors;
 using Bdgrz.Compliance.Features.Risks.Reactors;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.Risks.Rules;
+using Bdgrz.Compliance.Features.Risks.Services;
 using Bdgrz.Compliance.Features.Snapshots.Handlers;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.Snapshots.Projectors;
+using Bdgrz.Compliance.Features.Snapshots.Readers;
+using Bdgrz.Compliance.Features.SourceFacts.Contracts;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Readers;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceFacts.Services;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Handlers;
+using Bdgrz.Compliance.Features.SystemDescription.Processes;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.SystemDescription.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Services;
 using Bdgrz.Compliance.Features.TechnologyInventory.Authorizers;
+using Bdgrz.Compliance.Features.TechnologyInventory.Contracts;
 using Bdgrz.Compliance.Features.TechnologyInventory.Handlers;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Processes;
 using Bdgrz.Compliance.Features.TechnologyInventory.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Projectors;
 using Bdgrz.Compliance.Features.TechnologyInventory.Reactors;
+using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
+using Bdgrz.Compliance.Features.TechnologyInventory.Services;
 using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
 using Bdgrz.Compliance.Features.Tenants.Events;
 using Bdgrz.Compliance.Features.Tenants.Handlers;
+using Bdgrz.Compliance.Features.Tenants.History;
 using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.Tenants.Projections;
 using Bdgrz.Compliance.Features.Tenants.Projectors;
 using Bdgrz.Compliance.Features.Tenants.Reactors;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.Tenants.Rules;
+using Bdgrz.Compliance.Features.Tenants.Services;
 using Bdgrz.Compliance.Features.UserIdentities.Authorizers;
 using Bdgrz.Compliance.Features.UserIdentities.Commands;
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
 using Bdgrz.Compliance.Features.UserIdentities.Handlers;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Projections;
 using Bdgrz.Compliance.Features.UserIdentities.Projectors;
 using Bdgrz.Compliance.Features.UserIdentities.Reactors;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
 using Bdgrz.Compliance.Features.Work.Authorizers;
 using Bdgrz.Compliance.Features.Work.Handlers;
+using Bdgrz.Compliance.Features.Work.History;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Processes;
 using Bdgrz.Compliance.Features.Work.Projections;
 using Bdgrz.Compliance.Features.Work.Projectors;
+using Bdgrz.Compliance.Features.Work.Readers;
+using Bdgrz.Compliance.Features.Work.Services;
 using Bdgrz.Compliance.Features.Workforce.Authorizers;
 using Bdgrz.Compliance.Features.Workforce.Handlers;
+using Bdgrz.Compliance.Features.Workforce.Projections;
 using Bdgrz.Compliance.Features.Workforce.Projectors;
+using Bdgrz.Compliance.Features.Workforce.Readers;
+using Bdgrz.Compliance.Features.Workforce.Services;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz;
+using Cntryl.Portia;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Bdgrz.Compliance;
 
 /// <summary>
@@ -330,7 +330,13 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(new DeveloperUserRegistration(developerAuthentication));
         services.AddSingleton(PlatformOperatorAuthority.FromConfiguration(configuration, developerAuthentication));
         services.AddScoped<IPlatformOperatorAccess, EventSourcedPlatformOperatorAccess>();
-        services.AddScoped<PlatformOperatorRosterOperations>();
+        services.AddScoped<PlatformOperatorOperations>();
+        services.AddScoped<PlatformPrimaryOperations>();
+        services.AddScoped<PlatformPrimaryParticipant>();
+        services.AddScoped<PlatformPrimarySignalIntake>();
+        services.AddScoped<FitzPlatformOperatorDirectory>();
+        services.AddScoped<IPlatformOperatorDirectoryReader>(provider => provider.GetRequiredService<FitzPlatformOperatorDirectory>());
+        services.AddScoped<IPlatformOperatorDirectoryProjection>(provider => provider.GetRequiredService<FitzPlatformOperatorDirectory>());
         var professionalAuthorityTrust = FirmProfessionalAuthorityTrustSettings.FromConfiguration(configuration);
         services.TryAddScoped<IFirmProfessionalDutyAssertionVerifier>(_ =>
             new SignedFirmProfessionalDutyAssertionVerifier(professionalAuthorityTrust));
@@ -341,6 +347,17 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(ApplicationGovernedRevisionGate.FromConfiguration(configuration));
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<ICriteriaCatalog>(CriteriaCatalog.Platform);
+        services.AddScoped<ICriteriaExactSourceReader, FitzCriteriaExactSourceReader>();
+        services.AddScoped<ICriteriaSourceCutCoverage, FitzCriteriaSourceCutCoverage>();
+        services.AddScoped<ICriteriaParticipantCausalOrder, FitzCriteriaParticipantCausalOrder>();
+        services.AddScoped<PortiaCriteriaSourceHead>();
+        services.AddScoped<ICriteriaFreshEntryHead>(provider => provider.GetRequiredService<PortiaCriteriaSourceHead>());
+        services.AddScoped<ICriteriaFreshEditionHead>(provider => provider.GetRequiredService<PortiaCriteriaSourceHead>());
+        services.AddScoped<ICriteriaFreshLabelClaimHead>(provider => provider.GetRequiredService<PortiaCriteriaSourceHead>());
+        services.AddScoped<ICriteriaPublicationAuthority, SourceCriteriaPublicationAuthority>();
+        services.AddScoped<ICriteriaEntryAuthority, SourceCriteriaEntryAuthority>();
+        services.AddScoped<IRuntimeCriteriaCatalogReader, FitzRuntimeCriteriaCatalog>();
+        services.AddScoped<IRuntimeCriteriaCatalogProjection, FitzRuntimeCriteriaCatalog>();
         services.AddScoped<FitzCriteriaTextOverlayDirectory>();
         services.AddScoped<ICriteriaTextOverlayDirectoryReader>(provider =>
             provider.GetRequiredService<FitzCriteriaTextOverlayDirectory>());
@@ -424,20 +441,21 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<TenantInvitationDeliverySupport>();
         services.AddSingleton<ITenantInvitationDeliveryStore>(provider =>
             new FitzKvTenantInvitationDeliveryStore(provider.GetRequiredService<IKvClient>()));
-        services.AddScoped<FitzPermissionAuthorizer>();
-        services.AddScoped<IPermissionProjection>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());
-        services.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());
-        services.AddScoped<IMemberAccessReader>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());
+        services.AddScoped<CassiePermissionAuthorizer>();
+        services.AddScoped<TeamRolePermissionAuthorizer>();
+        services.AddScoped<IPermissionProjection>(provider => provider.GetRequiredService<CassiePermissionAuthorizer>());
+        services.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<TeamRolePermissionAuthorizer>());
+        services.AddScoped<IMemberAccessReader>(provider => provider.GetRequiredService<TeamRolePermissionAuthorizer>());
         services.AddScoped<IMemberAccessEligibility, EventSourcedMemberAccessEligibility>();
         services.AddScoped<MemberAuthorityCleanup>();
-        services.AddScoped<FitzTeamDirectoryReader>();
-        services.AddScoped<ITeamDirectoryProjection>(provider => provider.GetRequiredService<FitzTeamDirectoryReader>());
-        services.AddScoped<ITeamDirectoryReader>(provider => provider.GetRequiredService<FitzTeamDirectoryReader>());
-        services.AddScoped<FitzTeamMemberDirectoryReader>();
+        services.AddScoped<CassieTeamDirectoryReader>();
+        services.AddScoped<ITeamDirectoryProjection>(provider => provider.GetRequiredService<CassieTeamDirectoryReader>());
+        services.AddScoped<ITeamDirectoryReader>(provider => provider.GetRequiredService<CassieTeamDirectoryReader>());
+        services.AddScoped<CassieTeamMemberDirectoryReader>();
         services.AddScoped<ITeamMemberDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzTeamMemberDirectoryReader>());
+            provider => provider.GetRequiredService<CassieTeamMemberDirectoryReader>());
         services.AddScoped<ITeamMemberDirectoryReader>(
-            provider => provider.GetRequiredService<FitzTeamMemberDirectoryReader>());
+            provider => provider.GetRequiredService<CassieTeamMemberDirectoryReader>());
         services.AddScoped<FitzTenantDirectoryReader>();
         services.AddScoped<ITenantDirectoryProjection>(provider => provider.GetRequiredService<FitzTenantDirectoryReader>());
         services.AddScoped<ITenantDirectoryReader>(provider => provider.GetRequiredService<FitzTenantDirectoryReader>());
@@ -454,7 +472,9 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzTenantInvitationDirectory>());
         services.AddScoped<ProgramReader>();
         services.AddScoped<ProgramOperations>();
-        services.AddScoped<FitzProgramDirectory>();
+        services.AddScoped<ProgramNamedOperations>();
+        services.AddScoped<CassieProgramDirectory>();
+        services.AddScoped<Bdgrz.Compliance.Features.Programs.Services.ProgramApplicationAdmission>();
         services.AddScoped<ProgramDirectoryReadConsistency>();
         services.AddScoped<FitzApplicationDirectory>();
         services.AddScoped<IApplicationDirectoryProjection>(provider =>
@@ -529,9 +549,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ApplicationEvidenceSourceReferenceReadConsistency>();
         services.AddScoped<IApplicationEvidenceSourceAccess, ApplicationEvidenceSourceAccess>();
         services.AddScoped<IProgramDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzProgramDirectory>());
+            provider => provider.GetRequiredService<CassieProgramDirectory>());
         services.AddScoped<IProgramDirectoryReader>(
-            provider => provider.GetRequiredService<FitzProgramDirectory>());
+            provider => provider.GetRequiredService<CassieProgramDirectory>());
         services.AddScoped<ProgramHistoryReadConsistency>();
         services.AddScoped<ProgramSetupWorkReadConsistency>();
         services.AddScoped<ControlReader>();
@@ -720,20 +740,20 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<CriteriaCoverageReadConsistency>();
         services.AddScoped<ProductClientServiceReader>();
         services.AddScoped<ProductClientServiceOperations>();
-        services.AddScoped<FitzClientServiceDirectory>();
+        services.AddScoped<CassieClientServiceDirectory>();
         services.AddScoped<IClientServiceDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzClientServiceDirectory>());
+            provider => provider.GetRequiredService<CassieClientServiceDirectory>());
         services.AddScoped<IClientServiceDirectoryReader>(
-            provider => provider.GetRequiredService<FitzClientServiceDirectory>());
+            provider => provider.GetRequiredService<CassieClientServiceDirectory>());
         services.AddScoped<ClientServiceHistoryReadConsistency>();
         services.AddScoped<IClientServiceActivity, EventSourcedClientServiceActivity>();
         services.AddScoped<BoundaryReader>();
         services.AddScoped<BoundaryOperations>();
-        services.AddScoped<FitzBoundaryDirectory>();
+        services.AddScoped<CassieBoundaryDirectory>();
         services.AddScoped<IBoundaryDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzBoundaryDirectory>());
+            provider => provider.GetRequiredService<CassieBoundaryDirectory>());
         services.AddScoped<IBoundaryDirectoryReader>(
-            provider => provider.GetRequiredService<FitzBoundaryDirectory>());
+            provider => provider.GetRequiredService<CassieBoundaryDirectory>());
         services.AddScoped<FitzEvidenceWorkItemDirectory>();
         services.AddScoped<IEvidenceWorkItemProjection>(
             provider => provider.GetRequiredService<FitzEvidenceWorkItemDirectory>());
@@ -774,11 +794,11 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzCriterionApplicabilityWorkItemDirectory>());
         services.AddScoped<IAccountableWorkItemDirectoryReader>(
             provider => provider.GetRequiredService<FitzCriterionApplicabilityWorkItemDirectory>());
-        services.AddScoped<FitzSnapshotDirectory>();
+        services.AddScoped<CassieSnapshotDirectory>();
         services.AddScoped<ISnapshotDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzSnapshotDirectory>());
+            provider => provider.GetRequiredService<CassieSnapshotDirectory>());
         services.AddScoped<ISnapshotDirectoryReader>(
-            provider => provider.GetRequiredService<FitzSnapshotDirectory>());
+            provider => provider.GetRequiredService<CassieSnapshotDirectory>());
         services.AddScoped<ScopeSnapshotFreezer>();
         services.AddScoped<FitzAccessPopulationDirectory>();
         services.AddScoped<IAccessPopulationDirectoryProjection>(
@@ -805,11 +825,11 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzAccessReviewCampaignWorkItemDirectory>());
         services.AddScoped<IAccessReviewSources, GovernedAccessReviewSources>();
         services.AddScoped<AccessReviewQueueEligibility>();
-        services.AddScoped<FitzPopulationSnapshotDirectory>();
+        services.AddScoped<CassiePopulationSnapshotDirectory>();
         services.AddScoped<IPopulationSnapshotDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
+            provider => provider.GetRequiredService<CassiePopulationSnapshotDirectory>());
         services.AddScoped<IPopulationSnapshotDirectoryReader>(
-            provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
+            provider => provider.GetRequiredService<CassiePopulationSnapshotDirectory>());
         services.AddScoped<PopulationSnapshotDirectoryReadConsistency>();
         services.AddScoped<PopulationSnapshotFreezer>();
         services.TryAddSingleton(TenantActivationPolicy.Default);
@@ -841,13 +861,12 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzAccessGrantDirectory>());
         services.AddScoped<IAccessGrantProjection>(provider =>
             provider.GetRequiredService<FitzAccessGrantDirectory>());
-        services.AddScoped<AccessGrantPermissionAuthorizer>();
         services.AddScoped<IAccessGrantPermissionAuthorizer>(provider =>
-            provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
+            provider.GetRequiredService<TeamRolePermissionAuthorizer>());
         services.AddScoped<IAccessGrantScopePermissionAuthorizer>(provider =>
-            provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
+            provider.GetRequiredService<TeamRolePermissionAuthorizer>());
         services.AddScoped<IAccessGrantRolePermissionAuthorizer>(provider =>
-            provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
+            provider.GetRequiredService<TeamRolePermissionAuthorizer>());
         services.AddScoped<RestrictedApplicationVisibility>();
         services.AddScoped<TechnologyInventoryRestrictedVisibility>();
         services.AddScoped<OperatingAuthority>();
@@ -960,20 +979,20 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<BoundaryImpactService>();
         services.AddScoped<IBoundaryReferenceValidator,
             GovernedBoundaryReferenceValidator>();
-        services.AddScoped<FitzRoleDirectoryReader>();
-        services.AddScoped<IRoleDirectoryProjection>(provider => provider.GetRequiredService<FitzRoleDirectoryReader>());
-        services.AddScoped<IRoleDirectoryReader>(provider => provider.GetRequiredService<FitzRoleDirectoryReader>());
-        services.AddScoped<FitzRolePermissionDirectoryReader>();
+        services.AddScoped<CassieRoleDirectoryReader>();
+        services.AddScoped<IRoleDirectoryProjection>(provider => provider.GetRequiredService<CassieRoleDirectoryReader>());
+        services.AddScoped<IRoleDirectoryReader>(provider => provider.GetRequiredService<CassieRoleDirectoryReader>());
+        services.AddScoped<CassieRolePermissionDirectoryReader>();
         services.AddScoped<IRolePermissionDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzRolePermissionDirectoryReader>());
+            provider => provider.GetRequiredService<CassieRolePermissionDirectoryReader>());
         services.AddScoped<IRolePermissionDirectoryReader>(
-            provider => provider.GetRequiredService<FitzRolePermissionDirectoryReader>());
-        services.AddScoped<FitzRoleTeamDirectoryReader>();
-        services.AddScoped<IRoleTeamDirectoryProjection>(provider => provider.GetRequiredService<FitzRoleTeamDirectoryReader>());
-        services.AddScoped<IRoleTeamDirectoryReader>(provider => provider.GetRequiredService<FitzRoleTeamDirectoryReader>());
-        services.AddScoped<FitzTeamRoleDirectoryReader>();
-        services.AddScoped<ITeamRoleDirectoryProjection>(provider => provider.GetRequiredService<FitzTeamRoleDirectoryReader>());
-        services.AddScoped<ITeamRoleDirectoryReader>(provider => provider.GetRequiredService<FitzTeamRoleDirectoryReader>());
+            provider => provider.GetRequiredService<CassieRolePermissionDirectoryReader>());
+        services.AddScoped<CassieRoleTeamDirectoryReader>();
+        services.AddScoped<IRoleTeamDirectoryProjection>(provider => provider.GetRequiredService<CassieRoleTeamDirectoryReader>());
+        services.AddScoped<IRoleTeamDirectoryReader>(provider => provider.GetRequiredService<CassieRoleTeamDirectoryReader>());
+        services.AddScoped<CassieTeamRoleDirectoryReader>();
+        services.AddScoped<ITeamRoleDirectoryProjection>(provider => provider.GetRequiredService<CassieTeamRoleDirectoryReader>());
+        services.AddScoped<ITeamRoleDirectoryReader>(provider => provider.GetRequiredService<CassieTeamRoleDirectoryReader>());
         services.AddScoped<SeparationOfDutiesWaiverAuthorizer>();
         services.AddScoped<EvidenceRedactionWaiverRead>();
         services.AddScoped<EvidenceRedactionRead>();
@@ -984,6 +1003,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<EvidenceArtifactReadAccess>();
         services.AddScoped<EvidenceArtifactMetadataRead>();
         services.AddScoped<EvidenceSupportTargetSource>();
+        services.AddScoped<EvidenceSupportReader>();
+        services.AddScoped<EvidenceSupportStatusRead>();
         services.AddScoped<IAdvisorRecordVersionResolver, AdvisorRecordVersionResolver>();
         services.AddScoped<IAdvisorSharedSourceReader, AdvisorSharedSourceReader>();
         services.AddScoped<FitzAdvisorHandoffDirectory>();
@@ -1042,6 +1063,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ProcessRootReaction>();
         // ProcessSweep is a hosted service of the worker roles (AddWorkers); it resumes overdue process records.
         services.AddSingleton(AdministratorTransitionProcess.Definition);
+        services.AddSingleton(PlatformPrimarySignalProcess.Definition());
         services.AddSingleton(IdentityRecoveryProcess.Definition);
         services.AddSingleton(EmailChallengeDeliveryProcess.Definition);
         services.AddSingleton<IEmailChallengeDeliveryLedger>(provider =>
@@ -1329,6 +1351,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<DefineTeamHandler>()
             .AddRequestHandler<DeleteTeamHandler>()
             .AddRequestHandler<DefineRoleHandler>()
+            .AddRequestHandler<DesignatePrimaryOrgAdminHandler>()
+            .AddRequestHandler<ReleasePrimaryOrgAdminHandler>()
+            .AddRequestHandler<MarkMemberPrimaryHandler>()
+            .AddRequestHandler<UnmarkMemberPrimaryHandler>()
+            .AddRequestHandler<RecordPrimaryMarkOutcomeHandler>()
+            .AddRequestHandler<GetPrimaryOrgAdminsHandler>()
             .AddRequestHandler<RenameRoleHandler>()
             .AddRequestHandler<DeleteRoleHandler>()
             .AddRequestHandler<AssignTeamMemberHandler>()
@@ -1337,7 +1365,6 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RemoveTeamRoleHandler>()
             .AddRequestHandler<AssignRolePermissionHandler>()
             .AddRequestHandler<RemoveRolePermissionHandler>()
-            .AddRequestHandler<GrantAccessHandler>()
             .AddRequestHandler<RevokeAccessGrantHandler>()
             .AddRequestHandler<ListAccessGrantsHandler>()
             .AddRequestAuthorizer<RbacManagementAuthorizer>()
@@ -1539,11 +1566,20 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<MaterializeAdvisorFeedbackHandler>()
             .AddRequestAuthorizer<AdvisorReceiverAuthorizer>()
             .AddRequestHandler<CreateProgramHandler>()
+            .AddRequestHandler<CreateProgramV3Handler>()
+            .AddRequestHandler<RenameProgramHandler>()
+            .AddRequestHandler<ReviseProgramTargetsHandler>()
+            .AddRequestHandler<ChangeProgramStageHandler>()
             .AddRequestHandler<ListCriteriaCatalogEditionsHandler>()
             .AddRequestHandler<GetCriteriaCatalogEditionHandler>()
             .AddRequestHandler<ListCriteriaCatalogEntriesHandler>()
             .AddRequestHandler<ExportCriteriaCatalogEntriesHandler>()
             .AddRequestHandler<GetCriteriaCatalogEntryHandler>()
+            .AddRequestHandler<ListRuntimeCriteriaEditionsHandler>()
+            .AddRequestHandler<GetRuntimeCriteriaEditionHandler>()
+            .AddRequestHandler<ListRuntimeCriteriaEntriesHandler>()
+            .AddRequestHandler<GetRuntimeCriteriaEntryHandler>()
+            .AddRequestHandler<ListRuntimeCriteriaDisclosuresHandler>()
             .AddRequestHandler<SetCriteriaTextOverlayHandler>()
             .AddRequestHandler<CreateControlDraftHandler>()
             .AddRequestHandler<ReviseControlDraftHandler>()
@@ -1747,6 +1783,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<EvidenceArtifactDownloadAccess>()
             .AddRequestHandler<IssueArtifactDownloadHandler>()
             .AddRequestHandler<LinkEvidenceSupportHandler>()
+            .AddRequestHandler<WithdrawEvidenceSupportHandler>()
+            .AddRequestHandler<GetEvidenceSupportHandler>()
+            .AddRequestHandler<ListEvidenceSupportsHandler>()
             .AddRequestAuthorizer<EvidenceArtifactInspectionAuthorizer>()
             .AddRequestHandler<RecordEvidenceArtifactInspectionHandler>()
             .AddRequestHandler<ReleaseEvidenceArtifactQuarantineHandler>()
@@ -1966,6 +2005,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListClientServiceRevisionsHandler>()
             .AddRequestHandler<GetClientServiceRevisionHandler>()
             .AddRequestHandler<CreateBoundaryHandler>()
+            .AddRequestHandler<DraftBoundaryHandler>()
+            .AddRequestHandler<ReviewBoundaryDraftHandler>()
             .AddRequestHandler<ReviseBoundaryDraftHandler>()
             .AddRequestHandler<DiscardBoundaryDraftHandler>()
             .AddRequestHandler<GetBoundaryHandler>()
@@ -2006,10 +2047,13 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<SeparationOfDutiesWaiverAuthorizer>()
             .AddRequestHandler<RegisterTenantHandler>()
             .AddRequestAuthorizer<RegisterTenantAuthorizer>()
-            .AddRequestHandler<SeedPlatformOperatorRosterHandler>()
-            .AddRequestAuthorizer<SeedPlatformOperatorRosterAuthorizer>()
             .AddRequestHandler<GrantPlatformOperatorHandler>()
             .AddRequestHandler<RevokePlatformOperatorHandler>()
+            .AddRequestHandler<DesignatePlatformPrimaryHandler>()
+            .AddRequestHandler<ReleasePlatformPrimaryHandler>()
+            .AddRequestHandler<GetPlatformOperatorStateHandler>()
+            .AddRequestHandler<ReconcilePlatformPrimarySignalHandler>()
+            .AddRequestAuthorizer<PlatformPrimarySignalAuthorizer>()
             .AddRequestHandler<ListPlatformOperatorsHandler>()
             .AddRequestHandler<SuspendTenantHandler>()
             .AddRequestHandler<ReactivateTenantHandler>()
@@ -2018,8 +2062,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<InviteOrganizationMemberHandler>()
             .AddRequestHandler<InviteGuestConsultantHandler>()
             .AddRequestHandler<ListTenantInvitationsHandler>()
-            .AddRequestHandler<GetMemberAccessHandler>()
-            .AddRequestHandler<ProvisionGuestProgramAccessHandler>()
+            .AddRequestHandler<GetTeamMemberAccessHandler>()
             .AddRequestAuthorizer<GuestInvitationReactionAuthorizer>()
             .AddRequestHandler<AcceptTenantInvitationHandler>()
             .AddRequestHandler<SendTenantInvitationHandler>()
@@ -2086,10 +2129,18 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<PlatformUserDirectoryProjector>("PlatformUserDirectoryV2", WorkloadScope.Global)
             .AddProjector<IdentityDirectoryProjector>("UserIdentityDirectory", WorkloadScope.Global)
             .AddProjector<EmailAddressDirectoryProjector>("EmailAddressDirectory", WorkloadScope.Global)
+            .AddReactor<PrimaryOrgAdminReactor>("PrimaryOrgAdminV1", WorkloadScope.PerTenant)
+            .AddReactor<PrimaryMemberOutcomeReactor>("PrimaryMemberOutcomeV1", WorkloadScope.PerTenant)
             .AddReactor<TenantRbacBootstrapReactor>("TenantRbacBootstrap", WorkloadScope.Global)
-            // Creator activation follows its durable team assignment on a tenant workload,
-            // so a stalled activation cannot hold the global RBAC bootstrap cursor.
-            .AddReactor<TenantSelfServiceActivationReactor>("TenantSelfServiceActivationV1",
+            // Either the completed primary designation or confirmed slug may arrive last.
+            .AddReactor<TenantSlugActivationReactor>("TenantSlugActivationV1", WorkloadScope.Global,
+                options =>
+                {
+                    options.MaximumFailureDelay = TimeSpan.FromSeconds(2);
+                    options.FailureAttemptLimit = TenantActivationPolicy.WorkloadFailureAttemptLimit;
+                })
+            // A primary activation failure cannot hold the global RBAC bootstrap cursor.
+            .AddReactor<TenantSelfServiceActivationReactor>("TenantSelfServiceActivationV2",
                 WorkloadScope.PerTenant, options =>
                 {
                     options.MaximumFailureDelay = TimeSpan.FromSeconds(2);
@@ -2212,13 +2263,13 @@ public static class ComplianceServiceCollectionExtensions
                 ControlEvaluationDeviationFindingReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddProjector<ActualStaffEngagementLocatorProjector>(ActualStaffEngagementLocatorProjector.WorkloadName,
                 WorkloadScope.PerTenant)
-            .AddProjector<PermissionProjector>("PermissionProjection", WorkloadScope.PerTenant)
-            .AddProjector<TeamDirectoryProjector>("TeamDirectory", WorkloadScope.PerTenant)
-            .AddProjector<TeamMemberDirectoryProjector>("TeamMemberDirectory", WorkloadScope.PerTenant)
-            .AddProjector<RoleDirectoryProjector>("RoleDirectory", WorkloadScope.PerTenant)
-            .AddProjector<RolePermissionDirectoryProjector>("RolePermissionDirectory", WorkloadScope.PerTenant)
-            .AddProjector<RoleTeamDirectoryProjector>("RoleTeamDirectory", WorkloadScope.PerTenant)
-            .AddProjector<TeamRoleDirectoryProjector>("TeamRoleDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<PermissionProjector, CassiePermissionAuthorizer>("PermissionProjection", WorkloadScope.PerTenant)
+            .AddCassieProjection<TeamDirectoryProjector, CassieTeamDirectoryReader>("TeamDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<TeamMemberDirectoryProjector, CassieTeamMemberDirectoryReader>("TeamMemberDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<RoleDirectoryProjector, CassieRoleDirectoryReader>("RoleDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<RolePermissionDirectoryProjector, CassieRolePermissionDirectoryReader>("RolePermissionDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<RoleTeamDirectoryProjector, CassieRoleTeamDirectoryReader>("RoleTeamDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<TeamRoleDirectoryProjector, CassieTeamRoleDirectoryReader>("TeamRoleDirectory", WorkloadScope.PerTenant)
             .AddProjector<FirmStaffDirectoryProjector>(FitzFirmStaffDirectory.ProjectorName, WorkloadScope.Global)
             .AddProjector<FirmProfessionalDutyDirectoryProjector>(FitzFirmProfessionalDutyDirectory.ProjectorName,
                 WorkloadScope.Global)
@@ -2226,7 +2277,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<TenantMembershipProjector>("TenantMembership", WorkloadScope.PerTenant)
             .AddProjector<TenantInvitationDirectoryProjector>("TenantInvitationDirectory",
                 WorkloadScope.PerTenant)
-            .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<ProgramDirectoryProjector, CassieProgramDirectory>("ProgramDirectory", WorkloadScope.PerTenant)
             .AddProjector<ExaminationEngagementDirectoryProjector>(
                 FitzExaminationEngagementDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<SignificantChangeDirectoryProjector>(
@@ -2308,8 +2359,8 @@ public static class ComplianceServiceCollectionExtensions
                 WorkloadScope.PerTenant)
             .AddProjector<ProviderProjector>(FitzProviderDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AssuranceProjector>(FitzAssuranceDirectory.ProjectorName, WorkloadScope.PerTenant)
-            .AddProjector<ClientServiceDirectoryProjector>("ClientServiceDirectory", WorkloadScope.PerTenant)
-            .AddProjector<BoundaryDirectoryProjector>("BoundaryDirectoryV3", WorkloadScope.PerTenant)
+            .AddCassieProjection<ClientServiceDirectoryProjector, CassieClientServiceDirectory>("ClientServiceDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<BoundaryDirectoryProjector, CassieBoundaryDirectory>("BoundaryDirectoryV3", WorkloadScope.PerTenant)
             .AddProjector<BoundaryDecisionWorkItemProjector>(
                 FitzBoundaryDecisionWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<CommitmentDecisionWorkItemProjector>(
@@ -2335,20 +2386,26 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<ResponsibilitySetProjector>("ResponsibilitySetsV1", WorkloadScope.PerTenant)
             .AddProjector<MemberResponsibilityProjector>(FitzMemberResponsibilityIndex.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AccessGrantProjector>("AccessGrantsV1", WorkloadScope.PerTenant)
-            .AddProjector<SnapshotDirectoryProjector>("SnapshotDirectory", WorkloadScope.PerTenant)
-            .AddProjector<PopulationSnapshotDirectoryProjector>("PopulationSnapshotDirectoryV2",
+            .AddCassieProjection<SnapshotDirectoryProjector, CassieSnapshotDirectory>("SnapshotDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<PopulationSnapshotDirectoryProjector, CassiePopulationSnapshotDirectory>("PopulationSnapshotDirectoryV2",
                 WorkloadScope.PerTenant)
             .AddProjector<CriteriaTextOverlayDirectoryProjector>(
                 FitzCriteriaTextOverlayDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<PlatformOperatorDirectoryProjector>("PlatformOperatorDirectory", WorkloadScope.Global)
+            .AddReactor<PlatformPrimarySignalReactor>("PlatformPrimarySignalV1", WorkloadScope.Global,
+                options => options.FailureAttemptLimit = int.MaxValue)
             .AddFitz(
                 configuration.GetSection("Fitz"),
                 fitz => fitz.UseKvCheckpoints("kv://bdgrz/reactors/checkpoints",
                     Cntryl.Fitz.KvDurability.Sync))
             .RequireAuthorization(options => options.AllowAnonymous<StartIdentityRecovery>());
 
+        portia.AddCriteriaAuthoringServices();
+        portia.AddCriteriaWorkers();
+
         services.AddPersistenceSafety();
         services.AddHostedService<CassieReadModelStartup>();
-        services.AddHostedService<PlatformOperatorRosterBootstrap>();
+        services.AddHostedService<PlatformOperatorBootstrap>();
         return portia;
     }
 }

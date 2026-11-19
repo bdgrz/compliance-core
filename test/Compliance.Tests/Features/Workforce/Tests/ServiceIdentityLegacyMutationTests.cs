@@ -90,7 +90,7 @@ public sealed class ServiceIdentityLegacyMutationTests
     }
 
     static DomainEvent RoundTrip(DomainEvent fact) => (DomainEvent)JsonSerializer.Deserialize(
-        JsonSerializer.Serialize(fact, fact.GetType(), ComplianceCoreJsonContext.Default), fact.GetType(),
-        ComplianceCoreJsonContext.Default)!;
+        JsonSerializer.Serialize(fact, fact.GetType(), ComplianceCoreJsonMetadata.Default), fact.GetType(),
+        ComplianceCoreJsonMetadata.Default)!;
 
 }

@@ -1,0 +1,52 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "failed_first": "Alice has never successfully revised the draft. Before attempting her first revision, the system creates an immutable Alice-authored-this-draft claim. Her revision is refused. Alice later tries to review the draft. The policy prohibits review only by someone who actually authored a successful revision.",
+    "gap": "Alice has never authored the draft. The system commits Alice\u2019s first revision to one stream but crashes before committing Alice\u2019s author claim to a different stream. Bob freezes the draft and Alice asks to approve. The approval looks only at the author claim stream, which is empty.",
+    "paused": "A scope writer sees a draft is open and stores expected position 0 for a new independent scope stream. Later Bob freezes the separate draft stream. Nothing appends to the scope stream. The writer appends its change to scope stream at expected position 0, and it commits.",
+    "frozen_review": "A reviewer is designated before all draft changes. The system only accepts changes by an author different from the designated reviewer. The exact frozen draft is reconstructed completely for human review from an ordered retained history. Approval records the reviewer\u2019s attestation to that exact version, and the approval handler checks the reviewer and frozen version without scanning the child facts.",
+    "coverage": "The approval handler refuses to approve until a read-side projector reports that it processed every relevant fact before the version marker, even though the handler reads only one numeric checkpoint."
+  },
+  "questions": {
+    "false_refusal": {
+      "type": "noul",
+      "instructions": "In failed_first, is Alice wrongly prevented from reviewing under the stated policy?"
+    },
+    "missed_author": {
+      "type": "noul",
+      "instructions": "In gap, is Alice actually an author despite her empty author claim?"
+    },
+    "unauthorised_approval": {
+      "type": "noul",
+      "instructions": "In gap, could treating the empty claim as proof permit Alice to approve her own authored draft?"
+    },
+    "late_commit": {
+      "type": "noul",
+      "instructions": "In paused, did the scope change commit after freeze?"
+    },
+    "human_review": {
+      "type": "noul",
+      "instructions": "In frozen_review, is the designated reviewer\u2019s explicit personal attestation to one whole frozen version retained?"
+    },
+    "no_author": {
+      "type": "noul",
+      "instructions": "In frozen_review, did an accepted change by the designated reviewer occur?"
+    },
+    "write_all": {
+      "type": "noul",
+      "instructions": "In frozen_review, did the approval handler scan all child facts?"
+    },
+    "progress_dependency": {
+      "type": "noul",
+      "instructions": "In coverage, does approval wait for processing all relevant pre-marker facts?"
+    },
+    "coverage_collection": {
+      "type": "noul",
+      "instructions": "In coverage, does reading one checkpoint by itself prove the projector implemented correct complete processing?"
+    },
+    "policy_choice": {
+      "type": "noul",
+      "instructions": "Does forcing a person to be designated before all draft changes restrict when a reviewer may be chosen compared with the baseline?"
+    }
+  }
+}

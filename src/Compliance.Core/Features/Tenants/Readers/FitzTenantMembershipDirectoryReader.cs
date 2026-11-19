@@ -73,7 +73,8 @@ sealed class FitzTenantMembershipDirectoryReader
             {
                 await TenantMembershipDirectorySchema.Directory.InsertAsync(Transaction,
                     new TenantMembershipView(registered.UserId, registered.TenantId,
-                        registered.Affiliation, MembershipExpiresOn: registered.MembershipExpiresOn),
+                        registered.Affiliation, MembershipExpiresOn: registered.MembershipExpiresOn,
+                        MembershipEpisodeId: registered.MembershipEpisodeId, ProgramIds: ProgramCap(registered)),
                     ct).ConfigureAwait(false);
             }
             else if (current.IsDeprovisioned)
@@ -83,6 +84,9 @@ sealed class FitzTenantMembershipDirectoryReader
                     {
                         Affiliation = registered.Affiliation,
                         MembershipExpiresOn = registered.MembershipExpiresOn,
+                        MembershipEpisodeId = registered.MembershipEpisodeId,
+                        ProgramIds = ProgramCap(registered),
+                        PrimaryDesignationId = Uuid.Empty,
                         IsSuspended = false,
                         IsDeprovisioned = false,
                         SuspendedAt = null,
@@ -99,6 +103,14 @@ sealed class FitzTenantMembershipDirectoryReader
 
         switch (domainEvent)
         {
+            case MemberMarkedPrimary marked:
+                await ApplyPrimaryMarkAsync(marked.UserId, marked.TenantId, marked.MembershipEpisodeId,
+                    marked.DesignationId, remove: false, ct).ConfigureAwait(false);
+                break;
+            case MemberPrimaryMarkRemoved removed:
+                await ApplyPrimaryMarkAsync(removed.UserId, removed.TenantId, removed.MembershipEpisodeId,
+                    removed.DesignationId, remove: true, ct).ConfigureAwait(false);
+                break;
             case MemberSuspended suspended:
                 var current = await TenantMembershipDirectorySchema.Directory.GetAsync(Transaction,
                     suspended.UserId, ct).ConfigureAwait(false);
@@ -148,6 +160,28 @@ sealed class FitzTenantMembershipDirectoryReader
                     }, ct).ConfigureAwait(false);
                 break;
         }
+    }
+
+    static Uuid[] ProgramCap(MemberRegistered registration) =>
+        registration.ProgramIds?.Distinct().OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray() ?? [];
+
+    async ValueTask ApplyPrimaryMarkAsync(Uuid userId, Uuid tenantId, Uuid episodeId,
+        Uuid designationId, bool remove, CancellationToken ct)
+    {
+        var current = await TenantMembershipDirectorySchema.Directory.GetAsync(Transaction, userId, ct)
+            .ConfigureAwait(false);
+        if (current is null)
+            throw new InvalidOperationException("A primary mark cannot project before registration.");
+        // A previous episode's outcome must not mark a re-invited member. A delayed release
+        // must likewise leave a newer designation intact. These rows explain access; they do not grant it.
+        if (current.TenantId != tenantId || current.MembershipEpisodeId != episodeId ||
+            current.IsDeprovisioned || remove && current.PrimaryDesignationId != designationId)
+            return;
+        if (!remove && (current.IsSuspended || current.Affiliation == "guest" || designationId == Uuid.Empty ||
+            current.PrimaryDesignationId != Uuid.Empty && current.PrimaryDesignationId != designationId))
+            return;
+        await TenantMembershipDirectorySchema.Directory.ReplaceAsync(Transaction, current,
+            current with { PrimaryDesignationId = remove ? Uuid.Empty : designationId }, ct).ConfigureAwait(false);
     }
 
     public async ValueTask<TenantMembershipView?> GetAsync(string tenantId, Uuid userId,

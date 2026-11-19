@@ -1,10 +1,9 @@
 using System.Globalization;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Persistence;
@@ -18,28 +17,29 @@ using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Aggregates;
+using Bdgrz.Compliance.Features.Programs.Commands;
 using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Programs.Events;
 using Bdgrz.Compliance.Features.Programs.History;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Projections;
 using Bdgrz.Compliance.Features.Programs.Rules;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Responsibilities.Rules;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
-using Bdgrz.Compliance.Features.Programs.Aggregates;
-using Bdgrz.Compliance.Features.Programs.Commands;
-using Bdgrz.Compliance.Features.Programs.Events;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Programs.Readers;
 
 public sealed class ProgramReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)
@@ -63,8 +63,13 @@ public sealed class ProgramReader(IAggregateReader reader, IDomainEventReader ev
             var authored = await ReadContentAsync(content, fact, ct).ConfigureAwait(false);
             var failure = fact switch
             {
-                ProgramCreated => rules.Create(authored.Name, authored.Plan, member, display, fact.Operation.AcceptedAt),
+                ProgramCreated created => rules.Create(authored.Name, authored.Plan, member, display, fact.Operation.AcceptedAt,
+                    created.CriteriaEditionId),
                 ProgramRevised revised => rules.Revise(revised.Revision - 1, authored.Name, authored.Plan, member, display, revised.ChangedAt),
+                ProgramRenamed renamed => rules.Rename(renamed.Revision - 1, renamed.Name, member, display, renamed.ChangedAt),
+                ProgramTargetsRevised targets => rules.ReviseTargets(targets.Revision - 1, targets.Plan, member, display, targets.ChangedAt),
+                ProgramStageChanged stage => rules.ChangeStage(stage.Revision - 1, stage.Stage, stage.Support,
+                    stage.Rationale, member, display, stage.ChangedAt),
                 ProgramCriteriaEditionSelected selected => rules.SelectCriteriaEdition(selected.Revision - 1, selected.EditionId,
                     member, display, selected.ChangedAt),
                 _ => throw new ImmutableContentIntegrityException("The program has another history fact kind."),
@@ -84,7 +89,17 @@ public sealed class ProgramReader(IAggregateReader reader, IDomainEventReader ev
         var expected = fact.Operation.OriginalExpectedRevision;
         var digest = fact switch
         {
-            ProgramCreated => AuthoredIntentDigest.Compute(new CreateProgram(fact.ProgramId, fact.TenantId, value.Name, value.Plan)),
+            ProgramCreated created => AuthoredIntentDigest.Compute(new CreateProgram(fact.ProgramId, fact.TenantId,
+                value.Name, value.Plan, created.CriteriaEditionId ?? Uuid.Empty)),
+            ProgramRenamed renamed => AuthoredIntentDigest.Compute(new RenameProgram(fact.Operation.LogicalId, fact.TenantId,
+                fact.ProgramId, (long)expected!.Value, renamed.Name)),
+            ProgramTargetsRevised targets => AuthoredIntentDigest.Compute(new ReviseProgramTargets(fact.Operation.LogicalId,
+                fact.TenantId, fact.ProgramId, (long)expected!.Value, targets.Plan)),
+            ProgramStageChanged stage => AuthoredIntentDigest.Compute(new ChangeProgramStage(fact.Operation.LogicalId,
+                fact.TenantId, fact.ProgramId, (long)expected!.Value, stage.Stage,
+                new Bdgrz.Compliance.Features.NativeOperations.Models.NativeFactReference(stage.Support.Source.Source,
+                    stage.Support.Source.EventId, stage.Support.Source.AggregateVersion),
+                stage.Support.Source.ResourcePosition, stage.Rationale)),
             ProgramRevised => AuthoredIntentDigest.Compute(new ReviseProgram(fact.Operation.LogicalId, fact.TenantId, fact.ProgramId,
                 (long)expected!.Value, value.Name, value.Plan)),
             ProgramCriteriaEditionSelected selected => AuthoredIntentDigest.Compute(new SelectProgramCriteriaEdition(fact.Operation.LogicalId,

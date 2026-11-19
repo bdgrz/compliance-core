@@ -1,0 +1,54 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "graph": "Within one immutable population generation every principal has one immutable integer rank. Every accepted directed group-membership edge cites the exact same generation and immutable accepted endpoint identities, and must go from a lower rank to a higher rank. An observed edge that fails stays preserved as a rejected observation, and no complete-population assertion follows from successful individual edge checks.",
+    "review": "Each account-entitlement review item owns its own decision and close. A report displays each item it has observed and a source-consumption checkpoint. The list can lag and can omit an item whose opening is not in the report. There is no authoritative expected-item universe. A user action ID groups independently delivered item requests but retains no server-side selected-item roster.",
+    "races": "An actor sends decisions with operation IDs. Reusing the same ID with different intent is refused; exact retries return the original outcome. A timeout alone is not a final outcome. Membership and delegation authority may be revoked concurrently on other streams."
+  },
+  "questions": {
+    "rank_cycle": {
+      "type": "noul",
+      "instructions": "Under graph, can accepted edges contain a directed cycle if every accepted edge strictly increases its immutable rank?"
+    },
+    "rank_dag": {
+      "type": "noul",
+      "instructions": "Could an acyclic observed graph have an edge rejected solely because its supplied immutable ranks place that edge in decreasing order?"
+    },
+    "rank_complete": {
+      "type": "noul",
+      "instructions": "Do valid ranks for all edges the system happened to examine prove it examined every observed edge?"
+    },
+    "rank_concurrent": {
+      "type": "noul",
+      "instructions": "If immutable same-generation ranks are proven for both endpoints, can two concurrent individually rank-increasing edges create a directed cycle?"
+    },
+    "rank_ref_change": {
+      "type": "noul",
+      "instructions": "If an endpoint rank could change after edge validation, would earlier rank-increasing checks necessarily still imply the currently accepted edges are acyclic?"
+    },
+    "report_complete": {
+      "type": "noul",
+      "instructions": "Does a report showing every item it has observed as closed prove every required item has closed?"
+    },
+    "checkpoint_complete": {
+      "type": "noul",
+      "instructions": "Does a report source checkpoint alone prove all required review items were created and observed?"
+    },
+    "group_exact": {
+      "type": "noul",
+      "instructions": "Does grouping received item commands under a user action ID prove that the server received every item the user intended to select?"
+    },
+    "unknown_success": {
+      "type": "noul",
+      "instructions": "Does a timeout alone prove an item decision was accepted?"
+    },
+    "revoke_race": {
+      "type": "noul",
+      "instructions": "Does a membership or delegation check on a separate stream before a decision commit, by itself, prevent the decision from committing after a concurrent revocation?"
+    },
+    "closed_item": {
+      "type": "noul",
+      "instructions": "If a review item owns one stream and atomically refuses all changes after closure, can another item be changed without changing that closed item?"
+    }
+  }
+}

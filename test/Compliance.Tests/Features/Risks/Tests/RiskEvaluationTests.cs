@@ -218,6 +218,28 @@ public sealed class RiskEvaluationTests
     }
 
     [Fact]
+    public void ShouldAllowResidualAssessorAcceptanceGivenExactIndependentWaiver()
+    {
+        // Arrange
+        var method = Method(12);
+        var (evaluation, residualId) = ReadyForAcceptance(method, 1, 1);
+        var waiver = new SeparationOfDutiesWaiver(TenantId, Uuid.CreateVersion4());
+        Assert.Null(waiver.Record(new SeparationOfDutiesWaiverScope("risk", evaluation.Id,
+                residualId, 3, "approve"), AssessorId, Uuid.CreateVersion4(), "Admin",
+            "The assessor is the only executive.", Now.AddMinutes(-10), Now.AddDays(1)));
+        Assert.Null(waiver.Approve(Uuid.CreateVersion4(), "Other admin", Now.AddMinutes(-5)));
+
+        // Act
+        var failure = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId, method,
+            "executive", true, Now.AddMonths(3), "Approved exception", AssessorId, "Assessor", Now,
+            null, Proof(waiver));
+
+        // Assert
+        Assert.Null(failure);
+        Assert.Equal(waiver.Id, Assert.Single(evaluation.ToView().Acceptances).SeparationOfDutiesWaiverId);
+    }
+
+    [Fact]
     public void ShouldReportReassessmentDueGivenOpenTrigger()
     {
         // Arrange

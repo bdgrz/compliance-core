@@ -33,6 +33,7 @@ public sealed class TeamRole : Aggregate
     readonly Uuid _teamId;
     readonly Uuid _roleId;
     readonly Uuid _selectedCommandId;
+    readonly AccessGrantScope _scope;
     DomainEvent? _selectedFact;
     Uuid? _assignmentId;
 
@@ -41,16 +42,18 @@ public sealed class TeamRole : Aggregate
     public Uuid TenantId => _tenantId;
     public Uuid TeamId => _teamId;
     public Uuid RoleId => _roleId;
+    public AccessGrantScope Scope => _scope;
 
-    public TeamRole(Uuid tenantId, Uuid teamId, Uuid roleId, Uuid selectedCommandId = default)
-        : base(RbacIds.TeamRole(tenantId, teamId, roleId),
+    public TeamRole(Uuid tenantId, Uuid teamId, Uuid roleId, Uuid selectedCommandId = default, AccessGrantScope? scope = null)
+        : base(RbacIds.TeamRole(tenantId, teamId, roleId, scope),
             new EventStreamAddress(tenantId.ToString(), "rbac-team-roles",
-                RbacIds.TeamRole(tenantId, teamId, roleId).ToString()))
+                RbacIds.TeamRole(tenantId, teamId, roleId, scope).ToString()))
     {
         _tenantId = tenantId;
         _teamId = teamId;
         _roleId = roleId;
         _selectedCommandId = selectedCommandId;
+        _scope = TeamRoleScopes.Normalize(tenantId, scope);
         On<TeamRoleAssigned>(Apply);
         On<TeamRoleRemoved>(Apply);
     }
@@ -62,9 +65,17 @@ public sealed class TeamRole : Aggregate
         if (_selectedFact is { } prior)
             return prior is TeamRoleAssigned assigned && assigned.ExpectedRevision == expectedRevision &&
                 assigned.Actor == actor ? Result.Success : ChangedIntent();
-        if (Version != expectedRevision || IsAssigned)
-            return Conflict("The team role changed or is already assigned.");
-        RaiseEvent(new TeamRoleAssigned(_tenantId, _teamId, _roleId, commandId, expectedRevision, actor));
+        if (!TeamRoleScopes.IsValid(_tenantId, _scope))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A valid organization, program, engagement or shared-resource scope is required."));
+        if (_roleId == BuiltInRbac.AdvisorRoleId(_tenantId) || _roleId == BuiltInRbac.AttestRoleId(_tenantId))
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "Advisor and Attest authority comes only from engagement assignment."));
+        if (_roleId == BuiltInRbac.TenantAdministrationRoleId(_tenantId) && _scope.Kind != AccessGrantScopeKind.Organization)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "Org Admin is assigned only at organization scope."));
+        if (Version != expectedRevision)
+            return Conflict("The team role revision changed.");
+        if (IsAssigned)
+            return Result.Success;
+        RaiseEvent(new TeamRoleAssigned(_tenantId, _teamId, _roleId, commandId, expectedRevision, actor, _scope));
         return Result.Success;
     }
 
@@ -72,6 +83,9 @@ public sealed class TeamRole : Aggregate
     {
         if (Validate(commandId, actor) is { } error)
             return Result.Failure(error);
+        if (_teamId == BuiltInRbac.AdministratorsTeamId(_tenantId) &&
+            _roleId == BuiltInRbac.TenantAdministrationRoleId(_tenantId) && _scope.Kind == AccessGrantScopeKind.Organization)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The Administrators team keeps Org Admin at organization scope."));
         if (assignmentId == Uuid.Empty)
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "An assignment identity is required."));
         if (_selectedFact is { } prior)
@@ -79,7 +93,7 @@ public sealed class TeamRole : Aggregate
                 removed.AssignmentId == assignmentId && removed.Actor == actor ? Result.Success : ChangedIntent();
         if (Version != expectedRevision || _assignmentId != assignmentId)
             return Conflict("The team role revision or assignment episode changed.");
-        RaiseEvent(new TeamRoleRemoved(_tenantId, _teamId, _roleId, commandId, expectedRevision, actor, assignmentId));
+        RaiseEvent(new TeamRoleRemoved(_tenantId, _teamId, _roleId, commandId, expectedRevision, actor, assignmentId, _scope));
         return Result.Success;
     }
 
@@ -91,7 +105,7 @@ public sealed class TeamRole : Aggregate
 
     void Apply(TeamRoleAssigned ev)
     {
-        ValidateFact(ev.TenantId, ev.TeamId, ev.RoleId, ev.CommandId, ev.ExpectedRevision, ev.Actor, ev);
+        ValidateFact(ev.TenantId, ev.TeamId, ev.RoleId, ev.CommandId, ev.ExpectedRevision, ev.Actor, ev.Scope, ev);
         if (IsAssigned)
             throw new InvalidOperationException("An active team role cannot be assigned again.");
         _assignmentId = ev.CommandId;
@@ -99,16 +113,17 @@ public sealed class TeamRole : Aggregate
 
     void Apply(TeamRoleRemoved ev)
     {
-        ValidateFact(ev.TenantId, ev.TeamId, ev.RoleId, ev.CommandId, ev.ExpectedRevision, ev.Actor, ev);
+        ValidateFact(ev.TenantId, ev.TeamId, ev.RoleId, ev.CommandId, ev.ExpectedRevision, ev.Actor, ev.Scope, ev);
         if (_assignmentId != ev.AssignmentId || ev.AssignmentId == Uuid.Empty)
             throw new InvalidOperationException("Team role removal must close the exact active assignment.");
         _assignmentId = null;
     }
 
     void ValidateFact(Uuid tenantId, Uuid teamId, Uuid roleId, Uuid commandId, ulong expectedRevision,
-        ActorAttribution actor, DomainEvent fact)
+        ActorAttribution actor, AccessGrantScope? scope, DomainEvent fact)
     {
-        if (tenantId != _tenantId || teamId != _teamId || roleId != _roleId || commandId == Uuid.Empty ||
+        if (tenantId != _tenantId || teamId != _teamId || roleId != _roleId ||
+            TeamRoleScopes.Normalize(tenantId, scope) != _scope || commandId == Uuid.Empty ||
             expectedRevision != Version || actor is null || string.IsNullOrWhiteSpace(actor.Subject) ||
             string.IsNullOrWhiteSpace(actor.Issuer))
             throw new InvalidOperationException("A team role fact must match its owner, actor and original revision.");

@@ -22,6 +22,6 @@ public sealed class AssignRolePermissionHandler(IAggregateExecutor executor)
         return executor.ExecuteAsync(
             new RolePermission(request.TenantId, request.RoleId, request.Permission, request.CommandId),
             assignment => AggregateOutcome.CommitOnSuccess(assignment.Assign(request.CommandId, request.ExpectedRevision,
-                RbacOperationActor.From(context.Actor))), context, ct);
+                RbacOperationActor.From(context.Actor), builtInSetup: RequestActor.IsSystem(context.Actor))), context, ct);
     }
 }

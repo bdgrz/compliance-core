@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "prior_member": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "after_member": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "pending_scan": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "unknown_success": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "late_witness": {
+      "type": "noul",
+      "noul": 0.02
+    },
+    "gap_complete": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "assumptions_prove_runtime": {
+      "type": "noul",
+      "noul": 0.02
+    },
+    "changed_intent": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "visibility": {
+      "type": "noul",
+      "noul": 0.92
+    }
+  },
+  "usage": {
+    "input_tokens": 980,
+    "output_tokens": 164
+  }
+}

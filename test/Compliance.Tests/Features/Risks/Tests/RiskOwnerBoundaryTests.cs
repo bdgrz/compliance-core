@@ -171,7 +171,7 @@ public sealed class RiskOwnerBoundaryTests
     }
 
     [Fact]
-    public async Task ShouldRaiseTriggerOnceAndResolveGivenLaterInherentAssessment()
+    public async Task ShouldRaiseTriggerOnceAndResolveGivenLaterResidualAssessment()
     {
         // Arrange
         var fixture = await RiskGovernanceHandlerTests.Fixture.CreateAsync("accept");
@@ -189,7 +189,7 @@ public sealed class RiskOwnerBoundaryTests
         var snapshot = await scope.ServiceProvider.GetRequiredService<RiskGovernanceReader>()
             .ReadRiskAsync(fixture.TenantId, fixture.ProgramId, fixture.RiskId);
         var open = snapshot.OpenTriggers(fixture.RiskId, [Assessment(at.AddMinutes(-1))]);
-        var resolved = snapshot.OpenTriggers(fixture.RiskId, [Assessment(at.AddMinutes(1))]);
+        var resolved = snapshot.OpenTriggers(fixture.RiskId, [Assessment(at.AddMinutes(1)) with { Phase = "residual" }]);
 
         // Assert
         var trigger = Assert.Single(open);
@@ -197,7 +197,7 @@ public sealed class RiskOwnerBoundaryTests
             trigger.TriggerId);
         Assert.Empty(resolved);
         Assert.Equal(1, snapshot.RevisionOf(fixture.RiskId));
-        Assert.Equal("resolved", Assert.Single(snapshot.View(fixture.RiskId, [Assessment(at.AddMinutes(1))],
+        Assert.Equal("resolved", Assert.Single(snapshot.View(fixture.RiskId, [Assessment(at.AddMinutes(1)) with { Phase = "residual" }],
             DateOnly.FromDateTime(at.UtcDateTime)).ReassessmentTriggers).Status);
     }
 

@@ -109,6 +109,71 @@ public sealed class PolicyDistributionCampaignTests
         return failure;
     }
 
+    [Theory]
+    [InlineData("pending", -1, false)]
+    [InlineData("pending", 1, false)]
+    [InlineData("active", 1, false)]
+    [InlineData("active", 0, true)]
+    [InlineData("on_leave", -1, true)]
+    [InlineData("ended", -1, false)]
+    public void ShouldIncludeOnlyStartedCurrentRelationshipsGivenAudienceSelection(string status, int startOffset,
+        bool included)
+    {
+        // Arrange
+        var roster = Roster(Job(Ada, "employee", status, "Engineering", Today.AddDays(startOffset)));
+
+        // Act
+        var audience = RosterAudience.Evaluate(roster, PolicyAudience.CoreSecurity, []);
+
+        // Assert
+        Assert.Equal(included, audience.Matching.ContainsKey(Ada));
+        Assert.Equal(included, audience.Present.Contains(Ada));
+    }
+
+    [Fact]
+    public async Task ShouldKeepCampaignDueGivenExistingPersonMovesIntoAudience()
+    {
+        // Arrange
+        await using var harness = new CampaignOwnerHarness();
+        var launch = Roster(Job(Ada, "employee", "active", "Sales"));
+        var id = await LaunchAsync(harness, launch, PolicyAudience.RoleTargeted, ["Engineering"]);
+        var state = await harness.StateAsync(id);
+        var changed = Roster(Job(Ada, "employee", "active", "Engineering"));
+        var current = RosterAudience.Evaluate(changed, PolicyAudience.RoleTargeted, ["Engineering"]);
+
+        // Act
+        var amendments = CampaignRules.Amendments(state.Roster, current,
+            RosterAudience.Evaluate(launch, PolicyAudience.RoleTargeted, ["Engineering"]).Present,
+            Due, Due.AddDays(10));
+
+        // Assert
+        var amendment = Assert.Single(amendments);
+        Assert.Equal("mover_in", amendment.Reason);
+        Assert.Equal(Due, amendment.DueOn);
+    }
+
+    [Theory]
+    [InlineData(-1, false)]
+    [InlineData(0, false)]
+    [InlineData(1, true)]
+    public async Task ShouldCloseOnlyAfterPendingPersonDueGivenCampaignClosure(int afterDue, bool allowed)
+    {
+        // Arrange
+        await using var harness = new CampaignOwnerHarness();
+        var id = await LaunchAsync(harness, Roster(Job(Ada, "employee", "active", null)));
+        var state = await harness.StateAsync(id);
+        var request = new CloseCampaign(Uuid.CreateVersion4(), harness.TenantId, harness.ProgramId, id,
+            "Cycle complete", state.Campaign.Revision);
+
+        // Act
+        var failure = CampaignRules.CheckClosure(state, request, Due.AddDays(afterDue));
+
+        // Assert
+        Assert.Equal(allowed, failure is null);
+        if (!allowed)
+            Assert.Equal(CommandFailureCode.StateConflict, failure!.Code);
+    }
+
     [Fact]
     public async Task ShouldFreezeEmployeesAndContractorsGivenCoreSecurityRule()
     {
@@ -161,7 +226,7 @@ public sealed class PolicyDistributionCampaignTests
         var later = Roster(Job(Ada, "employee", "active", "Engineering"),
             Job(Bob, "employee", "active", "Sales"),
             Job(Cy, "employee", "active", "Engineering"),
-            Job(Eve, "contractor", "pending", "Engineering", Today.AddDays(5)));
+            Job(Eve, "contractor", "active", "Engineering", Today));
         var previous = RosterAudience.Evaluate(launch, PolicyAudience.RoleTargeted, ["Engineering"]).Present;
         var current = RosterAudience.Evaluate(later, PolicyAudience.RoleTargeted, ["Engineering"]);
 
@@ -178,7 +243,7 @@ public sealed class PolicyDistributionCampaignTests
         Assert.Equal("leaver", reasons[Dee]);
         Assert.Equal("mover_in", reasons[Cy]);
         Assert.Equal("joiner", reasons[Eve]);
-        Assert.Equal(Today.AddDays(35), result.Value.Amendments.Single(a => a.PersonId == Eve).DueOn);
+        Assert.Equal(Today.AddDays(30), result.Value.Amendments.Single(a => a.PersonId == Eve).DueOn);
         var state = await harness.StateAsync(campaignId);
         var people = state.ParticipantViews(Today, null).ToDictionary(static p => p.PersonId);
         Assert.Equal("removed", people[Bob].State);

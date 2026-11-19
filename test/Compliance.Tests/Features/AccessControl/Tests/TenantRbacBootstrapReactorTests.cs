@@ -97,7 +97,10 @@ public sealed class TenantRbacBootstrapReactorTests
 
         // Assert
         var grants = TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().ToArray();
-        Assert.Equal(47, grants.Length);
+        Assert.Equal(50, grants.Length);
+        Assert.Equal([BuiltInRbac.ComplianceManagementRoleId(tenantId)],
+            grants.Where(grant => grant.Permission == Bdgrz.Compliance.Features.Evidence.Services.EvidenceSupportPermissions.Withdraw)
+                .Select(grant => grant.RoleId));
         Assert.Equal(new[] { BuiltInRbac.ComplianceManagementRoleId(tenantId), BuiltInRbac.ComplianceParticipationRoleId(tenantId) }.Order(),
             grants.Where(grant => grant.Permission == Bdgrz.Compliance.Features.Remediation.Contracts.WaiverPermissions.Request)
                 .Select(grant => grant.RoleId).Order());
@@ -118,7 +121,7 @@ public sealed class TenantRbacBootstrapReactorTests
         Assert.Equal(new[] { BuiltInRbac.ComplianceManagementRoleId(tenantId), BuiltInRbac.ComplianceParticipationRoleId(tenantId) }.Order(),
             grants.Where(grant => grant.Permission == Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Record)
                 .Select(grant => grant.RoleId).Order());
-        Assert.Equal(47, grants.Select(grant => (grant.RoleId, grant.Permission)).Distinct().Count());
+        Assert.Equal(50, grants.Select(grant => (grant.RoleId, grant.Permission)).Distinct().Count());
         Assert.Equal(4, TypedReactionBus.Sent(scenario).OfType<DefineRole>().Count());
         Assert.Equal(4, TypedReactionBus.Sent(scenario).OfType<DefineTeam>().Count());
         Assert.Equal(4, TypedReactionBus.Sent(scenario).OfType<AssignTeamRole>().Count());
@@ -129,9 +132,9 @@ public sealed class TenantRbacBootstrapReactorTests
             Assert.NotEqual(Uuid.Empty, grant.CommandId);
             Assert.Equal(0UL, grant.ExpectedRevision);
         });
-        Assert.Equal(47, grants.Select(grant => grant.CommandId).Distinct().Count());
+        Assert.Equal(50, grants.Select(grant => grant.CommandId).Distinct().Count());
         AssertPermissions(grants, BuiltInRbac.TenantAdministrationRoleId(tenantId),
-            RbacPermissions.TenantAccess, RbacPermissions.TenantRbacManage, RbacPermissions.ProgramManage,
+            RbacPermissions.TenantAccess, RbacPermissions.TenantRbacManage, RbacPermissions.ProgramManage, "policies.approve",
             RbacPermissions.ApplicationInventoryManage, RbacPermissions.ApplicationRestrictedRead,
             RbacPermissions.ComplianceRecordRestrictedRead, RbacPermissions.ComplianceRecordRestrictedWrite,
             RbacPermissions.TechnologyInventoryManage, RbacPermissions.TechnologyInventoryRestrictedRead,
@@ -140,7 +143,7 @@ public sealed class TenantRbacBootstrapReactorTests
             RbacPermissions.ApplicationImportStage, RbacPermissions.EvidenceRedactionPrepare,
             Bdgrz.Compliance.Features.Remediation.Contracts.WaiverPermissions.Review);
         AssertPermissions(grants, BuiltInRbac.ComplianceManagementRoleId(tenantId),
-            RbacPermissions.TenantAccess, RbacPermissions.ProgramManage,
+            RbacPermissions.TenantAccess, RbacPermissions.ProgramManage, "policies.approve",
             RbacPermissions.ApplicationInventoryManage, RbacPermissions.ApplicationRestrictedRead,
             RbacPermissions.ComplianceRecordRestrictedRead, RbacPermissions.ComplianceRecordRestrictedWrite,
             RbacPermissions.TechnologyInventoryManage, RbacPermissions.TechnologyInventoryRestrictedRead,
@@ -154,7 +157,8 @@ public sealed class TenantRbacBootstrapReactorTests
             Bdgrz.Compliance.Features.Remediation.Contracts.CorrectiveActionPermissions.Change,
             Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Record,
             Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Manage,
-            Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Review);
+            Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Review,
+            Bdgrz.Compliance.Features.Evidence.Services.EvidenceSupportPermissions.Withdraw);
         AssertPermissions(grants, BuiltInRbac.ComplianceParticipationRoleId(tenantId),
             RbacPermissions.TenantAccess, RbacPermissions.ApplicationImportStage, RbacPermissions.EvidenceRedactionPrepare,
             Bdgrz.Compliance.Features.Remediation.Contracts.WaiverPermissions.Request,
@@ -257,7 +261,7 @@ public sealed class TenantRbacBootstrapReactorTests
             new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario)));
 
         // Assert
-        Assert.Equal(47, TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().Count());
+        Assert.Equal(50, TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().Count());
         Assert.DoesNotContain(TypedReactionBus.Sent(scenario), request => request is RegisterMember or AssignTeamMember or ActivateTenant);
     }
 
@@ -276,7 +280,7 @@ public sealed class TenantRbacBootstrapReactorTests
         await scenario.RunAsync(reactor);
 
         // Assert
-        Assert.Equal(first, TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().Skip(47));
+        Assert.Equal(first, TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().Skip(50));
     }
 
     [Theory]
@@ -322,7 +326,7 @@ public sealed class TenantRbacBootstrapReactorTests
         await scenario.RunAsync(reactor);
 
         // Assert
-        Assert.Equal(47, TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().Count());
+        Assert.Equal(50, TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().Count());
         Assert.Equal(4, TypedReactionBus.Sent(scenario).OfType<DefineRole>().Count());
         Assert.Equal(4, TypedReactionBus.Sent(scenario).OfType<DefineTeam>().Count());
     }
@@ -351,14 +355,14 @@ public sealed class TenantRbacBootstrapReactorTests
     public static TheoryData<int> GrantCommitBoundaries()
     {
         var positions = new TheoryData<int>();
-        foreach (var position in Enumerable.Range(1, 47))
+        foreach (var position in Enumerable.Range(1, 50))
             positions.Add(position);
         return positions;
     }
 
     [Theory]
     [MemberData(nameof(GrantCommitBoundaries))]
-    public async Task ShouldFinishWithoutRestoringRemovedAuthorityGivenAnUnknownGrantAppendOutcome(int interruption)
+    public async Task ShouldFinishWithoutChangingBuiltInPermissionsGivenAnUnknownGrantAppendOutcome(int interruption)
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -376,10 +380,11 @@ public sealed class TenantRbacBootstrapReactorTests
         var interrupted = bus.Grants[^1];
         Assert.Equal(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
-        var removeInterrupted = interrupted.Permission is not (RbacPermissions.TenantAccess or RbacPermissions.TenantRbacManage);
-        if (removeInterrupted)
-            Assert.True((await inner.SendAsync(new RemoveRolePermission(tenantId, interrupted.RoleId,
-                interrupted.Permission, Uuid.CreateVersion4(), 1, interrupted.CommandId), RequestActor.System)).IsSuccess);
+        var removal = await inner.SendAsync(new RemoveRolePermission(tenantId, interrupted.RoleId,
+            interrupted.Permission, Uuid.CreateVersion4(), 1, interrupted.CommandId), RequestActor.System);
+        var standingAdminPermission = interrupted.RoleId == BuiltInRbac.TenantAdministrationRoleId(tenantId) &&
+            interrupted.Permission is RbacPermissions.TenantAccess or RbacPermissions.TenantRbacManage;
+        Assert.Equal(standingAdminPermission ? RequestErrorKind.Conflict : RequestErrorKind.Forbidden, removal.Error?.Kind);
 
         // Act
         await scenario.RunAsync(reactor);
@@ -388,14 +393,13 @@ public sealed class TenantRbacBootstrapReactorTests
         // Assert
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var grants = bus.Grants.Distinct().ToArray();
-        Assert.Equal(47, grants.Length);
+        Assert.Equal(50, grants.Length);
         foreach (var grant in grants)
         {
             var owner = await reader.HydrateAsync(new RolePermission(tenantId, grant.RoleId, grant.Permission));
-            var removed = removeInterrupted && grant == interrupted;
-            Assert.Equal(!removed, owner.IsAssigned);
-            Assert.Equal(removed ? 2UL : 1UL, owner.Version);
-            Assert.Equal(removed ? null : (Uuid?)grant.CommandId, owner.AssignmentId);
+            Assert.True(owner.IsAssigned);
+            Assert.Equal(1UL, owner.Version);
+            Assert.Equal(grant.CommandId, owner.AssignmentId);
         }
         Assert.All(bus.Identities, identity => Assert.Equal(identity.Typed, identity.Metadata));
         Assert.NotEqual(ProjectionCheckpoint.Start,
@@ -470,7 +474,7 @@ public sealed class TenantRbacBootstrapReactorTests
             Assert.Equal(isRemoved ? null : (Uuid?)grant.CommandId, owner.AssignmentId);
         }
         Assert.All(bus.Identities, identity => Assert.Equal(identity.Typed, identity.Metadata));
-        Assert.Equal(47, bus.Grants.Distinct().Count());
+        Assert.Equal(50, bus.Grants.Distinct().Count());
         Assert.NotEqual(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
     }

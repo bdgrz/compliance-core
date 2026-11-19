@@ -167,7 +167,7 @@ public sealed class ControlDraftActorSnapshotTests
 
     static T Deserialize<T>(string json) where T : class =>
         Assert.IsType<T>(JsonSerializer.Deserialize(json,
-            ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!));
+            ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!));
 
     static ControlDraftContent Content() => new("Access review", "Review access",
         "Management reviews access", "The owner reviews access quarterly.",

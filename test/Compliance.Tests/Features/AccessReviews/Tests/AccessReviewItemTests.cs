@@ -359,6 +359,35 @@ public sealed class AccessReviewItemTests
         Assert.Equal(2, owner.Revision);
     }
 
+    [Fact]
+    public void ShouldRefuseNewDecisionsWithoutFactsGivenVerifiedItemReplay()
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var campaign = Uuid.CreateVersion4();
+        var item = Uuid.CreateVersion4();
+        var logicalId = Uuid.CreateVersion4();
+        var batchId = Uuid.CreateVersion4();
+        var author = new AccessReviewItem(tenant, campaign, item);
+        var verified = DomainEventSeed.Attach(new AccessRemediationVerified(tenant, campaign, 4, item,
+            NativeFacts.Ref(), NativeFacts.Root(author, Uuid.CreateVersion4(), "VerifyAccessRemediation", 3),
+            NativeFacts.Ref(), NativeFacts.Ref()), author.Id, 4);
+        var owner = Confirmed(tenant, campaign, item, logicalId, batchId,
+            [.. History(tenant, campaign, item, 3), verified]);
+
+        // Act
+        var decision = owner.RecordDecision(NativeFacts.Root(owner, logicalId, "RecordAccessDecisions", 4),
+            NativeFacts.Ref(), NativeFacts.Ref(), NativeFacts.Ref(), NativeFacts.Ref());
+        var bulk = owner.PrepareBulkHold(batchId);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, decision.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, bulk.Error?.Kind);
+        Assert.Contains("verified", decision.Error!.Message, StringComparison.Ordinal);
+        Assert.Equal(4, owner.Revision);
+        Assert.Empty(new AggregateScenario<AccessReviewItem>(owner).PendingEvents);
+    }
+
     static AccessReviewItem Confirmed(Uuid tenantId, Uuid campaignId, Uuid itemId, Uuid logicalId, Uuid batchId,
         DomainEvent[] facts)
     {

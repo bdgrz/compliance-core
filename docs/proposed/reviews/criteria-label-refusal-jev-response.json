@@ -1,0 +1,33 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "live_holder": {
+      "type": "noul",
+      "noul": 0.95
+    },
+    "changed_intent": {
+      "type": "noul",
+      "noul": 0.77
+    },
+    "exact_retry": {
+      "type": "noul",
+      "noul": 0.41
+    },
+    "same_position_race": {
+      "type": "noul",
+      "noul": 0.15
+    },
+    "qualified": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "unbounded_stream": {
+      "type": "noul",
+      "noul": 0.06
+    }
+  },
+  "usage": {
+    "input_tokens": 7592,
+    "output_tokens": 111
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "append_can_win": {
+      "type": "noul",
+      "noul": 0.26
+    },
+    "fence_changes_version": {
+      "type": "noul",
+      "noul": 0.53
+    }
+  },
+  "usage": {
+    "input_tokens": 412,
+    "output_tokens": 41
+  }
+}

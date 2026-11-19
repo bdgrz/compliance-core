@@ -1,0 +1,57 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "removed_parent_effective": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "remove_needs_children": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "late_remove_invalidates": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "readd_revives": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "witness_safe": {
+      "type": "noul",
+      "noul": 0.95
+    },
+    "stale_append": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "timeout_release": {
+      "type": "noul",
+      "noul": 0.02
+    },
+    "pending_change_parent": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "empty_draft": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "witness_all_children": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "unverified_provider": {
+      "type": "noul",
+      "noul": 0.02
+    },
+    "new_product": {
+      "type": "noul",
+      "noul": 0.94
+    }
+  },
+  "usage": {
+    "input_tokens": 1170,
+    "output_tokens": 227
+  }
+}

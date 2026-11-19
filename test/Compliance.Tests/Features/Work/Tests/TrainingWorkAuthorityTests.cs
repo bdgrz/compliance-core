@@ -459,7 +459,7 @@ public sealed class TrainingWorkAuthorityTests
                 {
                     DomainEvent registered = MemberFacts.Registered(fixture.TenantId,
                         fixture.OwnerMemberId, user, ownerAffiliation, Uuid.CreateVersion4(),
-                        DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30));
+                        DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30), [fixture.ProgramId]);
                     registered.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
                         fixture.OwnerMemberId, 1, DateTimeOffset.UtcNow));
                     await provider.GetRequiredService<IEventStore>().AppendAsync(

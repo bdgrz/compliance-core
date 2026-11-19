@@ -1,18 +1,22 @@
-using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Fitz.Extensions;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.ControlMappings.Aggregates;
+using Bdgrz.Compliance.Features.ControlMappings.Commands;
+using Bdgrz.Compliance.Features.ControlMappings.Handlers;
 using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.ControlMappings.Models;
+using Bdgrz.Compliance.Features.ControlMappings.Queries;
+using Bdgrz.Compliance.Features.Controls.Aggregates;
 using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Controls.Services;
 using Bdgrz.Compliance.Features.Criteria.Contracts;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Criteria.Readers;
 using Bdgrz.Compliance.Features.Criteria.Services;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Incidents.Rules;
@@ -22,15 +26,21 @@ using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Programs.Rules;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
@@ -38,9 +48,9 @@ using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
 using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
-using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
 using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
 using Bdgrz.Compliance.Tests.Features.Changes.Tests;
 using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
@@ -74,20 +84,11 @@ using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 using Bdgrz.Compliance.Tests.Features.Work.Tests;
 using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
-using Bdgrz.Compliance.Features.ControlMappings.Commands;
-using Bdgrz.Compliance.Features.ControlMappings.Handlers;
-using Bdgrz.Compliance.Features.ControlMappings.Models;
-using Bdgrz.Compliance.Features.ControlMappings.Queries;
-using Bdgrz.Compliance.Features.Controls.Aggregates;
-using Bdgrz.Compliance.Features.Controls.Models;
-using Bdgrz.Compliance.Features.Criteria.Models;
-using Bdgrz.Compliance.Features.Criteria.Readers;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.Providers.Aggregates;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.Responsibilities.Commands;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Extensions;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 namespace Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
 
 public sealed class ControlCriterionMappingHandlerTests
@@ -95,6 +96,28 @@ public sealed class ControlCriterionMappingHandlerTests
     static readonly Uuid CurrentEdition = Uuid.CreateVersion5(Uuid.Empty, "mapping-test-current");
     static readonly Uuid NextEdition = Uuid.CreateVersion5(Uuid.Empty, "mapping-test-next");
     const string FocusIdentifier = "bdgrz:focus:cc6.1-access";
+
+    [Fact]
+    public async Task ShouldRefuseWithoutFactGivenCriterionOutcomeIsPending()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync(services =>
+            services.AddSingleton<ICriteriaEntryAuthority>(new TestCriteriaEntryAuthority(TestCatalog(),
+                CriteriaEntryAuthorityStatus.Pending)));
+        var request = fixture.Propose("CC6.1");
+        var owner = new ControlCriterionMapping(request.TenantId, request.ProgramId, request.ControlId,
+            request.EditionId, request.CriterionIdentifier, request.MappingId);
+        var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
+
+        // Act
+        await fixture.Scenario(fixture.AuthorUserId).When(request).ExpectFailure(RequestErrorKind.Conflict);
+        var recorded = new List<DomainEventRecord>();
+        await foreach (var record in events.ReadAsync(owner.Stream, 0, CancellationToken.None))
+            recorded.Add(record);
+
+        // Assert
+        Assert.Empty(recorded);
+    }
 
     [Fact]
     public async Task ShouldCountOnlyAcceptedMappingsGivenPendingProposalThenIndependentReview()
@@ -218,6 +241,19 @@ public sealed class ControlCriterionMappingHandlerTests
         Assert.Equal("Narrowed rationale", mapping.Versions[1].Rationale);
         Assert.NotNull(mapping.Versions[0].ReviewedBy);
         Assert.Equal("unmapped", (await fixture.CoverageAsync("CC6.1")).CoverageState);
+    }
+
+    [Fact]
+    public async Task ShouldNotUseStaticCatalogGivenEditionWasNeverSelected()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync();
+
+        // Act
+        await fixture.Scenario(fixture.ReviewerUserId)
+            .When(new ListCriteriaCoverage(fixture.TenantId, fixture.ProgramId, NextEdition))
+            // Assert
+            .ExpectFailure(RequestErrorKind.Conflict);
     }
 
     [Fact]
@@ -407,7 +443,9 @@ public sealed class ControlCriterionMappingHandlerTests
                     .AddRequestHandler<ListCriterionApplicabilityHandler>(),
                 services =>
                 {
-                    services.AddSingleton<ICriteriaCatalog>(TestCatalog())
+                    var catalog = TestCatalog();
+                    services.AddSingleton<ICriteriaCatalog>(catalog)
+                    .AddSingleton<ICriteriaEntryAuthority>(new TestCriteriaEntryAuthority(catalog))
                     .AddScoped<ICriteriaTextOverlayReader, EmptyCriteriaTextOverlayReader>()
                     .AddScoped<ControlActivationSource>()
                     .AddCoverageProjections();

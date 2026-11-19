@@ -17,6 +17,7 @@ using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
 using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
 using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Commands;
@@ -27,7 +28,7 @@ namespace Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 public sealed class TenantSelfServiceActivationReactorTests
 {
     [Fact]
-    public async Task ShouldActivateVerifiedCreatorAfterAdministratorAssignmentGivenProjectionRecovery()
+    public async Task ShouldActivateCreatorAfterPrimaryDesignationGivenTransientRecovery()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -37,8 +38,7 @@ public sealed class TenantSelfServiceActivationReactorTests
         await SeedTenantAsync(scope.ServiceProvider, tenantId, creatorId,
             creatorIsAdministrator: true);
         var scenario = new ReactorScenario()
-            .Given(TeamMemberFacts.Assigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
-                RbacIds.Member(tenantId, creatorId)))
+            .Given(new PrimaryOrgAdminDesignated(tenantId, creatorId, Uuid.CreateVersion4(), Uuid.CreateVersion4()))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The first administrator is still being provisioned.", isTransient: true)));
         var checkpoints = new InMemoryProjectionCheckpointStore();
@@ -68,7 +68,7 @@ public sealed class TenantSelfServiceActivationReactorTests
     }
 
     [Fact]
-    public async Task ShouldReplayCreatorActivationAfterWorkerCancellationGivenTransientProjectionLag()
+    public async Task ShouldReplayCreatorActivationAfterWorkerCancellationGivenTransientFailure()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -78,8 +78,7 @@ public sealed class TenantSelfServiceActivationReactorTests
         await SeedTenantAsync(scope.ServiceProvider, tenantId, creatorId,
             creatorIsAdministrator: true);
         var scenario = new ReactorScenario()
-            .Given(TeamMemberFacts.Assigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
-                RbacIds.Member(tenantId, creatorId)))
+            .Given(new PrimaryOrgAdminDesignated(tenantId, creatorId, Uuid.CreateVersion4(), Uuid.CreateVersion4()))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The first administrator is still being provisioned.", isTransient: true)));
         var checkpoints = new InMemoryProjectionCheckpointStore();
@@ -108,7 +107,7 @@ public sealed class TenantSelfServiceActivationReactorTests
     }
 
     [Fact]
-    public async Task ShouldIgnoreOtherAdministratorGivenCreatorActivationAssignment()
+    public async Task ShouldIgnoreOtherPrimaryGivenCreatorActivation()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -119,8 +118,7 @@ public sealed class TenantSelfServiceActivationReactorTests
         await SeedTenantAsync(scope.ServiceProvider, tenantId, creatorId,
             creatorIsAdministrator: true);
         var scenario = new ReactorScenario()
-            .Given(TeamMemberFacts.Assigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
-                RbacIds.Member(tenantId, otherUserId)));
+            .Given(new PrimaryOrgAdminDesignated(tenantId, otherUserId, Uuid.CreateVersion4(), Uuid.CreateVersion4()));
         var checkpoints = new InMemoryProjectionCheckpointStore();
         var reactor = new TenantSelfServiceActivationReactor(checkpoints,
             scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scenario.Requests,
@@ -136,7 +134,7 @@ public sealed class TenantSelfServiceActivationReactorTests
     }
 
     [Fact]
-    public async Task ShouldIgnoreOwnerAssignmentGivenOperatorRegistration()
+    public async Task ShouldIgnorePrimaryDesignationGivenHistoricalOperatorRegistration()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -146,8 +144,7 @@ public sealed class TenantSelfServiceActivationReactorTests
         await SeedTenantAsync(scope.ServiceProvider, tenantId, operatorId,
             creatorIsAdministrator: false);
         var scenario = new ReactorScenario()
-            .Given(TeamMemberFacts.Assigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
-                RbacIds.Member(tenantId, operatorId)));
+            .Given(new PrimaryOrgAdminDesignated(tenantId, operatorId, Uuid.CreateVersion4(), Uuid.CreateVersion4()));
         var checkpoints = new InMemoryProjectionCheckpointStore();
         var reactor = new TenantSelfServiceActivationReactor(checkpoints,
             scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scenario.Requests,
@@ -163,7 +160,7 @@ public sealed class TenantSelfServiceActivationReactorTests
     }
 
     [Fact]
-    public async Task ShouldSkipHistoricalCreatorAssignmentGivenAlreadyActivatedTenant()
+    public async Task ShouldSkipHistoricalCreatorDesignationGivenAlreadyActivatedTenant()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -173,10 +170,37 @@ public sealed class TenantSelfServiceActivationReactorTests
         await SeedTenantAsync(scope.ServiceProvider, tenantId, creatorId,
             creatorIsAdministrator: true, alreadyActivated: true);
         var scenario = new ReactorScenario()
-            .Given(TeamMemberFacts.Assigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
-                RbacIds.Member(tenantId, creatorId)))
+            .Given(new PrimaryOrgAdminDesignated(tenantId, creatorId, Uuid.CreateVersion4(), Uuid.CreateVersion4()))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The historical creator is no longer authorized.")));
+        var checkpoints = new InMemoryProjectionCheckpointStore();
+        var reactor = new TenantSelfServiceActivationReactor(checkpoints,
+            scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scenario.Requests,
+            NullLogger<TenantSelfServiceActivationReactor>.Instance);
+
+        // Act
+        await scenario.RunAsync(reactor);
+
+        // Assert
+        Assert.DoesNotContain(scenario.SentRequests, request => request is ActivateTenant);
+        Assert.NotEqual(ProjectionCheckpoint.Start,
+            await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
+    }
+
+    [Fact]
+    public async Task ShouldCheckpointWithoutActivationGivenPrimaryCompletesBeforeSlug()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var creator = Uuid.CreateVersion4();
+        await using var provider = CreateProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var tenant = new Tenant(tenantId);
+        Assert.True(tenant.Register(creator, "Company", "company", creatorIsAdministrator: true).IsSuccess);
+        await scope.ServiceProvider.GetRequiredService<IAggregateWriter>()
+            .SaveAsync(tenant, new RequestDispatchContext(RequestActor.System));
+        var scenario = new ReactorScenario().Given(new PrimaryOrgAdminDesignated(tenantId, creator,
+            Uuid.CreateVersion4(), Uuid.CreateVersion4()));
         var checkpoints = new InMemoryProjectionCheckpointStore();
         var reactor = new TenantSelfServiceActivationReactor(checkpoints,
             scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scenario.Requests,
@@ -205,9 +229,9 @@ public sealed class TenantSelfServiceActivationReactorTests
         var tenant = new Tenant(tenantId);
         Assert.True(tenant.Register(ownerId, "Acme", "acme",
             creatorIsAdministrator: creatorIsAdministrator).IsSuccess);
+        Assert.True(tenant.ConfirmSlug("acme").IsSuccess);
         if (alreadyActivated)
         {
-            Assert.True(tenant.ConfirmSlug("acme").IsSuccess);
             Assert.True(tenant.Activate(ownerId, null).IsSuccess);
         }
         await services.GetRequiredService<IAggregateWriter>()

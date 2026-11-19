@@ -1133,7 +1133,7 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
                         Bdgrz.Compliance.Features.AccessControl.Readers.IMemberAccessReader>()
                     .ReadAsync(tenantId, memberId);
                 var underlyingPermissions = projectionServices.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.Authorizers.FitzPermissionAuthorizer>();
+                    Bdgrz.Compliance.Features.AccessControl.Authorizers.CassiePermissionAuthorizer>();
                 underlyingTenantAccess = await underlyingPermissions.IsAllowedAsync(tenantId,
                     parsedAdministratorId, memberId,
                     Bdgrz.Compliance.Features.AccessControl.Services.RbacPermissions.TenantAccess);

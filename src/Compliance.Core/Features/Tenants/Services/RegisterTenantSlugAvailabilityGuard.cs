@@ -46,8 +46,13 @@ sealed class RegisterTenantSlugAvailabilityGuard(IAggregateReader reader) : IReq
         if (!TenantSlugs.TryNormalize(context.Request.Slug, out var slug))
             return Result.Success; // Tenant.Register produces the authoritative validation error.
 
+        // Accepted creation is bound to the original tenant identity. A retry must reach that owner even
+        // after its initial slug was rejected or changed; the owner rejects changed registration intent.
+        if ((await reader.HydrateAsync(new Tenant(context.Request.TenantId), ct).ConfigureAwait(false)).IsRegistered)
+            return Result.Success;
+
         var tenantSlug = await reader.HydrateAsync(new TenantSlug(slug), ct).ConfigureAwait(false);
-        return tenantSlug.IsAvailableFor(context.RequestId)
+        return tenantSlug.IsAvailableFor(context.Request.TenantId)
             ? Result.Success
             : Result.Failure(new RequestError(
                 RequestErrorKind.Conflict,

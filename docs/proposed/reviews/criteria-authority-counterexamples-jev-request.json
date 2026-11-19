@@ -1,0 +1,26 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "case_1": "Edition A has reserved code alpha. Edition A has committed its accepted rename to alpha and references the exact reservation token. A network timeout loses the acknowledgement. The coordinator releases A reservation before re-reading or fencing the target. Edition B then reserves alpha successfully. Both A accepted rename fact and B reservation now exist.",
+    "case_2": "Operation X on an absent criterion receives a no-fact refusal. Coordinator treats the response as terminal and releases X without recording any token fence in the criterion stream. Later the criterion becomes eligible and a delayed copy of X arrives.",
+    "case_3": "A pending creation/rename reservation must not be released after the target accepted it. Confirming a label claim requires the target acceptance fact. The sequence is reserve claim, target commits transition using that reservation, confirm claim, release old claim."
+  },
+  "questions": {
+    "case_1_simultaneous_claims": {
+      "type": "noul",
+      "instructions": "In case_1, are both an accepted rename to alpha for edition A and a reservation for alpha by edition B recorded at the same time?"
+    },
+    "case_1_unknown_release": {
+      "type": "noul",
+      "instructions": "In case_1, did the coordinator release the reservation without first knowing whether edition A accepted?"
+    },
+    "case_2_delayed_write": {
+      "type": "noul",
+      "instructions": "In case_2, can the delayed copy of X become an accepted structural write, absent a target-side token fence?"
+    },
+    "case_3_order": {
+      "type": "noul",
+      "instructions": "In case_3, can the claim be confirmed before the target has committed its acceptance fact?"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "batch_stale_append": {
+      "type": "noul",
+      "noul": 0.28
+    },
+    "batch_retry": {
+      "type": "noul",
+      "noul": 0.86
+    },
+    "item_local_authority": {
+      "type": "noul",
+      "noul": 0.22
+    },
+    "sealed_exact": {
+      "type": "noul",
+      "noul": 0.66
+    },
+    "sealed_cut_assumed": {
+      "type": "noul",
+      "noul": 0.1
+    },
+    "path_array": {
+      "type": "noul",
+      "noul": 0.85
+    }
+  },
+  "usage": {
+    "input_tokens": 564,
+    "output_tokens": 113
+  }
+}

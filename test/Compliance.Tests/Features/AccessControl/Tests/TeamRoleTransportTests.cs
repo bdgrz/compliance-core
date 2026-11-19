@@ -135,11 +135,11 @@ public sealed class TeamRoleTransportTests
                     .ExpectSuccess();
                 return;
             }
-            using var request = new HttpRequestMessage(assignment is null ? HttpMethod.Put : HttpMethod.Delete,
-                $"/api/v1/tenants/{tenant}/teams/{team}/roles/{role}/{(assignment is null ? "assignments" : "removals")}/{commandId}" +
-                (assignment is null ? "" : $"?expected_revision={revision}&assignment_id={assignment}"));
-            if (assignment is null)
-                request.Content = new StringContent($"{{\"expected_revision\":{revision}}}", Encoding.UTF8, "application/json");
+            using var request = new HttpRequestMessage(HttpMethod.Put,
+                $"/api/v1/tenants/{tenant}/teams/{team}/roles/{role}/{(assignment is null ? "assignments" : "removals")}/{commandId}");
+            request.Content = new StringContent(assignment is null
+                ? $"{{\"expected_revision\":{revision}}}"
+                : $"{{\"expected_revision\":{revision},\"assignment_id\":\"{assignment}\"}}", Encoding.UTF8, "application/json");
             using var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }

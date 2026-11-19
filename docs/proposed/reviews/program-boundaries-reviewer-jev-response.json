@@ -1,0 +1,53 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "one_reviewer": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "multi_author": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "author_rule": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "same_workflows": {
+      "type": "noul",
+      "noul": 0.16
+    },
+    "waiver_equivalent": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "no_write_scan": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "marker_truth": {
+      "type": "noul",
+      "noul": 0.12
+    },
+    "late_append": {
+      "type": "noul",
+      "noul": 0.4
+    },
+    "review_not_report": {
+      "type": "noul",
+      "noul": 0.15
+    },
+    "human_evidence": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "source_assumed": {
+      "type": "noul",
+      "noul": 0.08
+    }
+  },
+  "usage": {
+    "input_tokens": 755,
+    "output_tokens": 203
+  }
+}

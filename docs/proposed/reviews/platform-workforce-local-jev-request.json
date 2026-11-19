@@ -1,0 +1,22 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "stale_unmark": "A primary seat requests designation generation G1 for operator A. A accepts mark G1; the seat confirms it. Another operator B becomes primary. A's G1 seat is released, and an unmark message for G1 is delayed. A is designated again under G2 and accepts mark G2; the seat confirms A under G2. The delayed G1 unmark reaches A's operator record. The unmark command merely checks that A is currently marked, without comparing the generation.",
+    "fenced_unmark": "A's operator record stores the current primary designation generation G2. A delayed unmark command carries earlier generation G1. The record only removes a mark when command generation equals its currently stored generation. The current designation must remain protected.",
+    "pending": "A designation request for a new primary was delivered to that user's owner. The seat has not received a terminal answer. The response might have been lost even though the user accepted the primary mark. No target-side fence has been committed.",
+    "seat_growth": "The seat owner stores at most two current primary seat states, with one event for each designation, confirmation, release, or refusal. A fixed number of concurrent seats is not a fixed number of rotations. Portia loads the aggregate's full event stream.",
+    "historical_link": "A member first links to Person P using operation L1 and generation G1, unlinks, and later links to Person P again with operation L3 and generation G3. A retry of L1 arrives after L3. The member stores only its current Person P and generation G3, without a durable historical operation lookup.",
+    "membership_episode": "A member's stable identity correlation with Person P is retained when episode E1 is deprovisioned. Later episode E2 starts. Access requires a current active episode and independently current grants. An unlink command from E1 arrives against E2.",
+    "workflow": "The platform has active primary A and active ordinary operator B. Under the candidate policy, a marked primary cannot be revoked and a primary seat cannot be released unless a different primary is confirmed. An operator wants to revoke A."
+  },
+  "questions": {
+    "aba_removes_new": {"type": "noul", "instructions": "In state.stale_unmark, can the delayed G1 unmark remove protection for the later G2 designation?"},
+    "generation_fence": {"type": "noul", "instructions": "In state.fenced_unmark, does the generation check stop the G1 unmark from removing the G2 mark?"},
+    "timeout_safe": {"type": "noul", "instructions": "In state.pending, does a timeout alone prove that the user never accepted the primary mark?"},
+    "rotation_history": {"type": "noul", "instructions": "In state.seat_growth, can aggregate replay work grow as primary rotations accumulate?"},
+    "old_retry": {"type": "noul", "instructions": "In state.historical_link, can current Person and generation alone establish whether L1 was previously accepted with the same intent?"},
+    "episode_grants": {"type": "noul", "instructions": "In state.membership_episode, does retaining the Person correlation by itself grant access in E2?"},
+    "episode_unlink": {"type": "noul", "instructions": "In state.membership_episode, must an unlink command restricted to E1 be accepted as a valid unlink of E2?"},
+    "primary_workflow": {"type": "noul", "instructions": "In state.workflow, is a separate primary designation of B required before A can be revoked?"}
+  }
+}

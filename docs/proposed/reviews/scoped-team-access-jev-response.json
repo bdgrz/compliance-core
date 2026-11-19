@@ -1,0 +1,33 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "narrow_scope_leaks": {
+      "type": "noul",
+      "noul": 0.11
+    },
+    "guest_cap_leaks": {
+      "type": "noul",
+      "noul": 0.08
+    },
+    "revocation_read_missed": {
+      "type": "noul",
+      "noul": 0.22
+    },
+    "legacy_fallback": {
+      "type": "noul",
+      "noul": 0.29
+    },
+    "explanation_scope_leaks": {
+      "type": "noul",
+      "noul": 0.11
+    },
+    "guest_invitation_loses_cap": {
+      "type": "noul",
+      "noul": 0.11
+    }
+  },
+  "usage": {
+    "input_tokens": 7043,
+    "output_tokens": 126
+  }
+}

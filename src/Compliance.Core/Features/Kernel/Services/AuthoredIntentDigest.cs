@@ -45,7 +45,7 @@ public static class AuthoredIntentDigest
     static readonly ConcurrentDictionary<IJsonTypeInfoResolver, JsonSerializerOptions> Options = new();
 
     /// <summary>Computes the lowercase SHA-256 hex digest of the canonical encoding of an intent registered in <see cref="ComplianceCoreJsonContext"/>.</summary>
-    public static string Compute<T>(T intent) where T : notnull => Compute(intent, ComplianceCoreJsonContext.Default);
+    public static string Compute<T>(T intent) where T : notnull => Compute(intent, ComplianceCoreJsonMetadata.Default);
 
     /// <summary>Computes the digest using the serialization metadata of <paramref name="resolver"/>.</summary>
     public static string Compute<T>(T intent, IJsonTypeInfoResolver resolver) where T : notnull
@@ -59,7 +59,7 @@ public static class AuthoredIntentDigest
 
     static JsonSerializerOptions CreateOptions(IJsonTypeInfoResolver resolver)
     {
-        var options = new JsonSerializerOptions(ComplianceCoreJsonContext.Default.Options)
+        var options = new JsonSerializerOptions(ComplianceCoreJsonMetadata.Default.Options)
         {
             TypeInfoResolver = resolver,
             WriteIndented = false

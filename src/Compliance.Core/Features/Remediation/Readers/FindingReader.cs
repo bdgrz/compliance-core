@@ -94,6 +94,10 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
                         $"Severity {ev.Severity}, owner {ev.OwnerMemberId}, due {FindingViews.Date(ev.DueOn)}: {ev.Reason}",
                         ev.RevisedBy, ev.RevisedAt), order));
                     break;
+                case FindingAnalysisRevised ev:
+                    history.Add((new FindingHistoryEntryView(ev.Revision, "analysis_revised", ev.Analysis,
+                        ev.RevisedBy, ev.RevisedAt), order));
+                    break;
                 case CorrectiveActionAdmitted ev:
                     var action = await ComposeActionAsync(finding, ev, actionChanges, ct).ConfigureAwait(false);
                     actions.Add(action.View);
@@ -113,6 +117,18 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
                 case FindingCorrectiveActionResolved ev:
                     history.Add((new FindingHistoryEntryView(ev.Revision, "corrective_action_resolved",
                         $"Action {ev.ActionId}: {ev.Outcome}", ev.Operation.Actor, ev.Operation.AcceptedAt), order));
+                    break;
+                case FindingClosureProposed ev:
+                    history.Add((new FindingHistoryEntryView(ev.Revision, "closure_proposed",
+                        $"Closure {ev.ClosureId}: {ev.Terms.Rationale}", ev.ProposedBy, ev.ProposedAt), order));
+                    break;
+                case FindingClosureWithdrawn ev:
+                    history.Add((new FindingHistoryEntryView(ev.Revision, "closure_withdrawn",
+                        $"Closure {ev.ClosureId} withdrawn.", ev.WithdrawnBy, ev.WithdrawnAt), order));
+                    break;
+                case FindingClosureReturned ev:
+                    history.Add((new FindingHistoryEntryView(ev.Revision, "closure_returned", ev.Comments,
+                        ev.Review.ReviewedBy, ev.Review.ReviewedAt), order));
                     break;
                 case FindingClosedV2 ev:
                     closure = await FindingContent.ReadAsync<FindingClosureView>(content, tenant, ev.ClosureContent, ct)
@@ -149,7 +165,10 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
         var view = new FindingView(tenant, raised.ProgramId, raised.FindingId, finding.Revision, raised.Source,
             raised.Title, raised.Description, finding.Severity!, finding.AffectedScope!, finding.OwnerMemberId,
             finding.DueOn, finding.RootCause, FindingStates.Open, FindingStates.Unresolved, links, actions, acceptances,
-            closure, history.Select(static item => item.Entry).ToArray(), raised.RaisedBy, raised.RaisedAt);
+            closure, history.Select(static item => item.Entry).ToArray(), raised.RaisedBy, raised.RaisedAt,
+            finding.ClosureProposal is { } proposal ? new FindingClosureProposalView(proposal.ClosureId, proposal.ProposalRevision,
+                proposal.Terms, source.Admitted.Select(static item => item.Operation.LogicalId).ToArray(),
+                proposal.ProposedBy, proposal.ProposedAt, finding.ProposalAuthors(proposal.ClosureId)) : null, finding.Analysis, finding.AffectedRecords);
         return FindingViews.Settle(view, now);
     }
 

@@ -62,7 +62,7 @@ public static class IndependenceCatalogContent
     {
         if (!Reference(reference, schema))
             return false;
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, typeof(T), ComplianceCoreJsonContext.Default);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, typeof(T), ComplianceCoreJsonMetadata.Default);
         return reference!.Bytes == bytes.LongLength && reference.Sha256 == ContentDigest.Sha256(bytes);
     }
     public static bool Reference(ImmutableContentRef? value, string schema) => value is not null && value.ContentId != Uuid.Empty &&

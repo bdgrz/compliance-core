@@ -1,0 +1,15 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "description": "A source record has revisions 3, 4 and 5 in increasing order. The record's gate has already admitted 4, then admits 5. One target has applied 3 but has received neither 4 nor 5. The target rejects an update only when its revision is less than or equal to that target's already applied revision. Revision updates carry complete source-owned values. Each target is updated independently and the source gate is a separate stream."
+  },
+  "questions": {
+    "four_after_five_admitted": {"type": "noul", "instructions": "Can revision 4 apply to the target after revision 5 is admitted at the separate gate but before the target applies revision 5?"},
+    "four_after_five_applied": {"type": "noul", "instructions": "After the target applies revision 5, can revision 4 update that target?"},
+    "target_completion": {"type": "noul", "instructions": "Before the target applies revision 5, is that target guaranteed to contain revision 5's values?"},
+    "exact_retry_history": {"type": "noul", "instructions": "The gate stores only latest revision 5 and receives a retry for revision 4. Can latest revision alone tell whether revision 4 was admitted earlier?"},
+    "delta_gap": {"type": "noul", "instructions": "The target applies revision 5 before revision 4, then refuses 4 as stale. Revision 5 contains only changes since revision 4. Can a change introduced only in 4 be missing from the target?"},
+    "complete_snapshot": {"type": "noul", "instructions": "The target applies revision 5 before revision 4, then refuses 4 as stale. Revision 5 contains all current source-owned values for the target. Can those values still match revision 5 without applying 4 first?"},
+    "child_roster": {"type": "noul", "instructions": "A separate authority for each Member stores one Person identifier. Must a Person store identifiers of all linked Members to enforce at most one Person per Member?"}
+  }
+}

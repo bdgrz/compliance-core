@@ -1,0 +1,50 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "identity_rule": "The platform permits an identity to authenticate only if its issuer and subject are attached to the same user and the identity is not revoked at admission T. A signed and unexpired token does not override a revoked identity.",
+    "revoked": "Identity I is revoked before T. Its JWT remains signed and unexpired. An operator grant exists for the associated user.",
+    "twopass": "Identity source I and operator source O provide linearizable reads and unique non-resetting increasing positions. All identity and operator first-pass reads complete before T. All identity and operator second-pass reads begin after T. Each second pass returns the same exact position as its own first pass. Every change to either relevant state advances that source position.",
+    "identity_change": "A first fresh identity read at time 1 returns position 4 and attached. A revocation commits at time 2 and advances position to 5. A fresh second read at time 4 returns position 5 and revoked. Admission time T is time 3.",
+    "disjoint": "Identity I is attached from time 1 through time 2 and revoked at time 3. Operator O is revoked through time 3 and only granted at time 4. An identity read at time 2 says attached and a separate operator read at time 5 says granted. No repeated reads are performed.",
+    "auth_and_revoke": "At T an identity is attached, an operator grant is active, and the credential is unexpired. At time T+1 the identity is revoked. The policy allows an exact operation authorized at T to complete even after later revocation but refuses new admissions.",
+    "unknown_old": "A source does not return a freshness or current position guarantee; two successive cached reads return matching values. Revocation may have committed before both reads."
+  },
+  "questions": {
+    "revoked_rule": {
+      "type": "noul",
+      "instructions": "Under identity_rule, does the revoked identity in revoked qualify to authenticate at T?"
+    },
+    "unchanged_identity": {
+      "type": "noul",
+      "instructions": "In twopass, could I have changed and returned to its old state between its first and second reads without advancing its position?"
+    },
+    "common_point": {
+      "type": "noul",
+      "instructions": "Given all the stated conditions in twopass, did I and O both have their observed source states at T?"
+    },
+    "changed_revoked": {
+      "type": "noul",
+      "instructions": "In identity_change, is the identity revoked at T?"
+    },
+    "changed_accept": {
+      "type": "noul",
+      "instructions": "In identity_change, can a rule requiring equal first and second positions accept this proof?"
+    },
+    "disjoint_both": {
+      "type": "noul",
+      "instructions": "In disjoint, was there any time when identity I was attached and operator O was granted simultaneously?"
+    },
+    "already_admitted": {
+      "type": "noul",
+      "instructions": "In auth_and_revoke, may the exact operation already authorized at T finish after identity revocation?"
+    },
+    "cached_proof": {
+      "type": "noul",
+      "instructions": "In unknown_old, do equal cached values prove that no revocation committed before the reads?"
+    },
+    "infra_established": {
+      "type": "noul",
+      "instructions": "Does the hypothetical twopass establish that a particular deployed source actually implements linearizable reads?"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "design": "A criterion owns its structure. The edition admission window has exactly one in-flight operation; each admitted token must reach a durable token-specific accepted/refused/no-effect result or durable target-side fence before release, even for empty child streams. A fence and a child mutation race on that target stream; a fence reports earlier acceptance and cannot overturn it. On 128 terminal operations or insufficient record budget a settled window closes once, with a deterministic successor. Publication freezes only with no outstanding token, validates complete authoritative chain and child event proofs, and binds an immutable structural manifest to the exact source cut. Window has at most 128 admissions, 128 outcomes, 5 control records. Separate application audit records count against maximum 261 total and reduce admissions; reserve space for in-flight outcome and control facts. Each app record is at most 8 KiB; provider records/metadata require qualification. Criterion/edition/label histories can grow through their own business lifecycles and label reuse. No aggregate owns a criterion roster.",
+    "existing_boundaries": "A label is a unique structured code, held by a per-code claim. A newly reserved label cannot be released after target acceptance, even when acknowledgement is lost. Program creation reads irrevocable published edition by exact ID. The existing seed has partial points of focus and unsupported Privacy lifecycle."
+  },
+  "questions": {
+    "child_owner": {
+      "type": "noul",
+      "instructions": "Can this design preserve one independent owner per criterion while enforcing frozen edition membership?"
+    },
+    "late_noop": {
+      "type": "noul",
+      "instructions": "If a new no-op has no durable target token outcome or fence and its admission is released, can a delayed retry become a real write after child state changes?"
+    },
+    "lost_ack_release": {
+      "type": "noul",
+      "instructions": "If an edition rename has committed but its acknowledgement is lost, would releasing the newly reserved label allow a second edition to claim the same accepted code?"
+    },
+    "missing_child_cut": {
+      "type": "noul",
+      "instructions": "Does a manifest hash by itself prove that every accepted child operation was included in the publication cut?"
+    },
+    "per_window_count": {
+      "type": "noul",
+      "instructions": "Is it valid to claim the window has at most 261 application event records when the design explicitly refuses further admission before exceeding 261 and reserves mandatory outcome/control capacity?"
+    },
+    "total_history_bound": {
+      "type": "noul",
+      "instructions": "Does a maximum of 261 records in each window by itself put a finite upper bound on the number of windows across the entire edition lifetime?"
+    },
+    "program_source": {
+      "type": "noul",
+      "instructions": "Is a direct authoritative read of an irrevocably published edition sufficient for creation to record that exact edition ID without holding a continuing reservation?"
+    }
+  }
+}

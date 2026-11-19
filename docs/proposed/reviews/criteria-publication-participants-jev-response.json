@@ -1,0 +1,33 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "pending": {
+      "type": "noul",
+      "noul": 0.95
+    },
+    "cut": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "unknown": {
+      "type": "noul",
+      "noul": 0.11
+    },
+    "pin_race": {
+      "type": "noul",
+      "noul": 0.19
+    },
+    "label_race": {
+      "type": "noul",
+      "noul": 0.25
+    },
+    "qualified": {
+      "type": "noul",
+      "noul": 0.04
+    }
+  },
+  "usage": {
+    "input_tokens": 3291,
+    "output_tokens": 104
+  }
+}

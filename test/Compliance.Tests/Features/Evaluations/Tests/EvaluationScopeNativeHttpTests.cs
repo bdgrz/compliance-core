@@ -84,7 +84,7 @@ public sealed class EvaluationScopeNativeHttpTests
             ["control_version_id"] = version,
             ["expected_version"] = 0,
             ["objective"] = "Review exact original sources",
-            ["steps"] = JsonSerializer.SerializeToElement(steps, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(IReadOnlyList<EvaluationProcedureStep>))!),
+            ["steps"] = JsonSerializer.SerializeToElement(steps, ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(IReadOnlyList<EvaluationProcedureStep>))!),
             ["tester_independence_required"] = false,
         };
 

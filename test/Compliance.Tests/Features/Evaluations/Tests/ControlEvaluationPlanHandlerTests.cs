@@ -165,11 +165,11 @@ public sealed class ControlEvaluationPlanHandlerTests
         var fixture = await OperationsFixture.CreateAsync();
         var request = new DefineControlEvaluationPlan(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
             fixture.ControlVersionId, 0, "Original evaluation objective", Steps, false);
-        var first = await fixture.AsAsync(fixture.LeadUserId, request);
+        var first = (await fixture.AsAsync(fixture.LeadUserId, request)).Value;
         await fixture.DefineEvaluationPlanAsync(1, "Successor objective", Steps);
 
         // Act
-        var replay = await fixture.AsAsync(fixture.LeadUserId, request);
+        var replay = (await fixture.AsAsync(fixture.LeadUserId, request)).Value;
 
         // Assert
         Assert.Equal(System.Text.Json.JsonSerializer.Serialize(first, ComplianceCoreJsonContext.Default.ControlEvaluationPlanVersionView),

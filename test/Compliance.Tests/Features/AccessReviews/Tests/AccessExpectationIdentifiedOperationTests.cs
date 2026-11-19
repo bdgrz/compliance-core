@@ -60,7 +60,7 @@ public sealed class AccessExpectationIdentifiedOperationTests
     static readonly AccessExpectationParameters NoAdmin = new(EntitlementKind: "admin_privilege");
 
     static string Wire<T>(T value) => System.Text.Json.JsonSerializer.Serialize(value,
-        ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!);
 
     [Fact]
     public async Task ShouldReturnOriginalViewGivenExactProposalRetryAfterLaterLineChange()

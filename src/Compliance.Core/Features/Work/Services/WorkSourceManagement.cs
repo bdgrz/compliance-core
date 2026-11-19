@@ -44,7 +44,7 @@ static class WorkSourceManagement
         [WorkSource.AccessReviewReview] = [typeof(RecordAccessDecision)],
         [WorkSource.AccessReviewRemediation] = [typeof(RecordAccessRemediationChange)],
         [WorkSource.AdvisorFeedback] = [typeof(RespondToAdvisorFeedback), typeof(ResolveAdvisorFeedback)],
-        [FindingClosureWork.Kind] = [typeof(CloseFinding)],
+        [FindingClosureWork.Kind] = [typeof(ReviewFindingClosure)],
         [ControlDecisionWork.DraftReview] = [typeof(ReviewControl)],
         [ControlDecisionWork.DraftApproval] = [typeof(ApproveControl)],
         [ControlDecisionWork.RetirementReview] = [typeof(ReviewControl)],

@@ -24,14 +24,23 @@ rules and the map between contexts.
   are absent or disabled.
 - Scope every business record to exactly one client organization (tenant).
   Only platform-level content (criteria editions, methodology templates, the
-  firm-staff directory and the operator roster) exists outside a tenant, and it
+  firm-staff and platform-operator identities) exists outside a tenant, and it
   never contains client data (M0-D25).
-- Every stream stays short enough to replay for the life of its record: a wide
-  or long-lived record keeps only its real invariant, and volume lives in
-  per-item or per-draft streams ([CV-13](contexts/conventions.md#stream-growth)).
-- One small aggregate per domain noun, named in the product's terms. Rules that
-  span aggregates are current-state checks
-  ([conventions](contexts/conventions.md)).
+- Assess replay in light of a record's actual invariant and expected lifetime
+  churn. Keep independent high-volume items in focused owners; a small,
+  low-churn aggregate may retain its own decision history when that protects its
+  invariant and retries ([CV-13](contexts/conventions.md#stream-growth)).
+- Give each aggregate one named invariant and identity in the product's terms;
+  independent participants have independent owners. Cross-owner reads are
+  advisory. A decision that must remain true requires authoritative admission,
+  exact participant outcomes and fencing or other proven owner coordination—not
+  a projection, dispatch acknowledgement or current-state read
+  ([conventions](contexts/conventions.md#guards-and-reviews)).
+- Express write-model invariants locally, without requiring a decision to load,
+  scan or settle every child. A paged list is a read concern; a segmented ledger
+  is not a substitute for a small business decision. Where an accepted product
+  rule conflicts with this direction, reopen that rule instead of silently
+  weakening it.
 
 ## Process spine
 
@@ -55,7 +64,7 @@ Client organization (tenant) and membership
 
 | Context | Owns |
 | --- | --- |
-| [Platform access](contexts/platform-access.md) | Tenants and their slugs, invitations, members, teams, roles, primary Org Admins, platform users, sign-in identities, the platform operators record, firm staff, separation-of-duties waivers |
+| [Platform access](contexts/platform-access.md) | Tenants and their slugs, invitations, members, teams, roles, primary Org Admins, platform users, sign-in identities, platform-operator authority, firm staff, separation-of-duties waivers |
 | [Firm services](contexts/firm-services.md) | Service engagements, staff assignments, client practice compartments, nonattest service records, independence rule sets and evaluations, partner designations, attest record packages |
 | [Firm methodology](contexts/firm-methodology.md) | Platform-level methodology templates and their application to programs |
 | [Program and scope](contexts/program-and-scope.md) | Programs, stages, target dates, system boundaries, client services |
@@ -66,7 +75,7 @@ Client organization (tenant) and membership
 | [Criteria](contexts/criteria.md) | Criteria editions, criteria, licensed text overlays, applicability |
 | [Control environment](contexts/control-environment.md) | Controls, mappings, responsibilities, occurrences, evaluation plans and evaluations |
 | [Evidence](contexts/evidence.md) | Artifacts, redactions, requests, support links, disclosures |
-| [Retention](contexts/retention.md) | Artifact retention, the hold register (legal and engagement holds, disposal authorization), dispositions |
+| [Retention](contexts/retention.md) | Artifact retention, legal and engagement holds, disposal authorization, dispositions |
 | [Assurance work](contexts/assurance-work.md) | Findings, corrective actions, waivers |
 | [Policies](contexts/policies.md) | Policies, training requirements, acknowledgement and training campaigns |
 | [Risk and provider oversight](contexts/risk-and-provider-oversight.md) | Risk method, risks, assessments, treatments, acceptances, triggers; providers, assurance reports, reviews, coverage gaps |

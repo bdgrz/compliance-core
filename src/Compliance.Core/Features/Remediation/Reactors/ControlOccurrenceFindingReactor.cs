@@ -35,10 +35,9 @@ using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Content.Persistence;
 namespace Bdgrz.Compliance.Features.Remediation.Reactors;
 /// <summary>
-///     Routes control-operation exceptions into the shared finding path: a failed or skipped
-///     attestation and each action a reviewer requests become a finding whose identity derives
-///     from the exact attestation or decision, so replay never duplicates one. It reads the occurrence facts of the
-///     tenant and their verified attestation and review content; the finding ids derive from those exact ids.
+///     Maps a committed reviewer's explicit raise decision into findings. Failed or skipped attestations remain
+///     facts for review; they do not decide whether a finding exists. Every emitted identity derives from the
+///     exact committed review so replay never duplicates it.
 /// </summary>
 public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpointStore checkpoints,
     IRequestBus bus, IImmutableContentStore content, ISourceFactResolver sources)
@@ -78,8 +77,15 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
             return sourceVerification;
         var review = await ReadAsync<ControlOccurrenceReviewView>(context, ev.ReviewContent, ct)
             .ConfigureAwait(false);
-        if (review.Outcome != ControlOperationStates.ActionRequested)
+        if (review.FindingDecision != "raise")
             return Result.Success;
+        if (review.RequestedActions.Count == 0)
+        {
+            var rationale = string.IsNullOrWhiteSpace(review.FindingRationale) ? review.Rationale : review.FindingRationale;
+            return await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId,
+                Uuid.CreateVersion5(review.DecisionId, "finding"), ev.ControlId, ev.OccurrenceId,
+                review.DecisionId.ToString(), "occurrence_review", rationale.Trim()), context, ct).ConfigureAwait(false);
+        }
         for (var index = 0; index < review.RequestedActions.Count; index++)
         {
             var reactionOutcome1 = await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId,

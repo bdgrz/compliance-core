@@ -1,0 +1,26 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "rules": "An edition has independently owned criteria and points of focus. Publication must prove one active criterion without checking every child. Criterion W can hold one publication pin bound to the exact edition ID, generation and publication attempt. Once W has durably accepted a pin, it refuses to remove that same criterion incarnation until it receives a durable terminal edition fact proving the exact attempt was refused, cancelled or abandoned. A successful publication leaves the witness pinned for that immutable generation. Unknown commit or outcome stays pending. The edition stream alone orders a publication and a cancellation of the same attempt using the same expected revision. An exact actor-owned authorization event permits one exact publication intent while the actor is still an active operator. These are stipulated business rules and ownership semantics, not claims about current implementation.",
+    "checkpoint": "A shared read-side consumer must read every committed source event in source order to advance its checkpoint. At least one earlier source event is an independent child proposal. A publication handler refuses to proceed until that consumer checkpoint has passed the publication request marker.",
+    "publish": "W commits its exact publication pin at source position 10. W refuses all removal attempts for that incarnation while pinned. The operator owner commits an exact authorization for this edition, witness and publication attempt at position 11. The edition commits Published for that same attempt at position 12. The publication handler did not read or wait for outcomes of other children.",
+    "cancel": "W commits a pin for attempt T. The edition commits Cancelled for T at the expected edition revision. W reads that exact committed cancellation and removes its pin. A delayed publication command for T attempts to append using the old edition revision after cancellation.",
+    "lost": "W accepted a pin but its response was lost. The publisher does not know whether the pin committed. No terminal cancellation or refusal has been established on the edition stream.",
+    "actor_before": "The operator owner confirms an exact authorization for attempt T while operator A is active. A is revoked after that authorization but before edition publication. A proposed policy says a previously authorized exact publication attempt may finish after revocation, while no new authorizations may be admitted.",
+    "actor_after": "Operator A is revoked on the same operator owner before it receives an authorization request for publication T. The owner is required to reject new authorizations while revoked.",
+    "stale_actor": "The edition handler reads that A is an active operator, pauses, A is revoked on another owner, and then the edition handler commits publication. There is no operator-owned authorization, common atomic guard or equivalent fence.",
+    "late": "An entry intent is committed after publication. The event store does not physically prohibit appends to the independently owned entry stream, and an evaluator has not yet resolved the intent against publication."
+  },
+  "questions": {
+    "checkpoint_reads_child": {"type": "noul", "instructions": "In state.checkpoint, must the consumer process the earlier child proposal before its checkpoint can pass the marker?"},
+    "pin_nonempty": {"type": "noul", "instructions": "In state.publish, can W be removed between its committed pin and publication under the stated rules?"},
+    "pin_allchildren": {"type": "noul", "instructions": "In state.publish, does checking the pin require publication to inspect every independently owned child?"},
+    "cancel_late_publish": {"type": "noul", "instructions": "In state.cancel, can the delayed publication append at the old expected edition revision succeed after the cancellation?"},
+    "unknown_release": {"type": "noul", "instructions": "In state.lost, does the missing response alone prove W can safely release its pin?"},
+    "permit_policy": {"type": "noul", "instructions": "Under the stated policy in state.actor_before, is the already authorized exact attempt allowed to finish after revocation?"},
+    "no_new_permit": {"type": "noul", "instructions": "Under state.actor_after, may the operator owner authorize T after the revocation?"},
+    "prior_read_suffices": {"type": "noul", "instructions": "In state.stale_actor, does the earlier read prove A was still an active operator when publication committed?"},
+    "late_proven_valid": {"type": "noul", "instructions": "In state.late, does the physical append by itself prove the entry is a valid member of the published edition?"},
+    "pin_proves_provider": {"type": "noul", "instructions": "Do the stipulated ownership rules in state.rules prove the deployed storage or application actually enforces them?"}
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "empty_proves_absent": {
+      "type": "noul",
+      "noul": 0.09
+    },
+    "fence_no_rebase": {
+      "type": "noul",
+      "noul": 0.14
+    },
+    "append_authoritative": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "existing_safe": {
+      "type": "noul",
+      "noul": 0.84
+    },
+    "new_allowed": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "noop_is_fence": {
+      "type": "noul",
+      "noul": 0.12
+    },
+    "old_still_possible": {
+      "type": "noul",
+      "noul": 0.71
+    },
+    "proof_provider": {
+      "type": "noul",
+      "noul": 0.06
+    }
+  },
+  "usage": {
+    "input_tokens": 788,
+    "output_tokens": 153
+  }
+}

@@ -50,6 +50,7 @@ public sealed class FindingHistorySnapshot
     {
         FindingClosedV2 closed => closed.Operation.RootOperationId == rootOperationId,
         FindingClosureCanceled canceled => canceled.Operation.RootOperationId == rootOperationId,
+        FindingClosureWithdrawn withdrawn => withdrawn.CanceledReview?.RootOperationId == rootOperationId,
         _ => false,
     });
 }

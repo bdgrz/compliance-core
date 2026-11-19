@@ -32,19 +32,21 @@ using Bdgrz.Compliance.Features.Programs.Aggregates;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Risks.Aggregates;
 using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Hosting;
 namespace Bdgrz.Compliance.Features.Risks.Handlers;
 
 /// <summary>Resolves an exact accepted publication before checking mutable program or version state.</summary>
 public sealed class PublishRiskMethodVersionHandler(NativeOperationExecutor operations,
     IAggregateReader reader, IImmutableContentStore content, TimeProvider clock)
-    : IRequestHandler<PublishRiskMethodVersion, RiskMethodVersionView>
+    : IRequestHandler<PublishRiskMethodVersion, PortiaCreateOutcome<RiskMethodVersionView>>
 {
-    public async ValueTask<Result<RiskMethodVersionView>> HandleAsync(IRequestContext<PublishRiskMethodVersion> context,
+    public async ValueTask<Result<PortiaCreateOutcome<RiskMethodVersionView>>> HandleAsync(
+        IRequestContext<PublishRiskMethodVersion> context,
         CancellationToken ct)
     {
         var request = context.Request;
         if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty || request.ExpectedVersion < 0)
-            return Result<RiskMethodVersionView>.Failure(new RequestError(RequestErrorKind.Validation,
+            return Result<PortiaCreateOutcome<RiskMethodVersionView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A method publication requires its tenant, program and original non-negative version."));
         var actor = RiskActor.From(context.Actor, request.TenantId);
         var command = ((IIdentifiedRequest)request).RequestId;
@@ -83,11 +85,14 @@ public sealed class PublishRiskMethodVersionHandler(NativeOperationExecutor oper
                     result = frozen.Result;
                     return Result<FirstResponseDescriptor>.Success(frozen.Response);
                 }, (owner, first) => owner.Append(provenance, body!, first, result!)), context, ct).ConfigureAwait(false);
-            return await NativeContent.ResponseAsync<RiskMethodVersionView>(content, request.TenantId, accepted, ct).ConfigureAwait(false);
+            var response = await NativeContent.ResponseAsync<RiskMethodVersionView>(content, request.TenantId,
+                accepted, ct).ConfigureAwait(false);
+            return PortiaCreateOutcomes.From(response,
+                accepted.IsSuccess && accepted.Value is AcceptedAppendResult.Committed);
         }
         catch (ImmutableContentIntegrityException error)
         {
-            return Result<RiskMethodVersionView>.Failure(new RequestError(RequestErrorKind.Conflict,
+            return Result<PortiaCreateOutcome<RiskMethodVersionView>>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The exact risk method content cannot be verified.", error is ImmutableContentUnavailableException));
         }
     }

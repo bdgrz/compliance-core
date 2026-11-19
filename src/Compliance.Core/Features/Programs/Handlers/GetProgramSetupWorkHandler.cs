@@ -138,7 +138,7 @@ public sealed class GetProgramSetupWorkHandler(IProgramDirectoryReader programs,
                 page = await boundaries.ListProgramAsync(request.TenantId, request.ProgramId,
                     request.BoundaryLimit ?? 50, request.BoundaryCursor, ct).ConfigureAwait(false);
             }
-            catch (KvDirectoryQueryException)
+            catch (ProgramScopeDirectoryQueryException)
             {
                 return Result<ProgramSetupWorkView>.Failure(new RequestError(RequestErrorKind.Validation,
                     "The boundary cursor is invalid."));

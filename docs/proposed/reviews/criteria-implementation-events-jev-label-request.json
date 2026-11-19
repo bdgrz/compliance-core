@@ -1,0 +1,42 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "source": "The selected criteria design has one claim owner per normalized label. It decides one exclusive current holder or reservation for that code. Creation or rename first makes a durable edition operation; a destination claim must be reserved, then confirmed only after the edition commits the exact activation or rename. A claim is released only when source evidence proves the exact holder and generation can no longer validly acquire it. The claim owner does not contain a list of editions.",
+    "reserved": "EditionLabelReserved records that the label claim owner accepted one provisional exclusive reservation for a specific edition, operation, and claim generation; this is not a confirmed edition or completed rename.",
+    "confirmed": "EditionLabelConfirmed records that the label claim owner confirmed that exact reserved generation after the matching edition activation or rename was durably accepted.",
+    "released": "EditionLabelReleased records that the label claim owner released the exact current reservation or confirmed holder generation after verifying the corresponding source terminal or rename proof.",
+    "old_release": "Label X was held by edition A under generation G1. G1 was released and the same code was then reserved by edition B under generation G2. A delayed release for A/G1 arrives; the claim owner requires both the current holder and current generation to match the release.",
+    "unverified_ids": "An internal caller supplies a UUID described as a committed edition activation fact, but neither the claim aggregate nor its handler reads the durable edition source or verifies what that UUID refers to.",
+    "pending": "A request reserved the label but the confirming edition result is unknown due to a lost reply. No terminal refusal, cancellation, or fence has been committed."
+  },
+  "questions": {
+    "reserved_name": {
+      "type": "noul",
+      "instructions": "Does the name EditionLabelReserved clearly describe the provisional exclusive claim in state.reserved, rather than a completed edition creation?"
+    },
+    "confirmed_name": {
+      "type": "noul",
+      "instructions": "Does the name EditionLabelConfirmed reasonably describe the claim owner's completed confirmation in state.confirmed?"
+    },
+    "released_name": {
+      "type": "noul",
+      "instructions": "Does the name EditionLabelReleased clearly identify the relinquishment described in state.released?"
+    },
+    "stale_release": {
+      "type": "noul",
+      "instructions": "In state.old_release, can the delayed A/G1 release clear B/G2 under the stated matching rule?"
+    },
+    "id_is_proof": {
+      "type": "noul",
+      "instructions": "In state.unverified_ids, does the supplied UUID by itself prove the matching edition activation was committed?"
+    },
+    "timeout_release": {
+      "type": "noul",
+      "instructions": "In state.pending, does the lost reply establish a safe basis to release the label for another edition?"
+    },
+    "parent_roster": {
+      "type": "noul",
+      "instructions": "Under state.source, must the label claim owner maintain a list of all editions to enforce exclusivity of this one code?"
+    }
+  }
+}

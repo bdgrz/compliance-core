@@ -1,0 +1,41 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "early": "An item has a designated assessor chosen before any change. Every author of every accepted scalar or relationship revision is rejected if they equal that assessor unless an exact valid waiver applies. An assessment by that assessor names the same designation and no waiver was used.",
+    "late": "An item already has a relationship revision by Ada. A new assessor is chosen later; the only check is that future relationship revisions are not authored by that assessor. Ada is chosen as assessor.",
+    "marker": "An independent relationship change is proposed before an assessment marker but its result is unknown. The assessment is recorded without waiting for that result. If eventually accepted, the relationship is included in the assessed boundary.",
+    "digest": "A weekly digest chooses a stable work-item witness that is open and visible at an initial read. The source then revokes the member access before the email is physically sent.",
+    "memory": "A system pages across a source with arbitrary ordering and may see duplicate work item IDs spread across pages. It promises globally ordered output with exact deduplication using only constant working memory, without another index, repeated scans or external storage.",
+    "author": "A commitment has its own stream containing all of its own revisions and no child records. The aggregate repository reads every event into a list to hydrate it. A separate author check reads the same stream one record at a time."
+  },
+  "questions": {
+    "early_author": {
+      "type": "noul",
+      "instructions": "Under the explicitly stated acceptance and designation conditions, can the assessor have authored an accepted revision in that episode without a waiver?"
+    },
+    "late_author": {
+      "type": "noul",
+      "instructions": "Does checking only future revisions establish that Ada authored no prior revision?"
+    },
+    "unknown_prior": {
+      "type": "noul",
+      "instructions": "Can the assessment already be recorded before the eventual accepted relationship outcome is known?"
+    },
+    "marker_review": {
+      "type": "noul",
+      "instructions": "Does the marker alone prove the assessor saw or reviewed the relationship that had an unknown outcome when assessment was recorded?"
+    },
+    "digest_revoked": {
+      "type": "noul",
+      "instructions": "Does the earlier open-and-visible witness alone prove the member remains authorized at physical send?"
+    },
+    "memory_bound": {
+      "type": "noul",
+      "instructions": "Do the stated assumptions guarantee exact global ordering and deduplication in constant working memory?"
+    },
+    "history_growth": {
+      "type": "noul",
+      "instructions": "Does paging the separate author check prevent aggregate hydration from loading the full commitment history?"
+    }
+  }
+}

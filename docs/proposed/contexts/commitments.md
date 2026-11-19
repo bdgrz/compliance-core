@@ -1,6 +1,6 @@
 # Commitments
 
-Status: **locked**, 2026-11-03. Hand-authored source of truth for this context.
+Status: **design under review**, 2026-11-05. Hand-authored source of truth for this context.
 
 ## Purpose
 
@@ -50,29 +50,47 @@ effective-dated.
 - A draft holds the statement, service, source citation, owner and categories. A
   CSOC also needs a provider, and other kinds cannot have one.
 - Categories must be in the program's current approved boundary version when the
-  draft is created, revised or approved.
+  draft is created, revised or approved (M0-D09). Recording an immutable boundary
+  version proves what was checked, but does not prove it was still current at
+  the commitment append. An authoritative cross-owner admission mechanism is
+  required and remains unresolved below.
 - The identifier is unique within the program and kind, including retired
   commitments, so a reported identifier always means one commitment. The
   identity enforces this, and the identifier never changes (CM-05).
 - The approver is a management approver who authored no revision of the draft,
   unless a separation-of-duties waiver covers it
   ([CV-06](conventions.md#guards-and-reviews)). Approval is one step (CM-01).
+- Keep only the current draft and latest approved version in current aggregate
+  state, not a collection of past versions, authors, or linked controls. Retain
+  the source events. For a particular reviewer, scan all authoritative revisions
+  of the exact draft incrementally for that author's identity, including its
+  initial drafting; compare the approval append against the scanned commitment
+  stream revision so a concurrent edit conflicts. A truncated stream, incomplete
+  scan, or unavailable waiver cannot yield approval. This requires bounded-memory
+  source-event paging and a storage contract that actually supports the expected
+  revision check; do not substitute a projection or a last-editor check. These
+  are the commitment's own revisions, not a collection of independent children.
+  Portia's aggregate hydration still loads the complete commitment stream, so
+  an additional paged author scan does not bound the owner's lifetime replay.
+  An independently governed draft episode may reduce replay but its transition,
+  exactly-one-open-draft rule and prior-version ordering require their own
+  authority; it is a candidate, not an approved split.
 - While a new draft is open, the latest approved version stays in effect (CM-03).
 - A CUEC never counts as a control the organization performs.
 
 ```mermaid
 stateDiagram-v2
     [*] --> drafting: DraftCommitment
-    drafting --> drafting: ReviseCommitmentDraft
-    drafting --> drafting: ReviewCommitmentDraft (changes requested)
-    drafting --> approved: ReviewCommitmentDraft (approve)
+    drafting --> drafting: ReviseGovernanceCommitmentDraft
+    drafting --> drafting: ReviewGovernanceCommitmentDraft (changes requested)
+    drafting --> approved: ReviewGovernanceCommitmentDraft (approve)
     drafting --> [*]: DiscardCommitmentDraft (never approved)
     approved --> changing: ProposeCommitmentChange
-    changing --> changing: ReviseCommitmentDraft
-    changing --> approved: ReviewCommitmentDraft (approve)
+    changing --> changing: ReviseGovernanceCommitmentDraft
+    changing --> approved: ReviewGovernanceCommitmentDraft (approve)
     changing --> approved: DiscardCommitmentDraft
-    approved --> retired: RetireCommitment
-    changing --> retired: RetireCommitment
+    approved --> retired: RetireGovernanceCommitment
+    changing --> retired: RetireGovernanceCommitment
     retired --> [*]
 ```
 
@@ -80,20 +98,20 @@ stateDiagram-v2
 | --- | --- | --- | --- |
 | DraftCommitment | Compliance Lead or Contributor | `CommitmentId` (from program, kind and identifier) is new; categories in boundary; provider rule holds | CommitmentDrafted |
 | ProposeCommitmentChange | Compliance Lead or Contributor | Approved; no open draft | CommitmentChangeProposed |
-| ReviseCommitmentDraft | Compliance Lead or Contributor | Draft open; categories in boundary | CommitmentDraftRevised |
+| ReviseGovernanceCommitmentDraft | Compliance Lead or Contributor | Draft open; categories in boundary | GovernanceCommitmentDraftRevised |
 | DiscardCommitmentDraft | Compliance Lead or the author | Draft open | CommitmentDraftDiscarded |
-| ReviewCommitmentDraft | Management approver who authored no revision, or covered by a waiver | Draft open; reviews the current revision; categories in boundary; approval: effective date later than the previous version's | CommitmentChangesRequested or CommitmentVersionApproved |
-| RetireCommitment | Management approver | Not retired; reason given | CommitmentRetired |
+| ReviewGovernanceCommitmentDraft | Management approver who authored no revision, or covered by a waiver | Draft open; reviews the current revision; categories in boundary; approval: effective date later than the previous version's | CommitmentChangesRequested or CommitmentVersionApproved |
+| RetireGovernanceCommitment | Management approver | Not retired; reason given | GovernanceCommitmentRetired |
 
 | Event | Carries |
 | --- | --- |
 | CommitmentDrafted | tenant, commitment, program, kind, identifier, statement, service, source citation, owner, categories, provider, drafted by |
 | CommitmentChangeProposed | tenant, commitment, from version, draft content, proposed by |
-| CommitmentDraftRevised | tenant, commitment, revision, changed fields, revised by |
+| GovernanceCommitmentDraftRevised | tenant, commitment, revision, changed fields, revised by |
 | CommitmentDraftDiscarded | tenant, commitment, revision, discarded by |
 | CommitmentChangesRequested | tenant, commitment, revision, note, reviewer |
 | CommitmentVersionApproved | tenant, commitment, version, revision, full content, effective at, boundary version, approver, waiver (if any) |
-| CommitmentRetired | tenant, commitment, effective at, reason, retired by |
+| GovernanceCommitmentRetired | tenant, commitment, effective at, reason, retired by |
 
 ### CommitmentControlLink
 
@@ -110,6 +128,12 @@ history keeps every link and unlink.
 - A link to a retired commitment or control no longer counts.
 - A CUEC may be linked for traceability, but the link never makes it an internal
   control.
+- Each pair is the only owner of its link and its bounded current rationale and
+  version references. Neither endpoint owns a roster of links. Link commands
+  needing both endpoints active and approved require an authoritative
+  cross-owner admission outcome, not just two reads; that protocol is unresolved
+  below. Later version changes or retirements are reflected as derived status,
+  without rewriting either endpoint or storing their full link collections.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
@@ -135,7 +159,7 @@ flowchart LR
     B([Current approved boundary categories]) -. checks .-> C1
     U([Identifier unused in program and kind]) -. checks .-> C1
     C1[/DraftCommitment/] --> E1([CommitmentDrafted])
-    E1 -. "current revision; reviewer authored none" .-> C2[/ReviewCommitmentDraft/]
+    E1 -. "current revision; reviewer authored none" .-> C2[/ReviewGovernanceCommitmentDraft/]
     B -. checks .-> C2
     C2 --> E2([CommitmentVersionApproved])
     E2 -. "approved, active" .-> C3[/LinkCommitmentToControl/]
@@ -149,7 +173,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     C1[/ProposeCommitmentChange/] --> E1([CommitmentChangeProposed])
-    E1 -. "current revision; reviewer authored none" .-> C2[/ReviewCommitmentDraft/] --> E2([CommitmentVersionApproved])
+    E1 -. "current revision; reviewer authored none" .-> C2[/ReviewGovernanceCommitmentDraft/] --> E2([CommitmentVersionApproved])
     E2 -. "link shows needing confirmation" .-> C3[/ConfirmCommitmentControlLink/] --> E3([CommitmentControlLinkConfirmed])
     E2 -.-> X1[[System description: commitments section]]
 ```
@@ -168,8 +192,9 @@ state; a person then revises, confirms, unlinks or retires.
 
 ## Decisions
 
-Jev answers are from `jev-1.14.0`, 2026-11-03. A yes is ≥ 0.8 and a no is ≤ 0.2.
-Anything in between is settled by common sense, with the reasoning stated.
+Jev answers are from `jev-1.14.0`, 2026-11-03. The historical 0.8 and 0.2
+thresholds were triage conventions, not calibrated probabilities of correctness;
+conflicting or inconclusive cases remain open until source evidence resolves them.
 
 | ID | Decision | Evidence |
 | --- | --- | --- |
@@ -182,7 +207,17 @@ Anything in between is settled by common sense, with the reasoning stated.
 
 ## Open questions
 
-None at this time.
+- **Current boundary admission:** M0-D09 requires the *current* approved
+  boundary on draft, revision and approval. Specify a source-owner fence or
+  conditional atomic commit that excludes boundary replacement between the
+  authoritative check and commitment append, and define how refusal, competing
+  changes, retries, abandoned operations and recovery release or resolve the
+  admission. A boundary version identifier or a second read alone does not close
+  the race. No distributed transaction or fencing capability is assumed here.
+- **Link admission:** specify the corresponding authoritative outcome when
+  a link or confirmation requires current active approved endpoint versions,
+  including retirement or version change racing the link append. Until then the
+  command table is the required behavior, not an implementable guarantee.
 
 ## Superseded owners
 

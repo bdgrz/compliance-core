@@ -200,7 +200,7 @@ public sealed class PermissionProjectionStateTests
     }
 
     [Fact]
-    public void ShouldNotAuthorizeHistoricalCustomRoleGivenExistingTeamAssignment()
+    public void ShouldMaterializeCustomRoleGivenExistingTeamAssignment()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -220,7 +220,7 @@ public sealed class PermissionProjectionStateTests
         var paths = state.Explain(memberId);
 
         // Assert
-        Assert.Empty(grants);
+        Assert.Equal(new PermissionGrant(memberId, RbacPermissions.TenantRbacManage), Assert.Single(grants));
         Assert.Contains(paths, path => path.RoleId == legacyRoleId);
     }
 

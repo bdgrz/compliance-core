@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "naive_race": {
+      "type": "noul",
+      "noul": 0.95
+    },
+    "ordering_needed": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "shared_roster": {
+      "type": "noul",
+      "noul": 0.09
+    },
+    "complete_lookup": {
+      "type": "noul",
+      "noul": 0.94
+    },
+    "unknown_danger": {
+      "type": "noul",
+      "noul": 0.8
+    },
+    "scope_visibility": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "batch_closure": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "bounded_lifetime": {
+      "type": "noul",
+      "noul": 0.02
+    },
+    "proof_gap": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "god_object": {
+      "type": "noul",
+      "noul": 0.04
+    }
+  },
+  "usage": {
+    "input_tokens": 1092,
+    "output_tokens": 182
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "unknown": "A prior target append may still be in flight, but a crash lost its attempt token and payload. No event recording that intent has committed. A recovery worker knows the target and its current committed position N, but does not know the old intent.",
+    "barrier": "The target accepts intents only with its current durable admission epoch. A prior worker prepared an append with expected position N and old epoch E. The recovery worker commits an epoch barrier E+1 to that same target at expected position N. Old workers must not rebase their old admission or write with epoch E+1.",
+    "oldwins": "A prior append and the epoch barrier compete at the same expected position. The prior append commits first and includes its actual actor, operation ID and normalized intent. The barrier receives an expected-position conflict.",
+    "newrequest": "The barrier committed first. An authorized caller submits a current operation ID and normalized intent. Nothing durable records the lost earlier payload. The barrier may bind the current request but says nothing about the unknowable older payload.",
+    "olderepoch": "The target advances to admission epoch E+1. A delayed worker still has an admitted intent bound to epoch E. The worker reloads the target and attempts to rebase the same old admission at the new position; the owner rejects an intent whose admission epoch differs from current."
+  },
+  "questions": {
+    "old_unknown": {
+      "type": "noul",
+      "instructions": "In unknown, does recovery know the old intent from an empty committed source alone?"
+    },
+    "barrier_prevents_position": {
+      "type": "noul",
+      "instructions": "In barrier, can the old expected-position-N append commit after the barrier advances the stream?"
+    },
+    "oldwins_compare": {
+      "type": "noul",
+      "instructions": "In oldwins, should recovery reload the actual committed intent before comparing it to a new request?"
+    },
+    "unknown_match": {
+      "type": "noul",
+      "instructions": "In newrequest, can the server prove the lost old payload was identical to the current request using only the current request?"
+    },
+    "old_rebase_allowed": {
+      "type": "noul",
+      "instructions": "In olderepoch, may the old admission be accepted after the epoch barrier?"
+    },
+    "provider_proven": {
+      "type": "noul",
+      "instructions": "Do the stated examples prove that the deployed provider and application implement these rules?"
+    }
+  }
+}

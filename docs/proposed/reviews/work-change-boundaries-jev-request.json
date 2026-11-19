@@ -1,0 +1,39 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "digest": "A weekly digest has a deterministic tenant/member/week dispatch owner. The email is assembled by enumerating the authorized queue; its event stores dispatch metadata and outcome, not all item IDs. Item details remain in their source records and read models. The relay may accept the email even if the network connection drops before the worker sees the response.",
+    "boundary": "A commitment is allowed to be approved only when its categories belong to the current approved program boundary. The boundary and commitment are independent streams. A command reads boundary version 1 where the category is allowed, then boundary version 2 is approved removing it, then the commitment approval appends recording version 1.",
+    "review": "A reviewer must not have authored any revision of a commitment draft. All draft revisions are retained in the commitment's authoritative event stream. To decide, the service scans revision events one at a time for that reviewer's identity without retaining a set of all authors. Approval appends with an expected stream version matching the scan; a concurrent revision causes a conflict.",
+    "assignment": "Assignment and source work are separate records. Source eligibility may change after the assignment reads it but before assignment commits. The source workflow refuses any later action by someone who is no longer eligible."
+  },
+  "questions": {
+    "digest_metadata": {
+      "type": "noul",
+      "instructions": "Does omitting a list of all item IDs from the dispatch event prevent a user receiving an email whose body lists the selected items?"
+    },
+    "digest_ambiguous": {
+      "type": "noul",
+      "instructions": "Can automatically resending after the ambiguous network failure cause two physical emails?"
+    },
+    "boundary_race": {
+      "type": "noul",
+      "instructions": "Does the approval occur while the category is absent from the current boundary?"
+    },
+    "boundary_reference": {
+      "type": "noul",
+      "instructions": "Does recording boundary version 1 alone prevent this race?"
+    },
+    "review_bounded": {
+      "type": "noul",
+      "instructions": "Can the scan check every recorded draft revision without storing a collection of all authors in memory?"
+    },
+    "review_race": {
+      "type": "noul",
+      "instructions": "Does the expected stream version make the approval conflict if a revision is appended after the scan?"
+    },
+    "assignment_race": {
+      "type": "noul",
+      "instructions": "Can the assignment commit after source eligibility has changed?"
+    }
+  }
+}

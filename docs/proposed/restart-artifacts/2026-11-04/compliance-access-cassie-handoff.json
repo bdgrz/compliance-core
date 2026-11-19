@@ -1,0 +1,369 @@
+{
+  "head": "226d00d6a1d471aa4b2cf44b0153172ab402f0ae",
+  "base": "adcc1348",
+  "branch": "work/proposed-access-cassie",
+  "worktree": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/platform-access",
+  "integration_commits": [
+    "f6cdc122",
+    "d0d29064",
+    "6d880189",
+    "226d00d6"
+  ],
+  "scope": "Seven RBAC read/projection repositories only; no Member, domain facts/commands, role/grant catalog, shared DI/serializers, configuration, or framework machinery changed. Batch held until coordinator first-nine native gates pass.",
+  "evidence": {
+    "status": "prepared source; native execution and coordinator integration pending",
+    "dotnet_build": false,
+    "dotnet_test": false,
+    "dotnet_format": false,
+    "git_diff_check": "passed",
+    "prior_access_control_test_method_names_preserved": 800,
+    "new_native_cases_authored": 59,
+    "live_jev": {
+      "compliance-access-cassie-api-jev-response.json": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "member_gate_lost": {
+            "type": "noul",
+            "noul": 0.09
+          },
+          "pending_revocation_lost": {
+            "type": "noul",
+            "noul": 0.18
+          },
+          "graph_cross_scope": {
+            "type": "noul",
+            "noul": 0.25
+          },
+          "api_mismatch": {
+            "type": "noul",
+            "noul": 0.34
+          }
+        },
+        "usage": {
+          "input_tokens": 22324,
+          "output_tokens": 82
+        }
+      },
+      "compliance-access-cassie-jev-directories-initial-response.json": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "row_scope_loss": {
+            "type": "noul",
+            "noul": 0.13
+          },
+          "substring_loss": {
+            "type": "noul",
+            "noul": 0.12
+          },
+          "cursor_scope_loss": {
+            "type": "noul",
+            "noul": 0.14
+          },
+          "pagination_loss": {
+            "type": "noul",
+            "noul": 0.66
+          },
+          "unsigned_revision_loss": {
+            "type": "noul",
+            "noul": 0.08
+          },
+          "event_tail_loss": {
+            "type": "noul",
+            "noul": 0.25
+          },
+          "framework_reimplementation": {
+            "type": "noul",
+            "noul": 0.06
+          },
+          "sql_injection": {
+            "type": "noul",
+            "noul": 0.27
+          }
+        },
+        "usage": {
+          "input_tokens": 15084,
+          "output_tokens": 149
+        }
+      },
+      "compliance-access-cassie-jev-response.json": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "positive_without_graph": {
+            "type": "noul",
+            "noul": 0.09
+          },
+          "member_gate_lost": {
+            "type": "noul",
+            "noul": 0.12
+          },
+          "pending_revocation_lost": {
+            "type": "noul",
+            "noul": 0.18
+          },
+          "graph_behavior_changed": {
+            "type": "noul",
+            "noul": 0.03
+          },
+          "graph_cross_scope": {
+            "type": "noul",
+            "noul": 0.28
+          },
+          "unnormalized_grants": {
+            "type": "noul",
+            "noul": 0.16
+          },
+          "api_mismatch": {
+            "type": "noul",
+            "noul": 0.41
+          },
+          "partial_claim": {
+            "type": "noul",
+            "noul": 0.2
+          }
+        },
+        "usage": {
+          "input_tokens": 18816,
+          "output_tokens": 156
+        }
+      },
+      "compliance-access-cassie-jev-initial-response.json": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "positive_without_graph": {
+            "type": "noul",
+            "noul": 0.09
+          },
+          "member_gate_lost": {
+            "type": "noul",
+            "noul": 0.12
+          },
+          "pending_revocation_lost": {
+            "type": "noul",
+            "noul": 0.18
+          },
+          "graph_behavior_changed": {
+            "type": "noul",
+            "noul": 0.03
+          },
+          "graph_cross_scope": {
+            "type": "noul",
+            "noul": 0.28
+          },
+          "unnormalized_grants": {
+            "type": "noul",
+            "noul": 0.16
+          },
+          "api_mismatch": {
+            "type": "noul",
+            "noul": 0.41
+          },
+          "partial_claim": {
+            "type": "noul",
+            "noul": 0.2
+          }
+        },
+        "usage": {
+          "input_tokens": 18816,
+          "output_tokens": 156
+        }
+      },
+      "compliance-access-cassie-narrow-jev-response.json": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "wrong_last_position": {
+            "type": "noul",
+            "noul": 0.36
+          },
+          "wrong_ascending_predicate": {
+            "type": "noul",
+            "noul": 0.17
+          },
+          "wrong_descending_predicate": {
+            "type": "noul",
+            "noul": 0.15
+          },
+          "skipped_match_by_lookahead": {
+            "type": "noul",
+            "noul": 0.35
+          },
+          "case_only_tie_loss": {
+            "type": "noul",
+            "noul": 0.1
+          },
+          "search_narrows_prefix": {
+            "type": "noul",
+            "noul": 0.05
+          },
+          "paging_regression_absent": {
+            "type": "noul",
+            "noul": 0.92
+          }
+        },
+        "usage": {
+          "input_tokens": 6603,
+          "output_tokens": 149
+        }
+      },
+      "compliance-access-cassie-jev-directories-response.json": {
+        "model": "jev-1.14.0",
+        "answers": {
+          "row_scope_loss": {
+            "type": "noul",
+            "noul": 0.12
+          },
+          "substring_loss": {
+            "type": "noul",
+            "noul": 0.1
+          },
+          "cursor_scope_loss": {
+            "type": "noul",
+            "noul": 0.1
+          },
+          "pagination_loss": {
+            "type": "noul",
+            "noul": 0.7
+          },
+          "unsigned_revision_loss": {
+            "type": "noul",
+            "noul": 0.08
+          },
+          "event_tail_loss": {
+            "type": "noul",
+            "noul": 0.25
+          },
+          "framework_reimplementation": {
+            "type": "noul",
+            "noul": 0.06
+          },
+          "sql_injection": {
+            "type": "noul",
+            "noul": 0.26
+          }
+        },
+        "usage": {
+          "input_tokens": 15522,
+          "output_tokens": 149
+        }
+      }
+    }
+  },
+  "new_repositories": {
+    "CassieTeamDirectoryReader": [
+      "ITeamDirectoryProjection",
+      "ITeamDirectoryReader"
+    ],
+    "CassieTeamMemberDirectoryReader": [
+      "ITeamMemberDirectoryProjection",
+      "ITeamMemberDirectoryReader"
+    ],
+    "CassieRoleDirectoryReader": [
+      "IRoleDirectoryProjection",
+      "IRoleDirectoryReader"
+    ],
+    "CassieRolePermissionDirectoryReader": [
+      "IRolePermissionDirectoryProjection",
+      "IRolePermissionDirectoryReader"
+    ],
+    "CassieRoleTeamDirectoryReader": [
+      "IRoleTeamDirectoryProjection",
+      "IRoleTeamDirectoryReader"
+    ],
+    "CassieTeamRoleDirectoryReader": [
+      "ITeamRoleDirectoryProjection",
+      "ITeamRoleDirectoryReader"
+    ],
+    "CassiePermissionAuthorizer": [
+      "IPermissionProjection",
+      "IPermissionAuthorizer",
+      "IMemberAccessReader"
+    ]
+  },
+  "schema": {
+    "source": "src/Compliance.Core/Features/AccessControl/Projections/CassieAccessControlSchema.cs",
+    "tables": 8,
+    "secondary_indexes": 8,
+    "all_primary_keys_single_column": true,
+    "directory_and_grant_keys": "row_key TEXT PRIMARY KEY, length-encoded full Portia scope + business identity tuple",
+    "graph_state_key": "projection_key TEXT PRIMARY KEY",
+    "graph_payload": "TEXT serialized JSON, direct @payload value and plain SELECT payload. Actual published engine rejects CAST expressions inside INSERT VALUES; JSONB/cast source-only assumption superseded.",
+    "assignment_revision": "Invariant decimal TEXT preserves full existing ulong contract; native authored ulong.MaxValue regression"
+  },
+  "six_authorized_handler_catches": [
+    "src/Compliance.Core/Features/AccessControl/Handlers/ListTeamsHandler.cs",
+    "src/Compliance.Core/Features/AccessControl/Handlers/ListRolesHandler.cs",
+    "src/Compliance.Core/Features/AccessControl/Handlers/ListTeamMembersHandler.cs",
+    "src/Compliance.Core/Features/AccessControl/Handlers/ListRolePermissionsHandler.cs",
+    "src/Compliance.Core/Features/AccessControl/Handlers/ListRoleTeamsHandler.cs",
+    "src/Compliance.Core/Features/AccessControl/Handlers/ListTeamRolesHandler.cs"
+  ],
+  "shared_wiring": [
+    "Replace seven scoped Fitz class/interface maps with new Cassie equivalents; same seven stable component names and realm-wide tenant patterns.",
+    "Initialize CassieAccessControlSchema.Statements centrally before workload startup; native fixture OpenAsync accepts this owned DDL.",
+    "Apply existing centrally pinned Cassie package/config/startup changes; no feature package edits needed.",
+    "Update remaining callers outside ownership below, including direct constructors in TechnologyInventory test fixture; native CassieProjectionDatabase must be injected, not a KV client.",
+    "Update shared aggregate-command-coverage fixture paths for seven renamed dedicated test files (Fitz->Cassie)."
+  ],
+  "remaining_external_callers": [
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:427:        services.AddScoped<FitzPermissionAuthorizer>();",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:428:        services.AddScoped<IPermissionProjection>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:429:        services.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:430:        services.AddScoped<IMemberAccessReader>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:433:        services.AddScoped<FitzTeamDirectoryReader>();",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:434:        services.AddScoped<ITeamDirectoryProjection>(provider => provider.GetRequiredService<FitzTeamDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:435:        services.AddScoped<ITeamDirectoryReader>(provider => provider.GetRequiredService<FitzTeamDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:436:        services.AddScoped<FitzTeamMemberDirectoryReader>();",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:438:            provider => provider.GetRequiredService<FitzTeamMemberDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:440:            provider => provider.GetRequiredService<FitzTeamMemberDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:963:        services.AddScoped<FitzRoleDirectoryReader>();",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:964:        services.AddScoped<IRoleDirectoryProjection>(provider => provider.GetRequiredService<FitzRoleDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:965:        services.AddScoped<IRoleDirectoryReader>(provider => provider.GetRequiredService<FitzRoleDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:966:        services.AddScoped<FitzRolePermissionDirectoryReader>();",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:968:            provider => provider.GetRequiredService<FitzRolePermissionDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:970:            provider => provider.GetRequiredService<FitzRolePermissionDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:971:        services.AddScoped<FitzRoleTeamDirectoryReader>();",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:972:        services.AddScoped<IRoleTeamDirectoryProjection>(provider => provider.GetRequiredService<FitzRoleTeamDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:973:        services.AddScoped<IRoleTeamDirectoryReader>(provider => provider.GetRequiredService<FitzRoleTeamDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:974:        services.AddScoped<FitzTeamRoleDirectoryReader>();",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:975:        services.AddScoped<ITeamRoleDirectoryProjection>(provider => provider.GetRequiredService<FitzTeamRoleDirectoryReader>());",
+    "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs:976:        services.AddScoped<ITeamRoleDirectoryReader>(provider => provider.GetRequiredService<FitzTeamRoleDirectoryReader>());",
+    "test/Compliance.Tests/E2E/SplitHostTenantE2ETests.cs:1136:                    Bdgrz.Compliance.Features.AccessControl.Authorizers.FitzPermissionAuthorizer>();",
+    "test/Compliance.Tests/Features/Evidence/Tests/ArtifactMetadataAccessTests.cs:688:                    \"PermissionProjection\" => services.GetRequiredService<FitzPermissionAuthorizer>(),",
+    "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryScopedGrantTests.cs:287:            collection.AddScoped<FitzPermissionAuthorizer>();",
+    "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryScopedGrantTests.cs:288:            collection.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());",
+    "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryScopedGrantTests.cs:291:            collection.AddScoped<FitzRolePermissionDirectoryReader>();",
+    "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryScopedGrantTests.cs:292:            collection.AddScoped<IRolePermissionDirectoryReader>(provider => provider.GetRequiredService<FitzRolePermissionDirectoryReader>());",
+    "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryScopedGrantTests.cs:363:            var permissions = scope.ServiceProvider.GetRequiredService<FitzPermissionAuthorizer>();",
+    "test/Compliance.Tests/Features/TechnologyInventory/Tests/TechnologyInventoryScopedGrantTests.cs:365:            var rolePermissions = scope.ServiceProvider.GetRequiredService<FitzRolePermissionDirectoryReader>();",
+    "test/Compliance.Tests/Features/Evidence/Tests/EvidenceRedactionCompositionTests.cs:812:            new AdvancingPermissionAuthorizer(provider.GetRequiredService<FitzPermissionAuthorizer>(), approver, clock));"
+  ],
+  "retained_nonruntime_utilities": [
+    "Six existing Services/*DirectoryKeys route constants now have no runtime references and remain untouched outside requested ownership.",
+    "PermissionProjectionKeys remains referenced only by historical InternalRbacTests.ShouldReusePermissionKeyGivenEquivalentStrings; no migrated runtime uses it. New native normalized-authorization case covers equivalent text behavior."
+  ],
+  "preserved_business_paths": [
+    "PermissionProjectionState and PermissionProjector business reducers/revocation predicates untouched.",
+    "IsAllowed membership identity/affiliation/activity checks, built-in explainable active path, pending event scan, final grant reread, final authoritative sourceMember eligibility gate retained in order.",
+    "TeamMember HasPendingRemoval and member assignment event-tail overlay retained; storage backfill removed because native by-member index is initialized by schema.",
+    "Six list interfaces retain default50/max200, ascending/descending order, ordinal case-insensitive substring. Cursors bound to full scope, directory, parent, search and direction. Six handlers retain their Validation result and existing messages.",
+    "Role rename keeps delete+insert semantics; definitions/assignments/deletions retain existing mapping. Assignment ID and full ulong revision retained."
+  ],
+  "review_disposition": {
+    "demonstrated_source_blockers": [],
+    "advisory_pagination_signal": "Broad Jev signal .70. Narrow source questions .36 wrong last position/.35 skipped lookahead, .17 ascending, .15 descending, .10 ties. Source captures lastSort/lastId only after adding included row; extra matching row breaks before capture, so next strict predicate includes it. ID-only shapes simplified to unique single-key continuation; normalized-name shapes include ID tie. Authored24native paging cases cover all6SQLshapes x2directions xsearch, including equal normalized names. This is prepared coverage, not execution or dismissal by model confidence.",
+    "advisory_api_signal": "Jev .34 after exact pinned Portia source supplied, .25 graph scope, .18 pending revocation, .09 Member gate. Direct API source inspection matches protected CreateCommand/OpenReadAsync/GetProjectionKey/CurrentProjectionKey and actual Cntryl.Cassie0.1 string parameter/cast/read APIs. Native engine qualification remains required. This historical review preceded actual native contract discovery; CAST-in-VALUES was subsequently proved unsupported by coordinator and removed in226d00d6. Source API agreement alone did not qualify engine SQL support.",
+    "sql_construction": "All table/column/filter SQL structure literal or direction/comparison selected from fixed constants. External tenant/parent/id/name/permission/revision values bound; search compared as .NET string.",
+    "partial": "No GREEN, runtime-complete context, or native SQL qualification claim. Root must integrate shared wiring and execute focused/native/full gates. Held Member draft remains separate on Workforce branch."
+  },
+  "native_compatibility_corrections": [
+    {
+      "commit": "6d880189",
+      "change": "Clamped numeric LIMIT literal uses invariant culture; no LIMIT parameter, external values stay bound.",
+      "basis": "Coordinator observed published Cassie0.1 invalidclausevalue on bound LIMIT."
+    },
+    {
+      "commit": "226d00d6",
+      "change": "Permission state payload TEXT, direct parameter in INSERT VALUES, plain SELECT payload.",
+      "basis": "Coordinator observed published Cassie0.1 VALUES accepts only literals and bound parameters, not CAST expressions. No business/reducer change."
+    }
+  ]
+}

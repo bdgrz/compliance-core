@@ -1,0 +1,38 @@
+{
+  "model": "jev-latest",
+  "state": "Design candidate for a finding's unresolved-action count. One finding has a succession of small coordination turns, each holding a scalar count, admission open/frozen state, generation, one exact operation and deterministic successor. No turn holds a list of actions. Exactly one operation wins each turn by expected-version append and the winner creates the only successor with the resulting count. A start-admission operation increments before dispatching creation; an unknown creation remains counted. The exact action creation or operation-specific durable refusal/fence is required before the admission coordinator can advance; on refusal it settles the increment. Each action's unique terminal event produces a unique settlement operation. An action or its request-specific coordinator must atomically pin exactly one settlement operation to one exact turn before dispatching a decrement. Retries target that turn only. If that turn committed the identical operation, it is consumed; if it committed a different operation, the pinned operation can move to the successor only after reading that immutable conflicting commit. An empty or inaccessible turn cannot prove refusal, so retry the same target, no move. Late writes to a committed turn fail. The coordinator records settlement consumed only after reading the matching committed turn. Freeze competes with admission, and preserves the count. Existing settlements may advance frozen turns, but no new admission can. A proposal is dispatched only after a frozen turn has count zero and matching exact verification; the freeze is retained throughout dispatch and review. Dispatch timeout never releases the freeze; acceptance, durable refusal or an exact Finding-side operation fence is required. A finding-side returned or withdrawn fact permits release; after a closed finding is reopened, a new generation is permitted. All commands go through this protocol; state, role checks, exact IDs and expected stream revisions are validated. Source reads are direct and consistent. Action terminal facts are irreversible. Every history stream has one operation and no roster. Source retention is guaranteed. No projection decides the count.",
+  "questions": {
+    "unsafe_retry": {
+      "type": "noul",
+      "instructions": "Can duplicate delivery or a lost acknowledgement of a settlement decrement the count twice under the stated protocol?"
+    },
+    "freeze": {
+      "type": "noul",
+      "instructions": "Under the stated protocol, can closure be proposed while an accepted or pending action remains unresolved?"
+    },
+    "bounded": {
+      "type": "noul",
+      "instructions": "Does any individual coordination turn need to hold a list of actions or process an unbounded number of action mutations?"
+    },
+    "unknown": {
+      "type": "noul",
+      "instructions": "Would moving a pinned settlement after seeing an empty target, rather than retrying or waiting for a committed conflicting operation, create a double-decrement risk?"
+    },
+    "late": {
+      "type": "noul",
+      "instructions": "Would releasing freeze on a proposal timeout without a Finding-side fence allow a late proposal after a new admission?"
+    },
+    "missing": {
+      "type": "noul",
+      "instructions": "Does the candidate leave any material detail needed to implement the protocol and prove safety under concurrency and recovery unspecified?"
+    },
+    "god": {
+      "type": "noul",
+      "instructions": "Do the coordination turns collectively form a single aggregate that owns every child action?"
+    },
+    "unbounded_history": {
+      "type": "noul",
+      "instructions": "Can the total number of small turns grow without bound over the life of a finding?"
+    }
+  }
+}

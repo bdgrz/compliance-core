@@ -25,6 +25,7 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Examinations.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
@@ -402,7 +403,7 @@ public sealed class MethodologyTemplateRules
             Name = content.Name.Trim(),
             Description = content.Description.Trim(),
             TemplateKind = kind,
-            Records = Freeze(content.Records.Select(item => item with
+            Records = Freeze(content.Records.Select(item => MethodologyTemplateDestinationCommands.Freeze(item) with
             {
                 EntryKey = item.EntryKey.Trim(),
                 RecordKind = item.RecordKind.Trim().ToLowerInvariant(),
@@ -469,10 +470,7 @@ public sealed class MethodologyTemplateRules
 
     static MethodologyTemplateContent FreezeContent(MethodologyTemplateContent content) => content with
     {
-        Records = Freeze(content.Records.Select(item => item with
-        {
-            CriteriaReferences = Freeze(item.CriteriaReferences.ToArray()),
-        }).ToArray()),
+        Records = Freeze(content.Records.Select(MethodologyTemplateDestinationCommands.Freeze).ToArray()),
     };
 
     static bool ValidContributionShare(MethodologyTemplateContributionShareView contribution) =>

@@ -7,7 +7,7 @@ using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>
-///     Terminates a member episode through the tenant manager guard. <paramref name="CommandId" /> is the logical
+///     Terminates a member episode directly on its authoritative member owner. <paramref name="CommandId" /> is the logical
 ///     identity of the deprovisioning and an exact retry replays the original acceptance.
 ///     <paramref name="MemberEpisodeId" /> is the episode being terminated and
 ///     <paramref name="ExpectedMemberRevision" /> the member revision the caller observed; a negative revision is

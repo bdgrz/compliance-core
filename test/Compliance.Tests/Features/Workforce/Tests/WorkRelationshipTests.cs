@@ -350,8 +350,8 @@ public sealed class WorkRelationshipTests
                 "E-100", ended, Author, Now);
             if (replayed)
                 historical = (WorkRelationshipRecorded)JsonSerializer.Deserialize(
-                    JsonSerializer.Serialize(historical, typeof(WorkRelationshipRecorded), ComplianceCoreJsonContext.Default),
-                    typeof(WorkRelationshipRecorded), ComplianceCoreJsonContext.Default)!;
+                    JsonSerializer.Serialize(historical, typeof(WorkRelationshipRecorded), ComplianceCoreJsonMetadata.Default),
+                    typeof(WorkRelationshipRecorded), ComplianceCoreJsonMetadata.Default)!;
             return NativeFacts.Replay(relationship, [DomainEventSeed.Attach(historical, relationship.Id, 1)]);
         }
         Assert.True(relationship.Record(PersonId, "E-100", Employee(), Author, Now).IsSuccess);

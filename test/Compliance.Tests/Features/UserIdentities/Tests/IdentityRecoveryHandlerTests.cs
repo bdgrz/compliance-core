@@ -336,7 +336,7 @@ public sealed class IdentityRecoveryHandlerTests
                      new UserIdentity(account.OldIdentityId).Stream,
                  })
             foreach (var fact in await host.FactsAsync(stream))
-                persisted.Append(JsonSerializer.Serialize(fact, fact.GetType(), ComplianceCoreJsonContext.Default.Options));
+                persisted.Append(JsonSerializer.Serialize(fact, fact.GetType(), ComplianceCoreJsonMetadata.Default.Options));
         var claimed = (IdentityRecoveryChallengeClaimed)(await host.ClaimRecordAsync(account)).Event;
         foreach (var reference in new[] { claimed.Intent, claimed.VerifiedEmailProof, claimed.VerifiedReplacementProof })
             persisted.Append(Encoding.UTF8.GetString((await host.Content.ReadVerifiedAsync("bdgrz", reference)).Span));

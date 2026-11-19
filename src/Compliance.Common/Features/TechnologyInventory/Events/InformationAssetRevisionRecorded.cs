@@ -1,4 +1,5 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.TechnologyInventory.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AttestRecords.Commands;
@@ -18,4 +19,4 @@ namespace Bdgrz.Compliance.Features.TechnologyInventory.Events;
 [Discriminator("bdgrz.inventory.information_asset.revision_recorded", 1)]
 public sealed record InformationAssetRevisionRecorded(Uuid TenantId, Uuid InformationAssetId, long Revision,
     InformationAssetContent Content, ActorReference Actor, DateTimeOffset ChangedAt, OperationProvenance Operation,
-    ImmutableContentRef? FirstResponse) : DomainEvent, INativeOperationFact;
+    ImmutableContentRef? FirstResponse) : DomainEvent, IInformationAssetFact;

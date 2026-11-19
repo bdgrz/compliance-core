@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "aba_removes_new": {
+      "type": "noul",
+      "noul": 0.73
+    },
+    "generation_fence": {
+      "type": "noul",
+      "noul": 0.97
+    },
+    "timeout_safe": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "rotation_history": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "old_retry": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "episode_grants": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "episode_unlink": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "primary_workflow": {
+      "type": "noul",
+      "noul": 0.85
+    }
+  },
+  "usage": {
+    "input_tokens": 944,
+    "output_tokens": 147
+  }
+}

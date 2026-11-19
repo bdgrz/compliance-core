@@ -40,7 +40,7 @@ using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
 
 /// <summary>
-///     Migrates the name of a built-in role as a native operation on the role owner. An exact retry replays the
+///     Renames a custom role as a native operation on the role owner. An exact retry replays the
 ///     original acceptance, the same command id with another name conflicts, and renaming to the current name
 ///     appends nothing.
 /// </summary>
@@ -53,9 +53,9 @@ public sealed class RenameRoleHandler(NativeOperationExecutor operations, IImmut
     public ValueTask<Result> HandleAsync(IRequestContext<RenameRole> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (!BuiltInRbac.IsBuiltInRole(request.TenantId, request.RoleId) || !RequestActor.IsSystem(context.Actor))
+        if (BuiltInRbac.IsBuiltInRole(request.TenantId, request.RoleId))
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Only the system may migrate built-in role names.")));
+                "Built-in roles cannot be renamed.")));
         if (request.CommandId == request.RoleId)
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A command id distinct from the role is required.")));

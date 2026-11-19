@@ -84,21 +84,17 @@ public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore c
         // live-episode conflict and the rest of the acceptance (grants, teams, activation) still applies. The
         // registration id is the episode id, so a replay binds the team assignments to the episode it registered.
         var registration = MemberRegistrationEffects.Register(accepted.Metadata.EventId, accepted.TenantId,
-            accepted.UserId, accepted.Affiliation, guestExpiresOn);
+            accepted.UserId, accepted.Affiliation, guestExpiresOn, guestPrograms);
         var registered = await bus.SendAsync(registration, context, ct).ConfigureAwait(false);
         if (!registered.IsSuccess && registered.Error != Member.LiveEpisodeConflict)
             throw new ReactionCommandFailedException(registered.Error);
         var episodeId = registered.IsSuccess ? registration.CommandId : Uuid.Empty;
-        if (guestPrograms is not null && guestExpiresOn is { } endDate)
+        if (guestPrograms is not null)
         {
-            foreach (var programId in guestPrograms)
-            {
-                var reactionOutcome1 = await bus.SendReactionAsync(new ProvisionGuestProgramAccess(accepted.TenantId, accepted.UserId,
-                    programId, accepted.InvitationId, endDate, accepted.AcceptedAt, accepted.InvitedBy,
-                    invitedByDisplay!), context, ct);
-                if (!reactionOutcome1.IsSuccess)
-                    return reactionOutcome1;
-            }
+            var assigned = await AssignAsync(context, BuiltInRbac.ViewersTeamId(accepted.TenantId),
+                RbacIds.Member(accepted.TenantId, accepted.UserId), episodeId, ct).ConfigureAwait(false);
+            if (!assigned.IsSuccess)
+                return assigned;
         }
 
         var memberId = RbacIds.Member(accepted.TenantId, accepted.UserId);

@@ -69,7 +69,7 @@ sealed class FitzTenantDirectoryReader(IKvClient client)
                     .ConfigureAwait(false);
                 if (old is not null)
                     await TenantDirectorySchema.Directory.ReplaceAsync(Transaction, old,
-                        old with { Slug = changed.NewSlug }, ct).ConfigureAwait(false);
+                        old with { Slug = changed.NewSlug, Status = TenantDirectoryStatus.After(old, changed) ?? old.Status }, ct).ConfigureAwait(false);
                 return;
             }
             var tenantId = domainEvent switch

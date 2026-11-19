@@ -46,7 +46,7 @@ public sealed class CorrectiveActionChangeBaselineTests
         var snapshot = JsonSerializer.Deserialize(bytes.AsSpan(Array.IndexOf(bytes, (byte)0) + 1),
             ComplianceCoreJsonContext.Default.FindingTypeIBaselineSourceContent)!;
         var changes = snapshot.History.Where(static fact => fact.Kind == "corrective_action_changed")
-            .Select(fact => fact.Payload.Deserialize<CorrectiveActionChanged>(ComplianceCoreJsonContext.Default.Options)!).ToArray();
+            .Select(fact => fact.Payload.Deserialize<CorrectiveActionChanged>(ComplianceCoreJsonMetadata.Default.Options)!).ToArray();
         Assert.Equal(["First correction.", "Second correction."], changes.Select(static fact => fact.Description));
         Assert.Equal([2L, 3L], changes.Select(static fact => fact.Revision));
         Assert.Equal(fixture.ReviewerMemberId, changes[0].OwnerMemberId);

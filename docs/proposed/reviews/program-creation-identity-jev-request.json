@@ -1,0 +1,56 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "identity": "A signed access token is still cryptographically valid and unexpired. Its issuer and subject map to UserId U, but the corresponding authoritative SignInIdentity was revoked before the proposed admission time T.",
+    "session": "A signed unexpired token is associated with revocable session S. Authoritative source says S was revoked before T.",
+    "spliced_member": "A valid current identity belongs to user A. An active current Member and organization-wide TeamRole path belong to different user B. Both are in the same tenant.",
+    "spliced_role": "An actor is a member of Team X. Team Y has an organization-wide assignment to Role R, and R grants program.manage. There is no assignment between X and R.",
+    "spliced_tenant": "The member and role permission are valid for tenant A, but the requested program belongs to tenant B.",
+    "spliced_episode": "A membership currently has episode 2. A team membership belongs to the same user and team but binds old episode 1; no active membership edge exists for episode 2.",
+    "unknown_veto": "All enumerated positive grant facts pass two-pass current reads, but the access policy allows additional independently owned revocation or deny records for this actor and those veto sources were not checked.",
+    "old_versions": "A record stores source owner versions and a timestamp T, but no trusted service proof exists that it actually performed fresh first reads before T and fresh second reads after T.",
+    "proof": "A trusted admission service actually performed all first reads before T and all second reads after T on fresh linearizable sources, with matching monotonic positions and complete fixed vetoes. It binds an integrity-protected attestation of exact actor, intent, path identities, versions, T, policy version and pass ordering to ProgramCreated."
+  },
+  "questions": {
+    "identity_token_authorizes": {
+      "type": "noul",
+      "instructions": "Under state.identity, can signature validity alone authorize the new admission?"
+    },
+    "session_token_authorizes": {
+      "type": "noul",
+      "instructions": "Under state.session, can signature validity alone authorize the new admission?"
+    },
+    "splice_member": {
+      "type": "noul",
+      "instructions": "Under state.spliced_member, may A use B's active membership and grant path?"
+    },
+    "splice_role": {
+      "type": "noul",
+      "instructions": "Under state.spliced_role, does the Team Y assignment authorize Team X?"
+    },
+    "splice_tenant": {
+      "type": "noul",
+      "instructions": "Under state.spliced_tenant, do tenant A's facts authorize creation in tenant B?"
+    },
+    "splice_episode": {
+      "type": "noul",
+      "instructions": "Under state.spliced_episode, does the old team membership prove a current episode-2 path?"
+    },
+    "unchecked_veto": {
+      "type": "noul",
+      "instructions": "Under state.unknown_veto, do the checked positive facts prove full authorization?"
+    },
+    "old_versions_prove_passes": {
+      "type": "noul",
+      "instructions": "Under state.old_versions, do the recorded versions and timestamp alone prove the live ordered reads occurred?"
+    },
+    "attestation_premise": {
+      "type": "noul",
+      "instructions": "Under state.proof, can the bound trusted attestation record the actual admission evidence, assuming the service and sources are correct?"
+    },
+    "proof_proves_infrastructure": {
+      "type": "noul",
+      "instructions": "Under state.proof, does the attestation alone independently prove that the service or sources were implemented correctly?"
+    }
+  }
+}

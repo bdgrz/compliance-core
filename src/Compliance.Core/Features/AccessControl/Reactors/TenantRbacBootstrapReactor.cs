@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Kernel.Services;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
@@ -63,7 +64,8 @@ public sealed partial class TenantRbacBootstrapReactor(
         // and core grants stay ahead of the assignment event that triggers tenant activation.
         if (ownerBecomesAdministrator)
         {
-            commands.Add(MemberRegistrationEffects.Register(sourceEventId, tenantId, context.Trigger.OwnerUserId));
+            var registration = MemberRegistrationEffects.Register(sourceEventId, tenantId, context.Trigger.OwnerUserId);
+            commands.Add(registration);
         }
 
         commands.Add(RbacTeamRoleEffects.Assign(sourceEventId, tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), adminRoleId));
@@ -75,6 +77,10 @@ public sealed partial class TenantRbacBootstrapReactor(
         {
             var memberId = RbacIds.Member(tenantId, context.Trigger.OwnerUserId);
             commands.Add(TeamMemberEffects.Assign(sourceEventId, tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), memberId));
+            commands.Add(new DesignatePrimaryOrgAdmin(
+                EffectIdentity.CommandId(sourceEventId, "primary:creator", tenantId.ToString(), null), tenantId,
+                context.Trigger.OwnerUserId,
+                MemberRegistrationEffects.CommandId(sourceEventId, tenantId, context.Trigger.OwnerUserId)));
         }
 
         commands.AddRange(

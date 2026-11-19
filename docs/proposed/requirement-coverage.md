@@ -11,6 +11,43 @@ The reviews below did not execute tests. Named tests are evidence to qualify,
 not proof of current GREEN, complete workflows or merged acceptance. No context
 is declared complete by this ledger, and SQL migration does not close business gaps.
 
+## 2026-11-05 boundary refinement supersedes earlier criteria lock
+
+[CR-09/10](contexts/criteria.md#decisions) select independent entry incarnations,
+a single pinned publication witness, a source-ordered edition cut and per-label
+authority. Program creation can select an authoritative published edition while
+unrelated entries remain pending. The former admission windows and per-operation
+chain are not the selected solution. Source, authorization, recovery and
+read-coverage guarantees require implementation qualification. No complete edition
+is stored in one manifest or aggregate. This is design, not implemented behavior. The
+static catalog remains data only; preserve its fixed ID and partial-coverage
+warnings until a source-backed publication migration is qualified. Program
+creation must select a published edition. Historical handoffs remain evidence of
+their revision, not evidence that the updated design is already implemented.
+
+## 2026-11-05 organization bootstrap supplement
+
+[Organization creation and primary administration](reviews/organization-bootstrap.md)
+supersedes older PA-04/05/21/23/27 rows that say primary seats, creator designation,
+registered-tenant slug recovery or the ordinary-admin guard cutover are absent.
+Creation now requires a client-created tenant ID on HTTP and MCP; exact retry
+returns the original registration and changed intent conflicts. Both source
+activation orderings and membership/primary/access reads are exercised. Membership
+views now retain guest caps, resolving that source-view gap from the scoped-access
+checkpoint. The controlled feature tests pass; native/full acceptance remains
+blocked as documented in the review. Other requirements are not promoted to done.
+
+## 2026-11-05 scoped-access supplement
+
+The [scoped-team checkpoint](reviews/scoped-team-access.md) supersedes the older
+PA rows below where they say custom/scoped roles, guest episode caps or direct-grant
+cutover are absent. Those source paths are now integrated and the 296-case focused
+selection passes. Platform access remains partial: command-side reference admission,
+raw membership cap views, native/public transport/full-suite acceptance, primary
+continuity, housekeeping and the other named requirements remain. Broader failures
+are recorded in #1189; the native blocker remains #1188. Other historical rows are
+not silently promoted to completed acceptance.
+
 ## Platform access
 
 Paths below are under `Features/AccessControl` unless another feature is named.
@@ -64,7 +101,7 @@ dependent on named facts from other contexts.
 | PS-06 | ClientService owner binds permanent Program and terminal retirement; ProductClientServiceNativeHistoryTests covers rebind/mutation/retry refusals | Qualify real bus/actor behavior and competing appends. Native SQL migration is a separate gate. |
 | PS-07 | Generic assignments dispatch control scopes to ControlOperations; boundary still owns assignment/revocation facts | Deliver specified ControlResponsibility effective tenure and work consumers; remove obsolete boundary responsibility ownership during coordinated cutover. |
 | Body: criteria at creation | Program criteria selection exists after creation | Require exactly one published criteria edition at creation and qualify actor/source authority. |
-| Body: target dates | ProgramRules validates adjacent target-date pairs | Compare all present dates across null intermediates; named changes must preserve ordering and retries. |
+| Body: target dates | ProgramRules now validates all six present date pairs; 6 intended RED failures, then 65 focused/native/history/HTTP cases passed | Full gate pending. Named target-change command/fact remains separate; old invalid historical plans are unsupported under the no-backcompat scope. |
 | Body: resolved scope | Boundary draft/version/source checks exist | Exact-version references and provider resolution remain incomplete; qualify source authority and actor matrix. |
 
 Small independent repairs include target-date ordering, all-author review
@@ -79,7 +116,7 @@ Current implementations are primarily under `Features/AccessControl`.
 | Requirement | Source evidence / implemented behavior | Remaining acceptance |
 | --- | --- | --- |
 | FS-01 | IndependenceCompartments computes from retained services/rules; policy/evaluation tests | Target evaluation owner/one approval/exact service revisions absent. Current calculation excludes services starting during the examination period. |
-| FS-02 | RecordNonattestService handler and complete retained history; ClientServiceIndependenceTests | Independent per-record owner, reasoned revision and void, current-history queries and replay. |
+| FS-02 | RecordFirmNonattestService handler and complete retained history; ClientServiceIndependenceTests | Independent per-record owner, reasoned revision and void, current-history queries and replay. |
 | FS-03 | Acceptance admission checks current rules/client epoch and retained source cut; stale-input tests | Replace superseded epoch/reservation coupling with approved exact service-revision freshness after new record/evaluation owners exist. |
 | FS-04 | EngagementAcceptancePolicy immediately allows advisory; a test asserts unconditional allowance | Engagement terms lack service kind. Add target terms and authoritative refusal of impairing advisory acceptance while an attest engagement is accepted/open. |
 | FS-05 | Existing assignment admission refuses draft engagements; ServiceEngagementStaffAssignmentTests | Independent assignment owner with request/answer/completion/end/re-request lifecycle; implement with FS-13. |
@@ -200,7 +237,7 @@ Held Finding closure source and its 78 unexecuted cases are excluded.
 | AW-06 | Waiver expiry is computed without an expiry event | Consumers must verify current exact-scope unexpired coverage; old approval alone is insufficient. |
 | AW-07 | Low/moderate/high command and replay vocabulary, with Work medium mapping, is implemented | Named analysis actor cutover remains separate; no new severity rubric is needed. |
 | AW-08 | Linked risk acceptance does not close a Finding; negative invariant tests exist | Target LinkFindingToRiskAcceptance/Lead admission absent; old linking command also accepts SOD-waiver links. |
-| AW-09 | Finding owns action admission and exact source-verified terminal outcome reporting; committed-source reactors and reporting-lag tests | Target command/role vocabulary and reviewed closure are separate; retain planned-but-unmaterialized/refused closure behavior. |
+| AW-09 | Finding owns action admission and exact source-verified terminal outcome reporting; committed-source reactors and reporting-lag tests | Historical source evidence only: the target closure invariant and independent action authority are being refined; see the context and boundary review. |
 | Body: identities | Current Finding includes ProgramId and Action includes program/finding in stream keys | Target tenant+FindingId and tenant+ActionId are not established by current tuple/wrong-stream tests. Coordinate canonical identity migration. |
 | Body: source vocabulary | Readiness/occurrence source checks and stable deterministic reaction raises exist | Target control_evaluation_deviation/audit_test_exception/provider_review/management_review vocabulary and producer migration remain; preserve coordinated #1180. |
 | Body: analysis/owner | Generic revision combines analysis and owner fields; active-member checks exist | Separate named analysis and Lead-only owner assignment, including approved person/team owner representation. |

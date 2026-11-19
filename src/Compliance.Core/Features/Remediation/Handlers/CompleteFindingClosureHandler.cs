@@ -86,8 +86,22 @@ sealed class CompleteFindingClosureHandler(IAggregateReader reader, IAggregateEx
         var provenance = FindingClosureEffects.Child(command.CommandId, nameof(CompleteFindingClosure),
             command.Source.EventId, intent.Header, finding.Stream, now);
         var binding = AcceptedOperationBinding.Of(provenance);
+        async ValueTask<Result<ReceiverOutcome>> SettleWithdrawalAsync(Result<ReceiverOutcome> outcome)
+        {
+            if (!outcome.IsSuccess || outcome.Value is not ReceiverOutcome.Superseded { Evidence: { } terminal })
+                return outcome;
+            var ended = await verifier.VerifyTerminalAsync(terminal, command.Intent, command.OperationId, command.CommandId, ct)
+                .ConfigureAwait(false);
+            if (ended.Error is not null)
+                return Result<ReceiverOutcome>.Failure(ended.Error);
+            if (ended.Finding!.TerminalClosure(command.OperationId) is not FindingClosureWithdrawn)
+                return outcome;
+            var settled = await fences.SettleCanceledAsync(ended, terminal, command.Source, command.Intent, context, ct)
+                .ConfigureAwait(false);
+            return settled.IsSuccess ? outcome : settled;
+        }
         if (Decide(finding, binding, command.OperationId) is { } early)
-            return early;
+            return await SettleWithdrawalAsync(early).ConfigureAwait(false);
 
         var held = await FindingClosureProofs.HeldAsync(reader, content, finding, intent, decision, tenant,
             command.CommandId, ct).ConfigureAwait(false);
@@ -123,7 +137,9 @@ sealed class CompleteFindingClosureHandler(IAggregateReader reader, IAggregateEx
 
         var view = new FindingClosureView(decision.DecisionId, decision.VerificationRationale, decision.ResolutionEvidence,
             decision.Rationale, decision.CloserMemberId, decision.ClosedBy, decision.DecidedAt,
-            decision.SeparationOfDutiesWaiverId);
+            decision.SeparationOfDutiesWaiverId, decision.Review?.ClosureId, decision.Review?.ProposalRevision,
+            decision.ProposalSource is { } proposalSource && closure.History!.FactById(proposalSource.EventId) is FindingClosureProposed proposal
+                ? proposal.Terms.ResolutionEvidence : null);
         var current = await findings.ComposeAsync(finding, now, ct).ConfigureAwait(false);
         var after = FindingViews.WithClosure(current!, view, finding.Revision + 1, now);
         var closureContent = await FindingContent.WriteDeterministicAsync(content, tenant, command.CommandId,
@@ -146,7 +162,8 @@ sealed class CompleteFindingClosureHandler(IAggregateReader reader, IAggregateEx
                                     fresh.Closed!)))))
                             : AggregateOutcome.Discard(Result<Decided>.Failure(raised.Error!));
                     }, context, ct).ConfigureAwait(false);
-                return step.IsSuccess ? step.Value!.Outcome : Result<ReceiverOutcome>.Failure(step.Error!);
+                return await SettleWithdrawalAsync(step.IsSuccess ? step.Value!.Outcome : Result<ReceiverOutcome>.Failure(step.Error!))
+                    .ConfigureAwait(false);
             }
             catch (EventStreamConcurrencyException) when (attempt < MaximumAttempts)
             {
@@ -171,6 +188,8 @@ sealed class CompleteFindingClosureHandler(IAggregateReader reader, IAggregateEx
         {
             FindingClosureCanceled canceled => SourceUseReceiverSupport.Superseded(
                 "The closure was canceled; its fence stands.", NativeFactReference.Of(finding.Stream, canceled)),
+            FindingClosureWithdrawn withdrawn => SourceUseReceiverSupport.Superseded(
+                "The proposal was withdrawn; its review fence stands.", NativeFactReference.Of(finding.Stream, withdrawn)),
             FindingClosedV2 => SourceUseReceiverSupport.Permanent("The finding was closed by another operation."),
             _ => default(Result<ReceiverOutcome>?),
         };

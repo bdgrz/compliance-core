@@ -39,7 +39,9 @@ public sealed partial class PermissionProjector(IPermissionProjection projection
                 removed.TeamId == currentAccess.TeamId,
             TeamDeleted deleted => currentAccess.TeamId == deleted.TeamId,
             TeamRoleRemoved removed => currentAccess.TeamId == removed.TeamId &&
-                currentAccess.RoleId == removed.RoleId,
+                currentAccess.RoleId == removed.RoleId &&
+                TeamRoleScopes.Normalize(removed.TenantId, removed.Scope) ==
+                TeamRoleScopes.Normalize(removed.TenantId, currentAccess.Scope),
             RoleDeleted deleted => currentAccess.RoleId == deleted.RoleId,
             RolePermissionRemoved removed => currentAccess.RoleId == removed.RoleId &&
                 currentAccess.Permissions.Contains(permission, StringComparer.Ordinal),

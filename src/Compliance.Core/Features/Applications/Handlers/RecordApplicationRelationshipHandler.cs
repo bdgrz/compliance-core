@@ -20,14 +20,15 @@ using Bdgrz.Compliance.Features.UserIdentities.Services;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.Applications.Aggregates;
 using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Hosting;
 namespace Bdgrz.Compliance.Features.Applications.Handlers;
 
 public sealed class RecordApplicationRelationshipHandler(IAggregateExecutor executor,
     IAggregateReader reader, RestrictedApplicationVisibility visibility,
     TimeProvider clock)
-    : IRequestHandler<RecordApplicationRelationship, ApplicationRelationshipRegistration>
+    : IRequestHandler<RecordApplicationRelationship, PortiaCreateOutcome<ApplicationRelationshipRegistration>>
 {
-    public async ValueTask<Result<ApplicationRelationshipRegistration>> HandleAsync(
+    public async ValueTask<Result<PortiaCreateOutcome<ApplicationRelationshipRegistration>>> HandleAsync(
         IRequestContext<RecordApplicationRelationship> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -35,10 +36,10 @@ public sealed class RecordApplicationRelationshipHandler(IAggregateExecutor exec
             request.TargetApplicationId == Uuid.Empty ||
             request.SourceApplicationId == request.TargetApplicationId ||
             !ApplicationRelationshipIdentity.IsSupported(request.RelationshipType))
-            return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(
+            return Result<PortiaCreateOutcome<ApplicationRelationshipRegistration>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The application relationship is invalid."));
         if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
-            return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(
+            return Result<PortiaCreateOutcome<ApplicationRelationshipRegistration>>.Failure(new RequestError(
                 RequestErrorKind.Unauthorized, "A personal member identity is required."));
 
         var source = await reader.HydrateApplicationAsync(request.TenantId,
@@ -50,10 +51,10 @@ public sealed class RecordApplicationRelationshipHandler(IAggregateExecutor exec
                 request.SourceApplicationId, ct).ConfigureAwait(false) ||
             !await visibility.CanReadApplicationAsync(request.TenantId, userId,
                 request.TargetApplicationId, ct).ConfigureAwait(false))
-            return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(
+            return Result<PortiaCreateOutcome<ApplicationRelationshipRegistration>>.Failure(new RequestError(
                 RequestErrorKind.NotFound, "The application was not found."));
         if (source.IsRetired || target.IsRetired)
-            return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(
+            return Result<PortiaCreateOutcome<ApplicationRelationshipRegistration>>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "Relationships require active applications."));
 
         var targetAggregate = new DeclaredApplication(request.TenantId, request.SourceApplicationId);
@@ -63,19 +64,25 @@ public sealed class RecordApplicationRelationshipHandler(IAggregateExecutor exec
             request.TargetApplicationId, ct).ConfigureAwait(false);
         if (!currentSource.IsCreated || !currentTarget.IsCreated ||
             currentSource.IsRetired || currentTarget.IsRetired)
-            return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(
+            return Result<PortiaCreateOutcome<ApplicationRelationshipRegistration>>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "The application relationship endpoints changed."));
         if (currentSource.Revision != source.Revision || currentTarget.Revision != target.Revision)
-            return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(
+            return Result<PortiaCreateOutcome<ApplicationRelationshipRegistration>>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "The application relationship endpoints changed."));
-        return await executor.ExecuteAsync(targetAggregate,
-            app => app.CheckPendingImportChanges() is { } importError
-                ? AggregateOutcome.Discard(Result<ApplicationRelationshipRegistration>.Failure(
-                    importError))
-                : AggregateOutcome.CommitOnSuccess(app.RecordRelationship(
+        var created = false;
+        var result = await executor.ExecuteAsync(targetAggregate,
+            app =>
+            {
+                created = !app.Relationships.Any(relationship =>
+                    relationship.TargetApplicationId == request.TargetApplicationId &&
+                    relationship.RelationshipType == request.RelationshipType);
+                if (app.CheckPendingImportChanges() is { } importError)
+                    return AggregateOutcome.Discard(Result<ApplicationRelationshipRegistration>.Failure(importError));
+                return AggregateOutcome.CommitOnSuccess(app.RecordRelationship(
                     request.TargetApplicationId, currentSource.Revision, currentTarget.Revision,
                     request.RelationshipType, RbacIds.Member(request.TenantId, userId),
-                    UserIdentityClaims.BdgrzDisplay(context.Actor, userId),
-                    clock.GetUtcNow())), context, ct).ConfigureAwait(false);
+                    UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow()));
+            }, context, ct).ConfigureAwait(false);
+        return PortiaCreateOutcomes.From(result, created);
     }
 }

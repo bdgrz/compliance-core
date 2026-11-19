@@ -1,0 +1,33 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "immutable_original_survives": {
+      "type": "noul",
+      "noul": 0.68
+    },
+    "exact_retry_bound_to_intent_actor": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "current_authority_before_retry": {
+      "type": "noul",
+      "noul": 0.86
+    },
+    "invalid_history_refuses": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "behavioral_tests_have_setup_mask": {
+      "type": "noul",
+      "noul": 0.75
+    },
+    "cross_context_enablement_incomplete": {
+      "type": "noul",
+      "noul": 0.86
+    }
+  },
+  "usage": {
+    "input_tokens": 13357,
+    "output_tokens": 132
+  }
+}

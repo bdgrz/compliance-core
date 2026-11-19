@@ -1,0 +1,61 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "jwt": "A signed session JWT has not expired. It names identity I and user U. I was revoked before admission instant T, but the check only validates the JWT signature and expiry.",
+    "aba": "The first fresh read sees operator source position 7 and active=true. Between first and second read, revoke then regrant both commit. The second read sees position 9 and active=true.",
+    "pass": "The authority reads fixed sources identity I, operator O, and policy P in first pass. All first reads finish. It samples trusted time T. Then it freshly reads exactly I, O, and P again. Each source returns the same non-resettable physical position and generation as in the first pass. Every veto-changing fact advances its respective position.",
+    "changed": "The first identity read finds I attached to U at position 4. I is revoked before T, then the second fresh identity read observes position 5. The operator grant remains active throughout.",
+    "wronguser": "A cryptographically valid credential names an identity attached to user U. The criteria intent claims a different operator user V.",
+    "expired": "A validly signed token has raw expiration time earlier than T, though it was unexpired when request processing began.",
+    "expirelater": "All required authorization sources are valid at T and the raw credential has not expired at T. The credential expires after T but before the already-admitted exact operation finishes.",
+    "stale_policy": "The active authoritative access policy is generation 2. A worker only knows its local binary implements generation 1 and reads no authoritative generation source.",
+    "missing": "Identity and operator reads are valid but a required session revocation owner is unavailable; the policy requires that owner as a veto.",
+    "retry": "The first attempt passes only the first-pass reads but fails before completing the second pass. A later retry runs using an old saved allow flag without new reads."
+  },
+  "questions": {
+    "jwt_authorizes": {
+      "type": "noul",
+      "instructions": "In jwt, may the revoked identity be admitted at T solely because the JWT is signed and unexpired?"
+    },
+    "aba_equal": {
+      "type": "noul",
+      "instructions": "In aba, does identical active=true prove the source did not change between reads?"
+    },
+    "pass_common": {
+      "type": "noul",
+      "instructions": "Given every stated assumption in pass, did the three source states all hold together at T?"
+    },
+    "changed_allow": {
+      "type": "noul",
+      "instructions": "In changed, may the two-pass proof accept the earlier identity state despite its changed position?"
+    },
+    "wronguser_allow": {
+      "type": "noul",
+      "instructions": "In wronguser, may the authenticated identity for U authorize an operator intent as V?"
+    },
+    "expired_allow": {
+      "type": "noul",
+      "instructions": "In expired, was the credential valid at T under a strict raw expiration rule?"
+    },
+    "expirelater_cancel": {
+      "type": "noul",
+      "instructions": "Under an admission-at-T policy, does expirelater automatically cancel the already-admitted operation?"
+    },
+    "localpolicy_proves": {
+      "type": "noul",
+      "instructions": "In stale_policy, does the local binary version prove it used the current authoritative policy?"
+    },
+    "missing_allow": {
+      "type": "noul",
+      "instructions": "In missing, is the required veto satisfied merely because its owner was unavailable?"
+    },
+    "retry_allow": {
+      "type": "noul",
+      "instructions": "In retry, does the old incomplete first pass establish a fresh current admission on retry?"
+    },
+    "provider_proven": {
+      "type": "noul",
+      "instructions": "Do the stated two-pass assumptions by themselves prove the deployed sources actually have linearizable reads and non-resettable positions?"
+    }
+  }
+}

@@ -379,8 +379,7 @@ public sealed class Policy : Aggregate
             Require(mutation.Waiver is null, "A Policy waiver can authorize only a selected personal decision.");
             return;
         }
-        var conflict = before!.PendingAuthorMemberIds.Contains(decision.Actor) || decision.Approval &&
-            before.Header.AcceptedReviewerMemberId == decision.Actor;
+        var conflict = before!.PendingAuthorMemberIds.Contains(decision.Actor);
         Require(conflict ? mutation.Waiver is { } proof && proof.WaiverId == decision.Waiver &&
             PolicyWaiverProof.Allows(proof, TenantId, new SeparationOfDutiesWaiverScope(SeparationOfDutiesRecordTypes.Policy,
                 Id, Id, before.Header.Revision, decision.Action), decision.Actor, at) : mutation.Waiver is null && decision.Waiver is null,
@@ -393,7 +392,7 @@ public sealed class Policy : Aggregate
     {
         if (!Reference(reference, schema))
             return false;
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonMetadata.Default.GetTypeInfo(typeof(T))!);
         return reference.Bytes == bytes.LongLength && reference.Sha256 == ContentDigest.Sha256(bytes);
     }
     static bool Hex(string? value) => value is { Length: 64 } && value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f');

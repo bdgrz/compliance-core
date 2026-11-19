@@ -79,10 +79,8 @@ public sealed class RecordTechnologyComponentHandler(NativeOperationExecutor ope
         {
             var error = await references.ValidateOwnerAsync(request.TenantId, request.OwnerPersonId, ct)
                 .ConfigureAwait(false) ??
-                (request.Category?.Trim() == TechnologyInventoryRules.CloudAccount
-                    ? await references.ValidateCloudAccountAsync(request.TenantId, request.SystemInstanceId, ct)
-                        .ConfigureAwait(false)
-                    : null);
+                await references.ValidateCloudAccountAsync(request.TenantId, request.SystemInstanceId, ct)
+                    .ConfigureAwait(false);
             if (error is not null)
                 return Result<TechnologyComponentRegistration>.Failure(error);
         }

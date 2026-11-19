@@ -38,7 +38,7 @@ public sealed class ListRolesHandler(IRoleDirectoryReader directory) : IRequestH
                 ListRequestNormalization.IsDescending(request.Sort),
                 ct).ConfigureAwait(false);
         }
-        catch (KvDirectoryQueryException)
+        catch (AccessControlDirectoryQueryException)
         {
             return Result<Page<RoleView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The role cursor is invalid."));

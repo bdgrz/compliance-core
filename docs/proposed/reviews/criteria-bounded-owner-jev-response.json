@@ -1,0 +1,65 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "lookup_bounded": {
+      "type": "noul",
+      "noul": 0.06
+    },
+    "head_alone_fences": {
+      "type": "noul",
+      "noul": 0.11
+    },
+    "seal_excludes_old_append": {
+      "type": "noul",
+      "noul": 0.84
+    },
+    "lost_reply_is_failure": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "decision_survives_receipt_failure": {
+      "type": "noul",
+      "noul": 0.96
+    },
+    "receipt_failure_safe_to_retry": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "abort_proves_cleanup": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "cancel_cleanup": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "children_roster": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "all_histories_bounded": {
+      "type": "noul",
+      "noul": 0.05
+    },
+    "cas_qualified": {
+      "type": "noul",
+      "noul": 0.03
+    },
+    "cas_needed": {
+      "type": "noul",
+      "noul": 0.95
+    },
+    "retention_reuse": {
+      "type": "noul",
+      "noul": 0.86
+    },
+    "proven_implementation": {
+      "type": "noul",
+      "noul": 0.03
+    }
+  },
+  "usage": {
+    "input_tokens": 3722,
+    "output_tokens": 278
+  }
+}

@@ -102,7 +102,7 @@ public sealed class IndependenceRuleCatalogRules
             : Failure<T>(RequestErrorKind.Conflict, "The request identity already retains a different rule intent or actor.");
     }
 
-    static string Intent<T>(T value) => JsonSerializer.Serialize(value, value!.GetType(), ComplianceCoreJsonContext.Default);
+    static string Intent<T>(T value) => JsonSerializer.Serialize(value, value!.GetType(), ComplianceCoreJsonMetadata.Default);
     static Result<T> Failure<T>(RequestErrorKind kind, string message) =>
         Result<T>.Failure(new RequestError(kind, message));
 }

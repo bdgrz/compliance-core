@@ -286,7 +286,7 @@ public sealed class NativeFirstResponseBridgeTests
         {
             var services = new ServiceCollection();
             services.AddLogging();
-            services.AddOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>().Configure(options => options.SerializerOptions.TypeInfoResolverChain.Insert(0, ComplianceCoreJsonContext.Default));
+            services.AddOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>().Configure(options => options.SerializerOptions.TypeInfoResolverChain.Insert(0, ComplianceCoreJsonMetadata.Default));
             services.AddSingleton<IEventStore>(new InMemoryEventStore());
             services.AddPortia();
             Content = new FaultContent(new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient())));

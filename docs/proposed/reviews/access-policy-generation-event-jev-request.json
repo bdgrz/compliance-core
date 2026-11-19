@@ -1,0 +1,9 @@
+{
+  "model": "jev-latest",
+  "state": "A platform aggregate owns only the single current access-policy generation and an immutable content reference. A successful transition changes the active generation to a strictly higher generation and records the operation, original source position, content reference and actor. The event does not assert that immutable bytes, source freshness, authorization, or deployment rollout have been verified. The intended event name is AccessPolicyActivated with discriminator bdgrz.access-policy.activated.",
+  "questions": {
+    "activation_fact": { "type": "noul", "instructions": "Does AccessPolicyActivated describe the recorded transition of the active access policy?" },
+    "proves_rollout": { "type": "noul", "instructions": "Does the event's existence by itself prove the deployment rollout was qualified?" },
+    "implies_roster": { "type": "noul", "instructions": "Does this event require the aggregate to own a roster of users or grants?" }
+  }
+}

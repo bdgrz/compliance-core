@@ -1,0 +1,21 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "candidate": "An edition contains independently owned criterion streams. Creating a criterion commits its identity, kind, edition and category forever. Creating a point of focus requires a committed creation event for a parent criterion with the same edition and category, and commits that exact parent reference forever. No criterion or point of focus may be removed within the draft. Their structural fields do not change. To fix an incorrect identity, category or parent, the operator abandons that draft and starts a fresh edition with a fresh edition ID. Summaries may be corrected independently. Publication must freeze the edition's structural membership.",
+    "race": "Child C has no events. Its create handler reads edition E as draft, then pauses before appending C at the expected empty-stream version. Nothing writes to C. E publishes. The handler resumes and its append to C succeeds because C's stream still has the expected version. No event store transaction or ordered source fence covers both E and C.",
+    "witness": "Edition E has an exact committed creation event for criterion C. C's edition is E, its kind is criterion, and the candidate forbids removing C. C was committed in the source boundary intended for publication.",
+    "wrong_parent": "A point of focus in edition E has category Security. Its claimed parent's committed creation event says kind criterion, edition E, category Availability.",
+    "retry": "A command with token T already created criterion C with category Security. A later request reuses T for C with category Availability."
+  },
+  "questions": {
+    "witness_nonempty": {"type": "noul", "instructions": "Does witness prove that edition E contains at least one criterion?"},
+    "witness_all_relations": {"type": "noul", "instructions": "Does witness alone prove that every point of focus has a valid parent?"},
+    "wrong_parent_valid": {"type": "noul", "instructions": "Does wrong_parent satisfy candidate's parent category rule?"},
+    "race_late_write": {"type": "noul", "instructions": "In race, does the child creation commit after publication?"},
+    "draft_read_is_fence": {"type": "noul", "instructions": "In race, did reading the draft state prevent the later child append?"},
+    "retry_exact": {"type": "noul", "instructions": "Is retry an exact retry of the original command intent?"},
+    "bad_identity_fix": {"type": "noul", "instructions": "Under candidate, can an incorrect criterion identity be removed from the same draft?"},
+    "new_parent_scan": {"type": "noul", "instructions": "Under candidate, does checking the exact parent creation event require reading every point of focus in the edition?"},
+    "empty_witness": {"type": "noul", "instructions": "If no criterion creation event exists, can witness prove the edition contains a criterion?"}
+  }
+}

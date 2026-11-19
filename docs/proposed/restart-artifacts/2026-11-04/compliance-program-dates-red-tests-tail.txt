@@ -1,0 +1,30 @@
+  Stack Trace:
+     at Bdgrz.Compliance.Tests.Features.Programs.Tests.ProgramTargetDateTests.ShouldKeepPreviousTargetsGivenRevisionReversesPresentTargetDates(Int32 earlierStage, Int32 laterStage) in /Users/jrepanich/Code/bdgrz/compliance-core/test/Compliance.Tests/Features/Programs/Tests/ProgramTargetDateTests.cs:line 66
+   at InvokeStub_ProgramTargetDateTests.ShouldKeepPreviousTargetsGivenRevisionReversesPresentTargetDates(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Passed Bdgrz.Compliance.Tests.Features.Programs.Tests.ProgramTargetDateTests.ShouldKeepPreviousTargetsGivenRevisionReversesPresentTargetDates(earlierStage: 0, laterStage: 1) [< 1 ms]
+  Passed Bdgrz.Compliance.Tests.Features.Programs.Tests.ProgramTargetDateTests.ShouldKeepPreviousTargetsGivenRevisionReversesPresentTargetDates(earlierStage: 1, laterStage: 2) [< 1 ms]
+  Failed Bdgrz.Compliance.Tests.Features.Programs.Tests.ProgramTargetDateTests.ShouldKeepPreviousTargetsGivenRevisionReversesPresentTargetDates(earlierStage: 1, laterStage: 3) [< 1 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is null
+Expected: typeof(Bdgrz.Compliance.Features.Versioning.Models.CommandFailure)
+Actual:   null
+  Stack Trace:
+     at Bdgrz.Compliance.Tests.Features.Programs.Tests.ProgramTargetDateTests.ShouldKeepPreviousTargetsGivenRevisionReversesPresentTargetDates(Int32 earlierStage, Int32 laterStage) in /Users/jrepanich/Code/bdgrz/compliance-core/test/Compliance.Tests/Features/Programs/Tests/ProgramTargetDateTests.cs:line 66
+   at InvokeStub_ProgramTargetDateTests.ShouldKeepPreviousTargetsGivenRevisionReversesPresentTargetDates(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Bdgrz.Compliance.Tests.Features.Programs.Tests.ProgramTargetDateTests.ShouldKeepPreviousTargetsGivenRevisionReversesPresentTargetDates(earlierStage: 0, laterStage: 2) [< 1 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is null
+Expected: typeof(Bdgrz.Compliance.Features.Versioning.Models.CommandFailure)
+Actual:   null
+  Stack Trace:
+     at Bdgrz.Compliance.Tests.Features.Programs.Tests.ProgramTargetDateTests.ShouldKeepPreviousTargetsGivenRevisionReversesPresentTargetDates(Int32 earlierStage, Int32 laterStage) in /Users/jrepanich/Code/bdgrz/compliance-core/test/Compliance.Tests/Features/Programs/Tests/ProgramTargetDateTests.cs:line 66
+   at InvokeStub_ProgramTargetDateTests.ShouldKeepPreviousTargetsGivenRevisionReversesPresentTargetDates(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Test Run Failed.
+Total tests: 35
+     Passed: 29
+     Failed: 6
+ Total time: 1.2839 Seconds

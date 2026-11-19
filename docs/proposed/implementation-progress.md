@@ -1,5 +1,34 @@
 # Proposed domain implementation progress
 
+**Design refinement:** This ledger records source as it was reviewed, including
+historical finding-owned outcome work. It does not establish the revised target;
+see [boundary refinement](reviews/domain-boundaries-review.md) and the current
+context for outstanding design qualifications.
+
+**Primary administration boundary — 2026-11-05:** `PrimaryOrgAdmins` owns the
+one-or-two-primary continuity invariant. Its infrequent designation, outcome and
+release history belongs to that decision; ordinary administrator churn does not
+grow the aggregate. This is an appropriate low-churn boundary, not a roster of
+all administrators or a reason to redesign the existing owner.
+
+**Organization creation and primary administration — 2026-11-05.** Source is
+implemented across API, MCP, write models and read models, including mandatory
+client-created tenant IDs. Strict Release build, whitespace and tooling pass;
+**152 focused cases and 8 HTTP/MCP cases pass**. The final full gate remains
+blocked: **8,221 passed / 1,080 failed / zero skipped**, with 6,753 inputs
+unchanged during execution. See the [feature review](reviews/organization-bootstrap.md)
+and [validation evidence](reviews/organization-bootstrap-validation.json).
+Native #1188 and broader assembly #1189 remain open; no full context, hosted
+acceptance, merge or release is claimed. Earlier checkpoint text is historical.
+
+**Resumed 2026-11-05; scoped-access source checkpoint preserved.** Current team-role
+permission authority, guest episode caps and public cutover have 296 passing focused
+cases, with strict build/format and tooling green. The full gate still fails:
+8,141 passed / 1,082 failed; follow-up Support fixture checks passed 21/21. See the
+[latest restart handoff](restart-handoff.md) and [scoped-team review](reviews/scoped-team-access.md).
+Native #1188 and assembly #1189 block full acceptance; no context is declared done.
+The stopped/sole-candidate inventories below are historical, not the active queue.
+
 The locked context documents are the specification. This ledger records implemented
 behavior and validation; a matching type name or a passing focused test does not
 establish completion of an owner, workflow, or context.
@@ -21,7 +50,22 @@ Tracking issue: [#1176](https://github.com/bdgrz/compliance-core/issues/1176).
   changing the reviewed proposal. Portia owns execution, persistence, concurrency,
   delivery and retries.
 
-See the [delivery reset](delivery-reset.md) for the current implementation freeze, preserved worker checkpoints and reduced work-in-progress limits.
+See the [delivery reset](delivery-reset.md) for the resumed queue, preserved worker
+checkpoints and work-in-progress limits. The user explicitly resumed on 2026-11-04
+with parallel agents. Program date ordering is the sole delivery candidate;
+Support withdrawal and Access Cassie are preparing. Other agents review consumers,
+shared wiring and held prerequisites. Only the isolated Program validation lane
+runs local .NET commands; no new full-gate result is claimed yet.
+
+The user then prioritized **code complete ASAP**, as a platform for iteration.
+Source implementation now fans out beyond the saved preparation queue while one
+serialized .NET lane continues independently. Current exclusive lanes are Support
+(Evidence, Advisor, Applications and the Examinations support contributor), Access,
+Program/scope, Methodology, Assurance, Workforce, Work, Controls/occurrences,
+FirmServices, Policies and Readiness. Workers deliver bounded source/test commits
+and exact shared wiring instructions. The coordinator owns shared integration.
+Authored tests remain unexecuted until the validation lane observes them; source
+preparation alone does not mark a context complete.
 
 ## Active batches and exclusive ownership
 
@@ -366,3 +410,36 @@ unchanged inputs. The next fresh native run passed **8,707/8,707**, zero
 failures/skips, in 12m47s. All 14 compiler/runtime-fixture input hashes remained
 unchanged. This second run supplies current local acceptance; final committed-head
 review, hosted CI and merge remain separate delivery gates.
+
+
+## Person retirement delivered; Program target ordering checkpoint
+
+This checkpoint is paused at the user's request. The Program full run described
+below was later canceled; no completed full acceptance is claimed. See the
+[restart handoff](restart-handoff.md) before taking further action.
+
+[PR #1187](https://github.com/bdgrz/compliance-core/pull/1187) merged Person
+writer retirement as `4e4c9d01`. The merged tree matches reviewed `a3e501f3`;
+local, exact-head hosted and independent post-merge gates each passed 8,707 units.
+Integration branch readback/push is complete. Person links and accepted HRIS
+application remain separate missing behavior.
+
+The next bounded repair compares every present Program target date across unknown
+intermediates. Clean RED passed29/failed6, then the six-line repair passed65
+focused/native/history/HTTP cases. Scaffold import/style fixes are not RED.
+All six date pairs, all16 present/null patterns and equality are covered; unchanged
+native handlers still provide original receipt/current authorization behavior.
+Strict build/whitespace pass; the assembled full gate is running. The
+[review](reviews/program-target-date-ordering.md) records the accepted breaking
+qualification for old invalid stored plans, which may stop historical reads and
+fresh projection rebuild. No data conversion/deployment is claimed.
+
+Evidence Support withdrawal is held at `3c81d366`, tests/contracts `6307b091`, on
+`work/evidence-support-withdrawal`. It is source-authored and unexecuted. Original
+assertion reads and new-use eligibility are separate authoritative seams; public
+wiring is not enabled. Examinations fixed-cut history, Advisor new-use checks and
+Applications/read-status qualification remain before a coherent public workflow.
+No new Fitz projection behavior is accepted as the target. The held Access Cassie
+slice also has a source-reviewed integration checklist covering shared schema/DI,
+real native authorization fixtures, cursor exception doubles and compiled E2E type
+references; source review is not executed migration acceptance.
