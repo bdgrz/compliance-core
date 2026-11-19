@@ -62,7 +62,7 @@ public static class NativeFirstResponseResultExtensions
         if (native is not null || custom is not null)
             return native ?? custom;
         var options = http.RequestServices.GetRequiredService<IOptions<HttpJsonOptions>>().Value.SerializerOptions;
-        var typeInfo = (JsonTypeInfo<TOut>)options.GetTypeInfo(typeof(TOut));
+        var typeInfo = options.GetTypeInfo<TOut>();
         if (NativeFirstResponseContracts.Pending(typeof(TRequest).Name) && result.Value is OperationAcceptedResponse pending)
         {
             http.Response.Headers.Location = pending.StatusUrl;

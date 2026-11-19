@@ -685,7 +685,12 @@ public sealed class FitzApplicationDirectoryTests
             {
                 await using var tx = await inner.BeginAsync(row.Route, KvMode.ReadOnly);
                 var stored = await tx.GetAsync(row.Key);
-                payloads.Add(stored.Value!.Value.ToArray());
+                payloads.Add(stored switch
+                {
+                    KvFound found => found.Value.ToArray(),
+                    KvNotFound => throw new InvalidOperationException("The recorded KV row was not found."),
+                    null => throw new InvalidOperationException("The recorded KV row result was not returned."),
+                });
             }
             return payloads;
         }

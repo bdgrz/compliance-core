@@ -292,10 +292,9 @@ public sealed class BoundaryMcpAuthoringE2ETests(BrokerStackFixture broker)
         throw new TimeoutException($"{path} did not project revision {revision}: {lastResponse}");
     }
 
-    static async Task<Client> CreateFitzClientAsync(string endpoint)
+    static async Task<FitzClient> CreateFitzClientAsync(string endpoint)
     {
-        var client = new Client(new ClientConfig(new Uri(endpoint, UriKind.Absolute),
-            Timeout: TimeSpan.FromSeconds(10)));
+        var client = new FitzClient(new ClientConfig(new Uri(endpoint, UriKind.Absolute)) { Timeout = TimeSpan.FromSeconds(10) });
         try
         {
             await client.ConnectWhenReadyAsync(new ConnectWhenReadyOptions(TimeSpan.FromSeconds(15)));

@@ -117,8 +117,8 @@ public sealed class ProviderHttpMcpTests
         // Assert
         Assert.Equal(record, recordRetry);
         Assert.Equal(revise, reviseRetry);
-        Assert.Equal(recordedId.ToString(), JsonDocument.Parse(record).RootElement.GetProperty("operation_id").GetString());
-        Assert.Equal(revisionCommand.ToString(), JsonDocument.Parse(revise).RootElement.GetProperty("operation_id").GetString());
+        Assert.Equal(recordedId.ToString(), JsonElement.Parse(record).GetProperty("operation_id").GetString());
+        Assert.Equal(revisionCommand.ToString(), JsonElement.Parse(revise).GetProperty("operation_id").GetString());
         Assert.Equal(1L, recorded.Generation);
         Assert.Equal(0L, recorded.Revision);
         Assert.Equal(2L, revising.Generation);

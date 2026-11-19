@@ -1,16 +1,17 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Contracts;
+using Bdgrz.Compliance.Features.Commitments.Models;
 using Bdgrz.Compliance.Features.Commitments.Services;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
@@ -18,6 +19,7 @@ using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Models;
@@ -31,13 +33,17 @@ using Bdgrz.Compliance.Features.Policies.Rules;
 using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Responsibilities.Rules;
 using Bdgrz.Compliance.Features.Responsibilities.Services;
@@ -47,24 +53,18 @@ using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Contracts;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.Commitments.Models;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.Responsibilities.Commands;
-using Bdgrz.Compliance.Features.Responsibilities.Events;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Commitments.Rules;
 
 public sealed class CommitmentRules
@@ -96,11 +96,12 @@ public sealed class CommitmentRules
 
     // Fitz stream frames are u16; leave room for the Portia envelope and metadata.
     public const int MaximumDraftEventPayloadBytes = 48 * 1024;
-    static readonly HashSet<string> AllowedKinds = new(StringComparer.Ordinal)
-    {
+    static readonly HashSet<string> AllowedKinds =
+    [
+        with(StringComparer.Ordinal),
         "service_commitment", "system_requirement", "user_entity_responsibility",
         "subservice_responsibility",
-    };
+    ];
 
     readonly Uuid _tenantId;
     string _statement = string.Empty;

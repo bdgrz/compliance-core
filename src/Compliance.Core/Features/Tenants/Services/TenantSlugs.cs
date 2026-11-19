@@ -1,17 +1,18 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
@@ -29,17 +30,16 @@ using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.SourceFacts.Readers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Models;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Tenants.Services;
 
 /// <summary>
@@ -52,14 +52,15 @@ public static class TenantSlugs
 {
     // Every top-level server or client route segment. Adding a new top-level route requires adding
     // it here first, per the backlog's registry-ownership rule.
-    static readonly HashSet<string> ReservedRoutes = new(StringComparer.Ordinal)
-    {
+    static readonly HashSet<string> ReservedRoutes =
+    [
+        with(StringComparer.Ordinal),
         "api", "auth", "health", "healthz", "openapi", "login", "logout", "signup", "callback",
         "select", "tenants", "organizations", "new", "create", "account", "settings", "admin",
         "portfolio", "work", "my-work", "invitations", "invite", "help", "support", "docs",
         "status", "static", "assets", "www", "app",
         "mcp", "developer-login", "teams", "roles",
-    };
+    ];
 
     internal static IEnumerable<string> ReservedRouteSegments => ReservedRoutes;
 

@@ -1,17 +1,18 @@
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.ControlMappings.History;
@@ -20,8 +21,10 @@ using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Examinations.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
@@ -32,6 +35,7 @@ using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
@@ -43,18 +47,14 @@ using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Rules;
 
 /// <summary>Pure business rules over a reconstructed immutable template view; this is not an aggregate.</summary>
@@ -63,10 +63,8 @@ public sealed class MethodologyTemplateRules
 
     const int MaximumRecords = 100;
     const int MaximumTextLength = 2000;
-    static readonly HashSet<string> TemplateKinds = new(StringComparer.Ordinal)
-        { "soc2", "iso27001", "custom" };
-    static readonly HashSet<string> RecordKinds = new(StringComparer.Ordinal)
-        { "control", "policy", "evidence_request", "risk" };
+    static readonly HashSet<string> TemplateKinds = [with(StringComparer.Ordinal), "soc2", "iso27001", "custom"];
+    static readonly HashSet<string> RecordKinds = [with(StringComparer.Ordinal), "control", "policy", "evidence_request", "risk"];
 
     MethodologyTemplateView? _current;
     MethodologyTemplateView? _initial;

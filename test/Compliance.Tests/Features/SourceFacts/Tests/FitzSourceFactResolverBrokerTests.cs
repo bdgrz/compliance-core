@@ -31,8 +31,7 @@ public sealed class FitzSourceFactResolverBrokerTests(BrokerStackFixture broker)
         await Append(events, other, Uuid.CreateVersion4(), now);
         await Append(events, stream, Uuid.CreateVersion4(), now);
         await Append(events, stream, Uuid.CreateVersion4(), now, 1);
-        await using var fitz = new Client(new ClientConfig(new Uri(broker.WebSocketEndpoint, UriKind.Absolute),
-            Timeout: TimeSpan.FromSeconds(10)));
+        await using var fitz = new FitzClient(new ClientConfig(new Uri(broker.WebSocketEndpoint, UriKind.Absolute)) { Timeout = TimeSpan.FromSeconds(10) });
         await fitz.ConnectWhenReadyAsync(new ConnectWhenReadyOptions(TimeSpan.FromSeconds(15)));
         var resolver = new FitzSourceFactResolver(fitz.Stream,
             factory.Services.GetRequiredService<IDomainEventSerializer>());

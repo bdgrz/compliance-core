@@ -1,13 +1,16 @@
 using System.Text;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.ControlMappings.History;
@@ -25,6 +28,7 @@ using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
@@ -33,19 +37,15 @@ using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
-using Bdgrz.Compliance.Features.AccessReviews.Models;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Authorizers;
 using Bdgrz.Compliance.Features.Work.Authorizers;
+using Bdgrz.Compliance.Features.Work.Models;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessReviews.Services;
 
 /// <summary>
@@ -193,7 +193,7 @@ public static class AccessPopulationAnalysis
                      .Select(static pair => pair.Key).Order(StringComparer.Ordinal))
         {
             var paths = new SortedDictionary<string, List<EffectiveAccessPathView>>(StringComparer.Ordinal);
-            Walk(subject, [], new HashSet<string>(StringComparer.Ordinal) { subject });
+            Walk(subject, [], [with(StringComparer.Ordinal), subject]);
             foreach (var (entitlement, found) in paths)
             {
                 var direct = found.Any(static path => path.Hops.Count == 1);

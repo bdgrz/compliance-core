@@ -1,9 +1,10 @@
-using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
@@ -12,11 +13,12 @@ using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AccessReviews.Contracts;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.ControlMappings.History;
@@ -25,6 +27,8 @@ using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Examinations.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
@@ -33,6 +37,8 @@ using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Services;
+using Bdgrz.Compliance.Features.Operations.Commands;
+using Bdgrz.Compliance.Features.Operations.Events;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Processes;
@@ -40,9 +46,11 @@ using Bdgrz.Compliance.Features.Operations.Services;
 using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Providers.Models;
 using Bdgrz.Compliance.Features.Providers.Processes;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
@@ -53,8 +61,10 @@ using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Responsibilities.Rules;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Snapshots.Readers;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
@@ -65,18 +75,8 @@ using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
 using Bdgrz.Compliance.Features.Versioning.Services;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Events;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Examinations.Models;
-using Bdgrz.Compliance.Features.Operations.Commands;
-using Bdgrz.Compliance.Features.Operations.Events;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.Snapshots.Readers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Operations.Rules;
 
 /// <summary>
@@ -93,11 +93,12 @@ public sealed class TypeIIPeriodRules
     const int MaximumOccurrences = 10000;
     const int MaximumAmendments = 64;
     const int MaximumTextLength = 2000;
-    static readonly HashSet<string> ExecutiveRoles = new(StringComparer.OrdinalIgnoreCase)
-    {
+    static readonly HashSet<string> ExecutiveRoles =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "ceo", "ciso", "chief executive", "chief executive officer",
         "chief information security officer"
-    };
+    ];
 
     readonly Dictionary<Type, Action<object>> _reducers = [];
     readonly List<object> _pendingChanges = [];

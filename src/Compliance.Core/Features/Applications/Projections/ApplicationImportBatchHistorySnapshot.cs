@@ -1,6 +1,7 @@
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Events;
 using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
@@ -11,8 +12,7 @@ using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.Applications.Aggregates;
-using Bdgrz.Compliance.Features.Applications.Events;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Applications.Projections;
 
 /// <summary>Complete read composition of the batch's facts and current row choices at one certified native cut.</summary>
@@ -25,7 +25,7 @@ public sealed class ApplicationImportBatchHistorySnapshot
     {
         _cut = ApplicationImportBatchPreparedCut.Capture(batch);
         Facts = Array.AsReadOnly(facts.ToArray());
-        _correlations = new(correlations);
+        _correlations = [with(correlations)];
     }
     public IReadOnlyList<DomainEvent> Facts { get; }
     public IReadOnlyCollection<ApplicationImportRowCorrelated> Correlations => _correlations.Values;

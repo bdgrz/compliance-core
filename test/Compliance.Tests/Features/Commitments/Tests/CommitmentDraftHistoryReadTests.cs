@@ -332,7 +332,7 @@ public sealed class CommitmentDraftHistoryReadTests
             ListWasCalled = true;
             return RejectCursor
                 ? ValueTask.FromException<Page<CommitmentDraftRevisionView>>(
-                    new KvDirectoryQueryException())
+                    new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(Page);
         }
     }

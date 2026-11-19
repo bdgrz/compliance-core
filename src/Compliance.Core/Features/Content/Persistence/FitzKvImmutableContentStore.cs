@@ -1,16 +1,15 @@
 using System.Text;
 using System.Text.Json;
-using Cntryl.Fitz;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Content.Contracts;
@@ -22,7 +21,9 @@ using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Examinations.Rules;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
@@ -34,7 +35,9 @@ using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
@@ -43,20 +46,17 @@ using Bdgrz.Compliance.Features.Responsibilities.Rules;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SourceFacts.Readers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Content.Persistence;
 
 /// <summary>
@@ -116,9 +116,9 @@ sealed class FitzKvImmutableContentStore(IKvClient client) : IImmutableContentSt
         await using var tx = await client.BeginAsync(Route(realm, contentId), KvMode.ReadWrite, ct)
             .ConfigureAwait(false);
         var existing = await tx.GetAsync(ManifestKey(contentId), ct).ConfigureAwait(false);
-        if (existing.Found)
+        if (existing is KvFound { Value: var existingBytes })
         {
-            var stored = Parse(existing.Value!.Value.Span);
+            var stored = Parse(existingBytes.Span);
             if (stored.Sha256 == manifest.Sha256 && stored.Bytes == manifest.Bytes &&
                 stored.MediaType == manifest.MediaType && stored.Schema == manifest.Schema)
             {
@@ -153,9 +153,9 @@ sealed class FitzKvImmutableContentStore(IKvClient client) : IImmutableContentSt
         await using var tx = await client.BeginAsync(Route(realm, reference.ContentId), KvMode.ReadOnly, ct)
             .ConfigureAwait(false);
         var found = await tx.GetAsync(ManifestKey(reference.ContentId), ct).ConfigureAwait(false);
-        if (!found.Found)
+        if (found is not KvFound { Value: var manifestBytes })
             throw new ImmutableContentUnavailableException($"Content {reference.ContentId} has no manifest.");
-        var manifest = Parse(found.Value!.Value.Span);
+        var manifest = Parse(manifestBytes.Span);
         var expectedChunks = (int)((reference.Bytes + ChunkBytes - 1) / ChunkBytes);
         if (manifest.ContentId != reference.ContentId || manifest.Bytes != reference.Bytes ||
             manifest.Schema != reference.Schema || manifest.MediaType != reference.MediaType ||
@@ -170,12 +170,12 @@ sealed class FitzKvImmutableContentStore(IKvClient client) : IImmutableContentSt
         {
             var chunk = await tx.GetAsync(ChunkKey(reference.ContentId, index), ct).ConfigureAwait(false);
             var expected = Math.Min(ChunkBytes, buffer.Length - written);
-            if (!chunk.Found)
+            if (chunk is not KvFound { Value: var chunkBytes })
                 throw new ImmutableContentUnavailableException($"Content {reference.ContentId} chunk {index} is missing.");
-            if (chunk.Value!.Value.Length != expected)
+            if (chunkBytes.Length != expected)
                 throw new ImmutableContentIntegrityException(
                     $"Content {reference.ContentId} chunk {index} has the wrong length.");
-            chunk.Value.Value.Span.CopyTo(buffer.AsSpan(written));
+            chunkBytes.Span.CopyTo(buffer.AsSpan(written));
             written += expected;
         }
         if (!string.Equals(ContentDigest.Sha256(buffer), reference.Sha256, StringComparison.OrdinalIgnoreCase))

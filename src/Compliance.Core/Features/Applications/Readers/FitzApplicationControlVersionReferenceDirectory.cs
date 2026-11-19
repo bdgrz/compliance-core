@@ -1,20 +1,22 @@
-using Cntryl.Fitz;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.Applications.Services;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Events;
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Controls.Services;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
@@ -29,16 +31,14 @@ using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
-using Bdgrz.Compliance.Features.Controls.Events;
-using Bdgrz.Compliance.Features.Controls.Models;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Applications.Readers;
 
 sealed class FitzApplicationControlVersionReferenceDirectory(IKvClient client, IImmutableContentStore content)
@@ -91,7 +91,7 @@ sealed class FitzApplicationControlVersionReferenceDirectory(IKvClient client, I
                 if (discarding.CurrentVersionId is not null)
                     throw new InvalidOperationException(
                         "An approved control cannot discard its version-reference state.");
-                await ApplicationControlVersionReferenceSchema.States.DeleteAsync(Transaction,
+                await ApplicationControlVersionReferenceSchema.States.DeleteByIdAsync(Transaction,
                     discarded.ControlId, ct).ConfigureAwait(false);
                 break;
             case ControlSuccessorProposed proposed:

@@ -31,7 +31,7 @@ namespace Bdgrz.Compliance.Tests.Features.Processes.Tests;
 sealed class ProbeReceiveRecorder
 {
     readonly List<ProbeReceive> _calls = [];
-    readonly Dictionary<string, Func<ProbeReceive, Result<ReceiverOutcome>>> _scripts = new(StringComparer.Ordinal);
+    readonly Dictionary<string, Func<ProbeReceive, Result<ReceiverOutcome>>> _scripts = [with(StringComparer.Ordinal)];
 
     public IReadOnlyList<ProbeReceive> Calls => _calls;
 

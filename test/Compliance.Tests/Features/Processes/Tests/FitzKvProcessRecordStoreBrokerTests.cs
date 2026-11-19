@@ -34,8 +34,7 @@ public sealed class FitzKvProcessRecordStoreBrokerTests(BrokerStackFixture broke
     public async Task ShouldPersistAndScanLargeProcessGivenRealBroker()
     {
         // Arrange
-        await using var fitz = new Client(new ClientConfig(new Uri(broker.WebSocketEndpoint, UriKind.Absolute),
-            Timeout: TimeSpan.FromSeconds(10)));
+        await using var fitz = new FitzClient(new ClientConfig(new Uri(broker.WebSocketEndpoint, UriKind.Absolute)) { Timeout = TimeSpan.FromSeconds(10) });
         await fitz.ConnectWhenReadyAsync(new ConnectWhenReadyOptions(TimeSpan.FromSeconds(15)));
         var store = new FitzKvProcessRecordStore(fitz.Kv);
         var now = DateTimeOffset.UtcNow;

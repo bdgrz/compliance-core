@@ -29,9 +29,9 @@ public sealed class FitzSourceFactResolverTests
         var bytes = serializer.Serialize(expected);
         var other = new StreamRecord("stream://tenant-b/tenants/acme", 1, null, 2, 7, bytes, null, 0);
         var wanted = new StreamRecord(Stream.ToString(), 1, null, 3, 12, bytes, null, 0);
-        var streams = new ResolverStreamClient((route, start, _, _) => route == Stream.ToString()
-            ? Page(new StreamRecord(Stream.ToString(), 1, bytes), false)
-            : start == 0 ? Page(other, true) : Page(wanted, false));
+        var streams = new ResolverStreamClient((route, _) => route == Stream.ToString()
+            ? [Batch(new StreamRecord(Stream.ToString(), 1, bytes), 0, true)]
+            : [Batch(other, 0, false), Batch(wanted, 8, true)]);
         var resolver = new FitzSourceFactResolver(streams, serializer);
 
         // Act
@@ -43,10 +43,10 @@ public sealed class FitzSourceFactResolverTests
         Assert.Equal(1UL, fact.Locator.ResourcePosition);
         Assert.Equal(3UL, fact.Locator.RealmPosition);
         Assert.Equal(12UL, fact.Locator.GlobalPosition);
-        Assert.All(streams.Requests, request => Assert.Equal("stream://*/tenants/acme", request.Route));
-        Assert.Equal([0UL, 8UL], streams.Requests.Select(request => request.Start));
-        Assert.Equal(11UL, streams.Requests[1].Fingerprint);
-        Assert.Equal(100UL, streams.Requests[1].Watermark);
+        var request = Assert.Single(streams.Requests);
+        Assert.Equal("stream://*/tenants/acme", request.Route);
+        Assert.Equal(0UL, request.Start);
+        Assert.Equal(StreamReadMode.Replay, request.Mode);
     }
 
     [Fact]
@@ -54,8 +54,8 @@ public sealed class FitzSourceFactResolverTests
     {
         // Arrange
         await using var provider = EventPersistenceFrameTests.Compose();
-        var streams = new ResolverStreamClient((_, _, _, _) => Page(
-            new StreamRecord("stream://tenant-b/tenants/acme", 1, null, 2, 7, Array.Empty<byte>(), null, 0), false));
+        var streams = new ResolverStreamClient((_, _) => [Batch(
+            new StreamRecord("stream://tenant-b/tenants/acme", 1, null, 2, 7, Array.Empty<byte>(), null, 0), 0, true)]);
         var resolver = new FitzSourceFactResolver(streams, provider.GetRequiredService<IDomainEventSerializer>());
 
         // Act
@@ -65,7 +65,7 @@ public sealed class FitzSourceFactResolverTests
         Assert.IsType<SourceFactUnavailableException>(failure);
     }
 
-    static StreamReadPage Page(StreamRecord record, bool more) => new(
-        [new StreamReadItem(record.Route, StreamReadItemKind.Event, record, 0, 0, 0, null)],
-        new StreamReadCursor(record.Offset, null, record.RealmOffset, record.GlobalOffset, 11, 100, more));
+    static StreamReadBatch Batch(StreamRecord record, ulong from, bool caughtUp) => new(
+        [new StreamReadItem(record.Route, StreamReadItemKind.Event, record)], from,
+        checked(record.GlobalOffset!.Value + 1), caughtUp);
 }

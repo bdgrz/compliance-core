@@ -317,7 +317,7 @@ public sealed class InventoryBoundaryReferenceReadTests
             OnList?.Invoke();
             return RejectCursor
                 ? ValueTask.FromException<Page<ApplicationBoundaryReferenceView>>(
-                    new KvDirectoryQueryException())
+                    new KvDirectoryQueryException("Synthetic directory query failure."))
                 : ValueTask.FromResult(Page);
         }
 

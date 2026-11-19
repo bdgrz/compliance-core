@@ -1,49 +1,49 @@
 using System.Globalization;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Models;
 using Bdgrz.Compliance.Features.Controls.Projections;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Readers;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Readers;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Retention.Commands;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.Controls.Models;
-using Bdgrz.Compliance.Features.Evaluations.Readers;
-using Bdgrz.Compliance.Features.Evidence.Readers;
-using Bdgrz.Compliance.Features.Operations.Models;
-using Bdgrz.Compliance.Features.Operations.Readers;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.Remediation.Readers;
-using Bdgrz.Compliance.Features.Retention.Commands;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Controls.Services;
 
 /// <summary>
@@ -139,7 +139,7 @@ public sealed class EvidenceControlImpactContributor(EvidenceRequestReader evide
             if (!Uuid.TryParse(reference, null, out var id) || id == Uuid.Empty)
                 return;
             if (!artifacts.TryGetValue(id, out var reasons))
-                artifacts[id] = reasons = new SortedSet<string>(StringComparer.Ordinal);
+                artifacts[id] = reasons = [with(StringComparer.Ordinal)];
             reasons.Add(reason);
         }
     }

@@ -1,24 +1,27 @@
 using System.Text.Json;
-using Cntryl.Fitz;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Features.AccessControl.Projectors;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Models;
@@ -31,6 +34,7 @@ using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
@@ -39,21 +43,17 @@ using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Tenants.Readers;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Projectors;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.Tenants.Readers;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl.Authorizers;
 
 /// <summary>
@@ -71,8 +71,8 @@ sealed class FitzPermissionAuthorizer(IKvClient client, ITenantMembershipDirecto
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
         var stored = await Transaction.GetAsync(PermissionProjectionKeys.State, ct).ConfigureAwait(false);
-        var state = stored.Found
-            ? JsonSerializer.Deserialize(stored.Value!.Value.Span, ComplianceCoreJsonContext.Default.PermissionProjectionState)
+        var state = stored is KvFound { Value: var storedBytes }
+            ? JsonSerializer.Deserialize(storedBytes.Span, ComplianceCoreJsonContext.Default.PermissionProjectionState)
                 ?? new PermissionProjectionState()
             : new PermissionProjectionState();
         state.Apply(domainEvent);
@@ -119,12 +119,12 @@ sealed class FitzPermissionAuthorizer(IKvClient client, ITenantMembershipDirecto
         {
             var initialGrant = await initialRead.GetAsync(PermissionProjectionKeys.Grant(memberId, permission), ct)
                 .ConfigureAwait(false);
-            if (!initialGrant.Found)
+            if (initialGrant is not KvFound)
                 return false;
             var stored = await initialRead.GetAsync(PermissionProjectionKeys.State, ct).ConfigureAwait(false);
-            if (!stored.Found)
+            if (stored is not KvFound { Value: var storedBytes })
                 return false;
-            var state = JsonSerializer.Deserialize(stored.Value!.Value.Span,
+            var state = JsonSerializer.Deserialize(storedBytes.Span,
                 ComplianceCoreJsonContext.Default.PermissionProjectionState);
             currentAccess = state?.Explain(memberId)
                 .Where(edge => BuiltInRbac.IsBuiltInRole(tenantId, edge.RoleId)).ToArray() ?? [];
@@ -146,7 +146,7 @@ sealed class FitzPermissionAuthorizer(IKvClient client, ITenantMembershipDirecto
         {
             var currentGrant = await finalRead.GetAsync(
                 PermissionProjectionKeys.Grant(memberId, permission), ct).ConfigureAwait(false);
-            currentGrantFound = currentGrant.Found;
+            currentGrantFound = currentGrant is KvFound;
         }
         // A suspension can commit after the pending-event scan and before this final key read.
         // Hydrate the tenant-addressed member stream at the last positive decision point.
@@ -185,9 +185,9 @@ sealed class FitzPermissionAuthorizer(IKvClient client, ITenantMembershipDirecto
     {
         await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
         var stored = await tx.GetAsync(PermissionProjectionKeys.State, ct).ConfigureAwait(false);
-        if (!stored.Found)
+        if (stored is not KvFound { Value: var storedBytes })
             return [];
-        var state = JsonSerializer.Deserialize(stored.Value!.Value.Span,
+        var state = JsonSerializer.Deserialize(storedBytes.Span,
             ComplianceCoreJsonContext.Default.PermissionProjectionState);
         return state?.Explain(memberId) ?? [];
     }

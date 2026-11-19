@@ -21,7 +21,7 @@ The [domain model](docs/proposed/README.md) is the source of truth for business 
 
 ## Prerequisites
 
-- .NET SDK 10.0.403 (selected by `global.json`)
+- .NET SDK 11.0.100 (selected by `global.json`)
 - Docker with Compose
 - A GitHub token that can read the Cntryl package registry
 
