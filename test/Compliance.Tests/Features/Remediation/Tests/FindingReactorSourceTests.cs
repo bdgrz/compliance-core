@@ -112,7 +112,7 @@ public sealed class FindingReactorSourceTests
         var content = services.GetRequiredService<IImmutableContentStore>();
         var resolver = services.GetRequiredService<ISourceFactResolver>();
         var checkpoints = new InMemoryProjectionCheckpointStore();
-        ReactionCommandFailedException error;
+        Result result;
 
         // Act
         if (closure)
@@ -123,8 +123,8 @@ public sealed class FindingReactorSourceTests
             var altered = new DomainEventRecord(stream, changed, source.ResourceOffset, source.NextCursor);
             var reactor = new FindingClosureReactor(checkpoints, process, content, resolver);
             await new ReactorScenario(new TenantId(fixture.TenantId.ToString())).RunAsync(reactor);
-            error = await Assert.ThrowsAsync<ReactionCommandFailedException>(async () =>
-                await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<FindingClosureAccepted>(altered), CancellationToken.None));
+            result = await reactor.HandleAsync(
+                AdministratorTransitionHost.ReactionOf<FindingClosureAccepted>(altered), CancellationToken.None);
         }
         else
         {
@@ -134,15 +134,17 @@ public sealed class FindingReactorSourceTests
             var altered = new DomainEventRecord(stream, changed, source.ResourceOffset, source.NextCursor);
             var reactor = new CorrectiveActionMaterializationReactor(checkpoints, process, content, resolver);
             await new ReactorScenario(new TenantId(fixture.TenantId.ToString())).RunAsync(reactor);
-            error = await Assert.ThrowsAsync<ReactionCommandFailedException>(async () =>
-                await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<CorrectiveActionAdmitted>(altered), CancellationToken.None));
+            result = await reactor.HandleAsync(
+                AdministratorTransitionHost.ReactionOf<CorrectiveActionAdmitted>(altered), CancellationToken.None);
         }
         var name = closure ? FindingClosureEffects.ProcessName : FindingClosureEffects.MaterializationProcessName;
         var recordAfter = await services.GetRequiredService<IProcessRecordStore>().ReadAsync(ProcessKey.ForRoot(name,
             root, NativeFactReference.Of(stream, source.Event)));
 
         // Assert
-        Assert.False(error.Error.IsTransient);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.False(result.Error.IsTransient);
         Assert.Null(recordAfter);
     }
 }
