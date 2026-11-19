@@ -89,6 +89,29 @@ sealed class EvidenceRedactionOperations(EvidenceRedactionAccess access, Evidenc
         }
     }
 
+    public async ValueTask<Result<EvidenceRedactionView>> ReviewAsync(IRequestContext<ReviewEvidenceRedaction> context,
+        CancellationToken ct)
+    {
+        var request = context.Request;
+        var comments = string.IsNullOrWhiteSpace(request.Comments) ? null : request.Comments.Trim();
+        if (request.Approved && comments is not null || !request.Approved && comments is not { Length: > 0 and <= 4000 })
+            return Failure(RequestErrorKind.Validation, "A rejection requires bounded comments; approval has no rejection comments.");
+        var canonical = request with { Comments = comments };
+        var approval = new ApproveEvidenceRedaction(request.CommandId, request.TenantId, request.RedactionId,
+            request.ExpectedRevision, request.PreparationId, request.PreparedRevision, request.SeparationOfDutiesWaiverId);
+        var approvalContext = new RequestContext<ApproveEvidenceRedaction>(approval,
+            new RequestDispatchContext(context.Actor, context.Invocation));
+        try
+        {
+            return await ApproveCoreAsync(approvalContext, ct, canonical, context).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Unverified(error);
+        }
+    }
+
     static Result<EvidenceRedactionView> Unverified(ImmutableContentIntegrityException error) =>
         Result<EvidenceRedactionView>.Failure(new RequestError(RequestErrorKind.Conflict,
             "The exact native redaction source or original response cannot be verified.", error is ImmutableContentUnavailableException));
@@ -161,7 +184,8 @@ sealed class EvidenceRedactionOperations(EvidenceRedactionAccess access, Evidenc
         return await NativeContent.ResponseAsync<EvidenceRedactionView>(content, request.TenantId, accepted, ct).ConfigureAwait(false);
     }
 
-    async ValueTask<Result<EvidenceRedactionView>> ApproveCoreAsync(IRequestContext<ApproveEvidenceRedaction> context, CancellationToken ct)
+    async ValueTask<Result<EvidenceRedactionView>> ApproveCoreAsync(IRequestContext<ApproveEvidenceRedaction> context,
+        CancellationToken ct, ReviewEvidenceRedaction? review = null, IExecutionContext? execution = null)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
@@ -182,8 +206,9 @@ sealed class EvidenceRedactionOperations(EvidenceRedactionAccess access, Evidenc
         if (!allowed.IsSuccess)
             return Result<EvidenceRedactionView>.Failure(allowed.Error!);
         var actor = Actor(context, request.TenantId);
-        var operation = Provenance(request.CommandId, nameof(ApproveEvidenceRedaction), initial.Stream, actor,
-            request.ExpectedRevision, AuthoredIntentDigest.Compute(request), clock.GetUtcNow());
+        var operation = Provenance(request.CommandId, review is null ? nameof(ApproveEvidenceRedaction) : nameof(ReviewEvidenceRedaction),
+            initial.Stream, actor, request.ExpectedRevision,
+            review is null ? AuthoredIntentDigest.Compute(request) : AuthoredIntentDigest.Compute(review), clock.GetUtcNow());
         PreparedMutation? prepared = null;
         var accepted = await operations.ExecuteAsync(new NativeOperation<EvidenceRedaction>(AcceptedOperationBinding.Of(operation),
             () => new EvidenceRedaction(request.TenantId, request.RedactionId, request.CommandId), owner => owner.Acceptance,
@@ -245,11 +270,23 @@ sealed class EvidenceRedactionOperations(EvidenceRedactionAccess access, Evidenc
                     if (!eligible.IsSuccess)
                         return Result<FirstResponseDescriptor>.Failure(eligible.Error!);
                 }
-                var frozen = await FreezeAsync(request.TenantId, history.With(decision.Value!).View(pair.Original.Metadata.State,
-                    pair.Derived.Metadata.State, true), cancel).ConfigureAwait(false);
+                EvidenceRedactionRejectionFact? rejection = null;
+                if (review is { Approved: false })
+                {
+                    var refused = owner.DecideReject(request.CommandId, request.ExpectedRevision, request.PreparationId,
+                        request.PreparedRevision, pair.Derived.Metadata.SourcePosition, actor, at, availableAt,
+                        review.Comments!, waiverValue);
+                    if (!refused.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(refused.Error!);
+                    rejection = refused.Value;
+                }
+                var outcome = rejection is null ? history.With(decision.Value!) : history.With(rejection);
+                var frozen = await FreezeAsync(request.TenantId, outcome.View(pair.Original.Metadata.State,
+                    pair.Derived.Metadata.State, rejection is null), cancel).ConfigureAwait(false);
                 if (!frozen.IsSuccess)
                     return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
-                prepared = new PreparedMutation(cut, operation with { AcceptedAt = at }, proof, frozen.Value.Result, null, decision.Value);
+                prepared = new PreparedMutation(cut, operation with { AcceptedAt = at }, proof, frozen.Value.Result,
+                    null, decision.Value, rejection);
                 return Result<FirstResponseDescriptor>.Success(frozen.Value.Response);
             },
             (owner, first) =>
@@ -259,9 +296,12 @@ sealed class EvidenceRedactionOperations(EvidenceRedactionAccess access, Evidenc
                 if (approval.SeparationOfDutiesWaiver is { } waiver &&
                     !EvidenceRedactionRules.ValidWaiver(request.TenantId, request.RedactionId, waiver, owner.CurrentPreparation!, actor, clock.GetUtcNow()))
                     return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "The exact waiver is no longer eligible at append."));
-                return owner.Append(new EvidenceRedactionApprovedV2(request.TenantId, request.RedactionId, request.ExpectedRevision,
-                    approval, mutation.Operation, mutation.SourceProofs, first, mutation.Result), mutation.Cut);
-            }), context, ct).ConfigureAwait(false);
+                return mutation.Rejection is { } rejection
+                    ? owner.Append(new EvidenceRedactionRejected(request.TenantId, request.RedactionId, request.ExpectedRevision,
+                        rejection, mutation.Operation, mutation.SourceProofs, first, mutation.Result), mutation.Cut)
+                    : owner.Append(new EvidenceRedactionApprovedV2(request.TenantId, request.RedactionId, request.ExpectedRevision,
+                        approval, mutation.Operation, mutation.SourceProofs, first, mutation.Result), mutation.Cut);
+            }), execution ?? context, ct).ConfigureAwait(false);
         return await NativeContent.ResponseAsync<EvidenceRedactionView>(content, request.TenantId, accepted, ct).ConfigureAwait(false);
     }
 
@@ -296,5 +336,6 @@ sealed class EvidenceRedactionOperations(EvidenceRedactionAccess access, Evidenc
     static Result<EvidenceRedactionView> Failure(RequestErrorKind kind, string message) => Result<EvidenceRedactionView>.Failure(new RequestError(kind, message));
     sealed record FrozenResult(FirstResponseDescriptor Response, ImmutableContentRef Result);
     sealed record PreparedMutation(EvidenceRedactionPreparedCut Cut, OperationProvenance Operation, ImmutableContentRef SourceProofs,
-        ImmutableContentRef Result, EvidenceRedactionPreparationFact? Preparation, EvidenceRedactionApprovalFact? Approval);
+        ImmutableContentRef Result, EvidenceRedactionPreparationFact? Preparation, EvidenceRedactionApprovalFact? Approval,
+        EvidenceRedactionRejectionFact? Rejection = null);
 }

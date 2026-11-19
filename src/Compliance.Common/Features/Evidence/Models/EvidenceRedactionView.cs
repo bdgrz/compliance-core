@@ -6,4 +6,5 @@ namespace Bdgrz.Compliance.Features.Evidence.Models;
 public sealed record EvidenceRedactionView(Uuid TenantId, Uuid RedactionId, long Revision,
     IReadOnlyList<EvidenceRedactionPreparationView> Preparations,
     IReadOnlyList<EvidenceRedactionApprovalView> Approvals,
-    string OriginalState, string DerivedState, bool ApprovalCurrent);
+    string OriginalState, string DerivedState, bool ApprovalCurrent,
+    EvidenceRedactionRejectionFact? Rejection = null);

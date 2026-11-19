@@ -68,6 +68,7 @@ static class EvidenceRedactionHistory
         var nativeStarted = false;
         EvidenceRedactionPreparationFact? current = null;
         EvidenceRedactionApprovalFact? currentApproval = null;
+        EvidenceRedactionRejectionFact? rejection = null;
         DomainEvent? currentPreparationFact = null;
         DomainEvent? selectedLegacy = null;
         DateTimeOffset last = default;
@@ -84,6 +85,7 @@ static class EvidenceRedactionHistory
                 EvidenceRedactionApproved value => value.Approval.ApprovalId,
                 EvidenceRedactionPreparedV2 value => value.Preparation.PreparationId,
                 EvidenceRedactionApprovedV2 value => value.Approval.ApprovalId,
+                EvidenceRedactionRejected value => value.Rejection.ReviewId,
                 _ => throw Invalid("The redaction prefix contains an unsupported fact type/version."),
             };
             if (id == Uuid.Empty || !ids.Add(id))
@@ -91,8 +93,8 @@ static class EvidenceRedactionHistory
             if (fact is INativeOperationFact native)
             {
                 nativeStarted = true;
-                var kind = fact is EvidenceRedactionPreparedV2 ? nameof(PrepareEvidenceRedaction) : nameof(ApproveEvidenceRedaction);
-                if (native.Operation.LogicalId != id || native.FirstResponse is null || EvidenceRedaction.OperationResultOf(fact) is not { Schema: "mutation-result-content.v1" } ||
+                var kind = native.Operation.CommandKind;
+                if (!EvidenceRedaction.NativeKind(fact, kind) || native.Operation.LogicalId != id || native.FirstResponse is null || EvidenceRedaction.OperationResultOf(fact) is not { Schema: "mutation-result-content.v1" } ||
                     !NativeOwnerHistory.IsOwnRoot(owner, native.Operation, kind, (ulong)revision))
                     throw Invalid("The native redaction receipt differs from its exact root, actor, owner or original revision.");
                 if (id == owner.Acceptance.SelectedLogicalId && (owner.Acceptance.SelectedFact is not { } selected ||
@@ -129,11 +131,39 @@ static class EvidenceRedactionHistory
                     var preparedSource = currentPreparationFact ?? throw Invalid("A native approval has no exact preparation source record.");
                     Approve(value.TenantId, value.RedactionId, value.ExpectedRevision, value.Approval);
                     if (value.Operation.Actor != value.Approval.ApprovedBy || value.Operation.AcceptedAt != value.Approval.ApprovedAt ||
-                        value.Operation.AuthoredIntentSha256 != AuthoredIntentDigest.Compute(new ApproveEvidenceRedaction(value.Approval.ApprovalId,
-                            value.TenantId, value.RedactionId, value.ExpectedRevision, value.Approval.PreparationId,
-                            value.Approval.PreparedRevision, value.Approval.SeparationOfDutiesWaiver?.WaiverId)))
+                        value.Operation.AuthoredIntentSha256 != (value.Operation.CommandKind == nameof(ReviewEvidenceRedaction)
+                            ? AuthoredIntentDigest.Compute(new ReviewEvidenceRedaction(value.Approval.ApprovalId,
+                                value.TenantId, value.RedactionId, value.ExpectedRevision, value.Approval.PreparationId,
+                                value.Approval.PreparedRevision, true, null, value.Approval.SeparationOfDutiesWaiver?.WaiverId))
+                            : AuthoredIntentDigest.Compute(new ApproveEvidenceRedaction(value.Approval.ApprovalId,
+                                value.TenantId, value.RedactionId, value.ExpectedRevision, value.Approval.PreparationId,
+                                value.Approval.PreparedRevision, value.Approval.SeparationOfDutiesWaiver?.WaiverId))))
                         throw Invalid("The native approval differs from its original canonical actor and admission time.");
                     await Proofs().VerifyAsync(owner, value.SourceProofs, prepared, value.Approval, preparedSource, ct).ConfigureAwait(false);
+                    break;
+                case EvidenceRedactionRejected value:
+                    var rejectedPreparation = current ?? throw Invalid("A rejection has no exact current preparation.");
+                    var rejectedSource = currentPreparationFact ?? throw Invalid("A rejection has no exact preparation source.");
+                    var rejected = value.Rejection;
+                    var decision = EvidenceRedactionRules.Approve(owner.TenantId, owner.Id, revision, current,
+                        currentApproval, last, rejected.ReviewId, value.ExpectedRevision, rejected.PreparationId,
+                        rejected.PreparedRevision, rejected.DerivedSourcePosition, rejected.ReviewedBy,
+                        rejected.ReviewedAt, rejected.DerivedAvailableAt, rejected.SeparationOfDutiesWaiver);
+                    if (rejection is not null || value.TenantId != owner.TenantId || value.RedactionId != owner.Id ||
+                        !decision.IsSuccess || EvidenceRedaction.ApprovalProof(rejected) != decision.Value ||
+                        string.IsNullOrWhiteSpace(rejected.Comments) || rejected.Comments.Trim() != rejected.Comments ||
+                        rejected.Comments.Length > 4000 || value.Operation.Actor != rejected.ReviewedBy ||
+                        value.Operation.AcceptedAt != rejected.ReviewedAt ||
+                        value.Operation.AuthoredIntentSha256 != AuthoredIntentDigest.Compute(new ReviewEvidenceRedaction(
+                            rejected.ReviewId, value.TenantId, value.RedactionId, value.ExpectedRevision,
+                            rejected.PreparationId, rejected.PreparedRevision, false, rejected.Comments,
+                            rejected.SeparationOfDutiesWaiver?.WaiverId)))
+                        throw Invalid("The rejection differs from its exact current preparation and independent review.");
+                    await Proofs().VerifyAsync(owner, value.SourceProofs, rejectedPreparation,
+                        EvidenceRedaction.ApprovalProof(rejected), rejectedSource, ct).ConfigureAwait(false);
+                    rejection = rejected;
+                    revision = rejected.Revision;
+                    last = rejected.ReviewedAt;
                     break;
                 default:
                     throw Invalid("The redaction prefix contains another fact kind.");
@@ -142,13 +172,13 @@ static class EvidenceRedactionHistory
                 throw Invalid("A retained redaction fact exceeds its complete typed frame bound.");
         }
         if (owner.Revision != revision || owner.CurrentPreparation != current || owner.CurrentApproval != currentApproval ||
-            owner.CurrentPreparationFact != currentPreparationFact || owner.LastChangedAt != last ||
+            owner.CurrentPreparationFact != currentPreparationFact || owner.CurrentRejection != rejection || owner.LastChangedAt != last ||
             owner.HasSelectedLegacy != (selectedLegacy is not null) ||
             selectedLegacy is not null && (owner.SelectedLegacyFact is not { } actualLegacy || actualLegacy != selectedLegacy || actualLegacy.Metadata != selectedLegacy.Metadata))
             throw Invalid("The full redaction prefix differs from its compact current/selected authority.");
         owner.ReplayCut.Confirm(owner, digest, metadata, known);
         return new EvidenceRedactionHistorySnapshot(owner.TenantId, owner.Id, revision, facts,
-            Array.AsReadOnly(preparations.ToArray()), Array.AsReadOnly(approvals.ToArray()), legacyCount);
+            Array.AsReadOnly(preparations.ToArray()), Array.AsReadOnly(approvals.ToArray()), legacyCount, rejection);
 
         EvidenceRedactionProofs Proofs() => content is not null && resolver is not null
             ? new EvidenceRedactionProofs(events, resolver, content)
@@ -156,6 +186,8 @@ static class EvidenceRedactionHistory
 
         void Prepare(Uuid tenantId, Uuid redactionId, long expected, EvidenceRedactionPreparationFact value, DomainEvent fact)
         {
+            if (currentApproval is not null || rejection is not null)
+                throw Invalid("A terminal reviewed redaction cannot accept another preparation.");
             var decided = EvidenceRedactionRules.Prepare(owner.TenantId, owner.Id, revision, current, last, value.PreparationId,
                 expected, value.Original, value.Derived, value.Provenance, value.Reason, value.PreparedBy, value.PreparedAt);
             if (tenantId != owner.TenantId || redactionId != owner.Id || !decided.IsSuccess || decided.Value != value)
@@ -170,6 +202,8 @@ static class EvidenceRedactionHistory
 
         void Approve(Uuid tenantId, Uuid redactionId, long expected, EvidenceRedactionApprovalFact value)
         {
+            if (rejection is not null)
+                throw Invalid("A rejected redaction cannot later be approved.");
             var decided = EvidenceRedactionRules.Approve(owner.TenantId, owner.Id, revision, current, currentApproval, last,
                 value.ApprovalId, expected, value.PreparationId, value.PreparedRevision, value.DerivedSourcePosition, value.ApprovedBy,
                 value.ApprovedAt, value.DerivedAvailableAt, value.SeparationOfDutiesWaiver);

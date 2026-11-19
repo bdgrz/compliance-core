@@ -32,6 +32,8 @@ using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
 using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Evidence.Events;
+using Bdgrz.Compliance.Features.Evidence.Commands;
+using Bdgrz.Compliance.Features.Versioning.Services;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Providers.Projections;
@@ -50,10 +52,15 @@ public sealed class EvidenceArtifact : Aggregate
     EvidenceArtifactInspected? _inspection;
     EvidenceArtifactQuarantineReleased? _quarantineRelease;
     long _revision;
+    readonly Uuid _selectedCommandId;
+    ArtifactHandlingClassChanged? _lastHandlingClassChange;
+    ArtifactHandlingClassChanged? _selectedHandlingClassChange;
+    string? _handlingClass;
 
     public bool IsCreated => _registration is not null;
     public long Revision => _revision;
-    public EvidenceArtifactContent? Content => _registration?.Content;
+    public EvidenceArtifactContent? Content => _registration is null ? null :
+        _registration.Content with { HandlingClass = _handlingClass ?? _registration.Content.HandlingClass };
     public string? ContentSha256 => _registration?.ContentSha256;
     public long? ContentLength => _registration?.ContentLength;
     internal EvidenceArtifactRegistered? Registration => _registration;
@@ -62,13 +69,15 @@ public sealed class EvidenceArtifact : Aggregate
     public Uuid? QuarantineReleaseRequestId => _quarantineRelease?.RequestId;
     public EvidenceArtifactQuarantineReleased? QuarantineRelease => _quarantineRelease;
 
-    public EvidenceArtifact(Uuid tenantId, Uuid id)
+    public EvidenceArtifact(Uuid tenantId, Uuid id, Uuid selectedCommandId = default)
         : base(id, EvidenceStreams.Address(tenantId, id))
     {
         _tenantId = tenantId;
+        _selectedCommandId = selectedCommandId;
         On<EvidenceArtifactRegistered>(ev =>
         {
             _registration = ev;
+            _handlingClass = ev.Content.HandlingClass;
             State = EvidenceArtifactStates.PendingInspection;
             _revision = 1;
         });
@@ -81,6 +90,7 @@ public sealed class EvidenceArtifact : Aggregate
         });
         On<EvidenceArtifactDownloadIssued>(ApplyDownload);
         On<EvidenceArtifactQuarantineReleased>(ApplyQuarantineRelease);
+        On<ArtifactHandlingClassChanged>(ApplyHandlingClass);
     }
 
     public Result<EvidenceArtifactRegistration> Register(EvidenceArtifactContent requested, string sha256,
@@ -100,6 +110,69 @@ public sealed class EvidenceArtifact : Aggregate
         RaiseEvent(new EvidenceArtifactRegistered(_tenantId, Id, content, sha256, length, collector,
             registeredAt));
         return Result<EvidenceArtifactRegistration>.Success(new EvidenceArtifactRegistration(Id));
+    }
+
+    /// <summary>Changes the artifact's own handling class while preserving its immutable captured content identity.</summary>
+    public CommandFailure? ChangeHandlingClass(ChangeArtifactHandlingClass request, ActorReference actor, DateTimeOffset at)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(actor);
+        var accepted = _selectedHandlingClassChange ?? (_lastHandlingClassChange?.CommandId == request.CommandId
+            ? _lastHandlingClassChange : null);
+        if (accepted is not null)
+            return accepted.CommandId == request.CommandId && request.TenantId == _tenantId && request.ArtifactId == Id &&
+                   request.ExpectedRevision == accepted.OriginalExpectedRevision &&
+                   AuthoredIntentDigest.Compute(request) == accepted.AuthoredIntentSha256 &&
+                   actor.Kind == "member" && Uuid.TryParse(actor.Id, out var retryActor) &&
+                   Uuid.TryParse(accepted.ChangedBy.Id, out var originalActor) && retryActor == originalActor
+                ? null : CommandFailure.StateConflict("The classification command accepted another intent or actor.");
+        if (_registration is null)
+            return CommandFailure.MissingRecord("The evidence artifact was not found.");
+        if (State is EvidenceArtifactStates.Rejected or EvidenceArtifactStates.Disposed)
+            return CommandFailure.StateConflict("Rejected or disposed evidence cannot change handling class.");
+        if (request.ExpectedRevision != _revision)
+            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("evidence artifact", _revision));
+        var rationale = request.Rationale?.Trim() ?? string.Empty;
+        if (request.CommandId == Uuid.Empty || request.TenantId != _tenantId || request.ArtifactId != Id ||
+            request.HandlingClass is not ("public" or "internal" or "confidential" or "restricted") ||
+            rationale.Length is 0 or > EvidenceRules.MaximumTextLength || actor.Kind != "member" ||
+            !Uuid.TryParse(actor.Id, out var member) || member == Uuid.Empty ||
+            string.IsNullOrWhiteSpace(actor.Display) || actor.Display.Trim().Length > 200 ||
+            at == default || at < _registration.RegisteredAt ||
+            _lastHandlingClassChange is { } previous && at < previous.ChangedAt)
+            return CommandFailure.InvalidContent("Classification requires its exact scope, a valid class, rationale and member attribution.");
+        if (request.HandlingClass == Content!.HandlingClass)
+            return null;
+        RaiseEvent(new ArtifactHandlingClassChanged(_tenantId, Id, _revision + 1, request.CommandId,
+            request.ExpectedRevision, AuthoredIntentDigest.Compute(request), Content!.HandlingClass,
+            request.HandlingClass, rationale, actor with { Display = actor.Display.Trim() }, at));
+        return null;
+    }
+
+    void ApplyHandlingClass(ArtifactHandlingClassChanged ev)
+    {
+        if (_registration is null || ev.TenantId != _tenantId || ev.ArtifactId != Id || ev.CommandId == Uuid.Empty ||
+            ev.Revision != _revision + 1 || ev.OriginalExpectedRevision != _revision ||
+            State is EvidenceArtifactStates.Rejected or EvidenceArtifactStates.Disposed ||
+            ev.PreviousClass != Content!.HandlingClass || ev.HandlingClass == ev.PreviousClass ||
+            ev.HandlingClass is not ("public" or "internal" or "confidential" or "restricted") ||
+            string.IsNullOrWhiteSpace(ev.Rationale) || ev.Rationale.Trim() != ev.Rationale ||
+            ev.Rationale.Length > EvidenceRules.MaximumTextLength || ev.ChangedBy is not { Kind: "member" } ||
+            !Uuid.TryParse(ev.ChangedBy.Id, out var member) || member == Uuid.Empty ||
+            string.IsNullOrWhiteSpace(ev.ChangedBy.Display) || ev.ChangedBy.Display.Trim() != ev.ChangedBy.Display ||
+            ev.ChangedBy.Display.Length > 200 || ev.ChangedAt == default || ev.ChangedAt < _registration.RegisteredAt ||
+            _lastHandlingClassChange is { } previous && ev.ChangedAt < previous.ChangedAt ||
+            ev.AuthoredIntentSha256 is not { Length: 64 })
+            throw new InvalidOperationException("The evidence handling class change event is invalid.");
+        _handlingClass = ev.HandlingClass;
+        _lastHandlingClassChange = ev;
+        if (ev.CommandId == _selectedCommandId)
+        {
+            if (_selectedHandlingClassChange is not null)
+                throw new InvalidOperationException("The evidence handling class command is repeated.");
+            _selectedHandlingClassChange = ev;
+        }
+        _revision = ev.Revision;
     }
 
     public CommandFailure? RecordInspection(EvidenceInspectionOutcome outcome, DateTimeOffset inspectedAt)
