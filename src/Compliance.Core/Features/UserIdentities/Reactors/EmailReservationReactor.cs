@@ -48,7 +48,7 @@ public sealed partial class EmailReservationReactor(IProjectionCheckpointStore c
         // A second provider identity may assert an address already owned by another user. That
         // conflict is terminal for this event; retrying it would block all later registrations.
         if (!result.IsSuccess && result.Error.Kind != RequestErrorKind.Conflict)
-            throw new ReactionCommandFailedException(result.Error);
+            return Result.Failure(result.Error);
         return Result.Success;
     }
 }

@@ -40,9 +40,16 @@ public sealed partial class LinkImpactReviewWorkReactor(IProjectionCheckpointSto
             throw new ImmutableContentIntegrityException("The work-link source content differs from its native exact assessment.");
         if (assessment.RelatedReviewWorkIds.Count == 0 && assessment.RelatedCorrectiveActionIds.Count == 0)
             return Result.Success;
-        await ImpactReactionOutcomes.SendAsync(bus, new LinkImpactReviewWork(
-            EffectIdentity.CommandId(ev.Metadata.EventId, "change:impact-work-links", ev.SubjectId.ToString(), null),
-            ev.TenantId, ev.Header.ProgramId, ev.SubjectId, assessment.ContentVersion), context, ct).ConfigureAwait(false);
+        try
+        {
+            await ImpactReactionOutcomes.SendAsync(bus, new LinkImpactReviewWork(
+                EffectIdentity.CommandId(ev.Metadata.EventId, "change:impact-work-links", ev.SubjectId.ToString(), null),
+                ev.TenantId, ev.Header.ProgramId, ev.SubjectId, assessment.ContentVersion), context, ct).ConfigureAwait(false);
+        }
+        catch (ReactionCommandFailedException exception)
+        {
+            return Result.Failure(exception.Error);
+        }
         return Result.Success;
     }
 }

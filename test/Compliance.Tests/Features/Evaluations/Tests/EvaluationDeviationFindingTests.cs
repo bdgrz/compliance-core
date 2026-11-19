@@ -145,10 +145,9 @@ public sealed class EvaluationDeviationFindingTests
 
         // Assert
         var processorFailure = Assert.IsType<ProcessorFailureException>(error);
-        var failure = Assert.IsType<ReactionCommandFailedException>(processorFailure.InnerException);
-        Assert.Same(failure.Error, processorFailure.Error);
-        Assert.False(failure.Error.IsTransient);
-        Assert.Contains("differs", failure.Error.Message, StringComparison.Ordinal);
+        Assert.Null(processorFailure.InnerException);
+        Assert.False(processorFailure.Error!.IsTransient);
+        Assert.Contains("differs", processorFailure.Error.Message, StringComparison.Ordinal);
         Assert.Empty(scenario.SentRequests);
     }
 

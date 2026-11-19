@@ -74,7 +74,7 @@ public sealed partial class ControlEvaluationDeviationFindingReactor(
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 $"The evaluation submission cannot be verified yet: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 

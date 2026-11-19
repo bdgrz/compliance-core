@@ -103,11 +103,8 @@ public sealed class CassieReadModelSchemaTests
         _ = await command.ExecuteNonQueryAsync();
 
         // Act
-        await CassieRepositoryTestDatabase.WithSchemaSetupAsync(async () =>
-        {
-            await CassieReadModelSchema.InitializeAsync(database.DataSource);
-            await CassieReadModelSchema.InitializeAsync(database.DataSource);
-        });
+        await CassieReadModelSchema.InitializeAsync(database.DataSource);
+        await CassieReadModelSchema.InitializeAsync(database.DataSource);
         command.CommandText = "SELECT value FROM schema_startup_probe WHERE id = 'kept'";
         var value = await command.ExecuteScalarAsync();
 

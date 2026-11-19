@@ -99,7 +99,7 @@ public sealed partial class TenantRbacBootstrapReactor(
             {
                 var assigned = await bus.SendAsync(assignment, context, ct).ConfigureAwait(false);
                 if (!assigned.IsSuccess)
-                    throw new ReactionCommandFailedException(assigned.Error);
+                    return Result.Failure(assigned.Error);
             }
             else if (command is DefineRole or DefineTeam)
             {
@@ -108,7 +108,7 @@ public sealed partial class TenantRbacBootstrapReactor(
                 // checkpoint: the accepted definition stays authoritative.
                 var defined = await bus.SendAsync((IRequest)command, context, ct).ConfigureAwait(false);
                 if (!defined.IsSuccess && defined.Error.Kind != RequestErrorKind.Conflict)
-                    throw new ReactionCommandFailedException(defined.Error);
+                    return Result.Failure(defined.Error);
             }
             else
             {

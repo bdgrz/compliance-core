@@ -9,7 +9,6 @@ namespace Bdgrz.Compliance.Tests.Testing;
 sealed class CassieRepositoryTestDatabase : IAsyncDisposable
 {
     static readonly ConcurrentDictionary<(string ConnectionString, string Name), ConcurrentStack<AvailableDatabase>> Pools = new();
-    static readonly SemaphoreSlim SchemaSetup = new(1, 1);
     readonly ConcurrentStack<AvailableDatabase> _pool;
     readonly AvailableDatabase _available;
     bool _disposed;
@@ -27,31 +26,14 @@ sealed class CassieRepositoryTestDatabase : IAsyncDisposable
     public CassieDataSource DataSource { get; }
     public CassieProjectionDatabase Database { get; }
 
-    public static async Task WithSchemaSetupAsync(Func<Task> setup, CancellationToken ct = default)
-    {
-        await SchemaSetup.WaitAsync(ct);
-        try
-        {
-            await setup();
-        }
-        finally
-        {
-            SchemaSetup.Release();
-        }
-    }
+    public static Task WithSchemaSetupAsync(Func<Task> setup, CancellationToken ct = default) =>
+        CassieReadModelSchema.WithSchemaSetupAsync(setup, ct);
 
     public static async ValueTask<CassieRepositoryTestDatabase> OpenAsync(
         IEnumerable<string>? additionalStatements = null, string? poolName = null, CancellationToken ct = default)
     {
-        await SchemaSetup.WaitAsync(ct);
-        try
-        {
-            return await OpenCoreAsync(additionalStatements, poolName, ct);
-        }
-        finally
-        {
-            SchemaSetup.Release();
-        }
+        return await CassieReadModelSchema.WithSchemaSetupAsync(
+            () => OpenCoreAsync(additionalStatements, poolName, ct).AsTask(), ct).ConfigureAwait(false);
     }
 
     static async ValueTask<CassieRepositoryTestDatabase> OpenCoreAsync(
@@ -77,7 +59,7 @@ sealed class CassieRepositoryTestDatabase : IAsyncDisposable
             await database.Database.InitializeAsync(ct);
             if (available.StandardTables is null)
             {
-                await CassieReadModelSchema.InitializeAsync(database.DataSource, ct);
+                await CassieReadModelSchema.InitializeCoreAsync(database.DataSource, ct);
                 available.StandardTables = (await database.ReadTablesAsync(ct))
                     .Select(static table => Qualified(table.Schema, table.Table)).ToHashSet(StringComparer.Ordinal);
             }
@@ -109,18 +91,11 @@ sealed class CassieRepositoryTestDatabase : IAsyncDisposable
         }
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync() => new(CassieReadModelSchema.WithSchemaSetupAsync(async () =>
     {
-        await SchemaSetup.WaitAsync();
-        try
-        {
-            await DisposeCoreAsync(reuse: true);
-        }
-        finally
-        {
-            SchemaSetup.Release();
-        }
-    }
+        await DisposeCoreAsync(reuse: true).ConfigureAwait(false);
+        return true;
+    }));
 
     async ValueTask DisposeCoreAsync(bool reuse)
     {

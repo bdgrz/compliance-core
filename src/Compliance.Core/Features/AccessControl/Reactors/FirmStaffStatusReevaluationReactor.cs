@@ -59,7 +59,16 @@ sealed partial class FirmStaffStatusReevaluationReactor(IProjectionCheckpointSto
                 throw new InvalidOperationException("Registered assignment discovery requires canonical tenant identities.");
             if (seen.Add(tenantId))
             {
-                var reactionOutcome1 = await discovery.ReconcileStatusAsync(tenantId, context, changed, ct).ConfigureAwait(false);
+                Result reactionOutcome1;
+                try
+                {
+                    reactionOutcome1 = await discovery.ReconcileStatusAsync(tenantId, context, changed, ct)
+                        .ConfigureAwait(false);
+                }
+                catch (ReactionCommandFailedException exception)
+                {
+                    return Result.Failure(exception.Error);
+                }
                 if (!reactionOutcome1.IsSuccess)
                     return reactionOutcome1;
             }
