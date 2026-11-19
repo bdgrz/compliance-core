@@ -1,8 +1,8 @@
 using System.Globalization;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Applications.Services;
 
 static class ApplicationImportVisibilityPaging
@@ -14,14 +14,14 @@ static class ApplicationImportVisibilityPaging
         if (cursor is null)
             return null;
         if (cursor.Length > 8192)
-            throw new KvDirectoryQueryException();
+            throw new KvDirectoryQueryException("The application visibility cursor exceeds the supported length.");
         if (!cursor.StartsWith(Prefix, StringComparison.Ordinal))
             return epoch == 0 ? cursor : throw new ApplicationImportVisibilityChangedException();
         var parts = cursor[Prefix.Length..].Split(':', 3);
         if (parts.Length != 3 || parts[0] != tenantId.ToString() ||
             !long.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var cursorEpoch) ||
             cursorEpoch < 0 || string.IsNullOrWhiteSpace(parts[2]))
-            throw new KvDirectoryQueryException();
+            throw new KvDirectoryQueryException("The application visibility cursor is invalid.");
         return cursorEpoch == epoch ? parts[2] : throw new ApplicationImportVisibilityChangedException();
     }
 

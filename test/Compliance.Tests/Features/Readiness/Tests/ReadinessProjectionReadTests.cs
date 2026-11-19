@@ -53,12 +53,12 @@ public sealed class ReadinessProjectionReadTests
         await fixture.Scenario(fixture.RunnerUserId)
             .When(new RunReadinessAssessment(assessmentId, fixture.TenantId, fixture.ProgramId, 0))
             .ExpectSuccess();
-        var before = await fixture.QueryAsync<ListReadinessAssessments, Cntryl.Fitz.Extensions.Page<ReadinessAssessmentSummaryView>>(
+        var before = await fixture.QueryAsync<ListReadinessAssessments, Page<ReadinessAssessmentSummaryView>>(
             new ListReadinessAssessments(fixture.TenantId, fixture.ProgramId));
 
         // Act
         var process = await ReadinessProcesses.RunRunAsync(provider, fixture.TenantId, fixture.ProgramId, assessmentId);
-        var after = await fixture.QueryAsync<ListReadinessAssessments, Cntryl.Fitz.Extensions.Page<ReadinessAssessmentSummaryView>>(
+        var after = await fixture.QueryAsync<ListReadinessAssessments, Page<ReadinessAssessmentSummaryView>>(
             new ListReadinessAssessments(fixture.TenantId, fixture.ProgramId));
 
         // Assert

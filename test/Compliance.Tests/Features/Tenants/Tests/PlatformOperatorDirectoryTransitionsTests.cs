@@ -43,7 +43,8 @@ public sealed class PlatformOperatorDirectoryTransitionsTests
         var mark = new PlatformOperatorPrimaryMarkAccepted(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 0,
             Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, Uuid.CreateVersion4());
 
-        // Act and assert
+        // Act
+        // Assert
         Assert.Throws<InvalidOperationException>(() => PlatformOperatorDirectoryTransitions.Apply(null, mark));
     }
 
@@ -60,7 +61,8 @@ public sealed class PlatformOperatorDirectoryTransitionsTests
             lineage, 2, Uuid.CreateVersion4(), Uuid.CreateVersion4());
         var wrongGrant = wrongReservation with { GrantEpisodeId = Uuid.CreateVersion4(), ReservationEventId = reservation };
 
-        // Act and assert
+        // Act
+        // Assert
         Assert.Throws<InvalidOperationException>(() => PlatformOperatorDirectoryTransitions.Apply(row, wrongReservation));
         Assert.Throws<InvalidOperationException>(() => PlatformOperatorDirectoryTransitions.Apply(row, wrongGrant));
     }

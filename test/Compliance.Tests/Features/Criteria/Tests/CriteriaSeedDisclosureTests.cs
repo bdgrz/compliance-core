@@ -132,7 +132,8 @@ public sealed class CriteriaSeedDisclosureTests
             Uuid.CreateVersion4(), "Privacy is limited.", Actor);
         var fact = DomainEventSeed.Attach(foreign, owner.Id, 1);
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.Throws<InvalidOperationException>(() => new AggregateScenario<CriteriaSeedDisclosure>(owner).Given(fact));
     }
 

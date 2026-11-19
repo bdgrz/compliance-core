@@ -151,7 +151,7 @@ public sealed class CriteriaEntryDecisionAuthorityTests
         readonly Uuid _entryOperation = Uuid.CreateVersion4();
         readonly Uuid _user = Uuid.CreateVersion4();
         CriteriaPublicationProof? _published;
-        EventStreamAddress? _claimStream;
+        readonly EventStreamAddress? _claimStream;
 
         public Fixture(ulong proposalArea = 6)
         {

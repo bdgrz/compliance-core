@@ -17,7 +17,8 @@ public sealed class CriteriaValueEditionParticipantVerifierTests
         var fixture = new Fixture();
         var verifier = fixture.Verifier();
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.True(await verifier.ObserveAsync(fixture.Request, CancellationToken.None));
         Assert.True(await verifier.ObserveAsync(fixture.Renamed, CancellationToken.None));
         Assert.True(await verifier.ObserveAsync(fixture.Completed, CancellationToken.None));

@@ -346,9 +346,8 @@ public sealed class TenantRbacBootstrapReactorTests
         var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => scenario.RunAsync(reactor));
 
         // Assert
-        var error = Assert.IsType<ReactionCommandFailedException>(failure.InnerException);
-        Assert.Same(error.Error, failure.Error);
-        Assert.Equal(RequestErrorKind.Validation, error.Error.Kind);
+        Assert.Null(failure.InnerException);
+        Assert.Equal(RequestErrorKind.Validation, failure.Error!.Kind);
         Assert.Equal(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
     }

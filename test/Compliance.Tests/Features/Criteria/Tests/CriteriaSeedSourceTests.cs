@@ -75,7 +75,8 @@ public sealed class CriteriaSeedSourceTests
         // Arrange
         var fixture = new Fixture(includeBinding: true, bindingArea: 5);
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await fixture.ReadParentAsync());
     }
 

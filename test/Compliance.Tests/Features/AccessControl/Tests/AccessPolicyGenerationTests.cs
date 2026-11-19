@@ -35,7 +35,7 @@ public sealed class AccessPolicyGenerationTests
     }
 
     [Fact]
-    public void ShouldReplayOldExactActivationAfterLaterGeneration()
+    public void ShouldReplayActivationGivenAnOlderExactGenerationHasBeenSuperseded()
     {
         // Arrange
         var firstId = Uuid.CreateVersion4();
@@ -65,7 +65,7 @@ public sealed class AccessPolicyGenerationTests
     }
 
     [Fact]
-    public void ShouldRejectStalePositionAndNonIncreasingGeneration()
+    public void ShouldRejectPolicyGenerationGivenItsPositionIsStaleOrNotIncreasing()
     {
         // Arrange
         var firstId = Uuid.CreateVersion4();
@@ -107,7 +107,7 @@ public sealed class AccessPolicyGenerationTests
     }
 
     [Fact]
-    public void ShouldPermitRestoringContentAtANewerGeneration()
+    public void ShouldRestorePolicyContentGivenANewerGenerationIsAppended()
     {
         // Arrange
         var original = Content();
@@ -140,13 +140,15 @@ public sealed class AccessPolicyGenerationTests
         var original = Assert.IsType<AccessPolicyActivated>(Assert.Single(source.PendingEvents));
         var corrupt = original with { ExpectedPosition = 1 };
 
-        // Act and Assert
+        // Act
         var replay = new AggregateScenario<AccessPolicyGeneration>(new AccessPolicyGeneration(operation));
+
+        // Assert
         Assert.Throws<InvalidOperationException>(() => replay.Given(corrupt));
     }
 
     [Fact]
-    public void ShouldRefusePolicyContentAboveProvisionalLimit()
+    public void ShouldRefusePolicyContentGivenItExceedsTheCurrentLimit()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();
@@ -164,7 +166,7 @@ public sealed class AccessPolicyGenerationTests
     }
 
     [Fact]
-    public void ShouldAcceptPolicyContentAtProvisionalLimit()
+    public void ShouldAcceptPolicyContentGivenItIsAtTheCurrentLimit()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();
@@ -191,8 +193,10 @@ public sealed class AccessPolicyGenerationTests
         var fact = Assert.IsType<AccessPolicyActivated>(Assert.Single(source.PendingEvents));
         var corrupt = fact with { Content = fact.Content with { Bytes = 16 * 1024 + 1 } };
 
-        // Act and Assert
+        // Act
         var replay = new AggregateScenario<AccessPolicyGeneration>(new AccessPolicyGeneration(operation));
+
+        // Assert
         Assert.Throws<InvalidOperationException>(() => replay.Given(corrupt));
     }
 
@@ -201,7 +205,7 @@ public sealed class AccessPolicyGenerationTests
     [InlineData("bytes")]
     [InlineData("schema")]
     [InlineData("large")]
-    public void ShouldRejectInvalidOrUnboundedReference(string error)
+    public void ShouldRejectPolicyReferenceGivenItIsInvalidOrUnbounded(string error)
     {
         // Arrange
         var operation = Uuid.CreateVersion4();

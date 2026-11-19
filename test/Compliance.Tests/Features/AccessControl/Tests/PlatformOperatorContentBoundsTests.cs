@@ -11,7 +11,7 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 public sealed class PlatformOperatorContentBoundsTests
 {
     [Fact]
-    public void ShouldRejectOversizedIssuerBeforeAppendingOperatorGrant()
+    public void ShouldRejectGrantGivenTheIssuerIsOversized()
     {
         // Arrange
         var user = Uuid.CreateVersion4();
@@ -30,7 +30,7 @@ public sealed class PlatformOperatorContentBoundsTests
     }
 
     [Fact]
-    public void ShouldRejectOversizedIssuerBeforeAppendingOperatorRevocation()
+    public void ShouldRejectRevocationGivenTheIssuerIsOversized()
     {
         // Arrange
         var user = Uuid.CreateVersion4();
@@ -54,7 +54,7 @@ public sealed class PlatformOperatorContentBoundsTests
     }
 
     [Fact]
-    public void ShouldRejectEscapedBusinessPayloadEvenWhenIndividualFieldsFit()
+    public void ShouldRejectBusinessPayloadGivenEscapingExceedsTheLimit()
     {
         // Arrange
         var user = Uuid.CreateVersion4();
@@ -78,7 +78,7 @@ public sealed class PlatformOperatorContentBoundsTests
     }
 
     [Fact]
-    public void ShouldRejectOversizedBusinessPayloadDuringReplay()
+    public void ShouldRejectBusinessPayloadGivenReplayContainsOversizedContent()
     {
         // Arrange
         var user = Uuid.CreateVersion4();
@@ -90,7 +90,8 @@ public sealed class PlatformOperatorContentBoundsTests
             new DateTimeOffset(2026, 11, 5, 12, 0, 0, TimeSpan.Zero)));
         var scenario = new AggregateScenario<PlatformOperator>(new PlatformOperator(user, operation));
 
-        // Act and assert
+        // Act
+        // Assert
         Assert.Throws<InvalidOperationException>(() => scenario.Given(fact));
     }
 

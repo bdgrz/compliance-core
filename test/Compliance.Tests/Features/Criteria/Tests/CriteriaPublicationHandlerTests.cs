@@ -22,7 +22,8 @@ public sealed class CriteriaPublicationHandlerTests
         var fence = new CriterionWitnessPinFenced(start.EditionId, start.DraftGeneration, start.WitnessIdentifier,
             start.PublicationAttemptId, start.AttemptOrdinal, start.WitnessIncarnationId, abort.Metadata.EventId);
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.True(PinCriteriaPublicationWitnessHandler.MatchesFence(start, fence, abort));
         Assert.False(PinCriteriaPublicationWitnessHandler.MatchesFence(start, fence with { AttemptOrdinal = 2 }, abort));
         Assert.False(PinCriteriaPublicationWitnessHandler.MatchesFence(start, fence with { PublicationAbortedEventId = Uuid.CreateVersion4() }, abort));

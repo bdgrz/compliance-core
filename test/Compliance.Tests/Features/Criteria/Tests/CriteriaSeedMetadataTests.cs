@@ -134,7 +134,8 @@ public sealed class CriteriaSeedMetadataTests
             "https://example.test/criteria", "identifiers_and_original_summaries", true, Actor);
         var persisted = DomainEventSeed.Attach(forged, owner.Id, 1);
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.Throws<InvalidOperationException>(() =>
             new AggregateScenario<CriteriaSeedMetadata>(owner).Given(persisted));
     }

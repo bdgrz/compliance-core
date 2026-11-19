@@ -1,10 +1,11 @@
 using System.Security.Claims;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
@@ -15,15 +16,13 @@ using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Services;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Changes.Services;
 
 /// <summary>Enforces the internal visibility rule for restricted change and incident records.</summary>
 public sealed class RestrictedComplianceRecordVisibility(IPermissionAuthorizer permissions)
 {
-    static readonly HashSet<string> HandlingClasses = new(StringComparer.Ordinal)
-        { "public", "internal", "confidential", "restricted" };
+    static readonly HashSet<string> HandlingClasses = [with(StringComparer.Ordinal), "public", "internal", "confidential", "restricted"];
 
     public async ValueTask<bool> CanReadAsync(Uuid tenantId, ClaimsPrincipal actor,
         string? handlingClass, IReadOnlyCollection<Uuid> assessorMemberIds,

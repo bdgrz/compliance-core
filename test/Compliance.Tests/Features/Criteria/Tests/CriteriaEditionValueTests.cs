@@ -165,7 +165,7 @@ public sealed class CriteriaEditionValueTests
     }
 
     [Fact]
-    public void ShouldRejectForeignSourceOrOversizedValueWithoutFact()
+    public void ShouldRejectValueGivenTheSourceIsForeignOrTheValueIsOversized()
     {
         // Arrange
         var fixture = new Fixture("field", "coverage_note", null, null, "Partial.", null);

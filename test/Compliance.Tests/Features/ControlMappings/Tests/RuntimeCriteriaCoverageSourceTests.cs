@@ -34,7 +34,8 @@ public sealed class RuntimeCriteriaCoverageSourceTests
         var fixture = new Fixture();
         fixture.Reader.IncludePublication = false;
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.False(await fixture.Source.CoversAsync(fixture.Edition.Id, fixture.Publication, CancellationToken.None));
     }
 
@@ -45,7 +46,8 @@ public sealed class RuntimeCriteriaCoverageSourceTests
         var fixture = new Fixture();
         fixture.Entries.Pending = true;
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.False(await fixture.Source.CoversAsync(fixture.Edition.Id, fixture.Publication, CancellationToken.None));
     }
 
@@ -56,7 +58,8 @@ public sealed class RuntimeCriteriaCoverageSourceTests
         var fixture = new Fixture();
         fixture.Runtime.Row = fixture.Runtime.Row with { IncarnationId = Uuid.CreateVersion4() };
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.False(await fixture.Source.CoversAsync(fixture.Edition.Id, fixture.Publication, CancellationToken.None));
     }
 

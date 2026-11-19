@@ -74,19 +74,20 @@ public sealed class PlatformCriteriaSeedWriterTests
     }
 
     [Fact]
-    public async Task ShouldRejectNonSystemExecutionBeforeReadingOrWriting()
+    public async Task ShouldRejectNonSystemExecutionGivenSystemActorIsRequired()
     {
         // Arrange
         var fixture = new Fixture(qualifyHead: true, system: false);
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             await fixture.Writer.BindEditionAsync(fixture.Header, fixture.Operation, CancellationToken.None));
         Assert.Equal(0, fixture.Executor.Executions);
     }
 
     [Fact]
-    public async Task ShouldKeepUnobservedMetadataAndCoveragePendingWithoutWriting()
+    public async Task ShouldKeepMetadataPendingGivenMetadataAndCoverageAreUnobserved()
     {
         // Arrange
         var fixture = new Fixture(qualifyHead: true);
@@ -212,7 +213,7 @@ public sealed class PlatformCriteriaSeedWriterTests
     }
 
     [Fact]
-    public async Task ShouldResolveLostMetadataAcknowledgementOnlyFromExactSource()
+    public async Task ShouldResolveLostMetadataAcknowledgementGivenOnlyTheExactSourceIsObserved()
     {
         // Arrange
         var fixture = new Fixture(qualifyHead: true, qualifyCoverage: true, qualifyFactHead: true);
@@ -232,7 +233,7 @@ public sealed class PlatformCriteriaSeedWriterTests
     }
 
     [Fact]
-    public async Task ShouldReconcileConcurrentExactMetadataWinnerWithoutAnotherAppend()
+    public async Task ShouldReconcileMetadataWinnerGivenTheConcurrentAppendIsExact()
     {
         // Arrange
         var fixture = new Fixture(qualifyHead: true, qualifyCoverage: true, qualifyFactHead: true);
@@ -268,7 +269,7 @@ public sealed class PlatformCriteriaSeedWriterTests
         // Arrange
         var fixture = new Fixture(qualifyHead: true, qualifyCoverage: true, qualifyFactHead: true);
         var binding = await fixture.Writer.BindEditionAsync(fixture.Header, fixture.Operation, CancellationToken.None);
-        var gap = PlatformCriteriaCatalog.SeedEdition().SupportGaps.First();
+        var gap = PlatformCriteriaCatalog.SeedEdition().SupportGaps[0];
         var operation = PlatformCriteriaSeedDefinition.OperationOf(fixture.Header.EditionId, "disclosure:" + gap.Category + ":" + gap.Code);
 
         // Act
@@ -286,7 +287,7 @@ public sealed class PlatformCriteriaSeedWriterTests
         // Arrange
         var fixture = new Fixture(qualifyHead: true, qualifyCoverage: true, qualifyFactHead: true);
         var binding = await fixture.Writer.BindEditionAsync(fixture.Header, fixture.Operation, CancellationToken.None);
-        var gap = PlatformCriteriaCatalog.SeedEdition().SupportGaps.First();
+        var gap = PlatformCriteriaCatalog.SeedEdition().SupportGaps[0];
         var operation = PlatformCriteriaSeedDefinition.OperationOf(fixture.Header.EditionId, "disclosure:" + gap.Category + ":" + gap.Code);
         fixture.Executor.BeforeAppend = owner =>
         {
@@ -333,7 +334,7 @@ public sealed class PlatformCriteriaSeedWriterTests
     }
 
     [Fact]
-    public async Task ShouldConfirmExactMetadataOnlyWithQualifiedSourceCoverage()
+    public async Task ShouldConfirmMetadataGivenSourceCoverageIsQualified()
     {
         // Arrange
         var fixture = new Fixture(qualifyHead: true, qualifyCoverage: true);
@@ -382,7 +383,7 @@ public sealed class PlatformCriteriaSeedWriterTests
         // Arrange
         var fixture = new Fixture(qualifyHead: true, qualifyCoverage: true);
         var binding = await fixture.Writer.BindEditionAsync(fixture.Header, fixture.Operation, CancellationToken.None);
-        var gap = PlatformCriteriaCatalog.SeedEdition().SupportGaps.First();
+        var gap = PlatformCriteriaCatalog.SeedEdition().SupportGaps[0];
         var operation = PlatformCriteriaSeedDefinition.OperationOf(fixture.Header.EditionId,
             "disclosure:" + gap.Category + ":" + gap.Code);
         var owner = new CriteriaSeedDisclosure(fixture.Header.EditionId, gap.Category, gap.Code);
@@ -399,7 +400,7 @@ public sealed class PlatformCriteriaSeedWriterTests
     }
 
     [Fact]
-    public async Task ShouldKeepAnUnobservedEntryPendingWithoutCreatingAProposal()
+    public async Task ShouldKeepEntryPendingGivenTheEntryIsUnobserved()
     {
         // Arrange
         var fixture = new Fixture(qualifyHead: true, qualifyCoverage: true);
@@ -417,7 +418,7 @@ public sealed class PlatformCriteriaSeedWriterTests
     }
 
     [Fact]
-    public async Task ShouldRejectChangedSeedEntryWithoutWriting()
+    public async Task ShouldRejectSeedEntryGivenItsContentChanged()
     {
         // Arrange
         var fixture = new Fixture(qualifyHead: true);
@@ -435,7 +436,7 @@ public sealed class PlatformCriteriaSeedWriterTests
     }
 
     [Fact]
-    public async Task ShouldClaimThenProposeOneSeedEntryAndKeepOutcomePending()
+    public async Task ShouldKeepSeedOutcomePendingGivenOneEntryIsClaimedAndProposed()
     {
         // Arrange
         var fixture = new Fixture(qualifyHead: true);

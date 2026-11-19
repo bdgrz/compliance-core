@@ -12,7 +12,7 @@ public sealed class PlatformOperatorAggregateTests
     static readonly ActorAttribution SystemActor = new("portia:system", "Portia");
 
     [Fact]
-    public void ShouldDeriveAnIndependentOwnerForEachUser()
+    public void ShouldDeriveOwnersGivenEachUserIsIndependent()
     {
         // Arrange
         var user = Uuid.CreateVersion4();
@@ -102,7 +102,7 @@ public sealed class PlatformOperatorAggregateTests
     }
 
     [Fact]
-    public void ShouldRevokeExactGrantAfterItsPrimaryMarkIsReleased()
+    public void ShouldRevokeGrantGivenItsPrimaryMarkHasBeenReleased()
     {
         // Arrange
         var user = Uuid.CreateVersion4();
@@ -216,7 +216,7 @@ public sealed class PlatformOperatorAggregateTests
     }
 
     [Fact]
-    public void ShouldBootstrapGrantAndPrimaryTogetherAndReplayTheOutcome()
+    public void ShouldReplayBootstrapGivenGrantAndPrimaryAreCreatedTogether()
     {
         // Arrange
         var user = Uuid.CreateVersion4();
@@ -245,7 +245,7 @@ public sealed class PlatformOperatorAggregateTests
     }
 
     [Fact]
-    public void ShouldNeverRegrantPreviouslyRevokedUserFromBootstrap()
+    public void ShouldRejectBootstrapGivenTheUserWasPreviouslyRevoked()
     {
         // Arrange
         var user = Uuid.CreateVersion4();
@@ -270,7 +270,7 @@ public sealed class PlatformOperatorAggregateTests
     }
 
     [Fact]
-    public void ShouldBootstrapNeverGrantedUserAtLaterGenerationAfterAnExactFence()
+    public void ShouldBootstrapUserGivenAnExactFenceAtALaterGeneration()
     {
         // Arrange
         var user = Uuid.CreateVersion4();

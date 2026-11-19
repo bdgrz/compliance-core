@@ -411,7 +411,7 @@ public sealed class CriteriaEntryOperationsTests
     }
 
     [Fact]
-    public async Task ShouldRefuseClaimedStaleSummaryAndRecoverItsExactRetry()
+    public async Task ShouldRecoverStaleSummaryRetryGivenTheClaimedIntentIsExact()
     {
         // Arrange
         var fixture = StaleSummaryFixture();

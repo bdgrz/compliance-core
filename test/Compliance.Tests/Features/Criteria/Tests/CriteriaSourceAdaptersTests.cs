@@ -13,13 +13,14 @@ public sealed class CriteriaSourceAdaptersTests
     static readonly EventStreamAddress Other = new("bdgrz", "criteria-test", "other");
 
     [Fact]
-    public async Task ShouldCoverTargetPrefixOnlyAfterObservingAreaCut()
+    public async Task ShouldCoverTargetPrefixGivenTheAreaCutIsObserved()
     {
         // Arrange
         var streams = Pages(Record(Target, 0, 0), Record(Other, 0, 1), Record(Target, 1, 2));
         var coverage = new FitzCriteriaSourceCutCoverage(streams);
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.True(await coverage.CoversAsync(Target, 1, 2));
         Assert.False(await coverage.CoversAsync(Target, 0, 2));
         Assert.False(await coverage.CoversAsync(Target, 2, 3));
@@ -31,12 +32,13 @@ public sealed class CriteriaSourceAdaptersTests
         // Arrange
         var coverage = new FitzCriteriaSourceCutCoverage(Pages(Record(Target, 0, 0), Record(Other, 0, 2)));
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.False(await coverage.CoversAsync(Target, 1, 2));
     }
 
     [Fact]
-    public async Task ShouldVerifyExactSameRealmCommittedOrder()
+    public async Task ShouldVerifyCommittedOrderGivenEventsShareARealm()
     {
         // Arrange
         var first = Fact(Target, 0, 1, 4);
@@ -44,7 +46,8 @@ public sealed class CriteriaSourceAdaptersTests
         var source = new ExactSource(first, second);
         var order = new FitzCriteriaParticipantCausalOrder(source);
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.True(await order.PrecedesAsync(first, second));
         Assert.False(await order.PrecedesAsync(second, first));
         Assert.False(await order.PrecedesAsync(first, second with { RealmOffset = 6 }));
@@ -52,27 +55,25 @@ public sealed class CriteriaSourceAdaptersTests
     }
 
     [Fact]
-    public async Task ShouldCompareExactCommittedHeadWithoutReservingIt()
+    public async Task ShouldCompareCommittedHeadGivenNoReservationIsRequired()
     {
         // Arrange
         var fact = Fact(Target, 0, 1, 1);
         var reader = new CommittedReader(fact);
         var heads = new PortiaCriteriaSourceHead(reader);
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.True(await heads.IsCurrentAsync(Target, fact.Event.Metadata.AggregateId, 1));
         Assert.False(await heads.IsCurrentAsync(Target, fact.Event.Metadata.AggregateId, 0));
         Assert.False(await heads.IsCurrentAsync(Target, Uuid.CreateVersion4(), 1));
     }
 
-    static ResolverStreamClient Pages(params StreamRecord[] records) => new((_, start, _, _) =>
+    static ResolverStreamClient Pages(params StreamRecord[] records) => new((_, start) =>
     {
-        if (start >= (ulong)records.Length)
-            return new StreamReadPage([], new StreamReadCursor(0, null, null, null, null, null, false));
-        var record = records[checked((int)start)];
-        return new StreamReadPage([new StreamReadItem(record.Route, StreamReadItemKind.Event, record, 0, 0, 0, null)],
-            new StreamReadCursor(record.Offset, record.AreaOffset, record.RealmOffset, null, null, null,
-                start + 1 < (ulong)records.Length));
+        var items = records.Select(record => new StreamReadItem(record.Route, StreamReadItemKind.Event, record)).ToArray();
+        var next = records.Length == 0 ? start : checked(records[^1].AreaOffset!.Value + 1);
+        return [new StreamReadBatch(items, start, next, true)];
     });
 
     static StreamRecord Record(EventStreamAddress stream, ulong resource, ulong area) =>

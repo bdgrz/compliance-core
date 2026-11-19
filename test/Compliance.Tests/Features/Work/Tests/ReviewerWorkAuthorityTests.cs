@@ -128,6 +128,7 @@ using Bdgrz.Compliance.Features.Work.Queries;
 using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
 
+[Collection("Cassie test server")]
 public sealed class ReviewerWorkAuthorityTests
 {
     [Theory]

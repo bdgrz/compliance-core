@@ -1,19 +1,21 @@
 using System.Text.Json;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -21,12 +23,16 @@ using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Policies.Aggregates;
 using Bdgrz.Compliance.Features.Policies.Contracts;
+using Bdgrz.Compliance.Features.Policies.Models;
 using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Providers.Processes;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Remediation.Rules;
@@ -42,13 +48,7 @@ using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Policies.Aggregates;
-using Bdgrz.Compliance.Features.Policies.Models;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Policies.Rules;
 
 /// <summary>
@@ -605,11 +605,12 @@ public sealed class PolicyRules
     static bool IsBoundedText(string? value) =>
         !string.IsNullOrWhiteSpace(value) && value.Length <= 4000;
 
-    static readonly HashSet<string> SubjectTypes = new(StringComparer.Ordinal)
-    {
+    static readonly HashSet<string> SubjectTypes =
+    [
+        with(StringComparer.Ordinal),
         "application", "system_instance", "control", "criterion", "risk", "vendor", "process",
         "scope",
-    };
+    ];
 
     internal static string? ValidateIdentifier(string identifier) =>
         identifier.Length is < 1 or > 80 ||

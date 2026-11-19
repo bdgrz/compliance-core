@@ -270,7 +270,7 @@ public sealed class CriteriaEvaluationTransportTests
         using var plan = await owner.PostAsync($"{arranged.ControlPath}/evaluation-plan/versions", Json(
             $$"""{"control_version_id":"{{ControlVersionIds.Initial(arranged.ControlId)}}","expected_version":0,"objective":"Evaluate the control.","steps":{{steps}},"tester_independence_required":false}"""));
         Assert.Equal(HttpStatusCode.OK, plan.StatusCode);
-        var planVersion = JsonDocument.Parse(await plan.Content.ReadAsStringAsync()).RootElement
+        var planVersion = JsonElement.Parse(await plan.Content.ReadAsStringAsync())
             .GetProperty("plan_version_id").GetString();
         var evaluationId = Guid.NewGuid();
         var evaluationPath = $"{arranged.ControlPath}/evaluations/{evaluationId}";
@@ -282,7 +282,7 @@ public sealed class CriteriaEvaluationTransportTests
         using var startedAgain = await owner.PutAsync(evaluationPath, Json(start));
         using var changedStart = await owner.PutAsync(evaluationPath,
             Json($$"""{"plan_version_id":"{{planVersion}}","retest_of_evaluation_id":"{{Guid.NewGuid()}}"}"""));
-        var stepIds = JsonDocument.Parse(startedText).RootElement.GetProperty("steps").EnumerateArray()
+        var stepIds = JsonElement.Parse(startedText).GetProperty("steps").EnumerateArray()
             .Select(static step => step.GetProperty("step_id").GetString()!).ToArray();
         var texts = new List<string>();
         var first = $$"""{"expected_revision":1,"result":"met","rationale":"Inspected the exact items.","inspected_items":[{"kind":"policy","reference":"policy/access-review","version":"v3"}]}""";
@@ -333,7 +333,7 @@ public sealed class CriteriaEvaluationTransportTests
         Assert.Equal(HttpStatusCode.Conflict, changedReview.StatusCode);
         using var final = JsonDocument.Parse(reviewedText);
         Assert.Equal("accepted", final.RootElement.GetProperty("state").GetString());
-        Assert.Equal(1, JsonDocument.Parse(startedText).RootElement.GetProperty("revision").GetInt64());
+        Assert.Equal(1, JsonElement.Parse(startedText).GetProperty("revision").GetInt64());
     }
 
     static async Task<Arranged> ArrangeAsync(WebApplicationFactory<Program> factory, HttpClient first, HttpClient second,

@@ -111,7 +111,8 @@ public sealed class ProgramCreationAdmissionAuthorityTests
         if (failure == "user")
             fixture.Routes.Path = fixture.Routes.Path with { UserId = Uuid.CreateVersion4() };
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
     }
 
@@ -125,19 +126,21 @@ public sealed class ProgramCreationAdmissionAuthorityTests
             Participants = fixture.Routes.Path.Participants.Concat([fixture.Routes.Path.Participants[0]]).ToArray(),
         };
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
         Assert.Equal(0, fixture.Source.Reads);
     }
 
     [Fact]
-    public async Task ShouldRejectAnotherProgramTargetBeforeSourceReads()
+    public async Task ShouldRejectProgramTargetGivenItIsAnotherTargetBeforeReadingSources()
     {
         // Arrange
         var fixture = new Fixture();
         var otherTarget = new ComplianceProgram(fixture.TenantId, Uuid.CreateVersion4()).Stream.ToString();
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>
             await fixture.Authority.AdmitProgramCreationAsync(new RequestDispatchContext(fixture.Actor), fixture.TenantId, fixture.ProgramId, otherTarget, Digest));
         Assert.Equal(0, fixture.Source.Reads);
@@ -150,7 +153,8 @@ public sealed class ProgramCreationAdmissionAuthorityTests
         var fixture = new Fixture();
         fixture.Source.ChangeOnRead = 9;
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
     }
 
@@ -162,7 +166,8 @@ public sealed class ProgramCreationAdmissionAuthorityTests
         fixture.Source.Set(AccessAdmissionStableRead.Slot.Tenant, new Tenant(fixture.TenantId));
         fixture.Routes.Path = fixture.Routes.Path with { AlternativesResolved = false };
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
         Assert.Equal(0, fixture.Source.Reads);
     }
@@ -174,17 +179,19 @@ public sealed class ProgramCreationAdmissionAuthorityTests
         var fixture = new Fixture();
         fixture.Source.OnRead = () => fixture.Routes.Qualified = false;
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
     }
 
     [Fact]
-    public async Task ShouldKeepProgramSelectionUnavailable()
+    public async Task ShouldKeepProgramSelectionUnavailableGivenItsAuthorityIsUnqualified()
     {
         // Arrange
         var fixture = new Fixture();
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>
             await fixture.Authority.AdmitProgramSelectionAsync(new RequestDispatchContext(fixture.Actor), fixture.TenantId, fixture.ProgramId,
                 Uuid.CreateVersion4(), fixture.Target, Digest));
@@ -263,7 +270,8 @@ public sealed class ProgramCreationAdmissionAuthorityTests
         if (failure == "missing")
             route.Missing = true;
 
-        // Act and assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>
             await fixture.AdmitSelectionAsync(Uuid.CreateVersion4()));
     }
@@ -276,7 +284,8 @@ public sealed class ProgramCreationAdmissionAuthorityTests
         fixture.EnableSelection();
         fixture.Source.ChangeOnRead = 9;
 
-        // Act and assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>
             await fixture.AdmitSelectionAsync(Uuid.CreateVersion4()));
     }
@@ -290,7 +299,8 @@ public sealed class ProgramCreationAdmissionAuthorityTests
         fixture.EnableSelection(organizationScope: false);
         fixture.Source.Remove(AccessAdmissionStableRead.Slot.RolePermission);
 
-        // Act and assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>
             await fixture.AdmitSelectionAsync(Uuid.CreateVersion4()));
     }
@@ -320,7 +330,8 @@ public sealed class ProgramCreationAdmissionAuthorityTests
         var route = fixture.SelectionRoutes!;
         route.Path = route.Path with { Participants = route.Path.Participants.Concat([route.Path.Participants[0]]).ToArray() };
 
-        // Act and assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>
             await fixture.AdmitSelectionAsync(Uuid.CreateVersion4()));
         Assert.Equal(0, fixture.Source.Reads);
@@ -334,7 +345,8 @@ public sealed class ProgramCreationAdmissionAuthorityTests
         fixture.EnableSelection();
         var target = new ComplianceProgram(fixture.TenantId, Uuid.CreateVersion4()).Stream.ToString();
 
-        // Act and assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>
             await fixture.SelectionAuthority.AdmitProgramSelectionAsync(new RequestDispatchContext(fixture.Actor), fixture.TenantId, fixture.ProgramId,
                 Uuid.CreateVersion4(), target, Digest));

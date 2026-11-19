@@ -88,7 +88,8 @@ public sealed class PlatformOperatorExactSourceVerifierTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
-        // Act and assert
+        // Act
+        // Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await verifier.FindAsync<PrimaryPlatformOperatorSeatReserved>(
             PrimaryPlatformOperators.Address, PrimaryPlatformOperators.OwnerId, fact.Metadata.EventId, cancellation.Token));
     }

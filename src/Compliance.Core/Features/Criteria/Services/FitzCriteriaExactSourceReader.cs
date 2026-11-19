@@ -56,17 +56,20 @@ public sealed class FitzCriteriaExactSourceReader(IStreamClient streams, IDomain
         ulong next = 0;
         ulong? lastArea = null;
         ulong? lastRealm = null;
-        ulong? fingerprint = null;
-        ulong? watermark = null;
-        while (true)
+        var reachedCaughtUp = false;
+        var options = new StreamReadOptions
         {
-            ct.ThrowIfCancellationRequested();
-            var page = await streams.ReadPageAsync(route, next, PageSize, new StreamFilterSet(),
-                PageByteBudget, fingerprint, watermark, ct).ConfigureAwait(false);
-            if (watermark is { } captured && page.Cursor.CapturedWatermark != captured)
-                throw new CriteriaSourceUnavailableException("The source changed the captured read watermark.");
+            BatchSize = PageSize,
+            Filter = new StreamFilterSet(),
+            MaxBytes = PageByteBudget,
+        };
+        await foreach (var batch in streams.ReadAsync(route, next, StreamReadMode.Replay,
+                           options, ct).ConfigureAwait(false))
+        {
+            if (batch.FromOffset != next)
+                throw new CriteriaSourceUnavailableException("The source resumed from an unexpected position.");
             var first = next;
-            foreach (var item in page.Items)
+            foreach (var item in batch.Items)
             {
                 if (item.Kind != StreamReadItemKind.Event || item.Record is not { } record)
                     throw new CriteriaSourceUnavailableException("The source withheld a criteria event.");
@@ -96,12 +99,11 @@ public sealed class FitzCriteriaExactSourceReader(IStreamClient streams, IDomain
                 next = checked(next + 1);
             }
 
-            if (!page.Cursor.HasMore)
-                yield break;
-            if (next == first || page.Cursor.LastResourceOffset != next - 1)
+            if (batch.NextOffset != next || next == first && !batch.CaughtUp)
                 throw new CriteriaSourceUnavailableException("The source cannot make contiguous progress.");
-            fingerprint = page.Cursor.CursorFingerprint ?? fingerprint;
-            watermark = page.Cursor.CapturedWatermark ?? watermark;
+            reachedCaughtUp |= batch.CaughtUp;
         }
+        if (!reachedCaughtUp)
+            throw new CriteriaSourceUnavailableException("The source replay ended before it caught up.");
     }
 }

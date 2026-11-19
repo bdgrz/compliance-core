@@ -1,26 +1,28 @@
-using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Models;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Services;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
@@ -28,7 +30,9 @@ using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Remediation.Models;
@@ -38,18 +42,14 @@ using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Events;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.NativeOperations.Models;
-using Bdgrz.Compliance.Features.Proofs.Models;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.UserIdentities.Events;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 
 /// <summary>
@@ -62,8 +62,7 @@ public sealed class TenantIdentityProvider : Aggregate
 {
     const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 1000;
-    static readonly HashSet<string> CredentialSchemes = new(StringComparer.Ordinal)
-        { "vault", "secret", "aws-secretsmanager", "azure-key-vault", "gcp-secret-manager" };
+    static readonly HashSet<string> CredentialSchemes = [with(StringComparer.Ordinal), "vault", "secret", "aws-secretsmanager", "azure-key-vault", "gcp-secret-manager"];
     static readonly Dictionary<string, string> TestMessages = new(StringComparer.Ordinal)
     {
         ["metadata_unavailable"] = "The provider metadata endpoint could not be reached.",

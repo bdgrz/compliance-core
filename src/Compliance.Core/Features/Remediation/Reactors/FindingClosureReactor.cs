@@ -47,8 +47,11 @@ sealed partial class FindingClosureReactor(IProjectionCheckpointStore checkpoint
     public async ValueTask<Result> HandleAsync(IReactorContext<FindingClosureAccepted> context, CancellationToken ct)
     {
         var accepted = context.Trigger;
-        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context, accepted.Owner, ct)
+        var sourceVerification = await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
+            accepted.Owner, ct)
             .ConfigureAwait(false);
+        if (!sourceVerification.IsSuccess)
+            return sourceVerification;
         var tenant = Uuid.Parse(context.Source.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
         IReadOnlyList<AdmittedChild> children;
         ClosureIntent intent;

@@ -69,14 +69,15 @@ public sealed class CodePolicyAdmissionAuthorityTests
         // Arrange
         var fixture = new Fixture();
 
-        // Act and assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>
             await fixture.Authority.AdmitCriteriaOperatorAsync(fixture.Context, Uuid.CreateVersion4(),
                 "stream://bdgrz/criteria-test/edition", Digest));
     }
 
     [Fact]
-    public async Task ShouldAdmitExistingProgramGrantWithoutGrantingOrganizationWideCreation()
+    public async Task ShouldAdmitProgramGrantGivenOrganizationWideCreationIsNotGranted()
     {
         // Arrange
         var fixture = new Fixture(team: true);

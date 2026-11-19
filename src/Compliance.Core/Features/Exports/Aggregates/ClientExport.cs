@@ -1,21 +1,24 @@
-using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Exports.Events;
+using Bdgrz.Compliance.Features.Exports.Models;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -24,7 +27,9 @@ using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Handlers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
@@ -33,13 +38,8 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.Exports.Events;
-using Bdgrz.Compliance.Features.Exports.Models;
-using Bdgrz.Compliance.Features.Providers.Handlers;
-using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Exports.Aggregates;
 
 /// <summary>
@@ -54,15 +54,16 @@ public sealed class ClientExport : Aggregate
     const int MaximumAttestDeliveryAttempts = 32;
     const int MaximumTextLength = 4000;
     const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
-    static readonly HashSet<string> Scopes = new(StringComparer.Ordinal)
-    {
-        "organization", "engagement_collaboration"
-    };
-    static readonly HashSet<string> WithheldReasonCodes = new(StringComparer.Ordinal)
-    {
+    static readonly HashSet<string> Scopes =
+    [
+with(StringComparer.Ordinal),         "organization", "engagement_collaboration"
+    ];
+    static readonly HashSet<string> WithheldReasonCodes =
+    [
+        with(StringComparer.Ordinal),
         "withheld_authorization", "withheld_retention", "withheld_engagement_hold",
         "withheld_legal_hold", "withheld_redacted", "withheld_unavailable"
-    };
+    ];
 
     readonly Uuid _tenantId;
     ClientExportView? _current;

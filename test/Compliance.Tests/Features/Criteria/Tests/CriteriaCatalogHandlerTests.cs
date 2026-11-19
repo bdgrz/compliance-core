@@ -210,7 +210,7 @@ public sealed class CriteriaCatalogHandlerTests
     // reads use the durable runtime projection, not this in-memory catalog.
     sealed class FixtureRuntimeCatalog : IRuntimeCriteriaCatalogReader
     {
-        readonly Dictionary<string, Cursor> _cursors = new(StringComparer.Ordinal);
+        readonly Dictionary<string, Cursor> _cursors = [];
         readonly Uuid _generation = Uuid.CreateVersion4();
         readonly Uuid _publication = Uuid.CreateVersion4();
         public bool Pending { get; init; }

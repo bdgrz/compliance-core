@@ -15,7 +15,7 @@ public sealed class CriteriaEditionAggregateTests
     const string Label = "2017_tsc_2022_pof";
 
     [Fact]
-    public void ShouldReplayLegacyDraftButKeepItsPendingParticipantUnavailable()
+    public void ShouldReplayLegacyDraftGivenItsParticipantIsPendingAndUnavailable()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();
@@ -42,7 +42,7 @@ public sealed class CriteriaEditionAggregateTests
     }
 
     [Fact]
-    public void ShouldRemainPendingUntilTheExactLabelConfirmation()
+    public void ShouldRemainPendingGivenTheExactLabelHasNotBeenConfirmed()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();
@@ -110,7 +110,7 @@ public sealed class CriteriaEditionAggregateTests
     }
 
     [Fact]
-    public void ShouldReplayExactDraftAndRejectChangedIntentWithoutNewFacts()
+    public void ShouldReplayDraftGivenTheIntentIsExactAndRejectChangedIntent()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();
@@ -132,7 +132,7 @@ public sealed class CriteriaEditionAggregateTests
     }
 
     [Fact]
-    public void ShouldRejectStaleAuthorizationAfterRecoveryFence()
+    public void ShouldRejectAuthorizationGivenItsEvidenceIsStaleAfterRecovery()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();
@@ -155,7 +155,7 @@ public sealed class CriteriaEditionAggregateTests
     }
 
     [Fact]
-    public void ShouldKeepAbortPendingUntilTheWitnessFenceCommits()
+    public void ShouldKeepAbortPendingGivenTheWitnessFenceIsUncommitted()
     {
         // Arrange
         var attempt = Uuid.CreateVersion4();
@@ -182,7 +182,7 @@ public sealed class CriteriaEditionAggregateTests
     }
 
     [Fact]
-    public void ShouldRejectSameLabelRenameWithoutReturningAnUnobservableSuccess()
+    public void ShouldRejectRenameGivenTheLabelIsUnchanged()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();

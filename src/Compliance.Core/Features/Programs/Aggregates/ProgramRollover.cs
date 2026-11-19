@@ -1,30 +1,37 @@
-using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Events;
+using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Handlers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Remediation.Models;
@@ -39,15 +46,8 @@ using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Examinations.Models;
-using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
-using Bdgrz.Compliance.Features.Programs.Events;
-using Bdgrz.Compliance.Features.Programs.Models;
-using Bdgrz.Compliance.Features.Providers.Handlers;
-using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Programs.Aggregates;
 
 /// <summary>
@@ -62,23 +62,24 @@ public sealed class ProgramRollover : Aggregate
     const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 4000;
     const int MaximumComparisonMeasures = 5;
-    static readonly HashSet<string> RecordTypes = new(StringComparer.Ordinal)
-    {
+    static readonly HashSet<string> RecordTypes =
+    [
+        with(StringComparer.Ordinal),
         "control", "policy", "risk", "vendor", "integration", "finding",
         "responsibility", "schedule", "system", "application"
-    };
-    static readonly HashSet<string> Dispositions = new(StringComparer.Ordinal)
-    {
-        "carried", "changed", "retired", "unresolved", "ineligible"
-    };
-    static readonly HashSet<string> ComparisonMeasures = new(StringComparer.Ordinal)
-    {
-        "readiness", "control_pass_rate", "open_findings", "overdue_work", "evidence_completeness"
-    };
-    static readonly HashSet<string> ApproverRoles = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "compliance_lead", "program_owner", "ceo", "ciso"
-    };
+    ];
+    static readonly HashSet<string> Dispositions =
+    [
+with(StringComparer.Ordinal),         "carried", "changed", "retired", "unresolved", "ineligible"
+    ];
+    static readonly HashSet<string> ComparisonMeasures =
+    [
+with(StringComparer.Ordinal),         "readiness", "control_pass_rate", "open_findings", "overdue_work", "evidence_completeness"
+    ];
+    static readonly HashSet<string> ApproverRoles =
+    [
+with(StringComparer.OrdinalIgnoreCase),         "compliance_lead", "program_owner", "ceo", "ciso"
+    ];
 
     readonly Uuid _tenantId;
     readonly Uuid _programId;

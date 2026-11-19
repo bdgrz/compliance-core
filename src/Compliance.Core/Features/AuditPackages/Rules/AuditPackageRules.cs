@@ -3,17 +3,19 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Models;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.ControlMappings.History;
@@ -22,6 +24,7 @@ using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Examinations.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
@@ -34,6 +37,7 @@ using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
@@ -43,8 +47,10 @@ using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Snapshots.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
@@ -54,13 +60,7 @@ using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.Snapshots.Models;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AuditPackages.Rules;
 
 /// <summary>
@@ -84,14 +84,14 @@ public sealed class AuditPackageRules
         "71eaf915-dcd6-5d96-8b24-86ca2b6268d1", CultureInfo.InvariantCulture);
     static readonly Uuid DeliveryNamespace = Uuid.Parse(
         "53cb20d6-01ef-5fd5-99b3-04087e39bf77", CultureInfo.InvariantCulture);
-    static readonly HashSet<string> PackageKinds = new(StringComparer.Ordinal)
-    {
-        "type_i", "type_ii"
-    };
-    static readonly HashSet<string> AuthorshipKinds = new(StringComparer.Ordinal)
-    {
-        "management", "auditor", "product_calculated"
-    };
+    static readonly HashSet<string> PackageKinds =
+    [
+with(StringComparer.Ordinal),         "type_i", "type_ii"
+    ];
+    static readonly HashSet<string> AuthorshipKinds =
+    [
+with(StringComparer.Ordinal),         "management", "auditor", "product_calculated"
+    ];
 
     readonly Uuid _tenantId;
     readonly Uuid _programId;

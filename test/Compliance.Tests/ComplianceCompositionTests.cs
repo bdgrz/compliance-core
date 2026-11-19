@@ -21,6 +21,7 @@ using Bdgrz.Compliance.Features.Incidents.Commands;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Tests;
 
+[Collection("Cassie test server")]
 public sealed class ComplianceCompositionTests
 {
     [Fact]

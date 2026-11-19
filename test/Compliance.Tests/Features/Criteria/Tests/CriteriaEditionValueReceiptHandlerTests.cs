@@ -30,7 +30,7 @@ public sealed class CriteriaEditionValueReceiptHandlerTests
     }
 
     [Fact]
-    public async Task ShouldRecheckCurrentAuthorityBeforeEveryReceipt()
+    public async Task ShouldRecheckAuthorityGivenEachReceiptCanObserveChanges()
     {
         // Arrange
         var user = Uuid.CreateVersion4();

@@ -123,12 +123,13 @@ public sealed class CriteriaEditionValueDecisionAuthorityTests
     }
 
     [Fact]
-    public async Task ShouldRejectClaimOrderedAfterProposal()
+    public async Task ShouldRejectClaimGivenItWasOrderedAfterTheProposal()
     {
         // Arrange
         var fixture = new Fixture(7, "publication", true) { ClaimArea = 8 };
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await fixture.DecideAsync());
     }
 
@@ -152,7 +153,7 @@ public sealed class CriteriaEditionValueDecisionAuthorityTests
     [InlineData("publication", 7UL, 1)]
     [InlineData("publication", 11UL, 0)]
     [InlineData("abandonment", 7UL, 2)]
-    public async Task ShouldRevalidateDraftDecisionAgainstInterveningTerminal(string terminal, ulong proposalArea,
+    public async Task ShouldRevalidateDraftDecisionGivenAnInterveningTerminalExists(string terminal, ulong proposalArea,
         int expected)
     {
         // Arrange
@@ -181,7 +182,7 @@ public sealed class CriteriaEditionValueDecisionAuthorityTests
     }
 
     [Fact]
-    public async Task ShouldRejectDraftEvidenceNamingAPublishingHead()
+    public async Task ShouldRejectDraftEvidenceGivenItNamesThePublishingHead()
     {
         // Arrange
         var fixture = new Fixture(7, terminal: null, covered: true);

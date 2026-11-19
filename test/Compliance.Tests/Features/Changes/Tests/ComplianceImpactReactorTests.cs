@@ -76,9 +76,8 @@ public sealed class ComplianceImpactReactorTests
         var afterRecovery = await checkpoints.LoadAsync(identity);
 
         // Assert
-        var refusal = Assert.IsType<ReactionCommandFailedException>(failure.InnerException);
-        Assert.True(refusal.Error.IsTransient);
-        Assert.Same(refusal.Error, failure.Error);
+        Assert.Null(failure.InnerException);
+        Assert.True(failure.Error!.IsTransient);
         Assert.Equal(ProjectionCheckpoint.Start, before);
         Assert.NotEqual(ProjectionCheckpoint.Start, afterRecovery);
         Assert.Equal(2, TypedReactionBus.Sent(scenario).OfType<LinkImpactReviewWork>().Count());

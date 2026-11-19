@@ -200,7 +200,7 @@ public sealed class ControlOperatingTransportTests
             Json("""{"expected_revision":1,"rationale":"Independent approval."}"""));
         Assert.Equal(HttpStatusCode.OK, approved.StatusCode);
         using var missed = await owner.GetAsync($"{fixture.ControlPath}/occurrences?state=missed");
-        var occurrence = JsonDocument.Parse(await missed.Content.ReadAsStringAsync()).RootElement
+        var occurrence = JsonElement.Parse(await missed.Content.ReadAsStringAsync())
             .GetProperty("items")[0].GetProperty("occurrence_id").GetString()!;
         var occurrencePath = $"{fixture.ControlPath}/occurrences/{occurrence}";
         var attestPath = $"{occurrencePath}/attestations/{Guid.NewGuid()}";
@@ -212,7 +212,7 @@ public sealed class ControlOperatingTransportTests
         using var attestedAgain = await owner.PutAsync(attestPath, Json(attestation));
         using var changedAttestation = await owner.PutAsync(attestPath,
             Json(attestation.Replace("Started.", "Restarted.", StringComparison.Ordinal)));
-        var attestationId = JsonDocument.Parse(attestedText).RootElement.GetProperty("attestations")[0]
+        var attestationId = JsonElement.Parse(attestedText).GetProperty("attestations")[0]
             .GetProperty("attestation_id").GetString();
         var reviewPath = $"{occurrencePath}/reviews/{Guid.NewGuid()}";
         var review = $$"""{"expected_revision":2,"attestation_id":"{{attestationId}}","outcome":"returned","rationale":"Add support."}""";
@@ -239,8 +239,8 @@ public sealed class ControlOperatingTransportTests
         Assert.Equal(HttpStatusCode.OK, corrected.StatusCode);
         Assert.Equal(correctedText, await correctedAgain.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Conflict, changedCorrection.StatusCode);
-        Assert.Equal("submitted", JsonDocument.Parse(correctedText).RootElement.GetProperty("state").GetString());
-        Assert.Equal("returned", JsonDocument.Parse(reviewedText).RootElement.GetProperty("state").GetString());
+        Assert.Equal("submitted", JsonElement.Parse(correctedText).GetProperty("state").GetString());
+        Assert.Equal("returned", JsonElement.Parse(reviewedText).GetProperty("state").GetString());
         var occurrenceId = Uuid.Parse(occurrence, CultureInfo.InvariantCulture);
         await AssertFrozenResponseAsync(factory, fixture, nameof(AttestControlOccurrence), attested, occurrenceId);
         await AssertFrozenResponseAsync(factory, fixture, nameof(ReviewControlOccurrence), reviewed, occurrenceId);
@@ -283,9 +283,9 @@ public sealed class ControlOperatingTransportTests
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
         Assert.Equal(firstText, await retried.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Conflict, secondCommand.StatusCode);
-        var items = JsonDocument.Parse(await list.Content.ReadAsStringAsync()).RootElement.GetProperty("items");
+        var items = JsonElement.Parse(await list.Content.ReadAsStringAsync()).GetProperty("items");
         Assert.Equal(1, items.GetArrayLength());
-        Assert.Equal(JsonDocument.Parse(firstText).RootElement.GetProperty("occurrence_id").GetString(),
+        Assert.Equal(JsonElement.Parse(firstText).GetProperty("occurrence_id").GetString(),
             items[0].GetProperty("occurrence_id").GetString());
     }
 

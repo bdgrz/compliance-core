@@ -1,6 +1,5 @@
 using System.Text.Json;
-using Cntryl.Portia;
-using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
@@ -8,11 +7,12 @@ using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AccessReviews.Contracts;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.ControlMappings.History;
@@ -21,6 +21,7 @@ using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Examinations.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
@@ -32,7 +33,9 @@ using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Handlers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
@@ -44,22 +47,19 @@ using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceUse.Handlers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Models;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.SystemDescription.Services;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Providers.Handlers;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SourceUse.Handlers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Cntryl.Portia;
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.Aggregates.SystemDescription;
 namespace Bdgrz.Compliance.Features.SystemDescription.Rules;
 
 /// <summary>
@@ -76,13 +76,14 @@ public sealed class SystemDescriptionRules
     static readonly Uuid DecisionNamespace = Uuid.Parse(
         "497b8fc1-c9de-5e5b-8a93-f5a6972f2537",
         System.Globalization.CultureInfo.InvariantCulture);
-    static readonly HashSet<string> RequiredSectionIds = new(StringComparer.Ordinal)
-    {
+    static readonly HashSet<string> RequiredSectionIds =
+    [
+        with(StringComparer.Ordinal),
         "services", "commitments_requirements", "components_infrastructure_software",
         "people", "procedures", "information_data_flows", "system_boundary",
         "control_environment", "user_entity_controls", "subservice_organizations",
         "exclusions", "relevant_changes",
-    };
+    ];
 
     readonly Dictionary<Type, Action<object>> _reducers = [];
     readonly List<object> _applied = [];

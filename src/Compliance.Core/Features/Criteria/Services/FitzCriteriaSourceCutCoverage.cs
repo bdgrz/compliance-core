@@ -21,13 +21,18 @@ public sealed class FitzCriteriaSourceCutCoverage(IStreamClient streams) : ICrit
         var areaRoute = $"stream://{stream.Realm}/{stream.Area}/*";
         var targetRoute = stream.ToString();
         ulong nextArea = 0;
-        while (true)
+        var options = new StreamReadOptions
         {
-            ct.ThrowIfCancellationRequested();
-            var page = await streams.ReadPageAsync(areaRoute, nextArea, PageSize, new StreamFilterSet(),
-                PageByteBudget, null, null, ct).ConfigureAwait(false);
-            var pageStart = nextArea;
-            foreach (var item in page.Items)
+            BatchSize = PageSize,
+            Filter = new StreamFilterSet(),
+            MaxBytes = PageByteBudget,
+        };
+        await foreach (var batch in streams.ReadAsync(areaRoute, nextArea, StreamReadMode.Replay,
+                           options, ct).ConfigureAwait(false))
+        {
+            if (batch.FromOffset != nextArea)
+                return false;
+            foreach (var item in batch.Items)
             {
                 if (item.Kind != StreamReadItemKind.Event || item.Record is not { } record ||
                     record.AreaOffset != nextArea || item.Route != record.Route)
@@ -45,8 +50,11 @@ public sealed class FitzCriteriaSourceCutCoverage(IStreamClient streams) : ICrit
                     return false;
                 nextArea = checked(nextArea + 1);
             }
-            if (!page.Cursor.HasMore || nextArea == pageStart || page.Cursor.LastAreaOffset != nextArea - 1)
+            if (batch.NextOffset != nextArea)
+                return false;
+            if (batch.CaughtUp)
                 return false;
         }
+        return false;
     }
 }

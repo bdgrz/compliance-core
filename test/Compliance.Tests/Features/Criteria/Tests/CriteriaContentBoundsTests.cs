@@ -27,7 +27,8 @@ public sealed class CriteriaContentBoundsTests
         var edition = PlatformCriteriaCatalog.SeedEdition();
         var entries = PlatformCriteriaCatalog.EnumerateSeedEntries().ToArray();
 
-        // Act and assert
+        // Act
+        // Assert
         Assert.All(entries, entry =>
         {
             Assert.True(CriteriaContentBounds.Identifier(entry.Identifier));
@@ -158,7 +159,8 @@ public sealed class CriteriaContentBoundsTests
             Uuid.CreateVersion4());
         proposed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), owner.Id, 1, Now));
 
-        // Act and assert
+        // Act
+        // Assert
         Assert.Throws<InvalidOperationException>(() => new AggregateScenario<CriteriaEntry>(owner).Given(proposed));
     }
 

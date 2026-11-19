@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Criteria.Commands;
 using Bdgrz.Compliance.Features.Criteria.Queries;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.App.Features.Criteria;
+namespace Bdgrz.Compliance.Features.Criteria;
 
 /// <summary>Declares the operator-facing criteria authoring MCP surface.</summary>
 /// <remarks>

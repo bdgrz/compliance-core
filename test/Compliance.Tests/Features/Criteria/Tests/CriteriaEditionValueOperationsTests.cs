@@ -94,7 +94,7 @@ public sealed class CriteriaEditionValueOperationsTests
     }
 
     [Fact]
-    public async Task ShouldRefuseInvalidShapeBeforeClaimingAnOperation()
+    public async Task ShouldRefuseOperationGivenItsShapeIsInvalid()
     {
         // Arrange
         var reader = new MemoryReader();
@@ -223,7 +223,7 @@ public sealed class CriteriaEditionValueOperationsTests
     }
 
     [Fact]
-    public async Task ShouldNotUseAnUnverifiedOutcomeAsTheBasisForACorrection()
+    public async Task ShouldRejectCorrectionGivenItsOutcomeIsUnverified()
     {
         // Arrange
         var request = Field();
@@ -248,7 +248,7 @@ public sealed class CriteriaEditionValueOperationsTests
     }
 
     [Fact]
-    public async Task ShouldRejectWrongUserEvidenceBeforeWriting()
+    public async Task ShouldRejectUserEvidenceGivenItNamesAnotherUser()
     {
         // Arrange
         var reader = new MemoryReader();

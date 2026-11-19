@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl.Services;
@@ -38,7 +39,7 @@ public sealed class HttpAdmissionCredentialResolverTests
     {
         // Arrange
         var fixture = new Fixture();
-        var other = fixture.Principal(Uuid.CreateVersion4(), fixture.Identity);
+        var other = Fixture.Principal(Uuid.CreateVersion4(), fixture.Identity);
         var wrong = new RequestDispatchContext(fixture.Actor, new HttpInvocation("GET", "/other", null, fixture.Http.TraceIdentifier));
         var mcp = new RequestDispatchContext(fixture.Actor, new McpInvocation("read"));
 
@@ -72,7 +73,7 @@ public sealed class HttpAdmissionCredentialResolverTests
     }
 
     [Fact]
-    public async Task ShouldAllowConfiguredDeveloperSessionOnlyInDevelopmentEnvironment()
+    public async Task ShouldAllowDeveloperSessionGivenItIsConfiguredForDevelopment()
     {
         // Arrange
         var fixture = new Fixture(fallback: true, developer: true, developmentEnvironment: true);
@@ -89,7 +90,8 @@ public sealed class HttpAdmissionCredentialResolverTests
     {
         // Arrange
         var fixture = new Fixture();
-        ((ClaimsIdentity)fixture.Actor.Identity!).AddClaim(new Claim("exp", fixture.End.ToUnixTimeSeconds().ToString()));
+        ((ClaimsIdentity)fixture.Actor.Identity!).AddClaim(new Claim("exp",
+            fixture.End.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)));
 
         // Act
         var result = await fixture.Resolver.ResolveAsync(fixture.Context(), CancellationToken.None);
@@ -105,7 +107,8 @@ public sealed class HttpAdmissionCredentialResolverTests
         var fixture = new Fixture();
         var identity = (ClaimsIdentity)fixture.Actor.Identity!;
         identity.RemoveClaim(identity.FindFirst("exp")!);
-        identity.AddClaim(new Claim("exp", fixture.Start.AddSeconds(1).ToUnixTimeSeconds().ToString()));
+        identity.AddClaim(new Claim("exp",
+            fixture.Start.AddSeconds(1).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)));
 
         // Act
         var result = await fixture.Resolver.ResolveAsync(fixture.Context(), CancellationToken.None);
@@ -122,7 +125,8 @@ public sealed class HttpAdmissionCredentialResolverTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
-        // Act and assert
+        // Act
+        // Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
             await fixture.Resolver.ResolveAsync(fixture.Context(), cancellation.Token));
     }
@@ -156,11 +160,12 @@ public sealed class HttpAdmissionCredentialResolverTests
                     new Environment { EnvironmentName = developmentEnvironment ? "Development" : "Production" }], null)!;
         }
 
-        public ClaimsPrincipal Principal(Uuid user, Uuid identity) => new(new ClaimsIdentity(
+        public static ClaimsPrincipal Principal(Uuid user, Uuid identity) => new(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", user.ToString()), new Claim("user_identity_id", identity.ToString()),
-             new Claim("nbf", Start.ToUnixTimeSeconds().ToString()), new Claim("exp", End.ToUnixTimeSeconds().ToString())], "BdgrzSession"));
+             new Claim("nbf", Now.AddMinutes(-1).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)),
+             new Claim("exp", Now.AddMinutes(1).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture))], "BdgrzSession"));
 
-        public IRequestContext Context(ClaimsPrincipal? actor = null) => new RequestDispatchContext(actor ?? Actor,
+        public RequestDispatchContext Context(ClaimsPrincipal? actor = null) => new(actor ?? Actor,
             new HttpInvocation(Http.Request.Method, Http.Request.Path.Value!, null, Http.TraceIdentifier));
     }
 

@@ -60,6 +60,7 @@ public sealed class RuntimeCriteriaProjectionRulesTests
         var pending = RuntimeCriteriaProjectionRules.Propose(current, proposal);
 
         // Act / Assert
+        // Assert
         Assert.Throws<InvalidOperationException>(() => RuntimeCriteriaProjectionRules.Settle(pending,
             proposal.OperationId, proposal.ExecutionGeneration, proposal.ProposalEventId, accepted: true, published: true));
     }
@@ -92,6 +93,7 @@ public sealed class RuntimeCriteriaProjectionRulesTests
         var pending = RuntimeCriteriaProjectionRules.Propose(current, proposal);
 
         // Act / Assert
+        // Assert
         Assert.Throws<InvalidOperationException>(() => RuntimeCriteriaProjectionRules.Settle(pending,
             proposal.OperationId, proposal.ExecutionGeneration, Uuid.CreateVersion4(), accepted: true, published: true));
     }

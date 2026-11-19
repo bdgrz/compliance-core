@@ -4,6 +4,7 @@ using Bdgrz.Compliance.Features.Tenants.Queries;
 using Bdgrz.Compliance.Features.Tenants.Readers;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
+using System.Security.Claims;
 
 namespace Bdgrz.Compliance.Tests.Features.Tenants.Tests;
 
@@ -19,7 +20,7 @@ public sealed class PlatformOperatorDirectoryQueryTests
 
         // Act
         var result = await new ListPlatformOperatorsHandler(directory).HandleAsync(
-            new RequestContext<ListPlatformOperators>(query), CancellationToken.None);
+            new RequestContext<ListPlatformOperators>(query, new ClaimsPrincipal(), null), CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -39,7 +40,8 @@ public sealed class PlatformOperatorDirectoryQueryTests
 
         // Act
         var result = await new ListPlatformOperatorsHandler(directory).HandleAsync(
-            new RequestContext<ListPlatformOperators>(new ListPlatformOperators(limit)), CancellationToken.None);
+            new RequestContext<ListPlatformOperators>(new ListPlatformOperators(limit), new ClaimsPrincipal(), null),
+            CancellationToken.None);
 
         // Assert
         Assert.False(result.IsSuccess);

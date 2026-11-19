@@ -249,9 +249,10 @@ public sealed class ControlCriterionMappingHandlerTests
         // Arrange
         var fixture = await Fixture.CreateAsync();
 
-        // Act and assert
+        // Act
         await fixture.Scenario(fixture.ReviewerUserId)
             .When(new ListCriteriaCoverage(fixture.TenantId, fixture.ProgramId, NextEdition))
+            // Assert
             .ExpectFailure(RequestErrorKind.Conflict);
     }
 

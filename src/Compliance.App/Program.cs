@@ -3234,7 +3234,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
-    app.MapPortiaGet<ListAdvisorRequests, Cntryl.Fitz.Extensions.Page<AdvisorRequestSummaryView>>(
+    app.MapPortiaGet<ListAdvisorRequests, Bdgrz.Compliance.Page<AdvisorRequestSummaryView>>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
@@ -3246,7 +3246,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/preview")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
-    app.MapPortiaGet<ListAdvisorFeedback, Cntryl.Fitz.Extensions.Page<AdvisorFeedbackView>>(
+    app.MapPortiaGet<ListAdvisorFeedback, Bdgrz.Compliance.Page<AdvisorFeedbackView>>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
@@ -3532,7 +3532,7 @@ public partial class Program
         int index, string name, bool nullable, bool hasDefault, out bool supplied)
     {
         var wireName = options.PropertyNamingPolicy?.ConvertName(name) ?? name;
-        supplied = PortiaHttpBinding.HasBodyMember<TRequest, T>(body, options, index, wireName);
+        supplied = PortiaHttpBinding.HasBodyMember<TRequest, T>(body, options, index, name, wireName);
         if (!supplied && PortiaHttpBinding.ReadQuery(context, wireName) is { } raw)
         {
             // Preserve generated binding's body-before-query scalar fallback and parsing.

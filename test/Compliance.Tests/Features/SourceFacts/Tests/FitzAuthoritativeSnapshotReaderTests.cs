@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Tests.Hosting.Persistence;
+using Cntryl.Fitz;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -186,14 +187,13 @@ public sealed class FitzAuthoritativeSnapshotReaderTests
 
         // Assert
         var anchor = streams.Requests[0];
-        var firstOfEach = streams.Requests.Skip(1).Where(request => request.Fingerprint is null).ToList();
+        var firstOfEach = streams.Requests.Skip(1).ToList();
         Assert.Equal("stream://**", anchor.Route);
         Assert.Equal(2, firstOfEach.Count);
-        Assert.All(firstOfEach, request => Assert.Null(request.Watermark));
+        Assert.Equal(StreamReadMode.Replay, anchor.Mode);
+        Assert.All(streams.Requests, request => Assert.Equal(StreamReadMode.Replay, request.Mode));
         Assert.All(streams.Requests.Skip(1), request => Assert.StartsWith("stream://*/", request.Route, StringComparison.Ordinal));
-        Assert.All(streams.Requests.Skip(1).Where(request => request.Fingerprint is not null),
-            request => Assert.Equal(ScriptedStreamClient.FingerprintOf(request.Route, request.Watermark!.Value),
-                request.Fingerprint));
+        Assert.All(firstOfEach, request => Assert.Equal(1UL, request.BatchSize));
     }
 
     [Fact]
@@ -229,12 +229,12 @@ public sealed class FitzAuthoritativeSnapshotReaderTests
         var result = await reader.ReadAtAsync(Other, Realm, capture.Cut);
 
         // Assert
-        var pages = streams.Requests.Skip(1).ToList();
+        var selectorReads = streams.Requests.Skip(1).ToList();
         Assert.Equal([0UL, 1UL, 2UL, 3UL, 4UL], result.Facts.Select(fact => fact.Locator.ResourcePosition));
-        Assert.Equal([0UL, 2UL, 4UL], pages.Select(request => request.Start));
-        Assert.Null(pages[0].Fingerprint);
-        Assert.All(pages.Skip(1), request => Assert.Equal(6UL, request.Watermark));
-        Assert.All(pages.Skip(1), request => Assert.NotNull(request.Fingerprint));
+        Assert.Single(selectorReads);
+        Assert.Equal(0UL, selectorReads[0].Start);
+        Assert.Equal(1UL, selectorReads[0].BatchSize);
+        Assert.True(streams.BatchesProduced > 3);
         Assert.Equal(5UL, result.Cursor.NextGlobalOffset);
     }
 

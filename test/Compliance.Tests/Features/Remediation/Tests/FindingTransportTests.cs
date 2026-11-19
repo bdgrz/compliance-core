@@ -188,13 +188,13 @@ public sealed class FindingTransportTests
         Assert.Equal(admittedText, await admittedAgain.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Accepted, admittedAgain.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, changedAction.StatusCode);
-        Assert.Equal(actionId.ToString(), JsonDocument.Parse(admittedText).RootElement.GetProperty("operation_id").GetString());
+        Assert.Equal(actionId.ToString(), JsonElement.Parse(admittedText).GetProperty("operation_id").GetString());
         // The finding has no recorded action outcome, so closure is refused before admission.
         Assert.Equal(HttpStatusCode.Conflict, closeBeforeWork.StatusCode);
         using var view = JsonDocument.Parse(await read.Content.ReadAsStringAsync());
         Assert.Single(view.RootElement.GetProperty("corrective_actions").EnumerateArray());
         Assert.Equal(0, view.RootElement.GetProperty("corrective_actions")[0].GetProperty("revision").GetInt32());
-        Assert.Equal(1, JsonDocument.Parse(await list.Content.ReadAsStringAsync()).RootElement.GetProperty("items").GetArrayLength());
+        Assert.Equal(1, JsonElement.Parse(await list.Content.ReadAsStringAsync()).GetProperty("items").GetArrayLength());
         await using var services = factory.Services.CreateAsyncScope();
         var owner = await services.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new FindingAggregate(
             Uuid.Parse(view.RootElement.GetProperty("tenant_id").GetString()!, CultureInfo.InvariantCulture),

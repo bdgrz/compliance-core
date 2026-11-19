@@ -117,7 +117,7 @@ public sealed class CriteriaEditionValueReceiptReaderTests
     }
 
     [Fact]
-    public async Task ShouldRejectAmbiguousTargetShape()
+    public async Task ShouldRejectAmbiguousTargetGivenTheTargetShapeIsAmbiguous()
     {
         // Arrange
         var fixture = new Fixture();

@@ -1,7 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using Cntryl.Fitz;
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
@@ -9,11 +7,12 @@ using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Content.Services;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Operations.History;
@@ -21,20 +20,21 @@ using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Readers;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SourceFacts.Readers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.SystemDescription.Processes;
 
 /// <summary>One tenant route atomically binds the process key and root command id before any attempt runs.</summary>
@@ -44,16 +44,16 @@ sealed class FitzKvSystemDescriptionExportProcesses(IKvClient client) : ISystemD
     {
         await using var tx = await client.BeginAsync(Route(tenant), KvMode.ReadOnly, ct).ConfigureAwait(false);
         var command = await tx.GetAsync(CommandKey(commandId), ct).ConfigureAwait(false);
-        if (command.Found)
-            processId = Uuid.Parse(Encoding.UTF8.GetString(command.Value!.Value.Span), System.Globalization.CultureInfo.InvariantCulture);
+        if (command is KvFound { Value: var commandBytes })
+            processId = Uuid.Parse(Encoding.UTF8.GetString(commandBytes.Span), System.Globalization.CultureInfo.InvariantCulture);
         var row = await tx.GetAsync(Key(processId), ct).ConfigureAwait(false);
-        if (!row.Found)
+        if (row is not KvFound { Value: var rowBytes })
         {
-            if (command.Found)
+            if (command is KvFound)
                 throw new ImmutableContentIntegrityException("An export command index has no owning process.");
             return null;
         }
-        var result = Parse(row.Value!.Value.Span);
+        var result = Parse(rowBytes.Span);
         if (result.TenantId != tenant || result.ProcessId != processId)
             throw new ImmutableContentIntegrityException("The export process belongs to another tenant or process identity.");
         return result;
@@ -66,16 +66,17 @@ sealed class FitzKvSystemDescriptionExportProcesses(IKvClient client) : ISystemD
             {
                 await using var tx = await client.BeginAsync(Route(candidate.TenantId), KvMode.ReadWrite, ct).ConfigureAwait(false);
                 var command = await tx.GetAsync(CommandKey(candidate.Binding.LogicalId), ct).ConfigureAwait(false);
-                if (command.Found && Encoding.UTF8.GetString(command.Value!.Value.Span) != candidate.ProcessId.ToString())
+                if (command is KvFound { Value: var commandBytes } &&
+                    Encoding.UTF8.GetString(commandBytes.Span) != candidate.ProcessId.ToString())
                     return Conflict();
                 var found = await tx.GetAsync(Key(candidate.ProcessId), ct).ConfigureAwait(false);
-                if (found.Found)
+                if (found is KvFound { Value: var foundBytes })
                 {
-                    var existing = Parse(found.Value!.Value.Span);
+                    var existing = Parse(foundBytes.Span);
                     return existing.Binding == candidate.Binding && existing.ProgramId == candidate.ProgramId && existing.DescriptionId == candidate.DescriptionId
                         ? Result<SystemDescriptionExportProcessRecord>.Success(existing) : Conflict();
                 }
-                if (command.Found)
+                if (command is KvFound)
                     throw new ImmutableContentIntegrityException("A bound export command lost its owning technical process.");
                 var accepted = candidate with { Revision = 1 };
                 await tx.InsertAsync(Key(candidate.ProcessId), JsonSerializer.SerializeToUtf8Bytes(accepted,
@@ -102,9 +103,9 @@ sealed class FitzKvSystemDescriptionExportProcesses(IKvClient client) : ISystemD
             {
                 await using var tx = await client.BeginAsync(Route(expected.TenantId), KvMode.ReadWrite, ct).ConfigureAwait(false);
                 var found = await tx.GetAsync(Key(expected.ProcessId), ct).ConfigureAwait(false);
-                if (!found.Found)
+                if (found is not KvFound { Value: var foundBytes })
                     throw new ImmutableContentUnavailableException("The admitted export process is not readable yet.");
-                var current = Parse(found.Value!.Value.Span);
+                var current = Parse(foundBytes.Span);
                 if (current.Binding != expected.Binding || current.Intent != expected.Intent)
                     return Conflict();
                 if (current.State is "completed" or "failed")

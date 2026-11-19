@@ -11,6 +11,7 @@ using Bdgrz.Compliance.Tests.Testing;
 namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
 
 [Trait("Category", "CassieIntegration")]
+[Collection("Cassie test server")]
 public sealed class CassieRemediationWorkRepositoryTests
 {
     [Fact]

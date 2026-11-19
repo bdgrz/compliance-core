@@ -1,4 +1,4 @@
-using Bdgrz.Compliance.App.Features.Criteria;
+using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.Criteria.Commands;
 using Bdgrz.Compliance.Features.Criteria.Models;
 using Bdgrz.Compliance.Features.Criteria.Queries;
@@ -57,7 +57,7 @@ public sealed class CriteriaAuthoringMcpRegistrationTests
     }
 
     [Fact]
-    public void ShouldNotExposeCriteriaAuthoringToolsWithoutExplicitRegistration()
+    public void ShouldNotExposeCriteriaAuthoringToolsGivenRegistrationIsNotExplicit()
     {
         // Arrange
         var services = new ServiceCollection();

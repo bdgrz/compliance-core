@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
@@ -9,13 +10,18 @@ using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AccessReviews.Contracts;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Aggregates;
 using Bdgrz.Compliance.Features.Commitments.Contracts;
+using Bdgrz.Compliance.Features.Commitments.Events;
+using Bdgrz.Compliance.Features.Commitments.Models;
 using Bdgrz.Compliance.Features.Commitments.Projections;
+using Bdgrz.Compliance.Features.Commitments.Readers;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Commitments.Services;
 using Bdgrz.Compliance.Features.Content.Contracts;
@@ -24,6 +30,7 @@ using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Examinations.Contracts;
 using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Examinations.Services;
@@ -38,6 +45,7 @@ using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Programs.Services;
+using Bdgrz.Compliance.Features.Providers.Handlers;
 using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
@@ -45,31 +53,23 @@ using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Features.Remediation.Processes;
 using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Responsibilities.Events;
 using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Retention.Commands;
 using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.Snapshots.Projections;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
-using Bdgrz.Compliance.Features.Boundaries.Readers;
-using Bdgrz.Compliance.Features.Commitments.Aggregates;
-using Bdgrz.Compliance.Features.Commitments.Events;
-using Bdgrz.Compliance.Features.Commitments.Models;
-using Bdgrz.Compliance.Features.Commitments.Readers;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Providers.Handlers;
-using Bdgrz.Compliance.Features.Responsibilities.Events;
-using Bdgrz.Compliance.Features.Retention.Commands;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Examinations.Readers;
 
 /// <summary>Shares exact commitment-version capture rules across baseline source families.</summary>
@@ -79,11 +79,12 @@ public sealed class CommitmentTypeIBaselineSourceReader(
     IBoundaryDirectoryReader boundaries, ProgramSetupWorkReadConsistency boundaryConsistency)
     : IProviderCsocBaselineReader
 {
-    static readonly HashSet<string> AllKinds = new(StringComparer.Ordinal)
-    {
+    static readonly HashSet<string> AllKinds =
+    [
+        with(StringComparer.Ordinal),
         "service_commitment", "system_requirement", "user_entity_responsibility",
         "subservice_responsibility",
-    };
+    ];
 
     static readonly IReadOnlySet<string> ProviderCsocKinds = new HashSet<string>(StringComparer.Ordinal)
     {

@@ -83,8 +83,8 @@ public sealed class NamedRecordTransportTests
         // Assert
         Assert.Equal(record, recordRetry);
         Assert.Equal(revise, reviseRetry);
-        Assert.Equal(recordId.ToString(), JsonDocument.Parse(record).RootElement.GetProperty("operation_id").GetString());
-        Assert.Equal(command.ToString(), JsonDocument.Parse(revise).RootElement.GetProperty("operation_id").GetString());
+        Assert.Equal(recordId.ToString(), JsonElement.Parse(record).GetProperty("operation_id").GetString());
+        Assert.Equal(command.ToString(), JsonElement.Parse(revise).GetProperty("operation_id").GetString());
         var accepted = await AcceptedCountAsync(factory, kind, tenant, recordId);
         Assert.Equal(1, accepted);
     }

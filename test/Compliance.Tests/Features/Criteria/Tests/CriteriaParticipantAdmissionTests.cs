@@ -27,7 +27,8 @@ public sealed class CriteriaParticipantAdmissionTests
         var request = new CriteriaEditionDraftRequested(edition, operation, operation, 1, "tsc", "edition_1",
             actor, admission, null, null);
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.False(CriteriaParticipantAdmission.AllowsLabel(request));
         Assert.True(CriteriaParticipantAdmission.AllowsLabel(request with
         {
@@ -69,7 +70,8 @@ public sealed class CriteriaParticipantAdmissionTests
         if (change == "operator")
             request = request with { Admission = admission with { Operator = null } };
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.False(CriteriaParticipantAdmission.AllowsLabel(request));
     }
 
@@ -107,7 +109,9 @@ public sealed class CriteriaParticipantAdmissionTests
         if (change == "generation")
             start = start with { ExecutionGeneration = 2 };
 
-        // Act and Assert
+        // Act
+
+        // Assert
         Assert.False(CriteriaParticipantAdmission.AllowsHumanPublication(start));
     }
 
@@ -138,7 +142,8 @@ public sealed class CriteriaParticipantAdmissionTests
             _ => throw new InvalidOperationException(),
         };
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.True(CriteriaParticipantAdmission.AllowsLabel(request));
         Assert.False(CriteriaParticipantAdmission.AllowsLabel(altered));
     }
@@ -153,7 +158,8 @@ public sealed class CriteriaParticipantAdmissionTests
             seed.EditionLabel, new ActorAttribution("criteria-seed-bootstrap", "system"), null,
             CriteriaSeedFingerprint.Version, CriteriaSeedFingerprint.Compute(seed, PlatformCriteriaCatalog.EnumerateSeedEntries()));
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.True(CriteriaParticipantAdmission.AllowsLabel(request));
         Assert.False(CriteriaParticipantAdmission.AllowsLabel(request with { SeedFingerprint = new string('0', 64) }));
         Assert.False(CriteriaParticipantAdmission.AllowsLabel(request with { Actor = new ActorAttribution("other", "system") }));

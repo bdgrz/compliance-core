@@ -1,3 +1,4 @@
+global using Bdgrz.Compliance;
 global using Bdgrz.Compliance.Features.AccessControl;
 global using Bdgrz.Compliance.Features.AccessReviews;
 global using Bdgrz.Compliance.Features.Applications;

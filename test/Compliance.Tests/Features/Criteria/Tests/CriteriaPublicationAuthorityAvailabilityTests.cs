@@ -28,7 +28,8 @@ public sealed class CriteriaPublicationAuthorityAvailabilityTests
         using var cancellation = new CancellationTokenSource();
         await cancellation.CancelAsync();
 
-        // Act and assert
+        // Act
+        // Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
             await authority.ReadPublishedAsync(Uuid.CreateVersion4(), cancellation.Token));
     }

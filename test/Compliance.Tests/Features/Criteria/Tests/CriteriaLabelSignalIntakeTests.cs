@@ -78,7 +78,7 @@ public sealed class CriteriaLabelSignalIntakeTests
     }
 
     [Fact]
-    public async Task ShouldRejectSourceMismatchBeforeCreatingARecord()
+    public async Task ShouldRejectSourceMismatchGivenTheRecordHasNotBeenCreated()
     {
         // Arrange
         var (source, fact, events) = await CreateSourceAsync();

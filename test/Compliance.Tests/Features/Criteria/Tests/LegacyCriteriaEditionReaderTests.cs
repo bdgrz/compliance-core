@@ -6,6 +6,7 @@ using Bdgrz.Compliance.Features.Criteria.Services;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
+using System.Globalization;
 
 namespace Bdgrz.Compliance.Tests.Features.Criteria.Tests;
 
@@ -15,6 +16,7 @@ public sealed class LegacyCriteriaEditionReaderTests
     static readonly Uuid EditionId = Uuid.CreateVersion4();
     static readonly Uuid PublicationId = Uuid.CreateVersion4();
     static readonly DateTimeOffset PublishedAt = new(2026, 9, 24, 0, 0, 0, TimeSpan.Zero);
+    static readonly string[] ExpectedSupportGapCodes = ["a", "b"];
 
     [Fact]
     public async Task ShouldReturnSourceMetadataAndDisclosuresGivenQualifiedSnapshot()
@@ -33,7 +35,7 @@ public sealed class LegacyCriteriaEditionReaderTests
         Assert.Equal("2017_tsc", result.Value.EditionLabel);
         Assert.Equal(PublishedAt, result.Value.PublishedAt);
         Assert.True(result.Value.IsComplete);
-        Assert.Equal(new[] { "a", "b" }, result.Value.SupportGaps.Select(static gap => gap.Code));
+        Assert.Equal(ExpectedSupportGapCodes, result.Value.SupportGaps.Select(static gap => gap.Code));
     }
 
     [Fact]
@@ -128,7 +130,7 @@ public sealed class LegacyCriteriaEditionReaderTests
     }
 
     [Fact]
-    public async Task ShouldKeepSeedPendingUntilCompletionFactIsProjected()
+    public async Task ShouldKeepSeedPendingGivenCompletionFactIsNotProjected()
     {
         // Arrange
         var client = new InMemoryKvClient();
@@ -204,7 +206,7 @@ public sealed class LegacyCriteriaEditionReaderTests
     }
 
     [Fact]
-    public async Task ShouldReadAuthoredEditionWhileSeedCompletionIsPending()
+    public async Task ShouldReadAuthoredEditionGivenSeedCompletionIsPending()
     {
         // Arrange
         var client = new InMemoryKvClient();
@@ -280,7 +282,7 @@ public sealed class LegacyCriteriaEditionReaderTests
         // Arrange
         var client = new InMemoryKvClient();
         var rows = Enumerable.Range(0, FitzRuntimeCriteriaCatalog.LegacyDisclosureLimit + 1)
-            .Select(index => Disclosure(index.ToString("D3"))).ToArray();
+            .Select(index => Disclosure(index.ToString("D3", CultureInfo.InvariantCulture))).ToArray();
         await new SeedStore(client).SeedAsync(Edition(), rows);
         var reader = new FitzRuntimeCriteriaCatalog(client);
 
@@ -317,7 +319,8 @@ public sealed class LegacyCriteriaEditionReaderTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
-        // Act and assert
+        // Act
+        // Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
             await reader.GetLegacyEditionAsync(TenantId, EditionId, cancellation.Token));
     }

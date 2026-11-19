@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl.Services;
@@ -46,7 +47,7 @@ public sealed class McpHttpAdmissionCredentialResolverTests
         var fixture = new Fixture();
         var context = fixture.Context();
         if (failure == "actor")
-            context = fixture.Context(fixture.Principal(Uuid.CreateVersion4(), fixture.Identity));
+            context = fixture.Context(Fixture.Principal(Uuid.CreateVersion4(), fixture.Identity));
         if (failure == "path")
             fixture.Http.Request.Path = "/other";
         if (failure == "method")
@@ -73,14 +74,14 @@ public sealed class McpHttpAdmissionCredentialResolverTests
         Assert.NotNull(await fixture.Resolver.ResolveAsync(fixture.Context(), CancellationToken.None));
 
         // Act
-        fixture.Http.User = fixture.Principal(fixture.User, fixture.Identity);
+        fixture.Http.User = Fixture.Principal(fixture.User, fixture.Identity);
 
         // Assert
         Assert.False(fixture.Resolver.IsQualified);
     }
 
     [Fact]
-    public async Task ShouldKeepConcurrentRequestActorsInTheirOwnScopes()
+    public async Task ShouldKeepActorsScopedGivenRequestsAreConcurrent()
     {
         // Arrange
         var first = new Fixture();
@@ -139,13 +140,13 @@ public sealed class McpHttpAdmissionCredentialResolverTests
             Http.RequestServices = services.BuildServiceProvider();
         }
 
-        public ClaimsPrincipal Principal(Uuid user, Uuid identity) => new(new ClaimsIdentity(
+        public static ClaimsPrincipal Principal(Uuid user, Uuid identity) => new(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", user.ToString()), new Claim("user_identity_id", identity.ToString()),
-             new Claim("nbf", Now.AddMinutes(-1).ToUnixTimeSeconds().ToString()),
-             new Claim("exp", Now.AddMinutes(1).ToUnixTimeSeconds().ToString())], "BdgrzSession"));
+             new Claim("nbf", Now.AddMinutes(-1).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)),
+             new Claim("exp", Now.AddMinutes(1).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture))], "BdgrzSession"));
 
-        public IRequestContext Context(ClaimsPrincipal? actor = null) =>
-            new RequestDispatchContext(actor ?? Actor, new McpInvocation("test_tool"));
+        public RequestDispatchContext Context(ClaimsPrincipal? actor = null) =>
+            new(actor ?? Actor, new McpInvocation("test_tool"));
     }
 
     sealed class FixedClock : TimeProvider

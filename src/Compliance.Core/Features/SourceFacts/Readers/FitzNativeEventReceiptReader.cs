@@ -1,14 +1,14 @@
-using Cntryl.Fitz;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Content.Services;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -24,8 +24,8 @@ using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Cntryl.Fitz;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.SourceFacts.Readers;
 
 /// <summary>Reads Fitz's broker commit timestamp, bound to the complete exact native source tuple and payload.</summary>
@@ -36,10 +36,16 @@ sealed class FitzNativeEventReceiptReader(IStreamClient streams, IDomainEventSer
         ArgumentNullException.ThrowIfNull(source);
         if (source.Event.Metadata is not { IsAudit: false } expected || expected.EventId == Uuid.Empty || expected.AggregateVersion == 0)
             throw new ImmutableContentIntegrityException("A receipt requires an exact committed non-audit native event identity and version.");
-        var page = await streams.ReadPageAsync(source.Stream.ToString(), source.ResourceOffset, 1, new StreamFilterSet(), ct: ct).ConfigureAwait(false);
-        if (page.Items.Count == 0 || page.Items.Count == 1 && page.Items[0].Kind != StreamReadItemKind.Event)
+        StreamReadItem? item = null;
+        await foreach (var batch in streams.ReadAsync(source.Stream.ToString(), source.ResourceOffset,
+                           StreamReadMode.Replay, new StreamReadOptions { BatchSize = 1 }, ct).ConfigureAwait(false))
+        {
+            item = batch.Items.SingleOrDefault();
+            break;
+        }
+        if (item is null || item.Kind != StreamReadItemKind.Event)
             throw new ImmutableContentUnavailableException("The exact native event receipt is not readable from the broker yet.");
-        if (page.Items.Count != 1 || page.Items[0].Record is not { } record || record.Route != source.Stream.ToString() || record.Offset != source.ResourceOffset)
+        if (item.Record is not { } record || record.Route != source.Stream.ToString() || record.Offset != source.ResourceOffset)
             throw new ImmutableContentIntegrityException("The broker receipt resolved on another concrete stream or resource offset.");
         DomainEvent actual;
         try

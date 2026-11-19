@@ -130,7 +130,7 @@ public sealed class EditionLabelClaimTests
     }
 
     [Fact]
-    public void ShouldFenceTerminalRequestWithoutDisturbingAnUnrelatedHolder()
+    public void ShouldFenceTerminalRequestGivenAnotherHolderIsUnrelated()
     {
         // Arrange
         var holderEdition = Uuid.CreateVersion4();

@@ -1,20 +1,22 @@
-using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.ControlMappings.History;
 using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Events;
+using Bdgrz.Compliance.Features.Examinations.Models;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.NativeOperations.History;
@@ -23,6 +25,7 @@ using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Handlers;
 using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Readiness.Rules;
 using Bdgrz.Compliance.Features.Remediation.Processes;
@@ -30,18 +33,15 @@ using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Contracts;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AttestRecords.Commands;
-using Bdgrz.Compliance.Features.Examinations.Events;
-using Bdgrz.Compliance.Features.Examinations.Models;
-using Bdgrz.Compliance.Features.Providers.Handlers;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Examinations.Aggregates;
 
 /// <summary>
@@ -53,8 +53,7 @@ public sealed class ExaminationSignOff : Aggregate
     const int MaximumItems = 1000;
     const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 4000;
-    static readonly HashSet<string> ExecutiveRoles = new(StringComparer.OrdinalIgnoreCase)
-        { "ceo", "ciso" };
+    static readonly HashSet<string> ExecutiveRoles = [with(StringComparer.OrdinalIgnoreCase), "ceo", "ciso"];
 
     readonly Uuid _tenantId;
     readonly Uuid _programId;

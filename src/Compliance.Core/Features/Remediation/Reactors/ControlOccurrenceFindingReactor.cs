@@ -50,9 +50,20 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
         CancellationToken ct)
     {
         var ev = context.Trigger;
-        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
+        var sourceVerification = await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
             new ControlOccurrence(ev.TenantId, ev.ProgramId, ev.ControlId, ev.OccurrenceId).Stream, ct).ConfigureAwait(false);
-        _ = await ReadAsync<ControlAttestationView>(context, ev.AttestationContent, ct).ConfigureAwait(false);
+        if (!sourceVerification.IsSuccess)
+            return sourceVerification;
+        var attestation = await ReadAsync<ControlAttestationView>(context, ev.AttestationContent, ct)
+            .ConfigureAwait(false);
+        if (attestation.Result is not (ControlOperationStates.Failed or ControlOperationStates.Skipped))
+            return Result.Success;
+        var reactionOutcome1 = await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId,
+            Uuid.CreateVersion5(attestation.AttestationId, "finding"), ev.ControlId,
+            ev.OccurrenceId, attestation.AttestationId.ToString(), "control_occurrence",
+            $"{attestation.Result}: {attestation.Rationale}"), context, ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
         return Result.Success;
     }
 
@@ -60,8 +71,10 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
         CancellationToken ct)
     {
         var ev = context.Trigger;
-        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
+        var sourceVerification = await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
             new ControlOccurrence(ev.TenantId, ev.ProgramId, ev.ControlId, ev.OccurrenceId).Stream, ct).ConfigureAwait(false);
+        if (!sourceVerification.IsSuccess)
+            return sourceVerification;
         var review = await ReadAsync<ControlOccurrenceReviewView>(context, ev.ReviewContent, ct)
             .ConfigureAwait(false);
         if (review.FindingDecision != "raise")

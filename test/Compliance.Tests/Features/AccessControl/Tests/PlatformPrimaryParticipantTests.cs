@@ -131,7 +131,7 @@ public sealed class PlatformPrimaryParticipantTests
     }
 
     [Fact]
-    public async Task ShouldVacateReleasedSeatOnlyAfterExactTargetUnmark()
+    public async Task ShouldVacateReleasedSeatGivenItsExactTargetIsUnmarked()
     {
         // Arrange
         var fixture = new Fixture();

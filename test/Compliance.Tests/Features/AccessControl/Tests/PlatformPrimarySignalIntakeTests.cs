@@ -14,7 +14,7 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 public sealed class PlatformPrimarySignalIntakeTests
 {
     [Fact]
-    public async Task ShouldReuseOriginalAttemptAfterLostCreateAcknowledgement()
+    public async Task ShouldReuseAttemptGivenCreateAcknowledgementWasLost()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();

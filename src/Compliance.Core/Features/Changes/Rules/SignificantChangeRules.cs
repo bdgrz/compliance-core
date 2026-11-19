@@ -1,8 +1,8 @@
-using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
@@ -10,12 +10,14 @@ using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AccessReviews.Contracts;
 using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Changes.Aggregates;
+using Bdgrz.Compliance.Features.Changes.Commands;
 using Bdgrz.Compliance.Features.Changes.Models;
 using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.ControlMappings.History;
@@ -23,6 +25,7 @@ using Bdgrz.Compliance.Features.Controls.Contracts;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Examinations.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -32,7 +35,9 @@ using Bdgrz.Compliance.Features.Operations.Models;
 using Bdgrz.Compliance.Features.Operations.Rules;
 using Bdgrz.Compliance.Features.Processes.Processes;
 using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Handlers;
 using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Readiness.Rules;
@@ -43,6 +48,7 @@ using Bdgrz.Compliance.Features.Retention.Models;
 using Bdgrz.Compliance.Features.Risks.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.TechnologyInventory.Models;
 using Bdgrz.Compliance.Features.Tenants.Models;
@@ -51,15 +57,9 @@ using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Versioning.Models;
 using Bdgrz.Compliance.Features.Versioning.Rules;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Handlers;
-using Bdgrz.Compliance.Features.Changes.Aggregates;
-using Bdgrz.Compliance.Features.Changes.Commands;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
-using Bdgrz.Compliance.Features.Providers.Handlers;
-using Bdgrz.Compliance.Features.Providers.Projections;
-using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Changes.Rules;
 
 /// <summary>Transient business rules and immutable read reconstruction; never retained by the compact command owner.</summary>
@@ -67,16 +67,14 @@ public sealed class SignificantChangeRules
 {
     const int MaximumReferences = 1000;
     const int MaximumTextLength = 4000;
-    static readonly HashSet<string> Severities = new(StringComparer.Ordinal)
-        { "low", "medium", "high", "critical" };
-    static readonly HashSet<string> HandlingClasses = new(StringComparer.Ordinal)
-        { "public", "internal", "confidential", "restricted" };
-    static readonly HashSet<string> ImpactDomains = new(StringComparer.Ordinal)
-        { "scope", "risk", "vendor", "control", "evidence", "system_description", "period", "other" };
-    static readonly HashSet<string> RecordTypes = new(StringComparer.Ordinal)
-        { "system_boundary", "service_commitment", "control", "application", "system_instance",
+    static readonly HashSet<string> Severities = [with(StringComparer.Ordinal), "low", "medium", "high", "critical"];
+    static readonly HashSet<string> HandlingClasses = [with(StringComparer.Ordinal), "public", "internal", "confidential", "restricted"];
+    static readonly HashSet<string> ImpactDomains = [with(StringComparer.Ordinal), "scope", "risk", "vendor", "control", "evidence", "system_description", "period", "other"];
+    static readonly HashSet<string> RecordTypes =
+        [         with(StringComparer.Ordinal),
+"system_boundary", "service_commitment", "control", "application", "system_instance",
             "technology_component", "information_asset", "risk", "vendor", "evidence_expectation",
-            "system_description_section", "other" };
+            "system_description_section", "other" ];
 
     readonly Dictionary<Type, Action<object>> _reducers = [];
     readonly List<object> _applied = [];

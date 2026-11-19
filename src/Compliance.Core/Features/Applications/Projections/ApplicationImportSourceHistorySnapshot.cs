@@ -1,7 +1,8 @@
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.Applications.Aggregates;
+using Bdgrz.Compliance.Features.Applications.Events;
 using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
@@ -10,8 +11,7 @@ using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.Applications.Aggregates;
-using Bdgrz.Compliance.Features.Applications.Events;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Applications.Projections;
 
 /// <summary>Transient complete source slots and publication order, never retained by command authority.</summary>
@@ -26,7 +26,7 @@ public sealed class ApplicationImportSourceHistorySnapshot
     internal ApplicationImportSourceHistorySnapshot(ApplicationImportSource source, IReadOnlyList<DomainEvent> facts,
         Dictionary<Uuid, ApplicationImportSourceSlot> slots, IReadOnlyList<ApplicationImportSourceSettled> published)
     {
-        _slots = new(slots);
+        _slots = [with(slots)];
         (_stream, _version, _position, _digest) = (source.Stream, source.Version, source.CommittedStreamPosition, source.NativeCut.Digest);
         Facts = Array.AsReadOnly(facts.ToArray());
         Published = Array.AsReadOnly(published.ToArray());

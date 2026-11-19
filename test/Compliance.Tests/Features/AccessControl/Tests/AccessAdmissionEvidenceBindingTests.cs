@@ -126,7 +126,7 @@ public sealed class AccessAdmissionEvidenceBindingTests
     }
 
     [Fact]
-    public void ShouldPreserveLegacyReplayButRejectLegacyForNewAdmission()
+    public void ShouldPreserveLegacyReplayGivenLegacyDataAndRejectItForNewAdmission()
     {
         // Arrange
         var legacy = Evidence() with { Operator = Source("operators") };
@@ -166,7 +166,8 @@ public sealed class AccessAdmissionEvidenceBindingTests
         // Arrange
         var evidence = Evidence() with { Operator = Source("operators"), FormatVersion = 1, PolicyContentSha256 = Digest };
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.True(AccessAdmissionEvidenceBinding.IsCurrentFormat(evidence));
         Assert.True(AccessAdmissionEvidenceBinding.BindsCriteriaOperator(evidence, User, Actor, Operation, Target, Digest));
     }

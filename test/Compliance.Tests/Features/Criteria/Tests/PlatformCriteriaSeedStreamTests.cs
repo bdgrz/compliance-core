@@ -96,7 +96,8 @@ public sealed class PlatformCriteriaSeedStreamTests
         var entries = PlatformCriteriaCatalog.EnumerateSeedEntries().ToArray();
         entries[0] = entries[0] with { LicensedText = "A licensed overlay must never be shipped." };
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.Throws<InvalidOperationException>(() => CriteriaSeedFingerprint.Compute(edition, entries));
     }
 
@@ -109,7 +110,8 @@ public sealed class PlatformCriteriaSeedStreamTests
         var original = PlatformCriteriaCatalog.EnumerateSeedEntries().First();
         var changed = original with { Summary = "A different initial summary." };
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.True(PlatformCriteriaSeedDefinition.MatchesEntry(edition.EditionId,
             CriteriaSeedFingerprint.Version, fingerprint, original));
         Assert.False(PlatformCriteriaSeedDefinition.MatchesEntry(edition.EditionId,
@@ -141,7 +143,8 @@ public sealed class PlatformCriteriaSeedStreamTests
             edition.PublishedAt, edition.IsComplete, edition.CoverageNote, edition.SourceUrl,
             edition.ContentRights, CriteriaSeedFingerprint.Version, fingerprint);
 
-        // Act and Assert
+        // Act
+        // Assert
         Assert.True(PlatformCriteriaSeedDefinition.MatchesHeader(header));
         Assert.False(PlatformCriteriaSeedDefinition.MatchesHeader(header with { CoverageNote = "No support gaps." }));
     }

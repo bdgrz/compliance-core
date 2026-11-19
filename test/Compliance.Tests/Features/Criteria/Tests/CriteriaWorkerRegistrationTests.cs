@@ -56,7 +56,7 @@ public sealed class CriteriaWorkerRegistrationTests
     }
 
     [Fact]
-    public void ShouldNotRegisterCriteriaWorkersWithoutExplicitOptIn()
+    public void ShouldNotRegisterCriteriaWorkersGivenOptInIsNotExplicit()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -72,7 +72,7 @@ public sealed class CriteriaWorkerRegistrationTests
     }
 
     [Fact]
-    public async Task ShouldRestrictParticipantDispatchToSystemActor()
+    public async Task ShouldRestrictParticipantDispatchGivenTheCallerIsNotTheSystemActor()
     {
         // Arrange
         var authorizer = new CriteriaSignalSystemAuthorizer();

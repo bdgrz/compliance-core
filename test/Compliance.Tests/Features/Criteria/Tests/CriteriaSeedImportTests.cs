@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Tests.Features.Criteria.Tests;
 public sealed class CriteriaSeedImportTests
 {
     [Fact]
-    public void ShouldReplayExactCompletionAndRejectChangedPublication()
+    public void ShouldReplayCompletionGivenPublicationIsUnchangedAndRejectChangedPublication()
     {
         // Arrange
         var edition = PlatformCriteriaCatalog.SeedEdition();

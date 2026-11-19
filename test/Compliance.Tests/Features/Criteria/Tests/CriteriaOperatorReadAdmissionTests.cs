@@ -55,7 +55,7 @@ public sealed class CriteriaOperatorReadAdmissionTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task ShouldRecheckCurrentAuthorityBeforeEachRead(bool draft)
+    public async Task ShouldRecheckAuthorityGivenEachReadCanObserveChanges(bool draft)
     {
         // Arrange
         var user = Uuid.CreateVersion4();

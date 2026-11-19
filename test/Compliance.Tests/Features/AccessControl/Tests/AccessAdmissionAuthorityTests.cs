@@ -79,7 +79,8 @@ public sealed class AccessAdmissionAuthorityTests
             fixture.Set(AccessAdmissionStableRead.Slot.Policy,
             new AccessAdmissionSemanticEvaluator.Policy("unsupported", Digest, true, true, true, true));
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
     }
 
@@ -90,7 +91,8 @@ public sealed class AccessAdmissionAuthorityTests
         var fixture = new Fixture();
         fixture.Trusted.Credential = fixture.Trusted.Credential with { UserId = Uuid.CreateVersion4() };
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
         Assert.Equal(0, fixture.Source.Reads);
     }
@@ -102,7 +104,8 @@ public sealed class AccessAdmissionAuthorityTests
         var fixture = new Fixture();
         fixture.Trusted.Credential = fixture.Trusted.Credential with { IdentityId = Uuid.Empty };
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
         Assert.Equal(0, fixture.Source.Reads);
     }
@@ -114,21 +117,23 @@ public sealed class AccessAdmissionAuthorityTests
         var fixture = new Fixture();
         var authority = new AccessAdmissionAuthority(null, fixture.Trusted, fixture.Source, new FixedClock(), "v1", Digest);
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>
             await authority.AdmitCriteriaOperatorAsync(new RequestDispatchContext(fixture.Actor), fixture.OperationId, Target, Digest));
         Assert.Equal(0, fixture.Source.Reads);
     }
 
     [Fact]
-    public async Task ShouldPropagateCancellationBeforeAdmission()
+    public async Task ShouldPropagateCancellationGivenCancellationIsRequestedBeforeAdmission()
     {
         // Arrange
         var fixture = new Fixture();
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
             await fixture.Authority.AdmitCriteriaOperatorAsync(new RequestDispatchContext(fixture.Actor), fixture.OperationId, Target, Digest, cancellation.Token));
         Assert.Equal(0, fixture.Source.Reads);
@@ -141,7 +146,8 @@ public sealed class AccessAdmissionAuthorityTests
         var fixture = new Fixture();
         fixture.Source.OnRead = () => fixture.Trusted.RouteQualified = false;
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
     }
 
@@ -152,7 +158,8 @@ public sealed class AccessAdmissionAuthorityTests
         var fixture = new Fixture();
         fixture.Trusted.Path = fixture.Trusted.Path.Concat([fixture.Trusted.Path[0]]).ToArray();
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
         Assert.Equal(0, fixture.Source.Reads);
     }
@@ -189,7 +196,8 @@ public sealed class AccessAdmissionAuthorityTests
             requirement == "session" ? true : requirement == "unknown" ? null : false,
             requirement == "account", requirement == "global", true));
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
     }
 
@@ -204,7 +212,8 @@ public sealed class AccessAdmissionAuthorityTests
         fixture.Set(AccessAdmissionStableRead.Slot.Policy,
             new AccessAdmissionSemanticEvaluator.Policy("v1", Digest, true, true, false, false, true));
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
     }
 
@@ -228,7 +237,8 @@ public sealed class AccessAdmissionAuthorityTests
             fixture.Set(AccessAdmissionStableRead.Slot.Policy,
             new AccessAdmissionSemanticEvaluator.Policy("v1", Digest, true, false, false, false));
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
     }
 
@@ -262,19 +272,21 @@ public sealed class AccessAdmissionAuthorityTests
             fixture.Source.Values[stream] = before with { Version = before.Version with { Position = before.Version.Position + 1 } };
         };
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () => await fixture.AdmitAsync());
     }
 
     [Fact]
-    public async Task ShouldReportUnavailableForUnimplementedProgramAdmission()
+    public async Task ShouldReportUnavailableGivenProgramAdmissionIsUnimplemented()
     {
         // Arrange
         var fixture = new Fixture();
         var tenant = Uuid.CreateVersion4();
         var program = Uuid.CreateVersion4();
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>
             await fixture.Authority.AdmitProgramCreationAsync(new RequestDispatchContext(fixture.Actor), tenant, program, Target, Digest));
         await Assert.ThrowsAsync<AccessAdmissionUnavailableException>(async () =>

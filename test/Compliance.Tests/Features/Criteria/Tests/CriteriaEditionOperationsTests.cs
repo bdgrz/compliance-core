@@ -15,6 +15,7 @@ public sealed class CriteriaEditionOperationsTests
         // Arrange and act
         var permitted = await CriteriaAuthoringReadiness.CheckAsync(null, CancellationToken.None);
 
+        // Act
         // Assert
         Assert.True(permitted);
     }

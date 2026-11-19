@@ -15,7 +15,7 @@ public sealed class CriteriaEntryAggregateTests
     static readonly DateTimeOffset Now = new(2026, 11, 5, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public void ShouldRecordOneExactNoChangeOutcomeWithoutAdvancingRevision()
+    public void ShouldRecordNoChangeGivenTheExactOutcomeDoesNotAdvanceRevision()
     {
         // Arrange
         var edition = Uuid.CreateVersion4();
@@ -81,7 +81,7 @@ public sealed class CriteriaEntryAggregateTests
     }
 
     [Fact]
-    public void ShouldDurablyRefuseClaimedStaleSummaryWithoutAdvancingRevision()
+    public void ShouldRefuseStaleSummaryGivenItWasClaimedAndTheRevisionAdvanced()
     {
         // Arrange
         var edition = Uuid.CreateVersion4();

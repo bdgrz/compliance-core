@@ -2,7 +2,7 @@ name: compliance-cassie-tests
 
 services:
   cassie:
-    image: ghcr.io/cntryl/cassie@sha256:14c99b2e05209eaa7a7e85dafe8be30f089564b0e6fabd77bbeb5427655a2778
+    image: ghcr.io/cntryl/cassie:latest
     init: true
     environment:
       CASSIE_STORAGE_MODE: memory

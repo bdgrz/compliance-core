@@ -12,7 +12,7 @@ public sealed class FitzCriteriaExactSourceReaderTests
     static readonly EventStreamAddress Stream = new("bdgrz", "criteria-test", "entry");
 
     [Fact]
-    public async Task ShouldPreservePresentAndMissingRealmOffsetsAcrossPages()
+    public async Task ShouldPreserveRealmOffsetsGivenPresentAndMissingObservationsAcrossPages()
     {
         // Arrange
         var fixture = new Fixture(0, null, 7);
@@ -30,17 +30,18 @@ public sealed class FitzCriteriaExactSourceReaderTests
     [Theory]
     [InlineData(8UL, 8UL)]
     [InlineData(8UL, 7UL)]
-    public async Task ShouldRejectNonIncreasingPresentRealmOffsetsAcrossMissingObservation(ulong first, ulong last)
+    public async Task ShouldRejectNonIncreasingRealmOffsetsGivenAnObservationIsMissing(ulong first, ulong last)
     {
         // Arrange
         var fixture = new Fixture(first, null, last);
 
-        // Act and Assert
+        // Act
+        // Assert
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await fixture.ReadAsync());
     }
 
     [Fact]
-    public async Task ShouldRetainRealmOffsetOnExactEventLookup()
+    public async Task ShouldRetainRealmOffsetGivenAnExactEventLookup()
     {
         // Arrange
         var fixture = new Fixture(null, 23);
@@ -71,13 +72,12 @@ public sealed class FitzCriteriaExactSourceReaderTests
                 records.Add(new StreamRecord(Stream.ToString(), (ulong)index, (ulong)index + 10, realmOffsets[index], null,
                     new byte[] { checked((byte)index) }, Encoding.UTF8.GetBytes(Stream.ToString()), 0));
             }
-            var streams = new ResolverStreamClient((_, start, _, _) =>
+            var streams = new ResolverStreamClient((_, start) =>
             {
-                var record = records[checked((int)start)];
-                return new StreamReadPage(
-                    [new StreamReadItem(record.Route, StreamReadItemKind.Event, record, 0, 0, 0, null)],
-                    new StreamReadCursor(record.Offset, record.AreaOffset, record.RealmOffset, null, null, null,
-                        start + 1 < (ulong)records.Count));
+                var items = records.Skip(checked((int)start))
+                    .Select(record => new StreamReadItem(record.Route, StreamReadItemKind.Event, record))
+                    .ToArray();
+                return [new StreamReadBatch(items, start, checked((ulong)records.Count), true)];
             });
             Reader = new FitzCriteriaExactSourceReader(streams, new Serializer(Events));
         }

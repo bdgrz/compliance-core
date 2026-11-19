@@ -12,7 +12,7 @@ public sealed class PrimaryPlatformOperatorsTests
     static readonly ActorAttribution SystemActor = new("portia:system", "Portia");
 
     [Fact]
-    public void ShouldConfirmInitialSeatOnlyAfterExactTargetBootstrapOutcome()
+    public void ShouldConfirmInitialSeatGivenTheExactTargetBootstrapOutcomeIsObserved()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();
@@ -42,7 +42,7 @@ public sealed class PrimaryPlatformOperatorsTests
     }
 
     [Fact]
-    public void ShouldCompleteBootstrapOnlyAfterConfirmingTheInitialPrimary()
+    public void ShouldCompleteBootstrapGivenTheInitialPrimaryIsConfirmed()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();
@@ -73,7 +73,7 @@ public sealed class PrimaryPlatformOperatorsTests
     }
 
     [Fact]
-    public void ShouldRejectUnattachedAndWrongOwnerTargetFacts()
+    public void ShouldRejectTargetFactsGivenTheyAreUnattachedOrHaveTheWrongOwner()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();
@@ -151,7 +151,7 @@ public sealed class PrimaryPlatformOperatorsTests
     }
 
     [Fact]
-    public void ShouldKeepReleasedSeatUntilExactTargetUnmarkThenPermitANewReservation()
+    public void ShouldKeepReleasedSeatGivenTheTargetIsNotYetUnmarkedThenPermitANewReservation()
     {
         // Arrange
         var first = InitialConfirmed();
@@ -188,7 +188,7 @@ public sealed class PrimaryPlatformOperatorsTests
     }
 
     [Fact]
-    public void ShouldClosePendingSeatOnlyAfterItsExactTargetFence()
+    public void ShouldClosePendingSeatGivenItsExactTargetFenceIsNotYetObserved()
     {
         // Arrange
         var initial = InitialConfirmed();
@@ -219,7 +219,7 @@ public sealed class PrimaryPlatformOperatorsTests
     }
 
     [Fact]
-    public void ShouldRetryTheOnlyBootstrapCandidateAtANewGenerationAfterItsFence()
+    public void ShouldRetryBootstrapCandidateGivenTheExactFenceIsObservedAtANewGeneration()
     {
         // Arrange
         var firstOperation = Uuid.CreateVersion4();
@@ -257,7 +257,7 @@ public sealed class PrimaryPlatformOperatorsTests
     }
 
     [Fact]
-    public void ShouldRejectTargetFactWhoseEnvelopeDoesNotFollowItsExpectedRevision()
+    public void ShouldRejectTargetFactGivenItsEnvelopeDoesNotFollowTheExpectedRevision()
     {
         // Arrange
         var operation = Uuid.CreateVersion4();

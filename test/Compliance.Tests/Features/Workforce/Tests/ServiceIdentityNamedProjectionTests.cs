@@ -9,6 +9,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
+[Collection("Cassie test server")]
 public sealed class ServiceIdentityNamedProjectionTests
 {
     static readonly Uuid Tenant = Uuid.CreateVersion4();

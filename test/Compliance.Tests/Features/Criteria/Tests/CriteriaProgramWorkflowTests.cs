@@ -1,4 +1,3 @@
-using Bdgrz.Compliance.App.Features.Criteria;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Criteria;
@@ -34,7 +33,7 @@ public sealed class CriteriaProgramWorkflowTests
     static readonly DateTimeOffset Now = new(2026, 11, 5, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task ShouldExposeTheSameAuthoringRequestsThroughHttpAndMcp()
+    public async Task ShouldExposeAuthoringRequestsGivenHttpAndMcpRegistration()
     {
         // Arrange
         await using var app = WebApplication.CreateSlimBuilder().Build();
@@ -82,11 +81,11 @@ public sealed class CriteriaProgramWorkflowTests
         var labelScenario = new AggregateScenario<EditionLabelClaim>(labelOwner);
         var reserved = Assert.IsType<EditionLabelReserved>(Assert.Single(labelScenario.PendingEvents));
         Assert.True(edition.ActivateDraft(draftId, 1, reserved.Metadata.EventId).IsSuccess);
-        var activated = Assert.IsType<CriteriaEditionDraftActivated>(editionScenario.PendingEvents.Last());
+        var activated = Assert.IsType<CriteriaEditionDraftActivated>(editionScenario.PendingEvents[^1]);
         Assert.True(labelOwner.Confirm(editionId, draftId, 1, activated.Metadata.EventId).IsSuccess);
-        var confirmed = Assert.IsType<EditionLabelConfirmed>(labelScenario.PendingEvents.Last());
+        var confirmed = Assert.IsType<EditionLabelConfirmed>(labelScenario.PendingEvents[^1]);
         Assert.True(edition.CompleteDraft(draftId, 1, confirmed.Metadata.EventId).IsSuccess);
-        var drafted = Assert.IsType<CriteriaEditionDrafted>(editionScenario.PendingEvents.Last());
+        var drafted = Assert.IsType<CriteriaEditionDrafted>(editionScenario.PendingEvents[^1]);
 
         var intent = new CriterionChangeIntent(editionId, draftId, identifier, entryOperationId,
             0, "create", "criterion", "security", null, null, "Original product summary.");
@@ -117,7 +116,7 @@ public sealed class CriteriaProgramWorkflowTests
         Assert.True(witness.PinWitness(started).IsSuccess);
         var pinned = Assert.IsType<CriterionWitnessPinned>(Assert.Single(new AggregateScenario<CriteriaEntry>(witness).PendingEvents));
         Assert.True(publicationEdition.Publish(publicationAttemptId, pinned.Metadata.EventId).IsSuccess);
-        var published = Assert.IsType<CriteriaEditionPublished>(publicationScenario.PendingEvents.Last());
+        var published = Assert.IsType<CriteriaEditionPublished>(publicationScenario.PendingEvents[^1]);
 
         // The program handler uses a test publication authority: source verification
         // and asynchronous participant workers are covered by their own tests.

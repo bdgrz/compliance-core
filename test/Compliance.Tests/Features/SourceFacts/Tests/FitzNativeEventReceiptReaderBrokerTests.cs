@@ -86,16 +86,22 @@ public sealed class FitzNativeEventReceiptReaderBrokerTests(BrokerStackFixture b
         await foreach (var record in events.ReadAsync(stream, 0, CancellationToken.None))
             records.Add(record);
         var source = Assert.Single(records);
-        await using var fitz = new Client(new ClientConfig(new Uri(broker.WebSocketEndpoint, UriKind.Absolute), Timeout: TimeSpan.FromSeconds(10)));
+        await using var fitz = new FitzClient(new ClientConfig(new Uri(broker.WebSocketEndpoint, UriKind.Absolute)) { Timeout = TimeSpan.FromSeconds(10) });
         await fitz.ConnectWhenReadyAsync(new ConnectWhenReadyOptions(TimeSpan.FromSeconds(15)));
         var reader = new FitzNativeEventReceiptReader(fitz.Stream, serializer);
 
         // Act
         var recordedAt = await reader.RecordedAtAsync(source);
-        var raw = await fitz.Stream.ReadPageAsync(stream.ToString(), 0, 1);
+        StreamReadBatch? raw = null;
+        await foreach (var batch in fitz.Stream.ReadAsync(stream.ToString(), 0, StreamReadMode.Replay,
+                           new StreamReadOptions { BatchSize = 1 }))
+        {
+            raw = batch;
+            break;
+        }
 
         // Assert
-        var committed = Assert.Single(raw.Items).Record!;
+        var committed = Assert.Single(raw!.Records);
         Assert.Equal(DateTimeOffset.FromUnixTimeMilliseconds(checked((long)committed.Timestamp)), recordedAt);
         Assert.True(recordedAt > cutoff);
         Assert.Equal(value.Metadata.OccurredOn, source.Event.Metadata.OccurredOn);

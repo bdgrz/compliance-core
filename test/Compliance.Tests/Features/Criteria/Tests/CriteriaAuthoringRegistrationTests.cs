@@ -107,7 +107,8 @@ public sealed class CriteriaAuthoringRegistrationTests
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
 
-        // Act and assert
+        // Act
+        // Assert
         Assert.Throws<InvalidOperationException>(() =>
             scope.ServiceProvider.GetRequiredService<CriteriaEntryOperations>());
     }

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0.403-noble-aot@sha256:c45158dabdcffc8409ef46c9431c16b36d9419405b51fd29261fa8a6af3f516f AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0.100-resolute-aot@sha256:f3264ae0bf11e2062b9650e0822d20c999320ac1685fe3acf4b7c17d0881af85 AS build
 
 WORKDIR /source
 
@@ -39,7 +39,7 @@ RUN case "$TARGETARCH" in \
       --output /app/publish \
       /p:PublishAot=true
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:10.0.14-noble-chiseled-extra@sha256:8a40d2041c4ccc2237fc4921d1c669662cb194d93375e37fbd9807d92bb55d63 AS runtime
+FROM mcr.microsoft.com/dotnet/runtime-deps:11.0.0-resolute-chiseled-extra@sha256:661d3e8cfdab9503453095a5b53b17f63402400266c0e0f6f2d1b1192e6da5c9 AS runtime
 
 WORKDIR /app
 

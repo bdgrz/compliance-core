@@ -1,9 +1,13 @@
-using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Queries;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.Services;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
 using Bdgrz.Compliance.Features.Operations.History;
@@ -14,11 +18,7 @@ using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.SourceFacts.Rules;
 using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Queries;
-using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
-using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Handlers;
 
 /// <summary>Returns one source's current content only through an unexpired open handoff.</summary>
@@ -26,11 +26,12 @@ public sealed class GetAdvisorSharedSourceHandler(AdvisorHandoffReader aggregate
     IAdvisorSharedSourceReader sources, TimeProvider clock)
     : IRequestHandler<GetAdvisorSharedSource, AdvisorSharedSourceView>
 {
-    static readonly HashSet<string> SourceFamilies = new(StringComparer.Ordinal)
-    {
+    static readonly HashSet<string> SourceFamilies =
+    [
+        with(StringComparer.Ordinal),
         "control", "policy", AdvisorRecordVersion.EvidenceArtifactKind,
         AdvisorRecordVersion.ReadinessGapKind, AdvisorRecordVersion.BoundaryQuestionKind,
-    };
+    ];
 
     public ValueTask<Result<AdvisorSharedSourceView>> HandleAsync(
         IRequestContext<GetAdvisorSharedSource> context, CancellationToken ct) =>
