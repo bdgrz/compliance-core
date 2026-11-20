@@ -76,7 +76,8 @@ public sealed partial class TenantRbacBootstrapReactor(
         if (ownerBecomesAdministrator)
         {
             var memberId = RbacIds.Member(tenantId, context.Trigger.OwnerUserId);
-            commands.Add(TeamMemberEffects.Assign(sourceEventId, tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), memberId));
+            commands.Add(TeamMemberEffects.Assign(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), memberId,
+                MemberRegistrationEffects.CommandId(sourceEventId, tenantId, context.Trigger.OwnerUserId)));
             commands.Add(new DesignatePrimaryOrgAdmin(
                 EffectIdentity.CommandId(sourceEventId, "primary:creator", tenantId.ToString(), null), tenantId,
                 context.Trigger.OwnerUserId,

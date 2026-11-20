@@ -244,15 +244,15 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        var request = Assignment(Uuid.CreateVersion4(), episode);
+        var request = Assignment(episode);
 
         // Act
         var result = await AssignAsync(provider, request);
-        var owner = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(Owner(request.CommandId));
+        var owner = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(Owner(request.OperationId));
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(request.CommandId, result.Value!.OperationId);
+        Assert.Equal(request.OperationId, result.Value!.OperationId);
         Assert.Equal(AdministratorTransitionResponseState.Completed, result.Value.State);
         Assert.Null(result.Value.StatusUrl);
         Assert.True(owner.IsAssigned);
@@ -267,7 +267,7 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        var request = Assignment(Uuid.CreateVersion4(), episode);
+        var request = Assignment(episode);
         var first = await AssignAsync(provider, request);
 
         // Act
@@ -290,7 +290,7 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        var original = Assignment(Uuid.CreateVersion4(), episode);
+        var original = Assignment(episode);
         Assert.True((await AssignAsync(provider, original)).IsSuccess);
         var changed = change switch
         {
@@ -316,7 +316,7 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var oldEpisode = await RegisterAsync(provider);
-        var request = Assignment(Uuid.CreateVersion4(), oldEpisode);
+        var request = Assignment(oldEpisode);
         var first = await AssignAsync(provider, request);
         var newEpisode = await ReRegisterAsync(provider, oldEpisode);
 
@@ -340,7 +340,7 @@ public sealed class TeamMemberTests
         await using var provider = Services();
         var oldEpisode = await RegisterAsync(provider);
         var newEpisode = await ReRegisterAsync(provider, oldEpisode);
-        var oldRetry = Assignment(Uuid.CreateVersion4(), oldEpisode);
+        var oldRetry = Assignment(oldEpisode);
 
         // Act
         var result = await AssignAsync(provider, oldRetry);
@@ -358,12 +358,12 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        Assert.True((await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode))).IsSuccess);
-        Assert.True((await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), episode, 1, 1))).IsSuccess);
+        Assert.True((await AssignAsync(provider, Assignment(episode))).IsSuccess);
+        Assert.True((await RemoveAsync(provider, Removal(episode, 1, 1))).IsSuccess);
 
         // Act
-        var stale = await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode));
-        var current = await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode, 2, 1));
+        var stale = await AssignAsync(provider, Assignment(episode));
+        var current = await AssignAsync(provider, Assignment(episode, 2, 1));
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(stale.Error).Kind);
@@ -376,12 +376,12 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        Assert.True((await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode))).IsSuccess);
-        var request = Removal(Uuid.CreateVersion4(), episode, 1, 1);
+        Assert.True((await AssignAsync(provider, Assignment(episode))).IsSuccess);
+        var request = Removal(episode, 1, 1);
 
         // Act
         var result = await RemoveAsync(provider, request);
-        var owner = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(Owner(request.CommandId));
+        var owner = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(Owner(request.OperationId));
         var history = await HistoryAsync(provider);
 
         // Assert
@@ -389,7 +389,7 @@ public sealed class TeamMemberTests
         Assert.Equal(AdministratorTransitionResponseState.Completed, result.Value!.State);
         Assert.False(owner.IsAssigned);
         Assert.IsType<TeamMemberRemoved>(history[^1]);
-        Assert.Equal(request.CommandId, owner.Acceptance.SelectedOperation!.Operation.LogicalId);
+        Assert.Equal(request.OperationId, owner.Acceptance.SelectedOperation!.Operation.LogicalId);
     }
 
     [Fact]
@@ -398,8 +398,8 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        Assert.True((await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode))).IsSuccess);
-        var request = Removal(Uuid.CreateVersion4(), episode, 1, 1);
+        Assert.True((await AssignAsync(provider, Assignment(episode))).IsSuccess);
+        var request = Removal(episode, 1, 1);
         var first = await RemoveAsync(provider, request);
 
         // Act
@@ -419,12 +419,12 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        Assert.True((await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode))).IsSuccess);
+        Assert.True((await AssignAsync(provider, Assignment(episode))).IsSuccess);
 
         // Act
-        var otherEpisode = await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, 1));
-        var staleRevision = await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), episode, 0, 1));
-        var staleGeneration = await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), episode, 1, 0));
+        var otherEpisode = await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), 1, 1));
+        var staleRevision = await RemoveAsync(provider, Removal(episode, 0, 1));
+        var staleGeneration = await RemoveAsync(provider, Removal(episode, 1, 0));
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(otherEpisode.Error).Kind);
@@ -444,12 +444,11 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        var assign = Assignment(Uuid.CreateVersion4(), episode);
-        var remove = Removal(Uuid.CreateVersion4(), episode, 0, 0);
+        var assign = Assignment(episode);
+        var remove = Removal(episode, 0, 0);
         var user = Caller(Uuid.CreateVersion4());
         (assign, remove) = empty switch
         {
-            "command" => (assign with { CommandId = Uuid.Empty }, remove with { CommandId = Uuid.Empty }),
             "tenant" => (assign with { TenantId = Uuid.Empty }, remove with { TenantId = Uuid.Empty }),
             "team" => (assign with { TeamId = Uuid.Empty }, remove with { TeamId = Uuid.Empty }),
             "member" => (assign with { MemberId = Uuid.Empty }, remove with { MemberId = Uuid.Empty }),
@@ -474,7 +473,7 @@ public sealed class TeamMemberTests
         var episode = await RegisterAsync(provider);
 
         // Act
-        var result = await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode, -1, -1),
+        var result = await AssignAsync(provider, Assignment(episode, -1, -1),
             Caller(Uuid.CreateVersion4()));
 
         // Assert
@@ -487,7 +486,7 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        var effect = TeamMemberEffects.Assign(Uuid.CreateVersion4(), TenantId, TeamId, Member());
+        var effect = TeamMemberEffects.Assign(TenantId, TeamId, Member());
 
         // Act
         var result = await AssignAsync(provider, effect);
@@ -507,12 +506,12 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        var request = Assignment(Uuid.CreateVersion4(), episode);
+        var request = Assignment(episode);
         Assert.True((await AssignAsync(provider, request)).IsSuccess);
         var original = Assert.IsType<TeamMemberAssigned>(Assert.Single(await HistoryAsync(provider)));
         await using var persistence = EventPersistenceFrameTests.Compose();
         var serializer = persistence.GetRequiredService<IDomainEventSerializer>();
-        var owner = Owner(request.CommandId);
+        var owner = Owner(request.OperationId);
         var restored = serializer.Deserialize(serializer.Serialize(original));
         var scenario = new AggregateScenario<TeamMember>(owner).Given(restored);
 
@@ -537,10 +536,10 @@ public sealed class TeamMemberTests
         TeamContentStore content = null!;
         await using var provider = Services(inner => content = new TeamContentStore(inner));
         var episode = await RegisterAsync(provider);
-        var assign = Assignment(Uuid.CreateVersion4(), episode);
+        var assign = Assignment(episode);
         var assignment = await AssignAsync(provider, assign);
         Assert.True(assignment.IsSuccess);
-        var removal = Removal(Uuid.CreateVersion4(), episode, 1, 1);
+        var removal = Removal(episode, 1, 1);
         var first = remove ? await RemoveAsync(provider, removal) : assignment;
         Assert.True(first.IsSuccess);
         var writes = content.WriteAttempts;
@@ -575,8 +574,8 @@ public sealed class TeamMemberTests
 
         // Act
         var result = remove
-            ? await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), episode, 1, 1))
-            : await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode, 1, 1));
+            ? await RemoveAsync(provider, Removal(episode, 1, 1))
+            : await AssignAsync(provider, Assignment(episode, 1, 1));
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(result.Error).Kind);
@@ -590,7 +589,7 @@ public sealed class TeamMemberTests
         // Arrange
         await using var provider = Services();
         var episode = await RegisterAsync(provider);
-        var request = Assignment(Uuid.CreateVersion4(), episode);
+        var request = Assignment(episode);
         var executor = provider.GetRequiredService<IAggregateExecutor>();
 
         // Act
@@ -615,11 +614,11 @@ public sealed class TeamMemberTests
 
     static TeamMember Owner(Uuid selected = default) => new(TenantId, TeamId, Member(), selected);
 
-    static AssignTeamMember Assignment(Uuid commandId, Uuid episode, long revision = 0, long generation = 0) =>
-        new(commandId, TenantId, TeamId, Member(), episode, revision, generation);
+    static AssignTeamMember Assignment(Uuid episode, long revision = 0, long generation = 0) =>
+        new(TenantId, TeamId, Member(), episode, revision, generation);
 
-    static RemoveTeamMember Removal(Uuid commandId, Uuid episode, long revision, long generation) =>
-        new(commandId, TenantId, TeamId, Member(), episode, revision, generation);
+    static RemoveTeamMember Removal(Uuid episode, long revision, long generation) =>
+        new(TenantId, TeamId, Member(), episode, revision, generation);
 
     static ServiceProvider Services(Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
     {

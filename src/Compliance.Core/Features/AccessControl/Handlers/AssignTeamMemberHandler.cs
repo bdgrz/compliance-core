@@ -68,9 +68,9 @@ public sealed class AssignTeamMemberHandler(NativeOperationExecutor operations,
     {
         var request = context.Request;
         var isSystem = RequestActor.IsSystem(context.Actor);
-        if (request.CommandId == Uuid.Empty || request.TenantId == Uuid.Empty || request.TeamId == Uuid.Empty ||
+        if (request.OperationId == Uuid.Empty || request.TenantId == Uuid.Empty || request.TeamId == Uuid.Empty ||
             request.MemberId == Uuid.Empty || (request.MemberEpisodeId == Uuid.Empty && !isSystem))
-            return Fail(RequestErrorKind.Validation, "A command id, tenant, team, member and member episode are required.");
+            return Fail(RequestErrorKind.Validation, "A tenant, team, member and member episode are required.");
         if ((request.ExpectedAssignmentRevision < 0 || request.ExpectedAssignmentGeneration < 0) && !isSystem)
             return Fail(RequestErrorKind.Validation, "The expected assignment revision and generation must not be negative.");
         var actor = RegisterMemberHandler.ActorOf(context.Actor);
@@ -81,7 +81,7 @@ public sealed class AssignTeamMemberHandler(NativeOperationExecutor operations,
             .ConfigureAwait(false);
         var provenance = Provenance(request, actor, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var prior = await reader.HydrateAsync(Owner(request, request.CommandId), ct).ConfigureAwait(false);
+        var prior = await reader.HydrateAsync(Owner(request, request.OperationId), ct).ConfigureAwait(false);
         var decision = prior.Acceptance.Decide(binding);
         var replay = decision != NativeAcceptanceDecision.None;
         var episodeId = request.MemberEpisodeId == Uuid.Empty ? member.MembershipEpisodeId : request.MemberEpisodeId;
@@ -95,7 +95,7 @@ public sealed class AssignTeamMemberHandler(NativeOperationExecutor operations,
         }
 
         var accepted = await operations.ExecuteAsync(new NativeOperation<TeamMember>(binding,
-            () => Owner(request, request.CommandId), owner => owner.Acceptance,
+            () => Owner(request, request.OperationId), owner => owner.Acceptance,
             (owner, token) => PrepareAsync(owner, request, member, episodeId, provenance.AcceptedAt, token),
             (TeamMember owner, ImmutableContentRef response) => owner.Assign(provenance, response, episodeId, request.ExpectedAssignmentRevision,
                 request.ExpectedAssignmentGeneration)), context, ct).ConfigureAwait(false);
@@ -144,13 +144,13 @@ public sealed class AssignTeamMemberHandler(NativeOperationExecutor operations,
         if (!prepared.IsSuccess)
             return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
         return Result<FirstResponseDescriptor>.Success(await TeamMemberResponses.FreezeCompletedAsync(content,
-            request.TenantId.ToString(), request.CommandId, acceptedAt, ct).ConfigureAwait(false));
+            request.TenantId.ToString(), request.OperationId, acceptedAt, ct).ConfigureAwait(false));
     }
 
     /// <summary>The provenance an assignment carries; the binding of a retry is derived from it.</summary>
     internal static OperationProvenance Provenance(AssignTeamMember request, ActorReference actor,
         DateTimeOffset acceptedAt) =>
-        Owner(request, Uuid.Empty).Provenance(request.CommandId, CommandKind, actor,
+        Owner(request, Uuid.Empty).Provenance(request.OperationId, CommandKind, actor,
             request.MemberEpisodeId == Uuid.Empty ? CurrentEpisode : request.MemberEpisodeId.ToString(),
             request.ExpectedAssignmentRevision >= 0 ? (ulong)request.ExpectedAssignmentRevision : null,
             AuthoredIntentDigest.Compute(request), acceptedAt);

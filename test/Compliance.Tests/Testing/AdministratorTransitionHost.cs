@@ -247,17 +247,17 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
         new(commandId ?? Uuid.CreateVersion4(), TenantId, target.UserId, target.EpisodeId,
             (long)(await MemberAsync(target)).MemberRevision);
 
-    public async Task<AssignTeamMember> AssignRequestAsync(Person target, Uuid? teamId = null, Uuid? commandId = null)
+    public async Task<AssignTeamMember> AssignRequestAsync(Person target, Uuid? teamId = null)
     {
         var assignment = await AssignmentAsync(target, teamId);
-        return new AssignTeamMember(commandId ?? Uuid.CreateVersion4(), TenantId, teamId ?? AdministratorsTeamId,
+        return new AssignTeamMember(TenantId, teamId ?? AdministratorsTeamId,
             target.MemberId, target.EpisodeId, (long)assignment.AssignmentRevision, (long)assignment.AssignmentGeneration);
     }
 
-    public async Task<RemoveTeamMember> RemoveRequestAsync(Person target, Uuid? teamId = null, Uuid? commandId = null)
+    public async Task<RemoveTeamMember> RemoveRequestAsync(Person target, Uuid? teamId = null)
     {
         var assignment = await AssignmentAsync(target, teamId);
-        return new RemoveTeamMember(commandId ?? Uuid.CreateVersion4(), TenantId, teamId ?? AdministratorsTeamId,
+        return new RemoveTeamMember(TenantId, teamId ?? AdministratorsTeamId,
             target.MemberId, target.EpisodeId, (long)assignment.AssignmentRevision, (long)assignment.AssignmentGeneration);
     }
 
@@ -308,21 +308,21 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
     }
 
     public async Task<Result<AdministratorTransitionResponse>> AssignAsync(Person actor, Person target,
-        Uuid? teamId = null, Uuid? commandId = null)
+        Uuid? teamId = null)
     {
         var assignment = await AssignmentAsync(target, teamId);
         return await AssignHandler().HandleAsync(new RequestContext<AssignTeamMember>(new AssignTeamMember(
-            commandId ?? Uuid.CreateVersion4(), TenantId, teamId ?? AdministratorsTeamId, target.MemberId,
+            TenantId, teamId ?? AdministratorsTeamId, target.MemberId,
             target.EpisodeId, (long)assignment.AssignmentRevision, (long)assignment.AssignmentGeneration), Actor(actor)),
             CancellationToken.None);
     }
 
     public async Task<Result<AdministratorTransitionResponse>> RemoveAsync(Person actor, Person target,
-        Uuid? teamId = null, Uuid? commandId = null)
+        Uuid? teamId = null)
     {
         var assignment = await AssignmentAsync(target, teamId);
         return await RemoveHandler().HandleAsync(new RequestContext<RemoveTeamMember>(new RemoveTeamMember(
-            commandId ?? Uuid.CreateVersion4(), TenantId, teamId ?? AdministratorsTeamId, target.MemberId,
+            TenantId, teamId ?? AdministratorsTeamId, target.MemberId,
             target.EpisodeId, (long)assignment.AssignmentRevision, (long)assignment.AssignmentGeneration), Actor(actor)),
             CancellationToken.None);
     }

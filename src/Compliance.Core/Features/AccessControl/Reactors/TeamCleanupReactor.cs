@@ -57,11 +57,10 @@ public sealed partial class TeamCleanupReactor(
     {
         var tenantId = context.Trigger.TenantId;
         var teamId = context.Trigger.TeamId;
-        var sourceEventId = context.Trigger.Metadata.EventId;
         var live = await RbacRelationshipSource.LiveMembersAsync(events, tenantId, teamId, ct).ConfigureAwait(false);
         foreach (var assignment in live)
         {
-            var removal = await bus.SendAsync(TeamMemberEffects.Remove(sourceEventId, tenantId, teamId, assignment),
+            var removal = await bus.SendAsync(TeamMemberEffects.Remove(tenantId, teamId, assignment),
                 context, ct).ConfigureAwait(false);
             if (removal.IsSuccess)
                 continue;

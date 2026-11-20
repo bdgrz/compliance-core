@@ -312,7 +312,7 @@ public sealed class TenantInvitationReactorTests
     }
 
     [Fact]
-    public async Task ShouldReuseAssignmentCommandIdGivenReplayedInvitationAcceptance()
+    public async Task ShouldReuseAssignmentOperationIdGivenReplayedInvitationAcceptance()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -330,7 +330,7 @@ public sealed class TenantInvitationReactorTests
         var assignments = TypedReactionBus.Sent(scenario).OfType<AssignTeamMember>().ToArray();
         Assert.Equal(2, assignments.Length);
         Assert.Equal(assignments[0], assignments[1]);
-        Assert.NotEqual(Uuid.Empty, assignments[0].CommandId);
+        Assert.NotEqual(Uuid.Empty, assignments[0].OperationId);
     }
 
     [Fact]

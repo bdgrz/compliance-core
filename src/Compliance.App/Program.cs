@@ -2901,12 +2901,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
     app.MapPortiaPut<AssignTeamMember, AdministratorTransitionResponse>(
-            "/v1/teams/{team_id}/members/{member_id}/{command_id}",
+            "/v1/teams/{team_id}/members/{member_id}",
             config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult((_, result) => AdministratorTransitionHttp.Result(result))).WithNativeFirstResponse<AssignTeamMember>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
-    app.MapPortiaPut<RemoveTeamMember, AdministratorTransitionResponse>(
-            "/v1/members/{member_id}/team-removals/{command_id}",
+    app.MapPortiaDelete<RemoveTeamMember, AdministratorTransitionResponse>(
+            "/v1/teams/{team_id}/members/{member_id}",
             config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult((_, result) => AdministratorTransitionHttp.Result(result))).WithNativeFirstResponse<RemoveTeamMember>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");

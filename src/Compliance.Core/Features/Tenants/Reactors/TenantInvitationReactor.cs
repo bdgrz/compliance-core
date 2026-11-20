@@ -127,8 +127,8 @@ public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore c
     async ValueTask<Result> AssignAsync(IReactorContext<TenantInvitationAccepted> context, Uuid teamId, Uuid memberId,
         Uuid episodeId, CancellationToken ct)
     {
-        var assignment = await bus.SendAsync(TeamMemberEffects.Assign(context.Trigger.Metadata.EventId,
-            context.Trigger.TenantId, teamId, memberId, episodeId), context, ct).ConfigureAwait(false);
+        var assignment = await bus.SendAsync(TeamMemberEffects.Assign(context.Trigger.TenantId,
+            teamId, memberId, episodeId), context, ct).ConfigureAwait(false);
         if (!assignment.IsSuccess && assignment.Error != TeamMember.AlreadyAssignedConflict)
             throw new ReactionCommandFailedException(assignment.Error);
         return Result.Success;

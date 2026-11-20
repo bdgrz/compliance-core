@@ -75,11 +75,11 @@ public sealed class TenantManagerGuardTests
         await using var host = new AdministratorTransitionHost();
         _ = await host.AddAdministratorAsync();
         var target = await host.AddAdministratorAsync();
-        var request = new RemoveTeamMember(Uuid.CreateVersion4(), host.TenantId,
+        var request = new RemoveTeamMember(host.TenantId,
             host.AdministratorsTeamId, target.MemberId, Uuid.Empty, -1, -1);
         var first = await host.SubmitSystemRemovalAsync(request);
         Assert.True(first.IsSuccess);
-        Assert.Equal(ProcessState.Completed, (await host.DriveAsync(request.CommandId)).State);
+        Assert.Equal(ProcessState.Completed, (await host.DriveAsync(request.OperationId)).State);
 
         // Act
         var retry = await host.SubmitSystemRemovalAsync(request);
@@ -97,11 +97,11 @@ public sealed class TenantManagerGuardTests
         await using var host = new AdministratorTransitionHost();
         var actor = await host.AddAdministratorAsync();
         var target = await host.AddMemberAsync();
-        var request = TeamMemberEffects.Assign(Uuid.CreateVersion4(), host.TenantId,
+        var request = TeamMemberEffects.Assign(host.TenantId,
             host.AdministratorsTeamId, target.MemberId);
         var original = await host.SubmitSystemAssignmentAsync(request);
         Assert.True(original.IsSuccess);
-        Assert.Equal(ProcessState.Completed, (await host.DriveAsync(request.CommandId)).State);
+        Assert.Equal(ProcessState.Completed, (await host.DriveAsync(request.OperationId)).State);
         var retired = await host.DeprovisionAsync(actor, target);
         Assert.True(retired.IsSuccess);
         Assert.Equal(ProcessState.Completed, (await host.DriveAsync(retired.Value!.OperationId)).State);

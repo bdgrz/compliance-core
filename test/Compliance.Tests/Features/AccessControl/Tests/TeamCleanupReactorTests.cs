@@ -114,7 +114,7 @@ public sealed class TeamCleanupReactorTests
     }
 
     [Fact]
-    public async Task ShouldReuseRemovalCommandIdsGivenReplayedTeamDeletion()
+    public async Task ShouldReuseRemovalOperationIdsGivenReplayedTeamDeletion()
     {
         // Arrange
         await using var provider = Build();
@@ -134,7 +134,7 @@ public sealed class TeamCleanupReactorTests
         var replayed = TypedReactionBus.Sent(replay).OfType<RemoveTeamMember>().ToArray();
         Assert.Equal(2, removals.Length);
         Assert.Equal(removals, replayed);
-        Assert.NotEqual(removals[0].CommandId, removals[1].CommandId);
+        Assert.NotEqual(removals[0].OperationId, removals[1].OperationId);
     }
 
     [Fact]
