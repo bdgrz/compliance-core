@@ -71,10 +71,10 @@ public sealed class TeamRole : Aggregate
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "Advisor and Attest authority comes only from engagement assignment."));
         if (_roleId == BuiltInRbac.TenantAdministrationRoleId(_tenantId) && _scope.Kind != AccessGrantScopeKind.Organization)
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "Org Admin is assigned only at organization scope."));
-        if (Version != expectedRevision)
-            return Conflict("The team role revision changed.");
         if (IsAssigned)
             return Result.Success;
+        if (Version != expectedRevision)
+            return Conflict("The team role revision changed.");
         RaiseEvent(new TeamRoleAssigned(_tenantId, _teamId, _roleId, commandId, expectedRevision, actor, _scope));
         return Result.Success;
     }
@@ -86,16 +86,21 @@ public sealed class TeamRole : Aggregate
         if (_teamId == BuiltInRbac.AdministratorsTeamId(_tenantId) &&
             _roleId == BuiltInRbac.TenantAdministrationRoleId(_tenantId) && _scope.Kind == AccessGrantScopeKind.Organization)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The Administrators team keeps Org Admin at organization scope."));
-        if (assignmentId == Uuid.Empty)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation, "An assignment identity is required."));
         if (_selectedFact is { } prior)
             return prior is TeamRoleRemoved removed && removed.ExpectedRevision == expectedRevision &&
                 removed.AssignmentId == assignmentId && removed.Actor == actor ? Result.Success : ChangedIntent();
+        if (!_assignmentId.HasValue)
+            return Result.Success;
+        if (assignmentId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "An assignment identity is required."));
         if (Version != expectedRevision || _assignmentId != assignmentId)
             return Conflict("The team role revision or assignment episode changed.");
         RaiseEvent(new TeamRoleRemoved(_tenantId, _teamId, _roleId, commandId, expectedRevision, actor, assignmentId, _scope));
         return Result.Success;
     }
+
+    public Result Remove(Uuid commandId, ulong expectedRevision, ActorAttribution actor) =>
+        Remove(commandId, expectedRevision, AssignmentId ?? Uuid.Empty, actor);
 
     RequestError? Validate(Uuid commandId, ActorAttribution actor) =>
         commandId == Uuid.Empty || commandId != _selectedCommandId || actor is null ||

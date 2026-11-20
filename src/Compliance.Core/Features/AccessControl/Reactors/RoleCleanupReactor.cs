@@ -58,12 +58,10 @@ public sealed partial class RoleCleanupReactor(
     {
         var tenantId = context.Trigger.TenantId;
         var roleId = context.Trigger.RoleId;
-        var sourceEventId = context.Trigger.Metadata.EventId;
-
         foreach (var permission in await RbacRelationshipSource.LivePermissionsAsync(events, tenantId, roleId, ct)
                      .ConfigureAwait(false))
         {
-            var removal = await bus.SendAsync(RbacPermissionEffects.Remove(sourceEventId, tenantId, roleId, permission),
+            var removal = await bus.SendAsync(RbacPermissionEffects.Remove(tenantId, roleId, permission),
                 context, ct).ConfigureAwait(false);
             if (removal.IsSuccess)
                 continue;
@@ -76,7 +74,7 @@ public sealed partial class RoleCleanupReactor(
         foreach (var team in await RbacRelationshipSource.LiveTeamsAsync(events, tenantId, roleId, ct)
                      .ConfigureAwait(false))
         {
-            var removal = await bus.SendAsync(RbacTeamRoleEffects.Remove(sourceEventId, tenantId, roleId, team),
+            var removal = await bus.SendAsync(RbacTeamRoleEffects.Remove(tenantId, roleId, team),
                 context, ct).ConfigureAwait(false);
             if (removal.IsSuccess)
                 continue;

@@ -83,7 +83,7 @@ public sealed class RoleTeamContentOperationTests
         var teamId = Uuid.CreateVersion4();
         var define = new DefineTeam(TenantId, teamId, "Reviewers");
         Assert.True((await host.SendAsync(define)).IsSuccess);
-        Assert.True((await host.SendAsync(new DeleteTeam(Uuid.CreateVersion4(), TenantId, teamId))).IsSuccess);
+        Assert.True((await host.SendAsync(new DeleteTeam(TenantId, teamId))).IsSuccess);
         var before = (await host.FactsAsync("rbac-teams")).Count;
 
         // Act
@@ -153,14 +153,13 @@ public sealed class RoleTeamContentOperationTests
         var roleId = Uuid.CreateVersion4();
         Assert.True((await host.SendAsync(new DefineRole(TenantId, roleId, BuiltInRbac.ViewerRoleName),
             FixedActor)).IsSuccess);
-        var commandId = Uuid.CreateVersion4();
-        var rename = new RenameRole(commandId, TenantId, roleId, "Read only");
+        var rename = new RenameRole(TenantId, roleId, "Read only", 1);
         Assert.True((await host.SendAsync(rename, FixedActor)).IsSuccess);
         var before = (await host.FactsAsync("rbac-roles")).Count;
 
         // Act
         var retry = await host.SendAsync(rename, FixedActor);
-        var changed = await host.SendAsync(new RenameRole(commandId, TenantId, roleId, "Observer"), FixedActor);
+        var changed = await host.SendAsync(new RenameRole(TenantId, roleId, "Observer", 1), FixedActor);
 
         // Assert
         Assert.True(retry.IsSuccess);
@@ -179,7 +178,7 @@ public sealed class RoleTeamContentOperationTests
 
         // Act
         var result = await host.SendAsync(
-            new RenameRole(Uuid.CreateVersion4(), TenantId, roleId, BuiltInRbac.ViewerRoleName), FixedActor);
+            new RenameRole(TenantId, roleId, BuiltInRbac.ViewerRoleName, 1), FixedActor);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -193,12 +192,12 @@ public sealed class RoleTeamContentOperationTests
         await using var host = new Host();
         var roleId = Uuid.CreateVersion4();
         await host.SeedAsync(new Role(TenantId, roleId), role => role.Define("Reviewer"));
-        var delete = new DeleteRole(Uuid.CreateVersion4(), TenantId, roleId);
+        var delete = new DeleteRole(TenantId, roleId);
         Assert.True((await host.SendAsync(delete)).IsSuccess);
 
         // Act
         var retry = await host.SendAsync(delete);
-        var second = await host.SendAsync(new DeleteRole(Uuid.CreateVersion4(), TenantId, roleId));
+        var second = await host.SendAsync(new DeleteRole(TenantId, roleId));
 
         // Assert
         Assert.True(retry.IsSuccess);
@@ -213,7 +212,7 @@ public sealed class RoleTeamContentOperationTests
         await using var host = new Host();
         var teamId = Uuid.CreateVersion4();
         await host.SeedAsync(new Team(TenantId, teamId), team => team.Define("Reviewers"));
-        var delete = new DeleteTeam(Uuid.CreateVersion4(), TenantId, teamId);
+        var delete = new DeleteTeam(TenantId, teamId);
         Assert.True((await host.SendAsync(delete)).IsSuccess);
 
         // Act
@@ -233,28 +232,13 @@ public sealed class RoleTeamContentOperationTests
             team => team.Define(BuiltInRbac.ViewersTeamName));
 
         // Act
-        var builtIn = await host.SendAsync(new DeleteTeam(Uuid.CreateVersion4(), TenantId,
+        var builtIn = await host.SendAsync(new DeleteTeam(TenantId,
             BuiltInRbac.ViewersTeamId(TenantId)));
-        var undefined = await host.SendAsync(new DeleteTeam(Uuid.CreateVersion4(), TenantId, Uuid.CreateVersion4()));
+        var undefined = await host.SendAsync(new DeleteTeam(TenantId, Uuid.CreateVersion4()));
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, builtIn.Error?.Kind);
         Assert.Equal(RequestErrorKind.NotFound, undefined.Error?.Kind);
-    }
-
-    [Fact]
-    public async Task ShouldRejectDeletionGivenACommandIdEqualToTheTeamId()
-    {
-        // Arrange
-        await using var host = new Host();
-        var teamId = Uuid.CreateVersion4();
-        await host.SeedAsync(new Team(TenantId, teamId), team => team.Define("Reviewers"));
-
-        // Act
-        var result = await host.SendAsync(new DeleteTeam(teamId, TenantId, teamId));
-
-        // Assert
-        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
     }
 
     sealed class Host : IAsyncDisposable

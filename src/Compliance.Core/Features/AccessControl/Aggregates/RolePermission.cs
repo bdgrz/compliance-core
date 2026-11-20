@@ -69,7 +69,9 @@ public sealed class RolePermission : Aggregate
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "The permission is not defined by the product."));
         if (BuiltInRbac.IsBuiltInRole(_tenantId, _roleId) && (!builtInSetup || Version != 0))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "Built-in role permissions are immutable after setup."));
-        if (Version != expectedRevision || IsAssigned)
+        if (IsAssigned)
+            return Result.Success;
+        if (Version != expectedRevision)
             return Conflict("The role permission changed or is already assigned.");
         RaiseEvent(new RolePermissionAssigned(_tenantId, _roleId, _permission, commandId, expectedRevision, actor));
         return Result.Success;
@@ -79,19 +81,24 @@ public sealed class RolePermission : Aggregate
     {
         if (Validate(commandId, actor) is { } error)
             return Result.Failure(error);
-        if (assignmentId == Uuid.Empty)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation, "An assignment identity is required."));
         if (BuiltInRbac.IsBuiltInRole(_tenantId, _roleId))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "Built-in role permissions cannot be removed."));
         if (_selectedFact is { } prior)
             return prior is RolePermissionRemoved removed && removed.ExpectedRevision == expectedRevision &&
                 removed.AssignmentId == assignmentId && removed.Actor == actor ? Result.Success : ChangedIntent();
+        if (!_assignmentId.HasValue)
+            return Result.Success;
+        if (assignmentId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "An assignment identity is required."));
         if (Version != expectedRevision || _assignmentId != assignmentId)
             return Conflict("The role permission revision or assignment episode changed.");
         RaiseEvent(new RolePermissionRemoved(_tenantId, _roleId, _permission, commandId, expectedRevision, actor,
             assignmentId));
         return Result.Success;
     }
+
+    public Result Remove(Uuid commandId, ulong expectedRevision, ActorAttribution actor) =>
+        Remove(commandId, expectedRevision, AssignmentId ?? Uuid.Empty, actor);
 
     RequestError? Validate(Uuid commandId, ActorAttribution actor) =>
         commandId == Uuid.Empty || commandId != _selectedCommandId || actor is null ||

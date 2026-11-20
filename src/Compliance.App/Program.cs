@@ -2891,7 +2891,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaPut<DefineTeam>("/v1/teams/{team_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<DefineTeam>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
-    app.MapPortiaPut<DeleteTeam>("/v1/teams/{team_id}/deletions/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<DeleteTeam>()
+    app.MapPortiaDelete<DeleteTeam>("/v1/teams/{team_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<DeleteTeam>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
     app.MapPortiaGet<GetTeam, TeamView>("/v1/teams/{team_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
@@ -2913,10 +2913,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListTeamMembers, Page<TeamMemberView>>("/v1/teams/{team_id}/members", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
-    app.MapPortiaPut<AssignTeamRole>("/v1/teams/{team_id}/roles/{role_id}/assignments/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<AssignTeamRole>()
+    app.MapPortiaPut<AssignTeamRole>("/v1/teams/{team_id}/role-assignments/{role_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<AssignTeamRole>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
-    app.MapPortiaPut<RemoveTeamRole>("/v1/teams/{team_id}/roles/{role_id}/removals/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<RemoveTeamRole>()
+    app.MapPortiaDelete<RemoveTeamRole>("/v1/teams/{team_id}/role-assignments/{role_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<RemoveTeamRole>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
     app.MapPortiaPut<DefineRole>("/v1/roles/{role_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<DefineRole>()
@@ -2932,10 +2932,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Organization access");
 
-    app.MapPortiaPut<RenameRole>("/v1/roles/{role_id}/renames/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<RenameRole>()
+    app.MapPortiaPut<RenameRole>("/v1/roles/{role_id}/name", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<RenameRole>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Roles");
-    app.MapPortiaPut<DeleteRole>("/v1/roles/{role_id}/deletions/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<DeleteRole>()
+    app.MapPortiaDelete<DeleteRole>("/v1/roles/{role_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<DeleteRole>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Roles");
     app.MapPortiaGet<GetRole, RoleView>("/v1/roles/{role_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
@@ -2944,10 +2944,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListRoles, Page<RoleView>>("/v1/roles", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Roles");
-    app.MapPortiaPut<AssignRolePermission>("/v1/roles/{role_id}/permissions/{permission}/assignments/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<AssignRolePermission>()
+    app.MapPortiaPut<AssignRolePermission>("/v1/roles/{role_id}/permissions/{permission}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<AssignRolePermission>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Roles");
-    app.MapPortiaDelete<RemoveRolePermission>("/v1/roles/{role_id}/permissions/{permission}/removals/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<RemoveRolePermission>()
+    app.MapPortiaDelete<RemoveRolePermission>("/v1/roles/{role_id}/permissions/{permission}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<RemoveRolePermission>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Roles");
     app.MapPortiaGet<ListRolePermissions, Page<RolePermissionView>>(

@@ -11,4 +11,7 @@ namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 /// </summary>
 [Discriminator("bdgrz.rbac.role.define", 1)]
 public sealed record DefineRole(Uuid TenantId, Uuid RoleId, string Name)
-    : IRequest, IClientRbacMutationRequest, ICallable;
+    : IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => RoleId;
+}

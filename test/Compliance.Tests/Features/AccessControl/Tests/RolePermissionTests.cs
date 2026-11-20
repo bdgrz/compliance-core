@@ -39,10 +39,10 @@ public sealed class RolePermissionTests
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var identity = RequestMetadata.Create();
-        var assignment = new AssignRolePermission(TenantId, RoleId, Permission, identity.RequestId, 0);
+        var assignment = new AssignRolePermission(TenantId, RoleId, Permission, 0);
         Assert.True((await bus.DispatchAsync(assignment, bus.CreateContext(RequestActor.System, identity))).IsSuccess);
-        Assert.True((await bus.SendAsync(new RemoveRolePermission(TenantId, RoleId, Permission,
-            Uuid.CreateVersion4(), 1, identity.RequestId), RequestActor.System)).IsSuccess);
+        Assert.True((await bus.SendAsync(new RemoveRolePermission(TenantId, RoleId, Permission, 1),
+            RequestActor.System)).IsSuccess);
 
         // Act
         var retry = await bus.DispatchAsync(assignment, bus.CreateContext(RequestActor.System, identity));
@@ -229,7 +229,7 @@ public sealed class RolePermissionTests
         await using var provider = Services();
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
-        var request = new AssignRolePermission(TenantId, RoleId, Permission, Uuid.CreateVersion4(), 0);
+        var request = new AssignRolePermission(TenantId, RoleId, Permission, 0);
         Assert.True((await bus.SendAsync(request, RequestActor.System)).IsSuccess);
 
         // Act
@@ -246,7 +246,7 @@ public sealed class RolePermissionTests
         await using var provider = Services(allowed: false);
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
-        var request = new AssignRolePermission(TenantId, RoleId, Permission, Uuid.CreateVersion4(), 0);
+        var request = new AssignRolePermission(TenantId, RoleId, Permission, 0);
         Assert.True((await bus.SendAsync(request, RequestActor.System)).IsSuccess);
 
         // Act
@@ -256,7 +256,7 @@ public sealed class RolePermissionTests
     }
 
     [Fact]
-    public async Task ShouldValidateTheTypedKeyGivenAnEmptyCommandIdentity()
+    public async Task ShouldValidateTheRelationshipOwnerGivenAnEmptyRoleIdentity()
     {
         // Arrange
         await using var provider = Services();
@@ -264,7 +264,7 @@ public sealed class RolePermissionTests
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
 
         // Act
-        var result = await bus.SendAsync(new AssignRolePermission(TenantId, RoleId, Permission, Uuid.Empty, 0),
+        var result = await bus.SendAsync(new AssignRolePermission(TenantId, Uuid.Empty, Permission, 0),
             RequestActor.System);
 
         // Assert
@@ -281,18 +281,17 @@ public sealed class RolePermissionTests
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var roleId = BuiltInRbac.TenantAdministrationRoleId(TenantId);
-        var assignment = new AssignRolePermission(TenantId, roleId, permission, Uuid.CreateVersion4(), 0);
+        var assignment = new AssignRolePermission(TenantId, roleId, permission, 0);
         Assert.True((await bus.SendAsync(assignment, RequestActor.System)).IsSuccess);
 
         // Act
-        var result = await bus.SendAsync(new RemoveRolePermission(TenantId, roleId, permission,
-            Uuid.CreateVersion4(), 1, assignment.CommandId), RequestActor.System);
+        var result = await bus.SendAsync(new RemoveRolePermission(TenantId, roleId, permission, 1), RequestActor.System);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
         var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new RolePermission(TenantId, roleId, permission));
-        Assert.Equal(assignment.CommandId, owner.AssignmentId);
+        Assert.Equal(assignment.OperationId, owner.AssignmentId);
         Assert.Equal(1UL, owner.Version);
     }
 
@@ -308,8 +307,7 @@ public sealed class RolePermissionTests
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
 
         // Act
-        var result = await bus.SendAsync(new AssignRolePermission(TenantId, RoleId, permission!,
-            Uuid.CreateVersion4(), 0), RequestActor.System);
+        var result = await bus.SendAsync(new AssignRolePermission(TenantId, RoleId, permission!, 0), RequestActor.System);
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind);

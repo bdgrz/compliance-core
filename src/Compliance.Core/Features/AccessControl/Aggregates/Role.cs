@@ -150,10 +150,31 @@ public sealed class Role : Aggregate
             : Result.Success;
     }
 
+    /// <summary>Checks a rename against the revision the caller observed.</summary>
+    public Result PrepareRename(string name, ulong expectedRevision)
+    {
+        if (Version != expectedRevision)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The role revision changed."));
+        return PrepareRename(name);
+    }
+
     /// <summary>Accepts the rename as the native fact of <paramref name="operation" />.</summary>
     public Result Rename(OperationProvenance operation, ImmutableContentRef firstResponse, string name)
     {
         var prepared = Prepare(operation, firstResponse, PrepareRename(name));
+        if (!prepared.IsSuccess)
+            return prepared;
+        var normalized = name.Trim();
+        RaiseEvent(new RoleRenamed(_tenantId, Id, normalized, operation.LogicalId, operation, firstResponse));
+        return Result.Success;
+    }
+
+    /// <summary>Accepts a rename only at the revision the caller observed.</summary>
+    public Result Rename(OperationProvenance operation, ImmutableContentRef firstResponse, string name,
+        ulong expectedRevision)
+    {
+        var prepared = Prepare(operation, firstResponse, PrepareRename(name, expectedRevision));
         if (!prepared.IsSuccess)
             return prepared;
         var normalized = name.Trim();

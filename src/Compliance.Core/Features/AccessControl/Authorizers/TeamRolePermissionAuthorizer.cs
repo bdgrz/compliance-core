@@ -186,7 +186,7 @@ sealed class TeamRolePermissionAuthorizer(IAggregateReader reader, IDomainEventR
             var primaries = await reader.HydrateAsync(new PrimaryOrgAdmins(tenantId), ct).ConfigureAwait(false);
             if (primaries.HasDesignated(userId, current.MembershipEpisodeId, current.PrimaryDesignationId))
             {
-                var names = BuiltInRolePermissions.Create(current.PrimaryDesignationId, tenantId)
+                var names = BuiltInRolePermissions.Create(tenantId)
                     .Where(grant => grant.RoleId == BuiltInRbac.TenantAdministrationRoleId(tenantId) &&
                         (permission is null || grant.Permission == permission))
                     .Select(grant => grant.Permission).Distinct(StringComparer.Ordinal).ToArray();

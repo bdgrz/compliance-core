@@ -35,11 +35,11 @@ public sealed class DeleteRoleHandler(NativeOperationExecutor operations, IImmut
     public ValueTask<Result> HandleAsync(IRequestContext<DeleteRole> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (request.TenantId == Uuid.Empty || request.RoleId == Uuid.Empty || request.CommandId == request.RoleId)
+        if (request.TenantId == Uuid.Empty || request.RoleId == Uuid.Empty)
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A tenant, role and a command id distinct from the role are required.")));
+                "A tenant and role are required.")));
         return UnitOperations.RunAsync(operations, content, clock, context, RegisterMemberHandler.ActorOf(context.Actor),
-            request.CommandId, CommandKind, CurrentEpisode, null,
+            request.OperationId, CommandKind, CurrentEpisode, null,
             selected => new Role(request.TenantId, request.RoleId, selected), role => role.Acceptance,
             role => role.PrepareDelete(), (Role role, OperationProvenance operation, ImmutableContentRef response) => role.Delete(operation, response),
             Role.AlreadyDeleted);

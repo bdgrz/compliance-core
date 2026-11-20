@@ -1,16 +1,21 @@
 using Cntryl.Portia;
+using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
 /// <summary>
-///     Renames a role. <paramref name="CommandId" /> is the logical identity of the rename and an exact retry replays
-///     the original acceptance; the same identity with a different name conflicts.
+///     Replaces a role's name at the revision the caller observed. The request identity is derived from the role and
+///     expected revision, so an identical retry replays while a changed body at that revision conflicts.
 /// </summary>
-[Discriminator("bdgrz.rbac.role.rename", 1)]
-public sealed record RenameRole(Uuid CommandId, Uuid TenantId, Uuid RoleId, string Name)
+[Discriminator("bdgrz.rbac.role.rename", 2)]
+public sealed record RenameRole(Uuid TenantId, Uuid RoleId, string Name, long ExpectedRevision)
     : IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest
 {
-    Uuid IIdentifiedRequest.RequestId => CommandId;
+    [JsonIgnore]
+    public Uuid OperationId => Uuid.CreateVersion5(RoleId,
+        $"role-rename:{TenantId}:{ExpectedRevision}");
+
+    Uuid IIdentifiedRequest.RequestId => OperationId;
 }

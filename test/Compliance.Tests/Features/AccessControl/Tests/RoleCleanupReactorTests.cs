@@ -119,8 +119,9 @@ public sealed class RoleCleanupReactorTests
         Assert.Equal(2, scenario.SentRequests.Count);
         var permission = Assert.Single(scenario.SentRequests.OfType<RemoveRolePermission>());
         Assert.Equal(RbacPermissions.ProgramManage, permission.Permission);
-        Assert.Equal((await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, RbacPermissions.ProgramManage)))
-            .AssignmentId, permission.AssignmentId);
+        Assert.Equal((await CleanupReactorHost.ReadAsync(provider,
+            new RolePermission(TenantId, RoleId, RbacPermissions.ProgramManage))).Version,
+            permission.ExpectedRevision);
         var teamRole = Assert.Single(scenario.SentRequests.OfType<RemoveTeamRole>());
         Assert.Equal(team, teamRole.TeamId);
     }
@@ -146,9 +147,8 @@ public sealed class RoleCleanupReactorTests
         Assert.Equal(first.SentRequests.Count, replay.SentRequests.Count);
         var removal = Assert.IsType<RemoveRolePermission>(first.SentRequests.First(static request => request is RemoveRolePermission));
         Assert.Equal(removal, replay.SentRequests.First(static request => request is RemoveRolePermission));
-        Assert.Equal(permission.AssignmentId, removal.AssignmentId);
         Assert.Equal(permission.Version, removal.ExpectedRevision);
-        Assert.NotEqual(Uuid.Empty, removal.CommandId);
+        Assert.NotEqual(Uuid.Empty, removal.OperationId);
         var teamRemoval = Assert.IsType<RemoveTeamRole>(first.SentRequests.First(static request => request is RemoveTeamRole));
         Assert.Equal(teamRemoval, replay.SentRequests.First(static request => request is RemoveTeamRole));
     }

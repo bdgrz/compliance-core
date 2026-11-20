@@ -32,8 +32,8 @@ public sealed class RemoveRolePermissionHandler(IAggregateExecutor executor)
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The Tenant Administration role keeps tenant access and RBAC management.")));
         return executor.ExecuteAsync(
-            new RolePermission(request.TenantId, request.RoleId, permission, request.CommandId),
-            assignment => AggregateOutcome.CommitOnSuccess(assignment.Remove(request.CommandId, request.ExpectedRevision,
-                request.AssignmentId, RbacOperationActor.From(context.Actor))), context, ct);
+            new RolePermission(request.TenantId, request.RoleId, permission, request.OperationId),
+            assignment => AggregateOutcome.CommitOnSuccess(assignment.Remove(request.OperationId, request.ExpectedRevision,
+                RbacOperationActor.From(context.Actor))), context, ct);
     }
 }

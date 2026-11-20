@@ -1,12 +1,26 @@
+using System.Globalization;
+using System.Text.Json.Serialization;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
 namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 
-[Discriminator("bdgrz.rbac.team-role.remove", 1)]
+[Discriminator("bdgrz.rbac.team-role.remove", 2)]
 public sealed record RemoveTeamRole(Uuid TenantId, Uuid TeamId, Uuid RoleId,
-    Uuid CommandId, ulong ExpectedRevision, Uuid AssignmentId, AccessGrantScope? Scope = null)
+    ulong ExpectedRevision, AccessGrantScope? Scope = null)
     : IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest
 {
-    Uuid IIdentifiedRequest.RequestId => CommandId;
+    [JsonIgnore]
+    public Uuid OperationId
+    {
+        get
+        {
+            var scope = Scope ?? new AccessGrantScope(AccessGrantScopeKind.Organization, TenantId);
+            var identity = string.Create(CultureInfo.InvariantCulture,
+                $"team-role:remove\n{TenantId}\n{TeamId}\n{RoleId}\n{(int)scope.Kind}\n{scope.Id}\n{scope.ResourceType}\n{ExpectedRevision}");
+            return Uuid.CreateVersion5(TeamId, identity);
+        }
+    }
+
+    Uuid IIdentifiedRequest.RequestId => OperationId;
 }

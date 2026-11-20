@@ -129,10 +129,10 @@ public sealed class TenantRbacBootstrapReactorTests
         Assert.All(grants, grant =>
         {
             Assert.Equal(tenantId, grant.TenantId);
-            Assert.NotEqual(Uuid.Empty, grant.CommandId);
+            Assert.NotEqual(Uuid.Empty, grant.OperationId);
             Assert.Equal(0UL, grant.ExpectedRevision);
         });
-        Assert.Equal(50, grants.Select(grant => grant.CommandId).Distinct().Count());
+        Assert.Equal(50, grants.Select(grant => grant.OperationId).Distinct().Count());
         AssertPermissions(grants, BuiltInRbac.TenantAdministrationRoleId(tenantId),
             RbacPermissions.TenantAccess, RbacPermissions.TenantRbacManage, RbacPermissions.ProgramManage, "policies.approve",
             RbacPermissions.ApplicationInventoryManage, RbacPermissions.ApplicationRestrictedRead,
@@ -241,7 +241,7 @@ public sealed class TenantRbacBootstrapReactorTests
             registration.CommandId != Uuid.Empty);
         Assert.Contains(prior, request => request is AssignTeamRole assignment &&
             assignment.TenantId == tenantId && assignment.TeamId == adminTeamId && assignment.RoleId == adminRoleId &&
-            assignment.CommandId != Uuid.Empty && assignment.ExpectedRevision == 0);
+            assignment.OperationId != Uuid.Empty && assignment.ExpectedRevision == 0);
         AssertPermissions(prior.OfType<AssignRolePermission>().ToArray(), adminRoleId,
             RbacPermissions.TenantAccess, RbacPermissions.TenantRbacManage, RbacPermissions.ProgramManage);
         Assert.DoesNotContain(prior, request => request is DefineRole role && role.RoleId != adminRoleId);
@@ -381,7 +381,7 @@ public sealed class TenantRbacBootstrapReactorTests
         Assert.Equal(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
         var removal = await inner.SendAsync(new RemoveRolePermission(tenantId, interrupted.RoleId,
-            interrupted.Permission, Uuid.CreateVersion4(), 1, interrupted.CommandId), RequestActor.System);
+            interrupted.Permission, 1), RequestActor.System);
         var standingAdminPermission = interrupted.RoleId == BuiltInRbac.TenantAdministrationRoleId(tenantId) &&
             interrupted.Permission is RbacPermissions.TenantAccess or RbacPermissions.TenantRbacManage;
         Assert.Equal(standingAdminPermission ? RequestErrorKind.Conflict : RequestErrorKind.Forbidden, removal.Error?.Kind);
@@ -399,7 +399,7 @@ public sealed class TenantRbacBootstrapReactorTests
             var owner = await reader.HydrateAsync(new RolePermission(tenantId, grant.RoleId, grant.Permission));
             Assert.True(owner.IsAssigned);
             Assert.Equal(1UL, owner.Version);
-            Assert.Equal(grant.CommandId, owner.AssignmentId);
+            Assert.Equal(grant.OperationId, owner.AssignmentId);
         }
         Assert.All(bus.Identities, identity => Assert.Equal(identity.Typed, identity.Metadata));
         Assert.NotEqual(ProjectionCheckpoint.Start,
@@ -455,7 +455,7 @@ public sealed class TenantRbacBootstrapReactorTests
         var removed = interrupted.TeamId != BuiltInRbac.AdministratorsTeamId(tenantId);
         if (removed)
             Assert.True((await inner.SendAsync(new RemoveTeamRole(tenantId, interrupted.TeamId, interrupted.RoleId,
-                Uuid.CreateVersion4(), 1, interrupted.CommandId), RequestActor.System)).IsSuccess);
+                1), RequestActor.System)).IsSuccess);
 
         // Act
         await scenario.RunAsync(reactor);
@@ -471,7 +471,7 @@ public sealed class TenantRbacBootstrapReactorTests
             var isRemoved = removed && grant == interrupted;
             Assert.Equal(!isRemoved, owner.IsAssigned);
             Assert.Equal(isRemoved ? 2UL : 1UL, owner.Version);
-            Assert.Equal(isRemoved ? null : (Uuid?)grant.CommandId, owner.AssignmentId);
+            Assert.Equal(isRemoved ? null : (Uuid?)grant.OperationId, owner.AssignmentId);
         }
         Assert.All(bus.Identities, identity => Assert.Equal(identity.Typed, identity.Metadata));
         Assert.Equal(50, bus.Grants.Distinct().Count());
@@ -504,14 +504,14 @@ public sealed class TenantRbacBootstrapReactorTests
             if (request is AssignRolePermission grant)
             {
                 Grants.Add(grant);
-                Identities.Add((grant.CommandId, context.RequestId));
+                Identities.Add((grant.OperationId, context.RequestId));
                 if (!interruptRoleLinks && Grants.Count == interruption)
                     throw new IOException("Interrupted after the owner committed and before checkpointing.");
             }
             if (request is AssignTeamRole roleGrant)
             {
                 RoleGrants.Add(roleGrant);
-                Identities.Add((roleGrant.CommandId, context.RequestId));
+                Identities.Add((roleGrant.OperationId, context.RequestId));
                 if (interruptRoleLinks && RoleGrants.Count == interruption)
                     throw new IOException("Interrupted after the team role committed and before checkpointing.");
             }

@@ -20,8 +20,8 @@ public sealed class AssignRolePermissionHandler(IAggregateExecutor executor)
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A tenant, role and permission are required.")));
         return executor.ExecuteAsync(
-            new RolePermission(request.TenantId, request.RoleId, request.Permission, request.CommandId),
-            assignment => AggregateOutcome.CommitOnSuccess(assignment.Assign(request.CommandId, request.ExpectedRevision,
+            new RolePermission(request.TenantId, request.RoleId, request.Permission, request.OperationId),
+            assignment => AggregateOutcome.CommitOnSuccess(assignment.Assign(request.OperationId, request.ExpectedRevision,
                 RbacOperationActor.From(context.Actor), builtInSetup: RequestActor.IsSystem(context.Actor))), context, ct);
     }
 }

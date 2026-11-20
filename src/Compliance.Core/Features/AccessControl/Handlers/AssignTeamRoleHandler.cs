@@ -19,8 +19,8 @@ public sealed class AssignTeamRoleHandler(IAggregateExecutor executor) : IReques
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A tenant, team and role are required.")));
         return executor.ExecuteAsync(
-            new TeamRole(request.TenantId, request.TeamId, request.RoleId, request.CommandId, request.Scope),
-            assignment => AggregateOutcome.CommitOnSuccess(assignment.Assign(request.CommandId, request.ExpectedRevision,
+            new TeamRole(request.TenantId, request.TeamId, request.RoleId, request.OperationId, request.Scope),
+            assignment => AggregateOutcome.CommitOnSuccess(assignment.Assign(request.OperationId, request.ExpectedRevision,
                 RbacOperationActor.From(context.Actor))), context, ct);
     }
 }

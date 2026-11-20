@@ -30,7 +30,7 @@ public sealed class RemoveRolePermissionRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new RemoveRolePermission(TenantId, RoleId, Permission, Uuid.CreateVersion4(), 1, RbacPermissionFacts.AssignmentId(TenantId, RoleId, Permission)))
+            .When(new RemoveRolePermission(TenantId, RoleId, Permission, 1))
             // Assert
             .ExpectSuccess();
     }
@@ -46,7 +46,7 @@ public sealed class RemoveRolePermissionRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new RemoveRolePermission(TenantId, RoleId, Permission, Uuid.CreateVersion4(), 1, RbacPermissionFacts.AssignmentId(TenantId, RoleId, Permission)))
+            .When(new RemoveRolePermission(TenantId, RoleId, Permission, 1))
             // Assert
             .ExpectDenied(RequestErrorKind.Forbidden)
             .ExpectNotHandled();

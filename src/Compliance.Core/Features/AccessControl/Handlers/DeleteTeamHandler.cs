@@ -35,11 +35,11 @@ public sealed class DeleteTeamHandler(NativeOperationExecutor operations, IImmut
     public ValueTask<Result> HandleAsync(IRequestContext<DeleteTeam> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (request.TenantId == Uuid.Empty || request.TeamId == Uuid.Empty || request.CommandId == request.TeamId)
+        if (request.TenantId == Uuid.Empty || request.TeamId == Uuid.Empty)
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A tenant, team and a command id distinct from the team are required.")));
+                "A tenant and team are required.")));
         return UnitOperations.RunAsync(operations, content, clock, context, RegisterMemberHandler.ActorOf(context.Actor),
-            request.CommandId, CommandKind, CurrentEpisode, null,
+            request.OperationId, CommandKind, CurrentEpisode, null,
             selected => new Team(request.TenantId, request.TeamId, selected), team => team.Acceptance,
             team => team.PrepareDelete(), (Team team, OperationProvenance operation, ImmutableContentRef response) => team.Delete(operation, response),
             Team.AlreadyDeleted);

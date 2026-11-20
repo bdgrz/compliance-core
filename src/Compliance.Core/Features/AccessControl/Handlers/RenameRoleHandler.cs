@@ -53,17 +53,18 @@ public sealed class RenameRoleHandler(NativeOperationExecutor operations, IImmut
     public ValueTask<Result> HandleAsync(IRequestContext<RenameRole> context, CancellationToken ct)
     {
         var request = context.Request;
+        if (request.TenantId == Uuid.Empty || request.RoleId == Uuid.Empty || request.ExpectedRevision < 0)
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A tenant, role and non-negative expected revision are required.")));
         if (BuiltInRbac.IsBuiltInRole(request.TenantId, request.RoleId))
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Built-in roles cannot be renamed.")));
-        if (request.CommandId == request.RoleId)
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A command id distinct from the role is required.")));
 
         return UnitOperations.RunAsync(operations, content, clock, context, RegisterMemberHandler.ActorOf(context.Actor),
-            request.CommandId, CommandKind, CurrentEpisode, null,
+            request.OperationId, CommandKind, CurrentEpisode, (ulong)request.ExpectedRevision,
             selected => new Role(request.TenantId, request.RoleId, selected), role => role.Acceptance,
-            role => role.PrepareRename(request.Name),
-            (Role role, OperationProvenance operation, ImmutableContentRef response) => role.Rename(operation, response, request.Name), Role.NameUnchanged);
+            role => role.PrepareRename(request.Name, (ulong)request.ExpectedRevision),
+            (Role role, OperationProvenance operation, ImmutableContentRef response) =>
+                role.Rename(operation, response, request.Name, (ulong)request.ExpectedRevision), Role.NameUnchanged);
     }
 }

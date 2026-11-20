@@ -21,15 +21,15 @@ namespace Bdgrz.Compliance.Features.AccessControl.Services;
 
 static class BuiltInRolePermissions
 {
-    public static IEnumerable<AssignRolePermission> Create(Uuid sourceEventId, Uuid tenantId)
+    public static IEnumerable<AssignRolePermission> Create(Uuid tenantId)
     {
         var administrator = BuiltInRbac.TenantAdministrationRoleId(tenantId);
         var lead = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var contributor = BuiltInRbac.ComplianceParticipationRoleId(tenantId);
         var viewer = BuiltInRbac.ViewerRoleId(tenantId);
         foreach (var role in new[] { administrator, lead, contributor, viewer })
-            yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role, RbacPermissions.TenantAccess);
-        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, administrator, RbacPermissions.TenantRbacManage);
+            yield return RbacPermissionEffects.Assign(tenantId, role, RbacPermissions.TenantAccess);
+        yield return RbacPermissionEffects.Assign(tenantId, administrator, RbacPermissions.TenantRbacManage);
         string[] managerPermissions =
         [
             RbacPermissions.ProgramManage,
@@ -47,34 +47,34 @@ static class BuiltInRolePermissions
         ];
         foreach (var role in new[] { administrator, lead })
             foreach (var permission in managerPermissions)
-                yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role, permission);
+                yield return RbacPermissionEffects.Assign(tenantId, role, permission);
         foreach (var role in new[] { administrator, lead, contributor })
         {
-            yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role, RbacPermissions.ApplicationImportStage);
-            yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role, RbacPermissions.EvidenceRedactionPrepare);
+            yield return RbacPermissionEffects.Assign(tenantId, role, RbacPermissions.ApplicationImportStage);
+            yield return RbacPermissionEffects.Assign(tenantId, role, RbacPermissions.EvidenceRedactionPrepare);
         }
-        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, administrator, FieldClasses.WorkforceManagerChain.ReadPermission);
-        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead, FieldClasses.WorkforceManagerChain.ReadPermission);
-        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead, RbacPermissions.EvidenceRedactionApprove);
+        yield return RbacPermissionEffects.Assign(tenantId, administrator, FieldClasses.WorkforceManagerChain.ReadPermission);
+        yield return RbacPermissionEffects.Assign(tenantId, lead, FieldClasses.WorkforceManagerChain.ReadPermission);
+        yield return RbacPermissionEffects.Assign(tenantId, lead, RbacPermissions.EvidenceRedactionApprove);
         foreach (var role in new[] { lead, contributor })
-            yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role,
+            yield return RbacPermissionEffects.Assign(tenantId, role,
                 Bdgrz.Compliance.Features.Remediation.Contracts.WaiverPermissions.Request);
         foreach (var role in new[] { administrator, lead })
-            yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role,
+            yield return RbacPermissionEffects.Assign(tenantId, role,
                 Bdgrz.Compliance.Features.Remediation.Contracts.WaiverPermissions.Review);
-        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+        yield return RbacPermissionEffects.Assign(tenantId, lead,
             Bdgrz.Compliance.Features.Remediation.Contracts.CorrectiveActionPermissions.Cancel);
-        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+        yield return RbacPermissionEffects.Assign(tenantId, lead,
             Bdgrz.Compliance.Features.Remediation.Contracts.CorrectiveActionPermissions.Change);
         foreach (var role in new[] { lead, contributor })
-            yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role,
+            yield return RbacPermissionEffects.Assign(tenantId, role,
                 Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Record);
-        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+        yield return RbacPermissionEffects.Assign(tenantId, lead,
             Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Manage);
-        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+        yield return RbacPermissionEffects.Assign(tenantId, lead,
             Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Review);
-        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+        yield return RbacPermissionEffects.Assign(tenantId, lead,
             Bdgrz.Compliance.Features.Evidence.Services.EvidenceSupportPermissions.Withdraw);
-        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, viewer, RbacPermissions.EvidenceArtifactRead);
+        yield return RbacPermissionEffects.Assign(tenantId, viewer, RbacPermissions.EvidenceArtifactRead);
     }
 }

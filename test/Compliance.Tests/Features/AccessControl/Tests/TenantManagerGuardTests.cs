@@ -671,17 +671,14 @@ public sealed class TenantManagerGuardTests
 
         // Act
         var removeRole = await new RemoveTeamRoleHandler(executor).HandleAsync(new RequestContext<RemoveTeamRole>(
-            new RemoveTeamRole(tenantId, team, role, Uuid.CreateVersion4(), 1,
-                RbacTeamRoleFacts.AssignmentId(tenantId, team, role)), actor), CancellationToken.None);
+            new RemoveTeamRole(tenantId, team, role, 1), actor), CancellationToken.None);
         var removeManage = await new RemoveRolePermissionHandler(executor).HandleAsync(
             new RequestContext<RemoveRolePermission>(new RemoveRolePermission(tenantId, role,
-                RbacPermissions.TenantRbacManage, Uuid.CreateVersion4(), 1,
-                RbacPermissionFacts.AssignmentId(tenantId, role, RbacPermissions.TenantRbacManage)), actor),
+                RbacPermissions.TenantRbacManage, 1), actor),
             CancellationToken.None);
         var removeAccess = await new RemoveRolePermissionHandler(executor).HandleAsync(
             new RequestContext<RemoveRolePermission>(new RemoveRolePermission(tenantId, role,
-                RbacPermissions.TenantAccess, Uuid.CreateVersion4(), 1,
-                RbacPermissionFacts.AssignmentId(tenantId, role, RbacPermissions.TenantAccess)), actor),
+                RbacPermissions.TenantAccess, 1), actor),
             CancellationToken.None);
 
         // Assert

@@ -29,14 +29,14 @@ public sealed class CustomRoleLifecycleTests
         var actor = RbacManagementServices.Actor();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var define = new DefineRole(tenant, role, "Control reviewers");
-        var rename = new RenameRole(Uuid.CreateVersion4(), tenant, role, "Evidence reviewers");
+        var rename = new RenameRole(tenant, role, "Evidence reviewers", 1);
 
         // Act
         var created = await bus.SendAsync(define, actor);
         var renamed = await bus.SendAsync(rename, actor);
         var renamedRetry = await bus.SendAsync(rename, actor);
         var changed = await bus.SendAsync(rename with { Name = "Changed intent" }, actor);
-        var deleted = await bus.SendAsync(new DeleteRole(Uuid.CreateVersion4(), tenant, role), actor);
+        var deleted = await bus.SendAsync(new DeleteRole(tenant, role), actor);
         var defineRetry = await bus.SendAsync(define, actor);
         var retained = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new Role(tenant, role));
@@ -67,7 +67,7 @@ public sealed class CustomRoleLifecycleTests
         Assert.True((await bus.SendAsync(new DefineRole(tenant, role, "Viewer"), RequestActor.System)).IsSuccess);
 
         // Act
-        var result = await bus.SendAsync(new RenameRole(Uuid.CreateVersion4(), tenant, role, "Modified"),
+        var result = await bus.SendAsync(new RenameRole(tenant, role, "Modified", 1),
             system ? RequestActor.System : RbacManagementServices.Actor());
         var retained = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new Role(tenant, role));

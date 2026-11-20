@@ -10,4 +10,8 @@ namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 ///     replays the original acceptance and the same identity with a different name conflicts.
 /// </summary>
 [Discriminator("bdgrz.rbac.team.define", 1)]
-public sealed record DefineTeam(Uuid TenantId, Uuid TeamId, string Name) : IRequest, IClientRbacMutationRequest, ICallable;
+public sealed record DefineTeam(Uuid TenantId, Uuid TeamId, string Name)
+    : IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => TeamId;
+}

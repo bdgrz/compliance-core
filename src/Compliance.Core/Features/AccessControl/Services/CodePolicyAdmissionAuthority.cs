@@ -94,7 +94,7 @@ sealed class CodePolicyAdmissionAuthority(ITrustedAdmissionCredentialResolver cr
             return await TeamPathAsync(credential, tenantId, programId, operationId, target, digest, selection,
             identity.Value, tenant.Value, member.Value, ct).ConfigureAwait(false);
         var allowed = primary.Value.Owner.HasDesignated(credential.UserId, current.MembershipEpisodeId, current.PrimaryDesignationId) &&
-            BuiltInRolePermissions.Create(current.PrimaryDesignationId, tenantId).Any(grant =>
+            BuiltInRolePermissions.Create(tenantId).Any(grant =>
                 grant.RoleId == BuiltInRbac.TenantAdministrationRoleId(tenantId) && grant.Permission == RbacPermissions.ProgramManage);
         if (!await UnchangedAsync(identity.Value, new UserIdentity(credential.IdentityId), ct).ConfigureAwait(false) ||
             !await UnchangedAsync(tenant.Value, new Tenant(tenantId), ct).ConfigureAwait(false) ||

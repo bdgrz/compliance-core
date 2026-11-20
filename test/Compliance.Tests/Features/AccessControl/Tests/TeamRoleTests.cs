@@ -39,10 +39,9 @@ public sealed class TeamRoleTests
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var identity = RequestMetadata.Create();
-        var assignment = new AssignTeamRole(TenantId, TeamId, RoleId, identity.RequestId, 0);
+        var assignment = new AssignTeamRole(TenantId, TeamId, RoleId, 0);
         Assert.True((await bus.DispatchAsync(assignment, bus.CreateContext(RequestActor.System, identity))).IsSuccess);
-        Assert.True((await bus.SendAsync(new RemoveTeamRole(TenantId, TeamId, RoleId,
-            Uuid.CreateVersion4(), 1, identity.RequestId), RequestActor.System)).IsSuccess);
+        Assert.True((await bus.SendAsync(new RemoveTeamRole(TenantId, TeamId, RoleId, 1), RequestActor.System)).IsSuccess);
 
         // Act
         var result = await bus.DispatchAsync(assignment, bus.CreateContext(RequestActor.System, identity));
@@ -193,7 +192,7 @@ public sealed class TeamRoleTests
         await using var provider = Services();
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
-        var command = new AssignTeamRole(TenantId, TeamId, RoleId, Uuid.CreateVersion4(), 0);
+        var command = new AssignTeamRole(TenantId, TeamId, RoleId, 0);
         Assert.True((await bus.SendAsync(command, RbacManagementServices.Actor())).IsSuccess);
 
         // Act
@@ -212,7 +211,7 @@ public sealed class TeamRoleTests
         // Arrange
         await using var provider = Services(allowed: false);
         await using var scope = provider.CreateAsyncScope();
-        var command = new AssignTeamRole(TenantId, TeamId, RoleId, Uuid.CreateVersion4(), 0);
+        var command = new AssignTeamRole(TenantId, TeamId, RoleId, 0);
         Assert.True((await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(command, RequestActor.System)).IsSuccess);
 
         // Act
@@ -230,23 +229,22 @@ public sealed class TeamRoleTests
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var team = BuiltInRbac.AdministratorsTeamId(TenantId);
         var role = BuiltInRbac.TenantAdministrationRoleId(TenantId);
-        var assignment = new AssignTeamRole(TenantId, team, role, Uuid.CreateVersion4(), 0);
+        var assignment = new AssignTeamRole(TenantId, team, role, 0);
         Assert.True((await bus.SendAsync(assignment, RequestActor.System)).IsSuccess);
 
         // Act
-        var result = await bus.SendAsync(new RemoveTeamRole(TenantId, team, role,
-            Uuid.CreateVersion4(), 1, assignment.CommandId), RequestActor.System);
+        var result = await bus.SendAsync(new RemoveTeamRole(TenantId, team, role, 1), RequestActor.System);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
         var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new TeamRole(TenantId, team, role));
-        Assert.Equal(assignment.CommandId, owner.AssignmentId);
+        Assert.Equal(assignment.OperationId, owner.AssignmentId);
         Assert.Equal(1UL, owner.Version);
     }
 
     [Fact]
-    public async Task ShouldRejectAnEmptyTypedIdentityGivenAnAuthorizedCommand()
+    public async Task ShouldRejectAnEmptyTeamIdentityGivenAnAuthorizedCommand()
     {
         // Arrange
         await using var provider = Services();
@@ -254,7 +252,7 @@ public sealed class TeamRoleTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(
-            new AssignTeamRole(TenantId, TeamId, RoleId, Uuid.Empty, 0), RequestActor.System);
+            new AssignTeamRole(TenantId, Uuid.Empty, RoleId, 0), RequestActor.System);
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind);

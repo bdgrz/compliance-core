@@ -42,22 +42,10 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 [Trait("Category", "WebIntegration")]
 public sealed class RolePermissionTransportTests
 {
-    const string OperationId = "b4eb443f-94d4-4ca6-aec8-06d7946ff1da";
-    const string AssignmentId = "dc97120d-631c-4aa7-ae05-ecf9e5d18791";
-
     [Theory]
-    [InlineData(false, "", "", HttpStatusCode.NotFound)]
-    [InlineData(false, "malformed", "", HttpStatusCode.BadRequest)]
-    [InlineData(false, "00000000-0000-0000-0000-000000000000", "", HttpStatusCode.BadRequest)]
-    [InlineData(false, OperationId, "", HttpStatusCode.Forbidden)]
-    [InlineData(false, OperationId, ",\"command_id\":\"" + OperationId + "\"", HttpStatusCode.Forbidden)]
-    [InlineData(false, OperationId, ",\"command_id\":\"" + AssignmentId + "\"", HttpStatusCode.BadRequest)]
-    [InlineData(false, OperationId, ",\"command_id\":null", HttpStatusCode.BadRequest)]
-    [InlineData(false, OperationId, ",\"command_id\":\"malformed\"", HttpStatusCode.BadRequest)]
-    [InlineData(true, OperationId, "", HttpStatusCode.Forbidden)]
-    [InlineData(true, OperationId, ",\"command_id\":\"" + AssignmentId + "\"", HttpStatusCode.BadRequest)]
-    public async Task ShouldBindRequiredOperationIdentityBeforeDispatchGivenHttpCommand(
-        bool remove, string operationId, string duplicate, HttpStatusCode expected)
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldBindNaturalRelationshipIdentityBeforeAuthorizationGivenHttpCommand(bool remove)
     {
         // Arrange
         var calls = new List<BusCall>();
@@ -67,48 +55,44 @@ public sealed class RolePermissionTransportTests
         var tenant = Uuid.CreateVersion4();
         var role = Uuid.CreateVersion4();
         using var request = new HttpRequestMessage(remove ? HttpMethod.Delete : HttpMethod.Put,
-            $"/api/v1/tenants/{tenant}/roles/{role}/permissions/controls.read/{(remove ? "removals" : "assignments")}/{operationId}" +
-            (remove ? $"?expected_revision=1&assignment_id={AssignmentId}" : ""));
-        request.Content = new StringContent("{\"expected_revision\":1,\"assignment_id\":\"" + AssignmentId + "\"" + duplicate + "}",
-            Encoding.UTF8, "application/json");
+            $"/v1/roles/{role}/permissions/controls.read")
+        {
+            Content = new StringContent("{\"expected_revision\":1}", Encoding.UTF8, "application/json"),
+        };
+        request.Headers.Add("Tenant-Id", tenant.ToString());
 
         // Act
         using var response = await client.SendAsync(request);
 
         // Assert
-        Assert.Equal(expected, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         var dispatched = calls.Where(call => call.Request is AssignRolePermission or RemoveRolePermission).ToArray();
-        if (expected != HttpStatusCode.Forbidden)
-        {
-            Assert.Empty(dispatched);
-            return;
-        }
         // The catalog remains system-owned. Binding reaches the real authorizer, which denies this member.
         var call = Assert.Single(dispatched);
-        Assert.Equal(OperationId, call.Context.RequestId.ToString());
         if (remove)
         {
             var command = Assert.IsType<RemoveRolePermission>(call.Request);
             Assert.Equal(tenant, command.TenantId);
             Assert.Equal(role, command.RoleId);
-            Assert.Equal(OperationId, command.CommandId.ToString());
-            Assert.Equal(AssignmentId, command.AssignmentId.ToString());
+            Assert.Equal("controls.read", command.Permission);
             Assert.Equal(1UL, command.ExpectedRevision);
+            Assert.Equal(((IIdentifiedRequest)command).RequestId, call.Context.RequestId);
         }
         else
         {
             var command = Assert.IsType<AssignRolePermission>(call.Request);
             Assert.Equal(tenant, command.TenantId);
             Assert.Equal(role, command.RoleId);
-            Assert.Equal(OperationId, command.CommandId.ToString());
+            Assert.Equal("controls.read", command.Permission);
             Assert.Equal(1UL, command.ExpectedRevision);
+            Assert.Equal(((IIdentifiedRequest)command).RequestId, call.Context.RequestId);
         }
     }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ShouldRequireTheOrdinaryTypedIdentityGivenMcpCommand(bool remove)
+    public async Task ShouldExposeOnlyNaturalRelationshipIdentityGivenMcpCommand(bool remove)
     {
         // Arrange
         var calls = new List<BusCall>();
@@ -126,22 +110,17 @@ public sealed class RolePermissionTransportTests
             ["permission"] = "controls.read",
             ["expected_revision"] = 1,
         };
-        if (remove)
-            arguments["assignment_id"] = AssignmentId;
 
         // Act
-        var missing = await scenario.When(name, arguments);
-        arguments["command_id"] = OperationId;
         var bound = await scenario.When(name, arguments);
 
         // Assert
-        Assert.Contains("command_id", tool.InputSchema.GetProperty("required").EnumerateArray().Select(item => item.GetString()));
-        Assert.True(missing.IsError);
+        Assert.DoesNotContain("command_id", tool.InputSchema.GetProperty("properties").EnumerateObject().Select(item => item.Name));
+        Assert.DoesNotContain("assignment_id", tool.InputSchema.GetProperty("properties").EnumerateObject().Select(item => item.Name));
         Assert.True(bound.IsError);
         Assert.Equal("Forbidden", bound.Error?.GetProperty("kind").GetString());
         var call = Assert.Single(calls, item => item.Request is AssignRolePermission or RemoveRolePermission);
-        Assert.Equal(OperationId, ((IIdentifiedRequest)call.Request).RequestId.ToString());
-        Assert.Equal(OperationId, call.Context.RequestId.ToString());
+        Assert.Equal(((IIdentifiedRequest)call.Request).RequestId, call.Context.RequestId);
     }
 
     [Fact]
@@ -153,10 +132,9 @@ public sealed class RolePermissionTransportTests
         var serializer = new JsonRequestSerializer([
             new RequestTransportRegistration(typeof(RemoveRolePermission), [RequestTransportId.Queue],
                 new RequestRouteAttribute("bdgrz", "rbac", "permissions", "remove"),
-                new DiscriminatorAttribute("bdgrz.rbac.role-permission.remove", 1)),
+                new DiscriminatorAttribute("bdgrz.rbac.role-permission.remove", 2)),
         ], options);
-        var command = new RemoveRolePermission(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "controls.read",
-            Uuid.CreateVersion4(), 7, Uuid.CreateVersion4());
+        var command = new RemoveRolePermission(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "controls.read", 7);
         var metadata = RequestMetadata.FromRequest(command);
 
         // Act
@@ -164,12 +142,11 @@ public sealed class RolePermissionTransportTests
         var envelope = serializer.DeserializeEnvelope(bytes);
         var tampered = JsonNode.Parse(bytes.Span)!;
         var payload = tampered["payload"]!.AsObject();
-        var key = Assert.Single(payload.Select(pair => pair.Key), name => name is "command_id" or "commandId" or "CommandId");
-        payload[key] = Uuid.CreateVersion4().ToString();
+        payload["expected_revision"] = 8;
 
         // Assert
         Assert.Equal(command, Assert.IsType<RemoveRolePermission>(envelope.Request));
-        Assert.Equal(command.CommandId, envelope.Metadata.RequestId);
+        Assert.Equal(((IIdentifiedRequest)command).RequestId, envelope.Metadata.RequestId);
         Assert.Throws<InvalidOperationException>(() => serializer.DeserializeEnvelope(
             Encoding.UTF8.GetBytes(tampered.ToJsonString())));
     }
@@ -187,7 +164,7 @@ public sealed class RolePermissionTransportTests
     static async Task LoginAsync(HttpClient client)
     {
         using var body = new StringContent("{\"email_address\":\"permission-transport@example.com\"}", Encoding.UTF8, "application/json");
-        using var response = await client.PostAsync("/api/v1/developer-user-sessions", body);
+        using var response = await client.PostAsync("/v1/developer-user-sessions", body);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
