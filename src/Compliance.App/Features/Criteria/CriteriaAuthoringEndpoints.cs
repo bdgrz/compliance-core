@@ -39,16 +39,16 @@ public static class CriteriaAuthoringEndpoints
                 "/v1/system/criteria-editions/{edition_id}/publication-attempts/{attempt_id}")
             .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser).WithTags("Criteria authoring");
         endpoints.MapPortiaPut<ProposeCriterionChange, CriteriaOperationReceipt>(
-                "/v1/system/criteria-editions/{edition_id}/entries/{identifier}/change-operations/{operation_id}")
+                "/v1/system/criteria-change-operations/{operation_id}")
             .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser).WithTags("Criteria authoring");
         endpoints.MapPortiaPut<CorrectCriterionSummary, CriteriaOperationReceipt>(
-                "/v1/system/criteria-editions/{edition_id}/entries/{identifier}/summary-operations/{operation_id}")
+                "/v1/system/criteria-summary-corrections/{operation_id}")
             .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser).WithTags("Criteria authoring");
         endpoints.MapPortiaPut<SetCriteriaEditionField, CriteriaOperationReceipt>(
                 "/v1/system/criteria-editions/{edition_id}/fields/{field}/operations/{operation_id}")
             .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser).WithTags("Criteria authoring");
         endpoints.MapPortiaPut<SetCriteriaEditionDisclosure, CriteriaOperationReceipt>(
-                "/v1/system/criteria-editions/{edition_id}/disclosures/{category}/{code}/operations/{operation_id}")
+                "/v1/system/criteria-disclosure-operations/{operation_id}")
             .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser).WithTags("Criteria authoring");
 
         endpoints.MapPortiaGet<GetCriteriaEditionDraft, CriteriaEditionDraftView>(
