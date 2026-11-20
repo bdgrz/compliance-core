@@ -61,7 +61,7 @@ namespace Bdgrz.Compliance.Hosting;
 ///     Portia reports each authorization policy outcome through its versioned
 ///     <c>portia.authorization.duration</c> instrument, synchronously on the dispatching call. This
 ///     listener reads the outcome tags there and adds only opaque identifiers from the ambient request:
-///     the route template (never its values), the parsed <c>tenant_id</c> route value, and the Bdgrz
+///     the route template (never its values), the parsed <c>Tenant-Id</c> header, and the Bdgrz
 ///     subject. Emails, slugs, query strings, and bodies are never read, so a denial cannot disclose
 ///     client data or confirm a tenant to an outsider beyond the not-found response already returned.
 /// </remarks>
@@ -155,11 +155,15 @@ sealed partial class AuthorizationDenialLog(
             ? "mcp"
             : "http";
 
-    static string? TenantId(HttpContext httpContext) =>
-        httpContext.Request.RouteValues.TryGetValue("tenant_id", out var value) &&
-        Uuid.TryParse(value as string, CultureInfo.InvariantCulture, out var tenantId)
+    static string? TenantId(HttpContext httpContext)
+    {
+        var value = PortiaHttpBinding.ReadHeader(httpContext, "Tenant-Id");
+        if (value is null && httpContext.Request.RouteValues.TryGetValue("tenant_id", out var routeValue))
+            value = routeValue as string;
+        return Uuid.TryParse(value, CultureInfo.InvariantCulture, out var tenantId)
             ? tenantId.ToString()
             : null;
+    }
 
     // Uses the request authorizers' own actor rule: only the Bdgrz session subject names the actor.
     static string? ActorId(ClaimsPrincipal user) =>

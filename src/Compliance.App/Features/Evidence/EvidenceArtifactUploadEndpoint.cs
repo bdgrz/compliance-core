@@ -57,7 +57,7 @@ public static class EvidenceArtifactUploadEndpoint
         (2L * MaximumSectionHeadersLength) + (4L * MaximumBoundaryLength) + 1024;
 
     public static RouteHandlerBuilder MapEvidenceArtifactUpload(this IEndpointRouteBuilder endpoints) =>
-        endpoints.MapPost("/api/v1/tenants/{tenant_id}/evidence-artifacts", UploadAsync)
+        endpoints.MapPost("/v1/evidence-artifacts", UploadAsync)
             .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
             .Accepts<EvidenceArtifactUploadForm>("multipart/form-data")
             .Produces<EvidenceCapture>(StatusCodes.Status200OK)
@@ -78,6 +78,7 @@ public static class EvidenceArtifactUploadEndpoint
 
     static async Task<IResult> UploadAsync(HttpContext context,
         [FromHeader(Name = UploadRequestHeader)] string uploadRequestHeader,
+        [FromHeader(Name = "Tenant-Id")] string tenantIdHeader,
         CaptureEvidenceArtifactHandler handler, TimeProvider time, CancellationToken ct)
     {
         var request = context.Request;
@@ -103,7 +104,7 @@ public static class EvidenceArtifactUploadEndpoint
             return Results.Problem(statusCode: StatusCodes.Status411LengthRequired,
                 title: "The server cannot apply a bounded upload limit to this request.");
 
-        if (!Uuid.TryParse(Convert.ToString(request.RouteValues["tenant_id"], CultureInfo.InvariantCulture),
+        if (!Uuid.TryParse(tenantIdHeader,
                 CultureInfo.InvariantCulture, out var tenantId) || tenantId == Uuid.Empty)
             return BadRequest("The tenant identifier is invalid.");
 

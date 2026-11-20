@@ -14,7 +14,7 @@ using Bdgrz.Compliance.Features.Workforce.Commands;
 using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Workforce;
 
-/// <summary>Selected tenant/person/operation identities come only from canonical route segments.</summary>
+/// <summary>Reads tenant selection from the header and person/operation identities from the route.</summary>
 static class PersonHttp
 {
     public sealed record RecordBody(string DisplayName, string? WorkEmail = null, PersonalContactDetails? PersonalContact = null);
@@ -60,11 +60,14 @@ static class PersonHttp
     }
     static Uuid Identity(HttpContext context, JsonElement body, string name)
     {
-        if (!Uuid.TryParse(context.Request.RouteValues[name]?.ToString(), CultureInfo.InvariantCulture, out var value) || value == Uuid.Empty)
-            throw new BadHttpRequestException("Invalid person route identity.");
+        var raw = name == "tenant_id"
+            ? PortiaHttpBinding.ReadHeader(context, "Tenant-Id")
+            : context.Request.RouteValues[name]?.ToString();
+        if (!Uuid.TryParse(raw, CultureInfo.InvariantCulture, out var value) || value == Uuid.Empty)
+            throw new BadHttpRequestException($"Invalid person request identity '{name}'.");
         if (body.TryGetProperty(name, out var supplied) && (supplied.ValueKind != JsonValueKind.String ||
             !Uuid.TryParse(supplied.GetString(), CultureInfo.InvariantCulture, out var parsed) || parsed != value))
-            throw new BadHttpRequestException("The body identity conflicts with the canonical person route.");
+            throw new BadHttpRequestException("A body identity conflicts with the selected person request scope.");
         return value;
     }
 }

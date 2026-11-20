@@ -41,11 +41,18 @@ public sealed class NativeOperationHttpObserver(IHttpContextAccessor accessor) :
             "user" or "platform_operator" or "firm_staff" => binding.OriginalActor.Id == user.ToString(),
             _ => false,
         };
-        var realmMatches = !http.Request.RouteValues.TryGetValue("tenant_id", out var tenantValue) ||
-            Uuid.TryParse(tenantValue?.ToString(), out var routeTenant) &&
-            (Uuid.TryParse(binding.Realm, out var realmTenant) && routeTenant == realmTenant ||
+        var tenantHeader = http.Request.Headers["Tenant-Id"];
+        var hasTenantSelector = tenantHeader.Count > 0 || http.Request.RouteValues.ContainsKey("tenant_id");
+        var tenantValue = tenantHeader.Count == 1
+            ? tenantHeader[0]
+            : tenantHeader.Count == 0 && http.Request.RouteValues.TryGetValue("tenant_id", out var routeTenantValue)
+                ? routeTenantValue?.ToString()
+                : null;
+        var realmMatches = !hasTenantSelector || tenantHeader.Count <= 1 &&
+            Uuid.TryParse(tenantValue, out var selectedTenant) &&
+            (Uuid.TryParse(binding.Realm, out var realmTenant) && selectedTenant == realmTenant ||
              binding.FirstOwner.Realm == "bdgrz" && binding.FirstOwner.Area == "tenants" &&
-             binding.FirstOwner.Resource == routeTenant.ToString());
+             binding.FirstOwner.Resource == selectedTenant.ToString());
         if (!actorMatches || !realmMatches || capture.Fact.Stream != binding.FirstOwner || binding.FirstOwner.Realm != binding.Realm)
             capture = capture with { Ambiguous = true };
         var previous = http.Features.Get<NativeFirstResponseCapture>();

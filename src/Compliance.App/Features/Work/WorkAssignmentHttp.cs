@@ -30,7 +30,7 @@ using Bdgrz.Compliance.Features.Tenants.Aggregates;
 using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.Work;
 
-/// <summary>Canonical selected work assignment route scope; no body or query identity may override it.</summary>
+/// <summary>Reads the selected tenant from its header and the program scope from its query parameter.</summary>
 static class WorkAssignmentHttp
 {
     public sealed record ClaimBody(long ExpectedRevision);
@@ -77,11 +77,17 @@ static class WorkAssignmentHttp
         var values = new List<Uuid>(4);
         foreach (var name in new[] { "command_id", "tenant_id", "program_id", "work_item_id" })
         {
-            if (!Uuid.TryParse(context.Request.RouteValues[name]?.ToString(), CultureInfo.InvariantCulture, out var value) || value == Uuid.Empty)
-                throw new BadHttpRequestException("Invalid work assignment route identity.");
+            var raw = name switch
+            {
+                "tenant_id" => PortiaHttpBinding.ReadHeader(context, "Tenant-Id"),
+                "program_id" => PortiaHttpBinding.ReadQuery(context, "program_id"),
+                _ => context.Request.RouteValues[name]?.ToString(),
+            };
+            if (!Uuid.TryParse(raw, CultureInfo.InvariantCulture, out var value) || value == Uuid.Empty)
+                throw new BadHttpRequestException($"Invalid work assignment identity '{name}'.");
             if (body.TryGetProperty(name, out var supplied) && (supplied.ValueKind != JsonValueKind.String ||
                 !Uuid.TryParse(supplied.GetString(), CultureInfo.InvariantCulture, out var parsed) || parsed != value))
-                throw new BadHttpRequestException("The body identity conflicts with the canonical work assignment route.");
+                throw new BadHttpRequestException("A body identity conflicts with the selected work assignment scope.");
             values.Add(value);
         }
         return (values[0], values[1], values[2], values[3]);

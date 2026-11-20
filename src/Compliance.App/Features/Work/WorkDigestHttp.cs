@@ -17,7 +17,7 @@ using Bdgrz.Compliance.Features.Work.Commands;
 using Bdgrz.Compliance.Features.Work.Queries;
 namespace Bdgrz.Compliance.Features.Work;
 
-/// <summary>Canonical platform route scope; query/body identities cannot override the selected owner or command.</summary>
+/// <summary>Reads the selected tenant from its header and dispatch week from the query string.</summary>
 static class WorkDigestHttp
 {
     public static GetWorkDigestDispatchStatus BindStatus(HttpContext context) =>
@@ -39,10 +39,13 @@ static class WorkDigestHttp
                 "ExpectedRevision", "expected_revision", false, false, default));
     }
     static Uuid Id(HttpContext context, string name) =>
-        Uuid.TryParse(context.Request.RouteValues[name]?.ToString(), CultureInfo.InvariantCulture, out var value) && value != Uuid.Empty
-            ? value : throw new BadHttpRequestException("Invalid digest route identity.");
+        Uuid.TryParse(name == "tenant_id"
+                ? PortiaHttpBinding.ReadHeader(context, "Tenant-Id")
+                : context.Request.RouteValues[name]?.ToString(),
+            CultureInfo.InvariantCulture, out var value) && value != Uuid.Empty
+            ? value : throw new BadHttpRequestException($"Invalid digest request identity '{name}'.");
     static DateOnly Week(HttpContext context) =>
-        DateOnly.TryParseExact(context.Request.RouteValues["week_of"]?.ToString(), "yyyy-MM-dd",
+        DateOnly.TryParseExact(PortiaHttpBinding.ReadQuery(context, "week_of"), "yyyy-MM-dd",
             CultureInfo.InvariantCulture, DateTimeStyles.None, out var week)
-            ? week : throw new BadHttpRequestException("Invalid digest route week.");
+            ? week : throw new BadHttpRequestException("Invalid digest query week.");
 }
