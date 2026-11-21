@@ -1,0 +1,594 @@
+method,path,codes,proposed_method,proposed_path,note
+GET,/auth/config,R8,GET,/v1/system/auth/config,Unversioned auth path; platform resources belong under /v1/system.
+POST,/auth/logout,R4;R5;R8,DELETE,/v1/system/session,Verb POST logout; end the session resource with DELETE.
+GET,/auth/session,R8,GET,/v1/system/session,Unversioned auth path; session belongs under /v1/system.
+PUT,/v1/access-populations/record-access-population-facts/{command_id},R3;R4;R12,PUT,/v1/access-populations/{population_id}/facts/{fact_id},Verb segment replaces population ID; command token is retry key.
+GET,/v1/access-populations/{population_id},,GET,OK,Conformant read.
+PUT,/v1/access-populations/{population_id},R12,PUT,/v1/access-populations/{population_id},Create at client ID is conformant; result body violates R12 only.
+PUT,/v1/access-populations/{population_id}/acceptance/{command_id},R3;R4;R12,PUT,/v1/access-populations/{population_id}/acceptance,Acceptance is lifecycle; named part PUT without command token.
+PUT,/v1/access-populations/{population_id}/classifications/{command_id},R3;R12,PUT,/v1/access-populations/{population_id}/principals/{principal_id}/classification,Command token stands in for principal identity; address the principal.
+GET,/v1/access-populations/{population_id}/preview,R4,GET,/v1/access-populations/{population_id}?view=preview,Preview is a verb segment; use query-selected representation.
+GET,/v1/access-populations/{population_id}/principals,R1,GET,/v1/access-principals?population_id={population_id},Principals assumed to have own ID; flatten to filtered root list.
+GET,/v1/access-populations/{population_id}/variance,,GET,OK,Derived subordinate read; conformant.
+GET,/v1/access-review-campaigns,,GET,OK,Paginated collection; conformant.
+GET,/v1/access-review-campaigns/{campaign_id},,GET,OK,Conformant read.
+PUT,/v1/access-review-campaigns/{campaign_id},R12,PUT,/v1/access-review-campaigns/{campaign_id},Create at client ID is conformant; result body violates R12 only.
+POST,/v1/access-review-campaigns/{campaign_id}/bulk-decision-previews,R4;R5;R12,GET,/v1/access-review-campaigns/{campaign_id}/items?decision=...,Read via POST with preview verb; express selection as GET query filters.
+PUT,/v1/access-review-campaigns/{campaign_id}/bulk-decisions/{decision_batch_id},R1;R12,PUT,/v1/access-decision-batches/{decision_batch_id},"Batch has own ID nested under campaign; flatten, campaign_id in body."
+PUT,/v1/access-review-campaigns/{campaign_id}/completion/{command_id},R3;R4;R12,PUT,/v1/access-review-campaigns/{campaign_id}/status,"Completion is lifecycle; status PUT with value, no command token."
+PUT,/v1/access-review-campaigns/{campaign_id}/items/{item_id}/decisions/{command_id},R1;R3;R12,PUT,/v1/access-review-items/{item_id}/decision,"Item has own ID; flatten; decision as named part, no command token."
+PUT,/v1/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes/{command_id},R1;R3;R12,PUT,/v1/access-review-items/{item_id}/remediation-change,"Item flattened; remediation change as named part, no command token."
+PUT,/v1/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions/{command_id},R1;R3;R12,PUT,/v1/access-review-items/{item_id}/remediation-exception,"Item flattened; exception as named part, no command token."
+PUT,/v1/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications/{command_id},R1;R3;R12,PUT,/v1/access-review-items/{item_id}/remediation-verification,"Item flattened; verification as named part, no command token."
+PUT,/v1/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments/{command_id},R1;R3;R12,PUT,/v1/access-review-items/{item_id}/responsible-reviewer,Item flattened; reassignment replaces named part; confirm no own ID.
+GET,/v1/advisor-handoffs,,GET,OK,Paginated collection; conformant.
+GET,/v1/advisor-handoffs/{advisor_request_id},,GET,OK,Param name differs from PUT handoff_id on same collection; reconcile.
+PUT,/v1/advisor-handoffs/{handoff_id},,PUT,OK,Create at client ID; conformant except body result is absent.
+PUT,/v1/advisor-handoffs/{handoff_id}/closures/{command_id},R3;R4,PUT,/v1/advisor-handoffs/{handoff_id}/status,"Closure is lifecycle; status PUT, no command token."
+GET,/v1/advisor-handoffs/{handoff_id}/feedback,R1,GET,/v1/advisor-feedback?handoff_id={handoff_id},Feedback has own ID; flatten to filtered root list.
+PUT,/v1/advisor-handoffs/{handoff_id}/feedback/{feedback_id},R1;R12,PUT,/v1/advisor-feedback/{feedback_id},"Feedback has own ID nested under handoff; flatten, handoff_id in body."
+PUT,/v1/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections/{correction_id},R1,PUT,/v1/advisor-feedback-corrections/{correction_id},Two-level nesting; correction has own ID; flatten.
+PUT,/v1/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/resolutions/{command_id},R1;R3;R4,PUT,/v1/advisor-feedback/{feedback_id}/status,Feedback flattened; resolution is lifecycle status; drop command token.
+PUT,/v1/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses/{command_id},R1;R3,PUT,/v1/advisor-feedback/{feedback_id}/response,"Feedback flattened; response as named part, no command token."
+GET,/v1/advisor-handoffs/{handoff_id}/preview,R4,GET,/v1/advisor-handoffs/{handoff_id}?view=preview,Preview verb; use query-selected representation.
+PUT,/v1/advisor-handoffs/{handoff_id}/ready-for-review/{command_id},R3;R4,PUT,/v1/advisor-handoffs/{handoff_id}/status,Verb segment; status value ready_for_review; drop command token.
+PUT,/v1/advisor-handoffs/{handoff_id}/revocations/{command_id},R3;R4,PUT,/v1/advisor-handoffs/{handoff_id}/status,"Revocation is lifecycle; status PUT, no command token."
+PUT,/v1/advisor-handoffs/{handoff_id}/selection-revisions/{command_id},R3,PUT,/v1/advisor-handoffs/{handoff_id}/selection,Revision token in URL is a command key; selection as named part.
+GET,/v1/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id},R1,GET,/v1/advisor-shared-sources/{source_family}/{record_id}?handoff_id={handoff_id},Source record has own ID under handoff; flatten with filter.
+GET,/v1/application-imports/{batch_id},,GET,OK,Conformant read.
+PUT,/v1/application-imports/{batch_id}/acceptances/{command_id},R3;R4;R12,PUT,/v1/application-imports/{batch_id}/status,"Acceptance is lifecycle; status PUT, no command token."
+PUT,/v1/application-imports/{batch_id}/cancellations/{command_id},R3;R4;R12,PUT,/v1/application-imports/{batch_id}/status,"Cancellation is lifecycle; status PUT, no command token."
+GET,/v1/application-imports/{batch_id}/omission-proposal,,GET,OK,Subordinate read part; conformant.
+GET,/v1/application-imports/{batch_id}/omission-proposal/preview,R4,GET,/v1/application-imports/{batch_id}/omission-proposal?view=preview,Preview verb; query-selected representation.
+PUT,/v1/application-imports/{batch_id}/omission-proposal/{command_id},R3;R4,PUT,/v1/application-imports/{batch_id}/omission-proposal/status,"Freeze is lifecycle; status value frozen, no command token."
+GET,/v1/application-imports/{batch_id}/preview,R4,GET,/v1/application-import-rows?batch_id={batch_id}&state=preview,Preview verb; row state as query filter on rows.
+GET,/v1/application-imports/{batch_id}/preview/missing,R4,GET,/v1/application-import-rows?batch_id={batch_id}&state=missing,Preview verb plus nested noun; use row state query filter.
+GET,/v1/application-imports/{batch_id}/progress,,GET,OK,Subordinate read part; conformant.
+GET,/v1/application-imports/{batch_id}/rejected-report,,GET,OK,Report read part; conformant.
+GET,/v1/application-imports/{batch_id}/retention,,GET,OK,Subordinate read part; conformant.
+GET,/v1/application-imports/{batch_id}/rows,R1,GET,/v1/application-import-rows?batch_id={batch_id},Rows have own row_id; flatten to filtered root list.
+PUT,/v1/application-imports/{batch_id}/rows/{row_id}/correlations/{command_id},R1;R3,PUT,/v1/application-import-rows/{row_id}/correlation,"Row has own ID; flatten; correlation as named part, no command token."
+PUT,/v1/application-imports/{submission_id},R12,PUT,/v1/application-imports/{batch_id},Create uses submission_id while reads use batch_id; reconcile identity.
+GET,/v1/application-revision,,GET,OK,"Singleton with no owning identity; ambiguous scope, confirm."
+GET,/v1/applications,,GET,OK,Paginated collection; conformant.
+PUT,/v1/applications/revise-application/{command_id},R3;R4;R13,PUT,/v1/applications/{application_id},Verb segment and command token in URL; revise is PUT at identity.
+GET,/v1/applications/{application_id},,GET,OK,Conformant read.
+PUT,/v1/applications/{application_id},R12,PUT,/v1/applications/{application_id},Create at client ID is conformant; result body violates R12 only.
+GET,/v1/applications/{application_id}/access-review-coverage,,GET,OK,Subordinate derived read of application; conformant.
+GET,/v1/applications/{application_id}/access-review-scopes,R2,GET,/v1/access-review-scopes?application_id={application_id},Application scope in path for list; move to query filter.
+GET,/v1/applications/{application_id}/boundary-references,R2,GET,/v1/application-boundary-references?application_id={application_id},Owner scope in path for list; move to query filter.
+POST,/v1/applications/{application_id}/change-previews,R4;R5;R12;R13,GET,/v1/applications/{application_id}?view=change-preview,Preview read via POST; ADR lacks read-with-body; needs amendment.
+GET,/v1/applications/{application_id}/relationships,R2,GET,/v1/application-relationships?application_id={application_id},Application scope in path for list; move to query filter.
+GET,/v1/applications/{application_id}/relationships/directed,R2,GET,/v1/application-relationships?application_id={application_id}&direction=outgoing,Scope in path plus direction filter; use query parameters.
+DELETE,/v1/applications/{application_id}/relationships/{relationship_id},R1;R2;R12,DELETE,/v1/application-relationships/{relationship_id},Relationship has own ID under application; flatten at root.
+POST,/v1/applications/{application_id}/relationships/{relationship_id},R1;R2;R5;R12,PUT,/v1/application-relationships/{relationship_id},POST to identity; PUT at root with application ids in body.
+PUT,/v1/applications/{application_id}/retirements/{command_id},R3;R4,PUT,/v1/applications/{application_id}/status,"Retirement is lifecycle; status PUT, no command token."
+GET,/v1/applications/{application_id}/revisions,R2,GET,/v1/application-revisions?application_id={application_id},Owner scope in path for list; move to query filter.
+GET,/v1/applications/{application_id}/system-instances,R1;R2,GET,/v1/system-instances?application_id={application_id},System instance has own ID; flatten to filtered root list.
+GET,/v1/applications/{application_id}/system-instances/{system_instance_id},R1;R2,GET,/v1/system-instances/{system_instance_id},Own-ID child nested under application; flatten to root.
+PUT,/v1/applications/{application_id}/system-instances/{system_instance_id},R1;R2;R12,PUT,/v1/system-instances/{system_instance_id},"Own-ID child nested under application; flatten, application_id in body."
+PUT,/v1/applications/{application_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id},R1;R2;R12,PUT,/v1/access-expectations/{expectation_id},"Expectation has own ID; flatten, system_instance_id in body."
+PUT,/v1/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions/{exception_id},R1;R2;R12,PUT,/v1/access-population-exceptions/{exception_id},"Exception has own ID; flatten, system_instance_id in body."
+GET,/v1/applications/{application_id}/system-instances/{system_instance_id}/access-review-scope,R1;R2,GET,/v1/system-instances/{system_instance_id}/access-review-scope,Parent instance must flatten; singleton part keeps one level.
+POST,/v1/applications/{application_id}/system-instances/{system_instance_id}/access-review-scope-decisions,R1;R2;R5;R12,PUT,/v1/system-instances/{system_instance_id}/access-review-scope/decision,"Instance flattened; decision as named part PUT, not collection POST."
+GET,/v1/applications/{application_id}/system-instances/{system_instance_id}/boundary-references,R1;R2,GET,/v1/application-boundary-references?system_instance_id={system_instance_id},Instance flattened; list as root filter by instance.
+PUT,/v1/applications/{application_id}/system-instances/{system_instance_id}/retirements/{command_id},R1;R2;R3;R4,PUT,/v1/system-instances/{system_instance_id}/status,"Instance flattened; retirement as status value, no command token."
+POST,/v1/applications/{predecessor_application_id}/successors/{successor_application_id}/approval,R4;R5,PUT,/v1/applications/{predecessor_application_id}/successors/{successor_application_id}/status,Approval verb; status PUT on successor keyed by its ID.
+POST,/v1/applications/{source_application_id}/relationships,R2;R5;R12,PUT,/v1/application-relationships/{relationship_id},"Collection POST creates relationship; use client ID at root, source in body."
+DELETE,/v1/applications/{source_application_id}/relationships/{relationship_type}/{target_application_id},R2,DELETE,/v1/application-relationships/{relationship_id},Source scope in path; relationship addressed by ID at root.
+GET,/v1/artifact-retention/{source_kind}/{source_id},,GET,OK,Polymorphic source with vocabulary kind; conformant.
+PUT,/v1/artifact-retention/{source_kind}/{source_id}/basis/{command_id},R3,PUT,/v1/artifact-retention/{source_kind}/{source_id}/basis,Basis as named part; drop command token.
+GET,/v1/artifact-retention/{source_kind}/{source_id}/legal-holds,R1,GET,/v1/artifact-legal-holds?source_kind={source_kind}&source_id={source_id},Hold has own ID; flatten to filtered root list.
+PUT,/v1/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id},R1,PUT,/v1/artifact-legal-holds/{hold_id},"Hold has own ID nested under retention; flatten, source in body."
+PUT,/v1/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}/releases/{command_id},R1;R3;R4,PUT,/v1/artifact-legal-holds/{hold_id}/status,"Hold flattened; release is lifecycle status, no command token."
+GET,/v1/audit-packages,,GET,OK,Paginated collection; conformant.
+GET,/v1/audit-packages/{package_id},R13,GET,/v1/audit-packages/{package_id},Conformant apart from missing tenant header (R13).
+PUT,/v1/audit-packages/{package_id},,PUT,OK,"Create at client ID; conformant, no result body."
+PUT,/v1/audit-packages/{package_id}/amendments/{command_id},R3,PUT,/v1/audit-packages/{package_id}/amendment,Amendment as named part; drop command token.
+PUT,/v1/audit-packages/{package_id}/versions/{package_version}/builds/{build_key},R6;R7;R12,PUT,/v1/audit-package-builds/{build_id},"Non-UUID version and user-defined build_key; use build UUID, package in body."
+PUT,/v1/audit-packages/{package_id}/versions/{package_version}/deliveries/{delivery_id},R1;R7;R12,PUT,/v1/audit-package-deliveries/{delivery_id},Delivery has own ID; flatten; version UUID in body.
+PUT,/v1/audit-packages/{package_id}/versions/{package_version}/disclosures/{command_id},R3;R4;R7,PUT,/v1/audit-package-versions/{package_version_id}/disclosure,"Non-UUID version; approval as named part, drop command token."
+PUT,/v1/audit-packages/{package_id}/versions/{package_version}/validation-overrides/{command_id},R3;R4;R7,PUT,/v1/audit-package-versions/{package_version_id}/validation-override,"Non-UUID version; override approval as named part, no command token."
+PUT,/v1/audit-packages/{package_id}/versions/{package_version}/validations/{command_id},R3;R4;R7,PUT,/v1/audit-package-versions/{package_version_id}/validation,"Non-UUID version; validation transition as named part, no command token."
+GET,/v1/auditor-requests,R13,GET,/v1/auditor-requests,Paginated collection; conformant apart from missing tenant header (R13).
+GET,/v1/auditor-requests/{auditor_request_id},R13,GET,/v1/auditor-requests/{auditor_request_id},Conformant apart from missing tenant header (R13).
+GET,/v1/auditor-requests/{auditor_request_id}/responses,R1;R13,GET,/v1/auditor-request-responses?auditor_request_id={auditor_request_id},Responses have own IDs; flatten to filtered root list.
+PUT,/v1/auditor-requests/{auditor_request_id}/sample-selections/amend-sample-selection/{selection_id},R1;R4;R12,PUT,/v1/sample-selections/{selection_id},Selection has own ID; amend verb replaced by PUT body.
+PUT,/v1/auditor-requests/{auditor_request_id}/sample-selections/record-sample-selection/{selection_id},R1;R4;R12,PUT,/v1/sample-selections/{selection_id},Selection has own ID; record verb replaced by PUT at root.
+PUT,/v1/auditor-requests/{request_id}/assign-auditor-request/{command_id},R3;R4,PUT,/v1/auditor-requests/{auditor_request_id}/assignment,Assign verb and command token in URL; use assignment named part.
+PUT,/v1/auditor-requests/{request_id}/create-audit-response-draft/{response_id},R1;R4;R12,PUT,/v1/auditor-request-responses/{response_id},"Response has own ID nested under request; flatten, verb removed."
+PUT,/v1/auditor-requests/{request_id}/record-auditor-request,R4,PUT,/v1/auditor-requests/{auditor_request_id},Verb segment after identity; PUT at request ID is conformant.
+PUT,/v1/auditor-requests/{request_id}/record-auditor-request-comment/{comment_id},R1;R3;R4;R12,PUT,/v1/auditor-request-comments/{comment_id},"Comment has own id; flatten, drop verb and command id, return 204 not accepted body."
+PUT,/v1/auditor-requests/{request_id}/reopen-auditor-request/{command_id},R3;R4,PUT,/v1/auditor-requests/{request_id}/status,Verb reopen and command_id in path; use status desired-state PUT.
+PUT,/v1/auditor-requests/{request_id}/resolve-auditor-request/{command_id},R3;R4;R12,PUT,/v1/auditor-requests/{request_id}/status,Verb resolve and command_id in path; status PUT returning 204.
+PUT,/v1/auditor-requests/{request_id}/responses/{response_id}/deliver-audit-response/{command_id},R1;R3;R4,PUT,/v1/audit-responses/{response_id}/status,Response has own id; flatten to root; deliver verb becomes status transition.
+PUT,/v1/auditor-requests/{request_id}/responses/{response_id}/record-auditor-response-disposition/{command_id},R1;R3;R4,PUT,/v1/audit-responses/{response_id}/disposition,Response has own id; flatten; disposition becomes named part PUT.
+PUT,/v1/auditor-requests/{request_id}/responses/{response_id}/review-audit-response/{command_id},R1;R3;R4,PUT,/v1/audit-responses/{response_id}/status,Response has own id; review verb and command_id; use status PUT.
+PUT,/v1/auditor-requests/{request_id}/responses/{response_id}/revise-audit-response-draft/{command_id},R1;R3;R4,PUT,/v1/audit-responses/{response_id}/draft,Response has own id; revise verb; draft becomes named subordinate part PUT.
+PUT,/v1/auditor-requests/{request_id}/responses/{response_id}/submit-audit-response/{command_id},R1;R3;R4,PUT,/v1/audit-responses/{response_id}/status,Response has own id; submit verb and command_id; use status PUT.
+PUT,/v1/auditor-requests/{request_id}/revise-auditor-request/{command_id},R3;R4,PUT,/v1/auditor-requests/{request_id},Revise verb and command_id; replace the resource itself with PUT.
+GET,/v1/boundaries,,GET,OK,"Paged list, header tenant, no path scope."
+GET,/v1/boundaries/{boundary_id},,GET,OK,Flat root resource read by own UUID.
+PUT,/v1/boundaries/{boundary_id},R12,PUT,/v1/boundaries/{boundary_id},"Path conformant; returns BoundaryRegistration body, should be 201 with Location and no body."
+GET,/v1/boundaries/{boundary_id}/decisions,R1,GET,/v1/boundary-decisions?boundary_id={boundary_id},"Decisions have own id (see detail route); flatten collection, filter by boundary in query."
+GET,/v1/boundaries/{boundary_id}/decisions/{decision_id},R1,GET,/v1/boundary-decisions/{decision_id},Decision has own UUID; must be a flat root resource.
+PUT,/v1/boundaries/{boundary_id}/drafts/{draft_version_id}/approvals/{command_id},R1;R3;R4,PUT,/v1/boundary-draft-versions/{draft_version_id}/status,Draft version has own id; approve verb and command_id; status PUT.
+PUT,/v1/boundaries/{boundary_id}/drafts/{draft_version_id}/discards/{command_id},R1;R3;R4,DELETE,/v1/boundary-draft-versions/{draft_version_id},"Discard ends the draft; flatten and use idempotent DELETE, no command_id."
+GET,/v1/boundaries/{boundary_id}/drafts/{draft_version_id}/impact-preview,R1;R4,GET,/v1/boundary-draft-versions/{draft_version_id}/impact,Draft version nested with own id; preview verb replaced by impact resource noun.
+PUT,/v1/boundaries/{boundary_id}/drafts/{draft_version_id}/reviews/{command_id},R1;R3;R4,PUT,/v1/boundary-draft-versions/{draft_version_id}/status,Draft version has own id; review verb and command_id; status PUT.
+PUT,/v1/boundaries/{boundary_id}/drafts/{draft_version_id}/revisions/{command_id},R1;R3;R4,PUT,/v1/boundary-draft-versions/{draft_version_id},Draft version has own id; revise verb and command_id; replace draft with PUT.
+GET,/v1/boundaries/{boundary_id}/effective-version,,GET,OK,Derived read of current effective version; no own identity in route.
+PUT,/v1/boundaries/{boundary_id}/successors/{command_id},R1;R3;R4;R12,PUT,/v1/boundaries/{successor_boundary_id},Successor is a boundary with own id; flat root; predecessor in body; no command_id.
+GET,/v1/boundaries/{boundary_id}/versions,R1,GET,/v1/boundary-versions?boundary_id={boundary_id},Versions have own id (version detail route); flatten collection with query filter.
+GET,/v1/boundaries/{boundary_id}/versions/{version_id},R1,GET,/v1/boundary-versions/{version_id},Version has own UUID; must be flat root resource.
+GET,/v1/campaigns,,GET,OK,Paged root list with header tenant.
+GET,/v1/campaigns/{campaign_id},,GET,OK,Flat root resource read by own UUID.
+PUT,/v1/campaigns/{campaign_id}/acknowledgements/{command_id},R3;R4;R12,PUT,/v1/campaigns/{campaign_id}/acknowledgement,Command_id in path and action noun; named part PUT returning 204.
+GET,/v1/campaigns/{campaign_id}/amendments,,GET,OK,Paged subordinate history list without own-id detail route.
+PUT,/v1/campaigns/{campaign_id}/closure/{command_id},R3;R4;R12,PUT,/v1/campaigns/{campaign_id}/status,Close is a lifecycle transition; use status PUT with command_id removed.
+PUT,/v1/campaigns/{campaign_id}/completions/{command_id},R3;R4;R12,PUT,/v1/campaigns/{campaign_id}/participants/{user_id}/training-completion,Completion keyed by participant user_id; drop command_id; bodyless PUT.
+GET,/v1/campaigns/{campaign_id}/participants,,GET,OK,Paged participant relationship list.
+PUT,/v1/campaigns/{campaign_id}/reconciliations/{command_id},R3;R4;R12,PUT,/v1/campaigns/{campaign_id}/audience,"Reconciliation is an action noun with command_id; use named part PUT, read result via GET."
+PUT,/v1/campaigns/{campaign_id}/waivers/{command_id},R3;R4;R12,PUT,/v1/campaign-waivers/{waiver_id}/status,Waiver approval with command_id; waiver needs own caller-minted id; status PUT.
+PUT,/v1/client-independence-evaluations/evaluate-client-independence/{evaluation_id},R4;R12,PUT,/v1/client-independence-evaluations/{evaluation_id},Verb segment evaluate-client-independence; PUT the evaluation resource; return 201 no body.
+GET,/v1/client-service-revision,R7,GET,/v1/client-service-revisions/{revision_id},Singular identity-less lookup of a revision; address revision by its own UUID.
+GET,/v1/client-services,,GET,OK,Paged root list.
+GET,/v1/client-services/{service_id},,GET,OK,Flat root read by own UUID.
+PUT,/v1/client-services/{service_id},R12,PUT,/v1/client-services/{service_id},"Path conformant; ClientServiceRegistration response body should be dropped, return 201 with Location."
+PUT,/v1/client-services/{service_id}/retirements/{command_id},R3;R4,PUT,/v1/client-services/{service_id}/status,Retire is a lifecycle transition; command_id and noun segment removed; status PUT.
+GET,/v1/client-services/{service_id}/revisions,,GET,OK,Paged subordinate revision history list.
+PUT,/v1/client-services/{service_id}/revisions/{command_id},R3;R4,PUT,/v1/client-services/{service_id},Revise is a replacement of the resource; drop command_id and verb noun.
+GET,/v1/commitment-draft-revision,R7,GET,/v1/commitment-draft-revisions/{revision_id},Singular identity-less lookup; address revision by its own UUID.
+GET,/v1/commitment-drafts,,GET,OK,Paged root list.
+GET,/v1/commitment-drafts/{draft_id},,GET,OK,Flat root read by own UUID.
+PUT,/v1/commitment-drafts/{draft_id},R12,PUT,/v1/commitment-drafts/{draft_id},"Path conformant; CommitmentDraftRegistration body should be dropped, return 201 with Location."
+PUT,/v1/commitment-drafts/{draft_id}/approvals/{command_id},R3;R4,PUT,/v1/commitment-drafts/{draft_id}/status,Approve verb and command_id; desired-state status PUT.
+GET,/v1/commitment-drafts/{draft_id}/decisions,,GET,OK,Paged subordinate decision list without own-id detail route.
+PUT,/v1/commitment-drafts/{draft_id}/draft-revisions/{command_id},R3;R4,PUT,/v1/commitment-drafts/{draft_id},Revise verb and command_id; replace draft resource with PUT.
+GET,/v1/commitment-drafts/{draft_id}/effective-version,,GET,OK,Derived read of effective version under draft.
+GET,/v1/commitment-drafts/{draft_id}/impact-preview,R4,GET,/v1/commitment-drafts/{draft_id}/impact,Preview verb segment; replace with impact resource noun.
+PUT,/v1/commitment-drafts/{draft_id}/reviews/{command_id},R3;R4,PUT,/v1/commitment-drafts/{draft_id}/status,Review verb and command_id; desired-state status PUT.
+GET,/v1/commitment-drafts/{draft_id}/revisions,,GET,OK,Paged subordinate revision history list.
+GET,/v1/commitment-drafts/{draft_id}/versions,,GET,OK,Paged subordinate version history list.
+GET,/v1/commitment-version,R7,GET,/v1/commitment-versions/{version_id},Singular identity-less lookup of a version; address by its own UUID.
+PUT,/v1/commitments/{commitment_id}/retirements/{command_id},R3;R4,PUT,/v1/commitments/{commitment_id}/status,Retire lifecycle transition; drop command_id and noun; status PUT.
+GET,/v1/control-draft-revision,R7,GET,/v1/control-draft-revisions/{revision_id},Singular identity-less lookup; address revision by its own UUID.
+GET,/v1/control-mappings,,GET,OK,Paged root list.
+GET,/v1/control-mappings/{mapping_id},,GET,OK,Flat root read by own UUID.
+PUT,/v1/control-mappings/{mapping_id},R12,PUT,/v1/control-mappings/{mapping_id},"Path conformant; propose registration body returned; return 201 with Location, no body."
+PUT,/v1/control-mappings/{mapping_id}/retirements/{command_id},R3;R4,PUT,/v1/control-mappings/{mapping_id}/status,Retire lifecycle transition; drop command_id and noun; status PUT.
+PUT,/v1/control-mappings/{mapping_id}/reviews/{command_id},R3;R4,PUT,/v1/control-mappings/{mapping_id}/status,Review verb and command_id; desired-state status PUT.
+GET,/v1/controls,,GET,OK,Paged root list.
+GET,/v1/controls/{control_id}/current-version,,GET,OK,Named derived part read; no own-id identity in route.
+GET,/v1/controls/{control_id}/decisions,R1,GET,/v1/control-decisions?control_id={control_id},Decisions have own id (detail route); flatten collection with query filter.
+GET,/v1/controls/{control_id}/decisions/{decision_id},R1,GET,/v1/control-decisions/{decision_id},Decision has own UUID; must be flat root resource.
+GET,/v1/controls/{control_id}/draft,,GET,OK,Named singleton part read of control draft.
+PUT,/v1/controls/{control_id}/draft/approvals/{command_id},R3;R4,PUT,/v1/controls/{control_id}/draft/status,Approve verb and command_id; desired-state status PUT.
+PUT,/v1/controls/{control_id}/draft/discards/{command_id},R3;R4,DELETE,/v1/controls/{control_id}/draft,"Discard ends the draft; idempotent DELETE, drop command_id and verb noun."
+GET,/v1/controls/{control_id}/draft/owner-person,,GET,OK,Named subordinate part read.
+PUT,/v1/controls/{control_id}/draft/owner-person/{command_id},R3,PUT,/v1/controls/{control_id}/draft/owner-person,"Named part is fine; remove command_id, body carries owner user_id."
+PUT,/v1/controls/{control_id}/draft/reviews/{command_id},R3;R4,PUT,/v1/controls/{control_id}/draft/status,Review verb and command_id; desired-state status PUT.
+GET,/v1/controls/{control_id}/draft/revisions,,GET,OK,Paged subordinate revision history list.
+PUT,/v1/controls/{control_id}/draft/revisions/{command_id},R3;R4,PUT,/v1/controls/{control_id}/draft,Revise verb and command_id; replace draft resource with PUT.
+GET,/v1/controls/{control_id}/effective-version,,GET,OK,Derived read of effective version.
+GET,/v1/controls/{control_id}/evaluation-plan/versions,R1,GET,/v1/control-evaluation-plan-versions?control_id={control_id},Plan versions have own id (detail route); flatten with query filter.
+POST,/v1/controls/{control_id}/evaluation-plan/versions,R1;R5;R12,PUT,/v1/control-evaluation-plan-versions/{plan_version_id},"POST forbidden; caller-minted plan_version_id via PUT, 201 with Location, no body."
+GET,/v1/controls/{control_id}/evaluation-plan/versions/{plan_version_id},R1,GET,/v1/control-evaluation-plan-versions/{plan_version_id},Plan version has own UUID; flat root resource.
+GET,/v1/controls/{control_id}/evaluations,R1,GET,/v1/control-evaluations?control_id={control_id},Evaluations have own id (detail route); flatten with query filter.
+GET,/v1/controls/{control_id}/evaluations/{evaluation_id},R1,GET,/v1/control-evaluations/{evaluation_id},Evaluation has own UUID; flat root resource.
+PUT,/v1/controls/{control_id}/evaluations/{evaluation_id},R1;R12,PUT,/v1/control-evaluations/{evaluation_id},"Evaluation has own id; flatten, control_id in body; return 201 no body."
+PUT,/v1/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions/{command_id},R1;R3;R4;R12,PUT,/v1/control-evaluation-deviations/{deviation_id}/disposition,"Deviation has own id; flatten; disposition named part PUT, no command_id."
+PUT,/v1/controls/{control_id}/evaluations/{evaluation_id}/reviews/{command_id},R1;R3;R4;R12,PUT,/v1/control-evaluations/{evaluation_id}/status,Evaluation has own id; review verb and command_id; status PUT.
+PUT,/v1/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results/{command_id},R1;R3;R12,PUT,/v1/control-evaluation-steps/{step_id}/result,"Step has own id; flatten; result named part PUT, drop command_id and body."
+PUT,/v1/controls/{control_id}/evaluations/{evaluation_id}/submissions/{command_id},R1;R3;R4;R12,PUT,/v1/control-evaluations/{evaluation_id}/status,Evaluation has own id; submit verb and command_id; status PUT.
+GET,/v1/controls/{control_id}/impact-preview,R4,GET,/v1/controls/{control_id}/impact,Preview verb segment; replace with impact resource noun.
+GET,/v1/controls/{control_id}/occurrences,R1,GET,/v1/control-occurrences?control_id={control_id},Occurrences have own id (detail route); flatten with query filter.
+PUT,/v1/controls/{control_id}/occurrences/{command_id},R1;R3;R12,PUT,/v1/control-occurrences/{occurrence_id},Occurrence has own id; caller-minted id replaces command_id; 201 no body.
+GET,/v1/controls/{control_id}/occurrences/{occurrence_id},R1,GET,/v1/control-occurrences/{occurrence_id},Occurrence has own UUID; flat root resource.
+PUT,/v1/controls/{control_id}/occurrences/{occurrence_id}/attestations/{command_id},R1;R3;R4;R12,PUT,/v1/control-occurrences/{occurrence_id}/attestation,Occurrence has own id; attest action noun and command_id; named part PUT.
+PUT,/v1/controls/{control_id}/occurrences/{occurrence_id}/corrections/{command_id},R1;R3;R4;R12,PUT,/v1/control-occurrences/{occurrence_id}/attestation,Occurrence has own id; correction is a replaced attestation part; no command_id.
+PUT,/v1/controls/{control_id}/occurrences/{occurrence_id}/reviews/{command_id},R1;R3;R4;R12,PUT,/v1/control-occurrences/{occurrence_id}/status,Occurrence has own id; review verb and command_id; status PUT.
+GET,/v1/controls/{control_id}/operating-plan,,GET,OK,Derived read of operating plan set under control.
+POST,/v1/controls/{control_id}/operating-plan/preview,R4;R5;R12,PUT,/v1/control-operating-plan-previews/{preview_id},"POST and preview verb forbidden; caller-minted preview resource via PUT, then GET."
+PUT,/v1/controls/{control_id}/operating-plan/proposals/{plan_version_id},R1;R4;R12,PUT,/v1/control-operating-plan-versions/{plan_version_id},Plan version has own id; flatten; proposals noun replaced by status; 204.
+PUT,/v1/controls/{control_id}/operating-plan/proposals/{plan_version_id}/approvals/{command_id},R1;R3;R4;R12,PUT,/v1/control-operating-plan-versions/{plan_version_id}/status,Plan version has own id; approve verb and command_id; status PUT.
+PUT,/v1/controls/{control_id}/proposal-withdrawals/{command_id},R3;R4,PUT,/v1/controls/{control_id}/proposal/status,"Withdraw verb and command_id; proposal is a status transition, withdrawn target status."
+PUT,/v1/controls/{control_id}/retirement-proposals/{command_id},R3;R4;R12,PUT,/v1/controls/{control_id}/status,Proposal noun and command_id; status PUT with retirement_proposed target.
+PUT,/v1/controls/{control_id}/retirements/{command_id},R3;R4,PUT,/v1/controls/{control_id}/status,Retire lifecycle transition; drop command_id and noun; status PUT.
+PUT,/v1/controls/{control_id}/successors/{command_id},R1;R3;R4;R12,PUT,/v1/controls/{successor_control_id},Successor control has own id; flat root; predecessor in body; drop command_id.
+GET,/v1/controls/{control_id}/versions,,GET,OK,Paged subordinate version history list.
+GET,/v1/controls/{control_id}/versions/{version_id},,OK,OK,Conformant UUID-addressed version read.
+PUT,/v1/controls/{identifier},R6;R12,PUT,/v1/controls/{control_id},Path uses user-defined identifier; use control UUID. Result body violates bodyless write.
+GET,/v1/criteria-catalog-editions,R11,GET,/v1/criteria-catalog-editions,Returns IReadOnlyList; must be Page with cursor and limit.
+GET,/v1/criteria-catalog-editions/{edition_id},,OK,OK,Conformant UUID-addressed read.
+GET,/v1/criteria-catalog-editions/{edition_id}/entries,,OK,OK,Conformant paged subordinate list.
+GET,/v1/criteria-catalog-editions/{edition_id}/entries/export,R4,GET,/v1/criteria-catalog-editions/{edition_id}/entries,export verb duplicates list; select format via Accept header or query.
+GET,/v1/criteria-catalog-entries,,GET,/v1/criteria-catalog-editions/{edition_id}/entries?identifier=,Singular lookup at collection root; keep only as filter on entries list.
+GET,/v1/criteria-coverage,,OK,OK,Paged read-model collection; conformant.
+PUT,/v1/criteria-edition/selections/{command_id},R3,PUT,/v1/program-criteria-edition-selections/{selection_id},command_id retry token in path; singular criteria-edition inconsistent with editions. Program in body.
+PUT,/v1/criteria-editions/{edition_id}/overlays/set-criteria-text-overlay/{command_id},R3;R4;R12,PUT,/v1/criteria-catalog-editions/{edition_id}/text-overlay,Verb and command_id in path; use named part PUT; result body; path inconsistent with catalog-editions.
+GET,/v1/criterion-applicability,,OK,OK,Paged collection; conformant.
+GET,/v1/criterion-applicability/{decision_id},,OK,OK,Conformant UUID-addressed read.
+PUT,/v1/criterion-applicability/{decision_id},R12,PUT,/v1/criterion-applicability/{decision_id},"Client-minted create; returns Registration body; return 201 Location, no body."
+PUT,/v1/criterion-applicability/{decision_id}/reviews/{command_id},R3;R4,PUT,/v1/criterion-applicability/{decision_id}/status,Review outcome is a transition; command_id and reviews verb in path.
+PUT,/v1/criterion-applicability/{decision_id}/withdrawals/{command_id},R3;R4,PUT,/v1/criterion-applicability/{decision_id}/status,Withdrawal is a status transition with command_id and verb in path.
+GET,/v1/data-flows,,OK,OK,Paged collection; conformant.
+GET,/v1/data-flows/{data_flow_id},,OK,OK,Conformant UUID-addressed read.
+PUT,/v1/data-flows/{data_flow_id},R12,PUT,/v1/data-flows/{data_flow_id},Registration result body violates bodyless write; use 201 Location or 204.
+GET,/v1/data-flows/{data_flow_id}/revisions,,OK,OK,Paged subordinate read; conformant.
+POST,/v1/developer-user-sessions,R5;R12,PUT,/v1/developer-user-sessions/{session_id},"POST forbidden; client-minted session ID; returns identity body. Pre-auth, exempt from R13."
+GET,/v1/email-challenges,,OK,OK,Identity via query (email); pre-auth. Prefer path ID if challenge has one.
+PUT,/v1/email-challenges/{challenge_id},,OK,OK,"Conformant client-minted create; pre-auth, exempt from R13."
+PUT,/v1/email-challenges/{challenge_id}/verification,R4,PUT,/v1/email-challenges/{challenge_id}/status,Verification completion is a lifecycle transition; use status PUT.
+POST,/v1/evidence-artifacts/{artifact_id}/downloads,R5;R12,PUT,/v1/evidence-artifact-downloads/{download_id},POST forbidden; issued download link is a resource with own ID; read it with GET.
+GET,/v1/evidence-artifacts/{artifact_id}/metadata,,OK,OK,Named subordinate read; conformant.
+POST,/v1/evidence-artifacts/{artifact_id}/quarantine-releases,R4;R5,PUT,/v1/evidence-artifacts/{artifact_id}/status,POST forbidden; release verb in path; quarantine state via status PUT.
+PUT,/v1/evidence-artifacts/{artifact_id}/supports/{command_id},R1;R3;R12,PUT,/v1/evidence-supports/{evidence_support_id},Support has own identity (flat root exists); command_id in path; result body.
+GET,/v1/evidence-redactions/{redaction_id},,OK,OK,Conformant UUID-addressed read.
+PUT,/v1/evidence-redactions/{redaction_id}/approvals/{command_id},R3;R4;R12,PUT,/v1/evidence-redactions/{redaction_id}/status,Approval is a status transition; command_id and verb in path; result body.
+PUT,/v1/evidence-redactions/{redaction_id}/preparations/{command_id},R3;R4;R12,PUT,/v1/evidence-redactions/{redaction_id}/status,Preparation is a status transition; command_id and verb in path; result body.
+GET,/v1/evidence-requests,,OK,OK,Paged collection; conformant.
+GET,/v1/evidence-requests/{evidence_request_id},,OK,OK,Conformant UUID-addressed read.
+PUT,/v1/evidence-requests/{evidence_request_id},R12,PUT,/v1/evidence-requests/{evidence_request_id},Client-minted create; result body violates bodyless write.
+PUT,/v1/evidence-requests/{evidence_request_id}/cancellations/{command_id},R3;R4;R12,PUT,/v1/evidence-requests/{evidence_request_id}/status,Cancellation is a status transition; command_id and verb in path; result body.
+PUT,/v1/evidence-requests/{evidence_request_id}/fulfilments/{command_id},R3;R4;R12,PUT,/v1/evidence-requests/{evidence_request_id}/status,Fulfilment is a status transition; command_id and verb in path; result body.
+GET,/v1/evidence-supports,,OK,OK,Paged collection; conformant.
+GET,/v1/evidence-supports/{evidence_support_id},,OK,OK,Conformant UUID-addressed read.
+PUT,/v1/evidence-supports/{support_id}/withdrawals/{command_id},R3;R4,PUT,/v1/evidence-supports/{support_id}/status,Withdrawal is a status transition; command_id and verb in path. Param name inconsistent with evidence_support_id.
+GET,/v1/examinations/{examination_id},R13,GET,/v1/examinations/{examination_id},Tenant-scoped examination read lacks Tenant-Id header; add it.
+PUT,/v1/examinations/{examination_id},,OK,OK,"Conformant client-minted create; single request type, no body result."
+POST,/v1/examinations/{examination_id}/assertions/{assertion_id},R1;R5,PUT,/v1/management-assertions/{assertion_id},POST forbidden; assertion has own ID so route flat; examination_id in body.
+POST,/v1/examinations/{examination_id}/management-reviews/{sign_off_id},R1;R5,PUT,/v1/examination-management-reviews/{sign_off_id},POST forbidden; sign-off has own ID so route flat; examination_id in body.
+POST,/v1/examinations/{examination_id}/outcomes/{outcome_id},R1;R5,PUT,/v1/examination-outcomes/{outcome_id},POST forbidden; outcome has own ID so route flat; examination_id in body.
+POST,/v1/examinations/{examination_id}/representation-letters/{letter_id},R1;R5,PUT,/v1/representation-letters/{letter_id},POST forbidden; letter has own ID so route flat; examination_id in body.
+PUT,/v1/examinations/{examination_id}/revisions,R4,PUT,/v1/examinations/{examination_id}/engagement,revisions verb; PUT the revised named part. Whole-record change at root ID would 409.
+GET,/v1/examinations/{examination_id}/type-i-baseline-preview,R13,GET,/v1/examinations/{examination_id}/type-i-baseline-preview,"Tenant-scoped read lacks Tenant-Id header; preview segment is a read, acceptable."
+POST,/v1/examinations/{examination_id}/type-i-baselines/{baseline_id}/amendments,R1;R4;R5,PUT,/v1/type-i-baselines/{baseline_id},POST and amendments verb; baseline has own ID so route flat; examination_id in body.
+POST,/v1/examinations/{examination_id}/type-i-baselines/{baseline_id}/freeze,R1;R4;R5,PUT,/v1/type-i-baselines/{baseline_id}/status,POST and freeze verb; use status PUT with frozen state on flat baseline root.
+POST,/v1/examinations/{examination_id}/type-ii-plans/{plan_id}/proposals,R1;R4;R5,PUT,/v1/type-ii-operating-plans/{plan_id}/status,POST and proposals verb; plan has own ID so route flat; status transition.
+GET,/v1/findings,,OK,OK,Paged collection; conformant.
+GET,/v1/findings/{finding_id},,OK,OK,Conformant UUID-addressed read.
+PUT,/v1/findings/{finding_id},R12,PUT,/v1/findings/{finding_id},Client-minted create; FindingRegistration result body violates bodyless write.
+PUT,/v1/findings/{finding_id}/acceptances/{command_id},R3;R12,PUT,/v1/findings/{finding_id}/acceptance,command_id in path; use named part PUT; FindingView result body.
+PUT,/v1/findings/{finding_id}/closures/{command_id},R3;R4;R12,PUT,/v1/findings/{finding_id}/status,Closure is a status transition; closures noun-verb and command_id in path; OperationAccepted body.
+PUT,/v1/findings/{finding_id}/corrective-actions/{action_id},R1;R12,PUT,/v1/corrective-actions/{action_id},Corrective action has own identity so route flat; finding_id in body; OperationAccepted body.
+PUT,/v1/findings/{finding_id}/corrective-actions/{action_id}/cancellations/{command_id},R1;R3;R4;R12,PUT,/v1/corrective-actions/{action_id}/status,Nested under finding; cancellation verb and command_id; status transition; FindingView body.
+PUT,/v1/findings/{finding_id}/corrective-actions/{action_id}/changes/{command_id},R1;R3;R4;R12,PUT,/v1/corrective-actions/{action_id}/<changed-part>,Nested under finding; changes verb and command_id; PUT the changed named part; FindingView body.
+PUT,/v1/findings/{finding_id}/corrective-actions/{action_id}/completions/{command_id},R1;R3;R4;R12,PUT,/v1/corrective-actions/{action_id}/status,Nested under finding; completion verb and command_id; status transition; FindingView body.
+PUT,/v1/findings/{finding_id}/reopenings/{command_id},R3;R4;R12,PUT,/v1/findings/{finding_id}/status,Reopen is a status transition; reopenings verb and command_id; FindingView body.
+PUT,/v1/findings/{finding_id}/revisions/{command_id},R3;R4;R12,PUT,/v1/findings/{finding_id}/<revised-part>,revisions verb and command_id; PUT the revised named part; FindingView body.
+GET,/v1/firm-staff,R11,GET,/v1/firm-staff,Result FirmStaffDirectoryView not evidently Page; verify it is cursor-paged.
+PUT,/v1/guest-invitations/{invitation_id},,OK,OK,Conformant client-minted create; overlaps /v1/invitations and /v1/member-invitations roots.
+PUT,/v1/identity-providers/{provider_connection_id}/credential-rotations/{command_id},R3;R4,PUT,/v1/identity-providers/{provider_connection_id}/credentials,command_id and rotation verb; PUT the credentials named part (204).
+PUT,/v1/identity-providers/{provider_connection_id}/disable/{command_id},R3;R4,PUT,/v1/identity-providers/{provider_connection_id}/status,disable verb and command_id; status transition to disabled.
+PUT,/v1/identity-providers/{provider_connection_id}/tests/{test_key},R4,PUT,/v1/identity-providers/{provider_connection_id}/test-results/{test_key},tests segment is an action; record result as resource read via GET. test_key assumed code vocabulary.
+PUT,/v1/identity-providers/{provider_connection_id}/{command_id},R3,PUT,/v1/identity-providers/{provider_connection_id},command_id replaces resource identity in path; configure is PUT on the provider root.
+PUT,/v1/identity-recovery/challenges/{challenge_id},,OK,OK,"Conformant client-minted create; pre-auth, exempt from R13."
+PUT,/v1/identity-recovery/challenges/{challenge_id}/completion,R4;R12,PUT,/v1/identity-recovery/challenges/{challenge_id}/status,completion is a lifecycle transition; use status PUT; OperationAccepted body.
+POST,/v1/identity-recovery/options,R5,GET,/v1/identity-recovery/options,"Read via POST; use GET with query parameters. Pre-auth, exempt from R13."
+GET,/v1/incidents,,OK,OK,Paged collection; conformant.
+GET,/v1/incidents/{incident_id},,OK,OK,Conformant UUID-addressed read.
+PUT,/v1/incidents/{incident_id},,OK,OK,"Conformant client-minted create; single request type, no body result."
+PUT,/v1/incidents/{incident_id}/assessments/{command_id},R3;R4,PUT,/v1/incidents/{incident_id}/impact-assessment,command_id and assessments verb; PUT named part matching the existing GET path.
+GET,/v1/incidents/{incident_id}/impact-assessment,,OK,OK,Named subordinate read; conformant.
+PUT,/v1/incidents/{incident_id}/resolutions/{command_id},R3;R4,PUT,/v1/incidents/{incident_id}/status,Resolution is a status transition; command_id and verb in path. Use /resolution part if it carries data.
+PUT,/v1/incidents/{incident_id}/revisions/{command_id},R3;R4,PUT,/v1/incidents/{incident_id}/<revised-part>,revisions verb and command_id; PUT the revised named part.
+GET,/v1/independence/history,,OK,OK,Tenant-scoped read with header; conformant.
+GET,/v1/independence/rules,R11,GET,/v1/independence/rules,Returns IReadOnlyList; must be cursor-paged Page.
+GET,/v1/information-assets,,OK,OK,Paged collection; conformant.
+GET,/v1/information-assets/{information_asset_id},,OK,OK,Conformant UUID-addressed read.
+PUT,/v1/information-assets/{information_asset_id},R12,PUT,/v1/information-assets/{information_asset_id},Client-minted create; InformationAssetRegistration result body violates bodyless write.
+GET,/v1/information-assets/{information_asset_id}/boundary-references,,OK,OK,Paged subordinate read; conformant.
+POST,/v1/information-assets/{information_asset_id}/change-previews,R4;R5,PUT,/v1/information-asset-change-previews/{preview_id},POST forbidden and preview verb; client-minted preview ID then GET read of preview.
+GET,/v1/information-assets/{information_asset_id}/revisions,,OK,OK,Paged subordinate read; conformant.
+PUT,/v1/invitations/{invitation_id},,OK,OK,Conformant client-minted create; three invitation roots should be consolidated.
+PUT,/v1/invitations/{invitation_id}/acceptance,R4,PUT,/v1/invitations/{invitation_id}/status,Acceptance is a status transition; use status PUT with accepted.
+GET,/v1/locations,,OK,OK,Paged collection; conformant.
+PUT,/v1/locations/revise-location/{command_id},R3;R4;R12,PUT,/v1/locations/{location_id}/<revised-part>,Verb segment and command_id on collection root; PUT named part; OperationAccepted body.
+GET,/v1/locations/{location_id},,OK,OK,Conformant UUID-addressed read.
+PUT,/v1/locations/{location_id},R12,PUT,/v1/locations/{location_id},Client-minted create; OperationAccepted body violates bodyless write.
+GET,/v1/locations/{location_id}/revisions,,OK,OK,Paged subordinate read; conformant.
+GET,/v1/member-invitations,,OK,OK,Paged collection; conformant; duplicates invitation root.
+PUT,/v1/member-invitations/{invitation_id},,OK,OK,Conformant client-minted create; duplicates invitation root.
+GET,/v1/members,,OK,OK,Paged collection; conformant.
+PUT,/v1/members/by-user/{user_id}/reinstatements/{command_id},R3;R4;R12,PUT,/v1/members/{user_id}/status,by-user prefix extra; reinstatement verb and command_id; status transition; result body.
+GET,/v1/members/{user_id},,OK,OK,Conformant UUID-addressed read.
+GET,/v1/members/{user_id}/access,,OK,OK,Named subordinate read; conformant.
+PUT,/v1/members/{user_id}/deprovisioning/{command_id},R3;R4;R12,PUT,/v1/members/{user_id}/status,deprovisioning verb and command_id; status transition; result body.
+GET,/v1/members/{user_id}/responsibilities,R11,GET,/v1/members/{user_id}/responsibilities,Returns IReadOnlyList; must be cursor-paged Page.
+PUT,/v1/members/{user_id}/suspensions/{command_id},R3;R4;R12,PUT,/v1/members/{user_id}/status,"command_id retry token; suspend verb; body result. Use status PUT, 204."
+GET,/v1/methodology-template-versions/{methodology_template_version_id},,GET,OK,Flat identity-addressed read; conformant.
+GET,/v1/methodology-templates,,GET,OK,Page result with tenant header; conformant.
+GET,/v1/my-work,R11,GET,/v1/my-work,"Returns a single view, not a Page; return cursor/limit page of work items."
+POST,/v1/my/oidc-identity-links,R5;R8;R12,PUT,/v1/system/my/oidc-identity-links/{oidc_identity_link_id},POST forbidden; client-minted link ID; platform identity; body result returned.
+GET,/v1/my/tenant,R8,GET,/v1/system/my/tenant,Tenant slug resolution is platform-level identity; path otherwise acceptable.
+PUT,/v1/nonattest-services/record-nonattest-service/{service_record_id},R4;R12,PUT,/v1/nonattest-services/{service_record_id},Verb segment in path; drop it; 204 with no body.
+GET,/v1/observation-period-closes/{close_id},R13,GET,/v1/observation-period-closes/{close_id},Tenant-scoped but tenant_header false; require Tenant-Id header.
+GET,/v1/observation-periods,,GET,OK,Page with tenant header; conformant.
+GET,/v1/observation-periods/{period_id},R13,GET,/v1/observation-periods/{period_id},Tenant-scoped but tenant_header false; require Tenant-Id header.
+POST,/v1/observation-periods/{period_id}/close-approvals,R4;R5,PUT,/v1/observation-period-closes/{close_id}/status,"POST and approval verb; express as status transition, 204."
+GET,/v1/observation-periods/{period_id}/close-preview,R4;R13,GET,/v1/observation-periods/{period_id}/close,Preview verb in path; expose close as a named read part; tenant_header false.
+PUT,/v1/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/amendments/{command_id},R1;R3;R4,PUT,/v1/observation-period-close-snapshots/{close_snapshot_id}/amendment,"Snapshot has own identity, flatten to root; command_id dropped; 204."
+POST,/v1/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/freezes,R1;R4;R5,PUT,/v1/observation-period-close-snapshots/{close_snapshot_id}/status,POST forbidden; snapshot flattened; freeze becomes status PUT.
+PUT,/v1/observation-periods/{period_id}/close-validations/{command_id},R3,PUT,/v1/observation-period-closes/{close_id}/validation,command_id retry token in path; use close identity with named part.
+PUT,/v1/observation-periods/{period_id}/occurrence-generations/{generation_key},R3;R6;R7,PUT,/v1/observation-periods/{period_id}/occurrence-generations/{occurrence_generation_id},generation_key is a derived non-UUID value; use client-minted UUID ID.
+PUT,/v1/offboarding/{command_id},R3;R4,PUT,/v1/offboardings/{offboarding_id},"command_id in path and offboarding verb-like noun; use own identity, 204."
+POST,/v1/oidc-user-sessions,R5;R8;R12,PUT,/v1/system/oidc-user-sessions/{oidc_user_session_id},POST forbidden; authentication session is platform-level; client-minted ID; no body.
+GET,/v1/operating-blockers,,GET,OK,Page with tenant header; conformant.
+GET,/v1/operational-processes,,GET,OK,Page with tenant header; conformant.
+PUT,/v1/operational-processes/revise-operational-process/{command_id},R3;R4;R12,PUT,/v1/operational-process-revisions/{revision_id},Verb segment and command_id; revision gets own ID at root; 204.
+GET,/v1/operational-processes/{operational_process_id},,GET,OK,Flat identity-addressed read; conformant.
+PUT,/v1/operational-processes/{operational_process_id},R12,PUT,OK,Identity-addressed PUT; return 204 with no body instead of OperationAcceptedResponse.
+GET,/v1/operational-processes/{operational_process_id}/revisions,,GET,OK,Page of revisions under owner; no independent identity route required.
+GET,/v1/people,,GET,OK,Page with tenant header; conformant.
+GET,/v1/people/{person_id},,GET,OK,Flat identity-addressed read; conformant.
+PUT,/v1/people/{person_id},R12;R13,PUT,/v1/people/{person_id},Tenant-scoped but tenant_header false; return 204 not PersonRegistration body.
+POST,/v1/people/{person_id}/detail-changes/{command_id},R3;R4;R5;R13,PUT,/v1/people/{person_id}/details,POST and command_id; detail change becomes PUT of named part; add tenant header.
+PUT,/v1/people/{person_id}/membership-correlations/{command_id},R3;R4;R13,PUT,/v1/people/{person_id}/memberships/{user_id},command_id and correlate verb; relationship keyed by user ID; add tenant header.
+GET,/v1/policies,,GET,OK,Page with tenant header; conformant.
+GET,/v1/policies/{policy_id},,GET,OK,Flat identity-addressed read; conformant.
+PUT,/v1/policies/{policy_id},R12,PUT,OK,"Identity-addressed create; return 201 with Location, no body."
+PUT,/v1/policies/{policy_id}/approvals/{command_id},R3;R4;R12,PUT,/v1/policies/{policy_id}/status,command_id and approve action; use status PUT with 204.
+GET,/v1/policies/{policy_id}/decisions,,GET,OK,Page of owned decisions; conformant as a collection read.
+PUT,/v1/policies/{policy_id}/draft,R12,PUT,OK,Named part PUT; return 204 with no body.
+PUT,/v1/policies/{policy_id}/draft/discards/{command_id},R3;R4,DELETE,/v1/policies/{policy_id}/draft,"command_id and discard verb; DELETE the draft idempotently, 204."
+GET,/v1/policies/{policy_id}/effective-version,,GET,OK,Read of a derived view; conformant.
+GET,/v1/policies/{policy_id}/impact-preview,R4,GET,/v1/policies/{policy_id}/impact,Preview verb segment; expose impact as read-only named part.
+PUT,/v1/policies/{policy_id}/periodic-reviews/{command_id},R3;R12,PUT,/v1/policies/{policy_id}/periodic-review,command_id in path; named-part PUT; 204 with no body.
+PUT,/v1/policies/{policy_id}/retirement-proposals/{command_id},R3;R4;R12,PUT,/v1/policies/{policy_id}/status,command_id and propose verb; status transition with 204.
+PUT,/v1/policies/{policy_id}/retirements/{command_id},R3;R4;R12,PUT,/v1/policies/{policy_id}/status,command_id and retire verb; status PUT {status:retired} with 204.
+PUT,/v1/policies/{policy_id}/reviews/{command_id},R3;R12,PUT,/v1/policy-reviews/{review_id},command_id in path; review gets own client-minted identity at root; 204.
+PUT,/v1/policies/{policy_id}/successors/{command_id},R3;R12,PUT,/v1/policies/{policy_id}/successors/{successor_policy_id},Relationship keyed by successor policy ID instead of command_id; 204.
+GET,/v1/policies/{policy_id}/versions,,GET,OK,Page of owned versions; conformant.
+PUT,/v1/policy-campaigns/{campaign_id},R12,PUT,OK,Identity-addressed PUT; return 204 instead of CampaignRegistration body.
+GET,/v1/policy-version,,GET,/v1/policy-versions/{policy_version_id},Singular read with no identity in path; address by version ID.
+GET,/v1/primary-org-admins,R11,GET,/v1/primary-org-admins,"Returns a view, not a Page; return cursor/limit page of admins."
+PUT,/v1/primary-org-admins/{user_id}/designations/{command_id},R3,PUT,/v1/primary-org-admins/{user_id},"command_id in path; designation keyed by user ID, 204."
+PUT,/v1/primary-org-admins/{user_id}/releases/{command_id},R3;R4,DELETE,/v1/primary-org-admins/{user_id},"command_id and release verb; DELETE relationship idempotently, 204."
+GET,/v1/program-client-services,,GET,OK,Page with tenant header; conformant.
+GET,/v1/program-revision,,GET,/v1/program-revisions/{program_revision_id},Singular read with no identity in path; address by revision ID.
+GET,/v1/programs,,GET,OK,Page with tenant header; conformant.
+GET,/v1/programs/{program_id},,GET,OK,Flat identity-addressed read; conformant.
+PUT,/v1/programs/{program_id},R12,PUT,OK,"Identity-addressed create; return 201 with Location, no body."
+GET,/v1/provider-revision,,GET,/v1/provider-revisions/{provider_revision_id},Singular read with no identity in path; address by revision ID.
+GET,/v1/providers,,GET,OK,Page with tenant header; conformant.
+PUT,/v1/providers/revise-provider/{command_id},R3;R4;R12,PUT,/v1/providers/{provider_id},"Verb segment and command_id; revise as PUT to provider identity, 204."
+GET,/v1/providers/{provider_id},,GET,OK,Flat identity-addressed read; conformant.
+PUT,/v1/providers/{provider_id},R12,PUT,OK,Identity-addressed PUT; return 204 instead of OperationAcceptedResponse.
+GET,/v1/providers/{provider_id}/assurance-coverage,,GET,OK,Read of derived coverage view under owner; conformant.
+GET,/v1/providers/{provider_id}/assurance-reports,,GET,OK,Page of owned reports; conformant as a collection read.
+PUT,/v1/providers/{provider_id}/assurance-reports/revise-assurance-report/{command_id},R3;R4;R12,PUT,/v1/assurance-reports/{report_id},"Verb segment and command_id; report has own identity, flatten to root; 204."
+PUT,/v1/providers/{provider_id}/assurance-reports/{report_id},R1;R12,PUT,/v1/assurance-reports/{report_id},Report has own identity; flatten to root and drop provider from path; 204.
+POST,/v1/providers/{provider_id}/change-impact-previews,R4;R5;R10,GET,/v1/providers/{provider_id}/change-impact,POST for a read; preview verb; use GET with query parameters for the change.
+GET,/v1/providers/{provider_id}/coverage-gaps,,GET,OK,Page of owned gaps; conformant as a collection read.
+PUT,/v1/providers/{provider_id}/coverage-gaps/close-provider-coverage-gap/{command_id},R3;R4;R12,PUT,/v1/provider-coverage-gaps/{gap_id}/status,Verb segment and command_id; gap has own identity; status PUT with 204.
+GET,/v1/providers/{provider_id}/coverage-gaps/{gap_id},R1,GET,/v1/provider-coverage-gaps/{gap_id},Gap has own identity; flatten to root.
+PUT,/v1/providers/{provider_id}/coverage-gaps/{gap_id},R1;R12,PUT,/v1/provider-coverage-gaps/{gap_id},Gap has own identity; flatten to root; 204 with no body.
+PUT,/v1/providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances/link-provider-coverage-gap-risk-acceptance/{command_id},R1;R3;R4;R12,PUT,/v1/provider-coverage-gaps/{gap_id}/risk-acceptances/{risk_acceptance_id},"Deep nesting, verb and command_id; relationship keyed by acceptance ID, 204."
+GET,/v1/providers/{provider_id}/reviews,,GET,OK,Page of owned reviews; conformant as a collection read.
+PUT,/v1/providers/{provider_id}/reviews/{review_id},R1;R12,PUT,/v1/provider-reviews/{review_id},Review has own identity; flatten to root; 204 with no body.
+GET,/v1/providers/{provider_id}/revisions,,GET,OK,Page of owned revisions; conformant as a collection read.
+GET,/v1/readiness/assessments,,GET,OK,Page with tenant header; conformant.
+GET,/v1/readiness/assessments/{assessment_id},,GET,OK,Flat identity-addressed read; conformant.
+PUT,/v1/readiness/assessments/{assessment_id},R12,PUT,OK,"Identity-addressed PUT; return 201 or 204, no OperationAcceptedResponse body."
+GET,/v1/readiness/assessments/{assessment_id}/annotations,,GET,OK,Page of owned annotations; conformant as a collection read.
+PUT,/v1/readiness/assessments/{assessment_id}/decision/{command_id},R3;R12,PUT,/v1/readiness/assessments/{assessment_id}/decision,command_id in path; named-part PUT; 204 with no body.
+GET,/v1/readiness/assessments/{assessment_id}/gaps,,GET,OK,Page of owned gaps; conformant as a collection read.
+PUT,/v1/readiness/assessments/{assessment_id}/gaps/{gap_id}/annotations/{command_id},R1;R3;R12,PUT,/v1/readiness-annotations/{annotation_id},Gap and annotation have own identity; flatten; command_id dropped; 204.
+PUT,/v1/readiness/assessments/{assessment_id}/type-i-entry-decision/{command_id},R3;R12,PUT,/v1/readiness/assessments/{assessment_id}/type-i-entry-decision,command_id in path; named-part PUT; 204 with no body.
+PUT,/v1/readiness/gaps/{gap_id}/plan-readiness-gap/{command_id},R3;R4;R12,PUT,/v1/readiness-gaps/{gap_id}/plan,Verb segment and command_id; gap at root with plan as named part; 204.
+GET,/v1/readiness/type-i-entry-decisions,,GET,OK,Page with tenant header; conformant.
+GET,/v1/responsibilities,R11,GET,/v1/responsibilities,"Returns ResponsibilitySetView, not a Page; return cursor/limit page."
+GET,/v1/responsibilities/conflict-preview,R4,GET,/v1/responsibility-conflicts,Preview verb segment; expose conflicts as a read collection.
+PUT,/v1/responsibilities/{assignment_id}/revocations/{command_id},R3;R4,DELETE,/v1/responsibilities/{assignment_id},"command_id and revoke verb; DELETE assignment idempotently, 204."
+PUT,/v1/responsibilities/{command_id},R3,PUT,/v1/responsibilities/{assignment_id},command_id used as identity; assignment's own ID should address the route.
+GET,/v1/revisions,,GET,OK,Page of program revisions; conformant as a collection read.
+PUT,/v1/revisions/{command_id},R3,PUT,/v1/program-revisions/{program_revision_id},command_id as identity; revision gets its own client-minted ID at root.
+GET,/v1/risk-draft-revision,,GET,/v1/risk-draft-revisions/{risk_draft_revision_id},Singular read with no identity in path; address by revision ID.
+GET,/v1/risk-method,,GET,OK,Singleton read of current method; conformant.
+GET,/v1/risk-method-version,,GET,/v1/risk-method-versions/{risk_method_version_id},Singular read with no identity in path; address by version ID.
+POST,/v1/risk-method/versions,R5;R12,PUT,/v1/risk-method/versions/{risk_method_version_id},"POST forbidden; client-minted version ID; 201 with Location, no body."
+GET,/v1/risks,,GET,OK,Page with tenant header; conformant.
+PUT,/v1/risks/{risk_id},R12,PUT,OK,"Identity-addressed create; return 201 with Location, no body."
+PUT,/v1/risks/{risk_id}/acceptances/{command_id},R3;R4;R12,PUT,/v1/risks/{risk_id}/acceptance,command_id and acceptance action; named-part PUT; 204.
+PUT,/v1/risks/{risk_id}/assessments/{command_id},R3;R12,PUT,/v1/risk-assessments/{risk_assessment_id},command_id in path; assessment has own identity; flatten; 204.
+PUT,/v1/risks/{risk_id}/assign-risk-owner/{command_id},R3;R4,PUT,/v1/risks/{risk_id}/owner,"command_id and assign verb; owner as named part, 204."
+PUT,/v1/risks/{risk_id}/control-treatments/{command_id},R3;R12,PUT,/v1/risk-control-treatments/{treatment_id},command_id in path; treatment has own identity; flatten to root; 204.
+PUT,/v1/risks/{risk_id}/control-treatments/{treatment_id}/retirements/{command_id},R1;R3;R4,DELETE,/v1/risk-control-treatments/{treatment_id},"Treatment has own identity; command_id and retire verb; DELETE idempotently, 204."
+PUT,/v1/risks/{risk_id}/control-treatments/{treatment_id}/reviews/{command_id},R1;R3,PUT,/v1/control-treatments/{treatment_id}/review,"Treatment has own ID, so flatten to root; drop command_id; review is one part of treatment."
+GET,/v1/risks/{risk_id}/draft,,GET,OK,Subordinate draft part under risk; conformant.
+PUT,/v1/risks/{risk_id}/draft,,PUT,OK,Replaces named draft part; bodyless 204 response expected.
+GET,/v1/risks/{risk_id}/draft/revisions,R1,GET,/v1/risks/{risk_id}/draft-revisions,Two levels below risk; flatten to sibling named collection; revisions are identity-bearing history.
+GET,/v1/risks/{risk_id}/evaluation,,GET,OK,Subordinate evaluation part under risk; conformant.
+GET,/v1/risks/{risk_id}/evaluation/history,R1,GET,/v1/risks/{risk_id}/evaluation-history,Two part levels below risk; flatten to one-level named collection.
+GET,/v1/risks/{risk_id}/governance,,GET,OK,Subordinate governance part; conformant.
+PUT,/v1/risks/{risk_id}/treatment,,PUT,OK,"Named part PUT; request-only, bodyless response expected."
+PUT,/v1/risks/{risk_id}/treatment-actions/revise-risk-treatment-action/{command_id},R3;R4,PUT,/v1/risk-treatment-actions/{action_id},"Verb segment and command_id; revise is PUT on action's own ID, collides with add route."
+PUT,/v1/risks/{risk_id}/treatment-actions/{action_id},R1;R12,PUT,/v1/risk-treatment-actions/{action_id},Action has own ID nested under risk; flatten and move risk_id to body; return 204.
+PUT,/v1/risks/{risk_id}/treatment-actions/{action_id}/cancellations/{command_id},R1;R3;R4,PUT,/v1/risk-treatment-actions/{action_id}/status,Flatten action; cancellation is status transition with {status}; drop command_id.
+PUT,/v1/risks/{risk_id}/treatment-actions/{action_id}/completion-reviews/{command_id},R1;R3;R4;R12,PUT,/v1/risk-treatment-actions/{action_id}/completion/status,"Flatten action; review is status transition; returns OperationAccepted, must be 204."
+PUT,/v1/risks/{risk_id}/treatment-actions/{action_id}/completions/{command_id},R1;R3;R4;R12,PUT,/v1/risk-treatment-actions/{action_id}/completion,Flatten action; completion is one part; drop command_id; result registration must be 204.
+GET,/v1/roles,,GET,OK,Paged collection; tenant via header.
+DELETE,/v1/roles/{role_id},,DELETE,OK,Idempotent removal of role by UUID.
+GET,/v1/roles/{role_id},,GET,OK,Root resource read by UUID.
+PUT,/v1/roles/{role_id},,PUT,OK,Client-minted ID create or identical repeat; 201 with Location expected.
+PUT,/v1/roles/{role_id}/name,,PUT,OK,Named scalar part PUT.
+GET,/v1/roles/{role_id}/permissions,,GET,OK,Paged subordinate collection.
+DELETE,/v1/roles/{role_id}/permissions/{permission},,DELETE,OK,Permission is code-fixed vocabulary; relationship removal.
+PUT,/v1/roles/{role_id}/permissions/{permission},,PUT,OK,Permission is code-fixed vocabulary; relationship PUT.
+GET,/v1/roles/{role_id}/teams,,GET,OK,Paged relationship read keyed by role; teams not owned here.
+POST,/v1/rollovers/{rollover_id}/decisions,R5,PUT,/v1/rollovers/{rollover_id}/status,POST forbidden; approval is status transition with {status}; 204.
+POST,/v1/rollovers/{rollover_id}/proposals,R5,PUT,/v1/rollovers/{rollover_id},POST forbidden; proposal is the rollover resource created under client-minted ID.
+GET,/v1/runtime-criteria-editions,,GET,OK,Paged collection read.
+GET,/v1/runtime-criteria-editions/{edition_id},,GET,OK,Root resource read by UUID.
+GET,/v1/runtime-criteria-editions/{edition_id}/disclosures,,GET,OK,Paged subordinate collection.
+GET,/v1/runtime-criteria-editions/{edition_id}/entries,,GET,OK,Paged subordinate collection; single entry route is separate.
+GET,/v1/runtime-criteria-entries,,GET,/v1/runtime-criteria-entries/{entry_id},"Single entry lacks identity in path; not a listed code, identity presumably in query."
+GET,/v1/sample-selections/{sample_selection_id},R13,GET,OK,Tenant-scoped resource read without Tenant-Id header; confirm tenant scope and add header.
+GET,/v1/scope-snapshots,,GET,OK,Paged collection; scope filter belongs in query.
+POST,/v1/scope-snapshots,R5;R12,PUT,/v1/scope-snapshots/{snapshot_id},POST forbidden; create under client-minted ID with scope in body; return 201 without body.
+GET,/v1/scope-snapshots/{snapshot_id},,GET,OK,Root resource read by UUID.
+POST,/v1/scope-snapshots/{snapshot_id}/amendments,R5;R12;R4,PUT,/v1/scope-snapshots/{snapshot_id}/scope,POST and amend verb; replace scope part with PUT returning 204.
+GET,/v1/scope-snapshots/{snapshot_id}/manifest-regeneration,R10;R4,PUT,/v1/scope-snapshots/{snapshot_id}/manifest,GET has side effects; regeneration is a PUT of the manifest part.
+GET,/v1/scope-snapshots/{snapshot_id}/verification,,GET,OK,Read-only verification view; confirm no side effects.
+POST,/v1/separation-of-duties-waivers,R5;R12,PUT,/v1/separation-of-duties-waivers/{waiver_id},"POST forbidden; client-minted ID create; return 201 with Location, no body."
+GET,/v1/separation-of-duties-waivers/{waiver_id},,GET,OK,Root resource read by UUID.
+POST,/v1/separation-of-duties-waivers/{waiver_id}/approvals,R5;R4;R12,PUT,/v1/separation-of-duties-waivers/{waiver_id}/status,POST forbidden; approval is status transition; return 204.
+GET,/v1/service-engagements,R11,GET,OK,Returns IReadOnlyList with no pagination; needs Page with cursor and limit.
+GET,/v1/service-engagements/{engagement_id},,GET,OK,Root resource read by UUID.
+GET,/v1/service-engagements/{engagement_id}/acceptance,,GET,OK,Subordinate part read.
+GET,/v1/service-engagements/{engagement_id}/acceptance-history,R11,GET,OK,Unpaged IReadOnlyList; needs cursor and limit page.
+PUT,/v1/service-engagements/{engagement_id}/acceptance/{command_id},R3;R12,PUT,/v1/service-engagements/{engagement_id}/acceptance,Drop command_id; return 204 instead of OperationAcceptedResponse.
+PUT,/v1/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations/{command_id},R3;R4;R12,DELETE,/v1/service-engagements/{engagement_id}/actual-assignments/{staff_member_id},Revocation ends relationship: DELETE by staff ID; drop command_id; 204.
+PUT,/v1/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/{command_id},R3;R12,PUT,/v1/service-engagements/{engagement_id}/actual-assignments/{staff_member_id},Relationship keyed by staff ID; drop command_id; return 204.
+PUT,/v1/service-engagements/{engagement_id}/amend-service-engagement/{command_id},R3;R4;R12,PUT,/v1/service-engagements/{engagement_id},Amend verb; PUT on engagement root with changed body; drop command_id; 204.
+PUT,/v1/service-engagements/{engagement_id}/closure/{command_id},R3;R4;R12,PUT,/v1/service-engagements/{engagement_id}/status,Closure is status transition; drop command_id; return 204 not view.
+PUT,/v1/service-engagements/{engagement_id}/create-service-engagement,R4;R12,PUT,/v1/service-engagements/{engagement_id},Verb segment; PUT root with client-minted ID already fits; return 201 no body.
+GET,/v1/service-engagements/{engagement_id}/history,R11,GET,OK,Unpaged IReadOnlyList; needs cursor and limit page.
+GET,/v1/service-engagements/{engagement_id}/management-acknowledgements,R11,GET,OK,Unpaged IReadOnlyList; needs cursor and limit page.
+PUT,/v1/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id},R1;R12,PUT,/v1/engagement-management-acknowledgements/{acknowledgement_id},"Acknowledgement has own ID nested under engagement; flatten, engagement_id in body; 204."
+PUT,/v1/service-engagements/{engagement_id}/partner-evaluations/{evaluation_id},R1;R12,PUT,/v1/partner-independence-evaluations/{evaluation_id},Evaluation has own ID nested under engagement; flatten; return 204.
+PUT,/v1/service-engagements/{engagement_id}/propose-service-engagement-staff/{command_id},R3;R4;R12,PUT,/v1/service-engagements/{engagement_id}/staff-proposals/{staff_member_id},Verb segment and command_id; proposal keyed by staff ID; 204.
+PUT,/v1/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals/{command_id},R3;R4;R12,DELETE,/v1/service-engagements/{engagement_id}/staff-proposals/{staff_member_id},Withdrawal removes relationship: DELETE; drop command_id; 204.
+GET,/v1/service-identities,,GET,OK,Paged collection read.
+POST,/v1/service-identities,R5;R12,PUT,/v1/service-identities/{service_identity_id},"POST forbidden; create under client-minted ID; 201 with Location, no body."
+GET,/v1/service-identities/{service_identity_id},,GET,OK,Root resource read by UUID.
+POST,/v1/service-identities/{service_identity_id}/disable,R4;R5,PUT,/v1/service-identities/{service_identity_id}/status,POST and verb segment; PUT status {status:disabled}.
+POST,/v1/service-identities/{service_identity_id}/enable,R4;R5,PUT,/v1/service-identities/{service_identity_id}/status,POST and verb segment; PUT status {status:enabled}.
+POST,/v1/service-identities/{service_identity_id}/owner/change,R4;R5,PUT,/v1/service-identities/{service_identity_id}/owner,POST and verb segment; PUT named owner part.
+POST,/v1/service-identities/{service_identity_id}/purpose/change,R4;R5,PUT,/v1/service-identities/{service_identity_id}/purpose,POST and verb segment; PUT named purpose part.
+POST,/v1/service-identities/{service_identity_id}/retire,R4;R5,PUT,/v1/service-identities/{service_identity_id}/status,POST and verb segment; PUT status {status:retired}.
+POST,/v1/service-identities/{service_identity_id}/review,R4;R5,PUT,/v1/service-identities/{service_identity_id}/last-review,POST and verb segment; PUT recorded review part.
+GET,/v1/setup-work,,GET,OK,Singular read view; conformant.
+GET,/v1/significant-changes,,GET,OK,Paged collection read.
+GET,/v1/significant-changes/{change_id},,GET,OK,Root resource read by UUID.
+PUT,/v1/significant-changes/{change_id},,PUT,OK,"Client-minted ID create; body result is UnitResult, 201 with Location."
+PUT,/v1/significant-changes/{change_id}/assessments/{command_id},R3,PUT,/v1/significant-changes/{change_id}/assessment,Drop command_id; assessment is one subordinate part; 204.
+PUT,/v1/significant-changes/{change_id}/revisions/{command_id},R3,PUT,/v1/significant-changes/{change_id}/details,Drop command_id; revision replaces change details part; 204.
+PUT,/v1/slug-changes/{command_id},R3;R4,PUT,/v1/tenant/slug,Command_id token and change verb; tenant slug is named part of header-selected tenant.
+DELETE,/v1/suspensions,R10;R8,DELETE,/v1/system/tenant-suspensions/{suspension_id},"No identity in path; ends suspension record; confirm platform scope, which needs /v1/system."
+PUT,/v1/suspensions/{command_id},R3;R8,PUT,/v1/system/tenant-suspensions/{suspension_id},"Drop command_id; suspension has own ID; confirm platform-level, else tenant named part."
+GET,/v1/system-descriptions/{description_id},R13,GET,OK,System description looks tenant-scoped but lacks Tenant-Id header; confirm and add header.
+PUT,/v1/system-descriptions/{description_id}/approve-system-description/{command_id},R3;R4,PUT,/v1/system-descriptions/{description_id}/status,"Verb segment repeats resource name and command_id; status {status:approved}, 204."
+PUT,/v1/system-descriptions/{description_id}/bind-system-description-sources/{command_id},R3;R4,PUT,/v1/system-descriptions/{description_id}/sources,Verb segment and command_id; PUT sources part; 204.
+PUT,/v1/system-descriptions/{description_id}/bind-system-description-to-examination/{command_id},R3;R4,PUT,/v1/system-descriptions/{description_id}/examination,Verb segment and command_id; PUT examination binding part; 204.
+PUT,/v1/system-descriptions/{description_id}/create-system-description-draft,R4,PUT,/v1/system-descriptions/{description_id}/draft,Verb segment; PUT draft part under client-minted ID.
+GET,/v1/system-descriptions/{description_id}/impact-preview,R4;R13,GET,/v1/system-descriptions/{description_id}/impact,Preview verb segment; add Tenant-Id header if tenant-scoped; read-only.
+PUT,/v1/system-descriptions/{description_id}/propose-system-description-successor/{command_id},R3;R4,PUT,/v1/system-description-successors/{successor_id},Verb segment and command_id; successor has own ID; predecessor in body.
+PUT,/v1/system-descriptions/{description_id}/record-system-description-no-change-decision/{command_id},R3;R4,PUT,/v1/system-descriptions/{description_id}/no-change-decision,Verb segment and command_id; PUT decision part; 204.
+PUT,/v1/system-descriptions/{description_id}/review-system-description/{command_id},R3;R4,PUT,/v1/system-descriptions/{description_id}/status,"Verb segment and command_id; status {status:reviewed}, 204."
+PUT,/v1/system-descriptions/{description_id}/revise-system-description-draft/{command_id},R3;R4,PUT,/v1/system-descriptions/{description_id}/draft,Verb segment and command_id; PUT draft part; 204.
+GET,/v1/system-descriptions/{description_id}/versions,R13,GET,OK,Paged versions of tenant-scoped resource lack Tenant-Id header; confirm and add.
+GET,/v1/system-instances/{system_instance_id}/access-expectations,,GET,OK,Paged or view subordinate collection under instance; conformant.
+PUT,/v1/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval/{command_id},R1;R3;R4;R12,PUT,/v1/access-expectations/{expectation_id}/status,Expectation has own ID nested under instance; flatten; status {approved}; 204.
+PUT,/v1/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions/{command_id},R1;R3;R12,PUT,/v1/access-expectations/{expectation_id}/exception,Expectation has own ID nested under instance; flatten; drop command_id; 204.
+GET,/v1/system-instances/{system_instance_id}/access-populations,,GET,OK,Paged subordinate collection read.
+PUT,/v1/system/criteria-change-operations/{operation_id},R3;R12,PUT,/v1/system/criteria-changes/{change_id},Operation token as identity; use change's own ID; 204 not receipt.
+PUT,/v1/system/criteria-disclosure-operations/{operation_id},R3;R12,PUT,/v1/system/criteria-editions/{edition_id}/disclosure,Operation token in path; edition owns disclosure part; 204.
+PUT,/v1/system/criteria-editions/{edition_id}/abandon-operations/{operation_id},R1;R3;R4;R12,PUT,/v1/system/criteria-editions/{edition_id}/status,Operation nested with own identity and abandon verb; status {abandoned}; 204.
+GET,/v1/system/criteria-editions/{edition_id}/draft,,GET,OK,Subordinate draft part read; conformant.
+PUT,/v1/system/criteria-editions/{edition_id}/draft-cancellations/{operation_id},R1;R3;R4;R12,DELETE,/v1/system/criteria-editions/{edition_id}/draft,Cancel ends draft: DELETE draft part; drop operation_id; 204.
+PUT,/v1/system/criteria-editions/{edition_id}/draft-operations/{operation_id},R1;R3;R12,PUT,/v1/system/criteria-editions/{edition_id}/draft,Drop operation_id; PUT draft part with body; 204.
+PUT,/v1/system/criteria-editions/{edition_id}/fields/{field}/operations/{operation_id},R1;R3;R12,PUT,/v1/system/criteria-editions/{edition_id}/fields/{field},"Field is code vocabulary, fine; drop operation_id; 204."
+PUT,/v1/system/criteria-editions/{edition_id}/initial-label-operations/{operation_id},R1;R3;R12,PUT,/v1/system/criteria-editions/{edition_id}/initial-label,Drop operation_id; PUT initial-label part; 204.
+GET,/v1/system/criteria-editions/{edition_id}/operations/{operation_id},R1;R3,GET,/v1/system/criteria-operations/{operation_id},Receipt is addressable only if operation is its own resource; flatten to root.
+PUT,/v1/system/criteria-editions/{edition_id}/publication-attempts/{attempt_id},R1;R3;R4;R12,PUT,/v1/system/criteria-editions/{edition_id}/publication,Attempt token nested as identity; publish verb noun; PUT publication part; 204.
+PUT,/v1/system/criteria-editions/{edition_id}/rename-cancellations/{operation_id},R1;R3;R4;R12,DELETE,/v1/system/criteria-editions/{edition_id}/pending-name,Cancelling pending rename removes it: DELETE; drop operation_id; 204.
+PUT,/v1/system/criteria-editions/{edition_id}/rename-operations/{operation_id},R3;R4;R12,PUT,/v1/system/criteria-editions/{edition_id}/name,Operation_id is a retry token; rename is a named field PUT returning 204.
+GET,/v1/system/criteria-editions/{edition_id}/value-operations/{operation_id},R3,GET,/v1/system/criteria-editions/{edition_id}/value,Polls a command receipt by operation_id; read the edition value directly.
+PUT,/v1/system/criteria-summary-corrections/{operation_id},R3;R12,PUT,/v1/system/criterion-summary-corrections/{correction_id},Keyed by operation_id; use client-minted correction ID with criterion in body; 204.
+GET,/v1/system/firm-professional-duties,,OK,OK,Platform catalog read; no rubric gap.
+PUT,/v1/system/firm-professional-duties/{designation_id}/assertion-revocations/{assertion_id},R1;R4;R12,PUT,/v1/system/professional-duty-assertions/{assertion_id}/status,Assertion has own ID so flatten; revocation is a status transition; 204.
+PUT,/v1/system/firm-professional-duties/{designation_id}/assertions/{assertion_id},R1;R12,PUT,/v1/system/professional-duty-assertions/{assertion_id},Assertion has own ID; flatten to root and carry designation_id in body; no response body.
+GET,/v1/system/firm-staff,R8,GET,/v1/firm-staff,Tenant-scoped staff directory (header-scoped) placed under /system; move to tenant root.
+PUT,/v1/system/firm-staff/{staff_member_id}/register-firm-staff,R4;R12;R13,PUT,/v1/system/firm-staff/{staff_member_id},Verb segment; registration is PUT on staff identity; tenant-scoped mutation lacks Tenant-Id.
+PUT,/v1/system/firm-staff/{staff_member_id}/set-firm-staff-status/{command_id},R3;R4;R12;R13,PUT,/v1/system/firm-staff/{staff_member_id}/status,Command_id retry token and verb path; status part; returns view not 204; header missing.
+GET,/v1/system/independence/rules,R11,GET,/v1/system/independence-rule-versions,Returns IReadOnlyList; needs cursor pagination Page<T>; rename to resource noun.
+PUT,/v1/system/independence/rules/{command_id},R3;R12,PUT,/v1/system/independence-rule-versions/{rule_version_id},Command_id as key; client-minted version ID; drop view body; 201 or 204.
+PUT,/v1/system/independence/rules/{rule_version}/ratification/{command_id},R3;R4;R7;R12,PUT,/v1/system/independence-rule-versions/{rule_version_id}/status,Non-UUID version and command_id in path; ratification is a status transition; 204.
+GET,/v1/system/members/{member_id}/work-digest-dispatches,,OK,OK,Single status read; plural name for a singular view is cosmetic only.
+PUT,/v1/system/members/{member_id}/work-digest-dispatches/retry-authorizations/{command_id},R3;R4;R12,PUT,/v1/system/members/{member_id}/work-digest-dispatch/unknown-retry-status,Command_id and verb path; express as status part; return 204 not view.
+GET,/v1/system/methodology-templates/{template_id},,OK,OK,Conformant read of template identity.
+PUT,/v1/system/methodology-templates/{template_id}/drafts/{draft_id}/approvals/{command_id},R1;R3;R4,PUT,/v1/system/methodology-template-drafts/{draft_id}/status,Draft has own ID so flatten; approval is status transition; drop command_id.
+PUT,/v1/system/methodology-templates/{template_id}/drafts/{draft_id}/discards/{command_id},R1;R3;R4,DELETE,/v1/system/methodology-template-drafts/{draft_id},Discard removes the draft; flatten and use DELETE on draft identity.
+PUT,/v1/system/methodology-templates/{template_id}/drafts/{draft_id}/reviews/{command_id},R1;R3;R4,PUT,/v1/system/methodology-template-drafts/{draft_id}/status,Draft has own ID so flatten; review is a status transition; drop command_id.
+PUT,/v1/system/methodology-templates/{template_id}/drafts/{draft_id}/revisions/{command_id},R1;R3;R4,PUT,/v1/system/methodology-template-drafts/{draft_id}/content,Flatten draft identity; revision is named-part PUT replacing content; drop command_id.
+PUT,/v1/system/methodology-templates/{template_id}/drafts/{draft_id}/starts/{command_id},R1;R3;R4,PUT,/v1/system/methodology-template-drafts/{draft_id},Start creates a draft under client-minted ID; template_id in body; 201 Location.
+PUT,/v1/system/operator-grants/{command_id},R3,PUT,/v1/system/operators/{user_id},Command_id as key with user only in body; key the operator relationship by user ID.
+PUT,/v1/system/operator-revocations/{command_id},R3;R4,DELETE,/v1/system/operators/{user_id},Revocation removes the operator relationship; DELETE on user identity.
+GET,/v1/system/operators,,OK,OK,Paginated Page<T> collection read.
+GET,/v1/system/operators/{user_id},,OK,OK,Conformant identity read by user ID.
+PUT,/v1/system/operators/{user_id}/primary-designations/{command_id},R3;R4,PUT,/v1/system/operators/{user_id}/primary,Designation as named-part PUT; drop command_id retry token.
+PUT,/v1/system/operators/{user_id}/primary-releases/{command_id},R3;R4,DELETE,/v1/system/operators/{user_id}/primary,Release removes primary designation; DELETE named part; drop command_id.
+GET,/v1/system/tenants,,OK,OK,Platform paginated list; Tenant-Id header is unneeded but no rubric gap.
+GET,/v1/teams,,OK,OK,Paginated tenant-scoped list with header.
+DELETE,/v1/teams/{team_id},,OK,OK,Identity-addressed removal with header.
+GET,/v1/teams/{team_id},,OK,OK,Identity read with header.
+PUT,/v1/teams/{team_id},,OK,OK,Identity-addressed define; no declared response body.
+GET,/v1/teams/{team_id}/members,,OK,OK,Paginated subordinate relationship list.
+DELETE,/v1/teams/{team_id}/members/{member_id},R12,DELETE,/v1/teams/{team_id}/members/{user_id},Relationship keyed by user ID; AdministratorTransitionResponse body should be 204.
+PUT,/v1/teams/{team_id}/members/{member_id},R12,PUT,/v1/teams/{team_id}/members/{user_id},Relationship keyed by user ID; drop AdministratorTransitionResponse; return 204.
+DELETE,/v1/teams/{team_id}/role-assignments/{role_id},,OK,OK,Relationship keyed by role ID removal; conformant.
+PUT,/v1/teams/{team_id}/role-assignments/{role_id},,OK,OK,Relationship keyed by role ID; no response body.
+GET,/v1/teams/{team_id}/roles,,GET,/v1/teams/{team_id}/role-assignments,Lists role assignments under a different noun than the item route; align naming.
+GET,/v1/technology-components,,OK,OK,Paginated tenant-scoped list.
+GET,/v1/technology-components/{component_id},,OK,OK,Identity read with header.
+PUT,/v1/technology-components/{component_id},R12,PUT,/v1/technology-components/{component_id},"Identity-addressed PUT; drop TechnologyComponentRegistration body, return 201 or 204."
+GET,/v1/technology-components/{component_id}/boundary-references,R1,GET,/v1/application-boundary-references?component_id={component_id},"If boundary reference has its own ID, flatten to root with component filter; confirm."
+GET,/v1/technology-components/{component_id}/revisions,,OK,OK,Paginated subordinate history without independent identity.
+GET,/v1/template-applications/{template_application_id},,OK,OK,Identity read with header.
+GET,/v1/tenant/provisioning-status,,OK,OK,Singular current-tenant status part selected by header; conformant.
+POST,/v1/tenants,R5;R8;R12,PUT,/v1/system/tenants/{tenant_id},"POST forbidden; platform create under /system with client-minted ID; 201 Location, no body."
+GET,/v1/tenants/mine,R8,GET,/v1/system/tenant-memberships,"Caller's memberships are platform-level, not tenant-scoped; move under /system."
+GET,/v1/tenants/{tenant_id},R2;R8,GET,/v1/system/tenants/{tenant_id},Tenant ID in path is scope-like; tenant is a platform resource listed under /system.
+PUT,/v1/training-campaigns/{campaign_id},R12,PUT,/v1/training-campaigns/{campaign_id},"Identity PUT; drop CampaignRegistration body, return 201 or 204."
+GET,/v1/training-requirements,,OK,OK,Paginated tenant-scoped list.
+PUT,/v1/training-requirements/revise-training-requirement/{command_id},R3;R4;R12,PUT,/v1/training-requirements/{requirement_id}/definition,"Verb segment with command_id; requirement_id absent from path; revision is named-part PUT, 204."
+GET,/v1/training-requirements/{requirement_id},,OK,OK,Identity read with header.
+PUT,/v1/training-requirements/{requirement_id},R12,PUT,/v1/training-requirements/{requirement_id},Identity PUT; drop TrainingRequirementRegistration body.
+GET,/v1/type-i-baselines/{type_i_baseline_id},R13,GET,/v1/type-i-baselines/{type_i_baseline_id},Tenant-scoped baseline read without Tenant-Id header; confirm and require the header.
+PUT,/v1/type-ii-periods/{period_id},R12,PUT,/v1/type-ii-periods/{period_id},"Identity PUT; drop OperationAcceptedResponse, return 201 or 204."
+PUT,/v1/type-ii-periods/{period_id}/amendments/{amendment_id}/cancellations/{command_id},R1;R3;R4,PUT,/v1/type-ii-period-amendments/{amendment_id}/status,Amendment has own ID so flatten; cancellation is status transition; drop command_id.
+PUT,/v1/type-ii-periods/{period_id}/amendments/{command_id},R1;R3;R12,PUT,/v1/type-ii-period-amendments/{amendment_id},"Amendment has own ID (cancel route uses it); client-mint it, period_id in body, 201 no body."
+GET,/v1/user-email-addresses,,GET,/v1/email-addresses/{email_address_id},Singular view at collection root with no identity; address by email-address ID.
+PUT,/v1/users/{user_id}/email-address-reservations/{command_id},R1;R3;R4,PUT,/v1/email-addresses/{email_address_id},Reservation is create under client-minted email ID; flatten; user_id in body.
+GET,/v1/users/{user_id}/email-addresses,R1,GET,/v1/email-addresses?user_id={user_id},Email addresses have own IDs (cancel-style identity); flatten to root with user filter.
+POST,/v1/waivers,R5;R12,PUT,/v1/waivers/{waiver_id},"POST forbidden; client-minted waiver ID; 201 Location, no body."
+GET,/v1/waivers/{waiver_id},,OK,OK,Identity read with header.
+POST,/v1/waivers/{waiver_id}/review,R4;R5,PUT,/v1/waivers/{waiver_id}/status,Review verb with POST; express decision as status transition.
+POST,/v1/waivers/{waiver_id}/revoke,R4;R5,PUT,/v1/waivers/{waiver_id}/status,Revoke verb with POST; status transition to revoked.
+GET,/v1/work,R11,GET,/v1/work,WorkQueueView not declared as Page; confirm and add cursor pagination if a list.
+GET,/v1/work-digest-preference,,OK,OK,Singleton preference read with header.
+PUT,/v1/work-digest-preference/changes/{command_id},R3;R12,PUT,/v1/work-digest-preference,"Command_id retry token in path; singleton replace; drop view body, return 204."
+GET,/v1/work-relationships,,OK,OK,Paginated tenant-scoped list.
+POST,/v1/work-relationships,R5;R12,PUT,/v1/work-relationships/{relationship_id},"POST forbidden; client-minted relationship ID; 201 Location, no body."
+GET,/v1/work-relationships/{relationship_id},,OK,OK,Identity read with header.
+POST,/v1/work-relationships/{relationship_id}/dates/correction,R4;R5,PUT,/v1/work-relationships/{relationship_id}/dates,Correction verb with POST; replace dates as named-part PUT.
+POST,/v1/work-relationships/{relationship_id}/department,R5,PUT,/v1/work-relationships/{relationship_id}/department,POST for a named field; use named-part PUT.
+POST,/v1/work-relationships/{relationship_id}/leave/end,R4;R5,PUT,/v1/work-relationships/{relationship_id}/leave,Verb path with POST; leave as named-part PUT with status body.
+POST,/v1/work-relationships/{relationship_id}/leave/start,R4;R5,PUT,/v1/work-relationships/{relationship_id}/leave,Verb path with POST; leave as named-part PUT with status body.
+POST,/v1/work-relationships/{relationship_id}/manager,R5,PUT,/v1/work-relationships/{relationship_id}/manager,POST for relationship change; use named-part PUT.
+POST,/v1/work-relationships/{relationship_id}/sponsor,R5,PUT,/v1/work-relationships/{relationship_id}/sponsor,POST for relationship change; use named-part PUT.
+POST,/v1/work-relationships/{relationship_id}/end,R4;R5,PUT,/v1/work-relationships/{relationship_id}/status,Verb path with POST; end is status transition to ended.
+POST,/v1/work-relationships/{relationship_id}/start,R4;R5,PUT,/v1/work-relationships/{relationship_id}/status,Verb path with POST; start is status transition to started.
+GET,/v1/work/digest,,OK,OK,Single digest read with header.
+GET,/v1/work/reminders,R11,GET,/v1/work/reminders,Returns IReadOnlyList; needs cursor pagination Page<T>.
+GET,/v1/work/{work_item_id},,OK,OK,Identity read with header.
+PUT,/v1/work/{work_item_id}/assignments/{command_id},R3;R12;R13,PUT,/v1/work/{work_item_id}/assignee,Command_id retry token; single assignee as named part; tenant-scoped write lacks Tenant-Id.
+PUT,/v1/work/{work_item_id}/claims/{command_id},R3;R4;R12;R13,PUT,/v1/work/{work_item_id}/assignee,"Claim is self-assignment; verb path and command_id; use assignee part, caller from auth; header missing."
+PUT,/v1/work/{work_item_id}/delegations/{command_id},R3;R4;R12;R13,PUT,/v1/work/{work_item_id}/assignee,"Delegation changes assignee; noun-verb path, command_id, view body, missing header."
+PUT,/v1/work/{work_item_id}/escalations/{command_id},R3;R4;R12;R13,PUT,/v1/work/{work_item_id}/status,Escalation is a status transition; drop command_id and view body; header missing.
+GET,/v1/workforce-observations,,OK,OK,Paginated tenant-scoped list.
+PUT,/v1/workforce-observations/{observation_id}/resolution,,OK,OK,Named-part PUT on observation identity; no response body.
+GET,/v1/workforce-reconciliation-observations,,OK,OK,Paginated tenant-scoped list.
+GET,/v1/workforce-roster-snapshot-as-of,,GET,/v1/workforce-roster-snapshots?as_of={date},Point-in-time read as a root segment; express as collection filter.
+GET,/v1/workforce-roster-snapshots,,OK,OK,Paginated tenant-scoped list.
+POST,/v1/workforce-roster-snapshots,R5;R12,PUT,/v1/workforce-roster-snapshots/{snapshot_id},"POST forbidden; client-minted snapshot ID; 201 Location, no body."
+GET,/v1/workforce-roster-snapshots/{snapshot_id},,OK,OK,Identity read with header.
+POST,/v1/workforce-roster-snapshots/{snapshot_id}/amendments,R4;R5;R12,PUT,/v1/workforce-roster-snapshots/{amended_snapshot_id},"Amendment creates successor snapshot; POST and amendments verb; client-minted ID, source in body."
+GET,/v1/workforce-roster-snapshots/{snapshot_id}/manifest-regeneration,R4;R10,GET,/v1/workforce-roster-snapshots/{snapshot_id}/manifest,"GET regenerates manifest (side effect) and uses verb path; read via GET, regeneration via PUT manifest."
+GET,/v1/workforce-source-observations,,OK,OK,Paginated tenant-scoped list.
+POST,/v1/workforce-source-observations,R5;R12,PUT,/v1/workforce-source-observations/{observation_id},"POST forbidden; client-minted observation ID; 201 Location, no body."
+GET,/v1/workforce-source-observations/{observation_id},,OK,OK,Identity read with header.
+PUT,/v1/workforce-source-observations/{observation_id}/decision,R4,PUT,/v1/workforce-source-observations/{observation_id}/status,Reconciliation decision is a lifecycle transition; express as status.
+GET,/v1/workforce-source-observations/{observation_id}/preview,R4,GET,/v1/workforce-source-observation-previews/{observation_id},Preview is a verb segment; expose as a preview resource keyed by observation ID.
