@@ -997,7 +997,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaPut<ReviseControlDraft>(
-            "/v1/controls/{control_id}/draft/revisions/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ReviseControlDraft>()
+            "/v1/controls/{control_id}/draft", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ReviseControlDraft>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaPut<DiscardControlDraft>(
@@ -1013,7 +1013,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<ListControlDraftRevisions, Page<ControlDraftRevisionView>>(
-            "/v1/controls/{control_id}/draft/revisions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/controls/{control_id}/draft-revisions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<GetControlDraftRevision, ControlDraftRevisionView>(
@@ -1038,19 +1038,19 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<ListControlVersions, Page<ControlVersionView>>(
-            "/v1/controls/{control_id}/versions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/control-versions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<GetControlVersion, ControlVersionView>(
-            "/v1/controls/{control_id}/versions/{version_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/control-versions/{version_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<ListControlDecisions, Page<ControlDecisionView>>(
-            "/v1/controls/{control_id}/decisions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/control-decisions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<GetControlDecision, ControlDecisionView>(
-            "/v1/controls/{control_id}/decisions/{decision_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/control-decisions/{decision_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     // Mapping writes, including review, are human decisions and stay HTTP-only.
@@ -1087,7 +1087,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<PreviewControlImpact, ControlImpactPreview>(
-            "/v1/controls/{control_id}/impact-preview", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/controls/{control_id}/impact", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     // Retirement approval is a human decision and stays HTTP-only.
@@ -1101,11 +1101,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaPut<DesignateControlOwnerPerson>(
-            "/v1/controls/{control_id}/draft/owner-person/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<DesignateControlOwnerPerson>()
+            "/v1/controls/{control_id}/draft-owner-person", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<DesignateControlOwnerPerson>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<GetControlDraftOwnerPerson, ControlDraftOwnerPersonView>(
-            "/v1/controls/{control_id}/draft/owner-person", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/controls/{control_id}/draft-owner-person", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     // Criterion applicability decisions are human decisions; writes stay HTTP-only.
@@ -1534,7 +1534,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Readiness");
     app.MapPortiaPut<ProposeControlOperatingPlan, ControlOperatingPlanView>(
-            "/v1/controls/{control_id}/operating-plan/proposals/{plan_version_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ProposeControlOperatingPlan>()
+            "/v1/control-operating-plan-versions/{plan_version_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ProposeControlOperatingPlan>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
     app.MapPortiaPost<PreviewControlOperatingPlan, ControlOperatingPlanPreview>(
@@ -1562,11 +1562,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
     app.MapPortiaGet<ListControlOccurrences, Page<ControlOccurrenceView>>(
-            "/v1/controls/{control_id}/occurrences", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/control-occurrences", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
     app.MapPortiaGet<GetControlOccurrence, ControlOccurrenceView>(
-            "/v1/controls/{control_id}/occurrences/{occurrence_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/control-occurrences/{occurrence_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
     app.MapPortiaPut<AttestControlOccurrence, ControlOccurrenceView>(
@@ -1582,7 +1582,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
     app.MapPortiaPut<StartControlEvaluation, ControlEvaluationView>(
-            "/v1/controls/{control_id}/evaluations/{evaluation_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<StartControlEvaluation>()
+            "/v1/control-evaluations/{evaluation_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<StartControlEvaluation>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
     app.MapPortiaPost<DefineControlEvaluationPlan, PortiaCreateOutcome<ControlEvaluationPlanVersionView>>(
@@ -1592,19 +1592,19 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Control evaluations");
     app.MapPortiaGet<ListControlEvaluationPlanVersions,
             Page<ControlEvaluationPlanVersionView>>(
-            "/v1/controls/{control_id}/evaluation-plan/versions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/control-evaluation-plan-versions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
     app.MapPortiaGet<GetControlEvaluationPlanVersion, ControlEvaluationPlanVersionView>(
-            "/v1/controls/{control_id}/evaluation-plan/versions/{plan_version_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/control-evaluation-plan-versions/{plan_version_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
     app.MapPortiaGet<ListControlEvaluations, Page<ControlEvaluationView>>(
-            "/v1/controls/{control_id}/evaluations", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/control-evaluations", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
     app.MapPortiaGet<GetControlEvaluation, ControlEvaluationView>(
-            "/v1/controls/{control_id}/evaluations/{evaluation_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/control-evaluations/{evaluation_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control evaluations");
     app.MapPortiaPut<RecordControlEvaluationStep, ControlEvaluationView>(
@@ -1701,7 +1701,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
     app.MapPortiaPut<AddCorrectiveAction, OperationAcceptedResponse>(
-            "/v1/findings/{finding_id}/corrective-actions/{action_id}",
+            "/v1/corrective-actions/{action_id}",
             config => config.FromHeader(x => x.TenantId, "Tenant-Id")
                 .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
                 .OnNativeResult((http, result) =>
@@ -1766,7 +1766,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Auditor requests");
     app.MapPortiaGet<ListRequestResponses, Page<AuditorRequestResponseView>>(
-            "/v1/auditor-requests/{auditor_request_id}/responses", endpoint => endpoint
+            "/v1/audit-responses", endpoint => endpoint
                 .OnBind(Program.BindAuditorRequestResponsesRead)
                 .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Header, required: true)
                 .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Query, required: true)
@@ -1800,7 +1800,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Auditor requests");
     app.MapPortiaPut<ReviseAuditResponseDraft>(
-            "/v1/auditor-requests/{request_id}/responses/{response_id}/revise-audit-response-draft/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ReviseAuditResponseDraft>()
+            "/v1/audit-responses/{response_id}/draft", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ReviseAuditResponseDraft>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Auditor requests");
     app.MapPortiaPut<SubmitAuditResponse>(
@@ -1834,7 +1834,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Auditor requests");
     app.MapPortiaPut<CreateAuditResponseDraft, OperationAcceptedResponse>(
-            "/v1/auditor-requests/{request_id}/create-audit-response-draft/{response_id}",
+            "/v1/audit-responses/{response_id}",
             config => config.FromHeader(x => x.TenantId, "Tenant-Id")
                 .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
                 .OnNativeResult((http, result) =>
@@ -1848,7 +1848,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Auditor requests");
     app.MapPortiaPut<RecordAuditorRequestComment, OperationAcceptedResponse>(
-            "/v1/auditor-requests/{request_id}/record-auditor-request-comment/{comment_id}",
+            "/v1/auditor-request-comments/{comment_id}",
             config => config.FromHeader(x => x.TenantId, "Tenant-Id")
                 .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
                 .OnNativeResult((http, result) =>
@@ -1910,11 +1910,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaGet<ListAccessPopulations, Page<AccessPopulationSummaryView>>(
-            "/v1/system-instances/{system_instance_id}/access-populations", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/access-populations?system_instance_id={system_instance_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaPut<ExemptMissingAccessPopulation, AccessPopulationExceptionView>(
-            "/v1/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions/{exception_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ExemptMissingAccessPopulation>()
+            "/v1/access-population-exceptions/{exception_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ExemptMissingAccessPopulation>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaGet<GetAccessReviewCoverage, AccessReviewCoverageView>(
@@ -1934,7 +1934,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaPut<ProposeAccessExpectation, AccessExpectationView>(
-            "/v1/applications/{application_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ProposeAccessExpectation>()
+            "/v1/access-expectations/{expectation_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ProposeAccessExpectation>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaPut<ApproveAccessExpectation, AccessExpectationView>(
@@ -1946,7 +1946,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaGet<ListAccessExpectations, AccessExpectationsView>(
-            "/v1/system-instances/{system_instance_id}/access-expectations", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/access-expectations?system_instance_id={system_instance_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaPut<LaunchAccessReviewCampaign, AccessReviewCampaignRegistration>(
@@ -2458,7 +2458,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Applications");
     app.MapPortiaPut<ReviseApplication>(
-            "/v1/applications/revise-application/{command_id}", endpoint => endpoint
+            "/v1/applications/{application_id}/details", endpoint => endpoint
                 .OnBind(Program.BindApplicationRevisionAsync)
                 .Accepts<ApplicationRevisionHttpBody>("application/json", isOptional: true, "*/*")
                 .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Header, required: true)
@@ -2491,7 +2491,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Applications");
     app.MapPortiaGet<ListApplicationRelationships, ApplicationRelationshipPage>(
-            "/v1/applications/{application_id}/relationships", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/application-relationships?application_id={application_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("List directed relationships from an application")
         .WithDescription("relationship_revision, expected_relationship_revision, and minimum_revision " +
@@ -2510,7 +2510,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Applications");
     app.MapPortiaGet<ListApplicationRevisions, Page<ApplicationRevisionView>>(
-            "/v1/applications/{application_id}/revisions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/application-revisions?application_id={application_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Applications");
     app.MapPortiaPost<RecordApplicationRelationship, PortiaCreateOutcome<ApplicationRelationshipRegistration>>(
@@ -2525,7 +2525,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithSummary("Remove a directed application relationship")
         .WithTags("Applications");
     app.MapPortiaGet<ListDirectedApplicationRelationships, Page<ApplicationRelationshipView>>(
-            "/v1/applications/{application_id}/relationships/directed", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/application-relationships?application_id={application_id}&direction=outgoing", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("List incoming or outgoing application relationships")
         .WithTags("Applications");
@@ -2535,26 +2535,26 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithSummary("Approve a proposed successor after a complete current impact review")
         .WithTags("Applications");
     app.MapPortiaPut<DeclareSystemInstance, SystemInstanceRegistration>(
-            "/v1/applications/{application_id}/system-instances/{system_instance_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<DeclareSystemInstance>()
+            "/v1/system-instances/{system_instance_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<DeclareSystemInstance>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("System instances");
     app.MapPortiaGet<GetSystemInstance, SystemInstanceView>(
-            "/v1/applications/{application_id}/system-instances/{system_instance_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/system-instances/{system_instance_id}?application_id={application_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("System instances");
     app.MapPortiaGet<ListSystemInstances, Page<SystemInstanceView>>(
-            "/v1/applications/{application_id}/system-instances", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/system-instances?application_id={application_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("System instances");
     app.MapPortiaGet<ListApplicationBoundaryReferences,
             Page<ApplicationBoundaryReferenceView>>(
-            "/v1/applications/{application_id}/boundary-references", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/application-boundary-references?application_id={application_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("List current draft and approved boundary references for an application")
         .WithTags("Applications");
     app.MapPortiaGet<ListSystemInstanceBoundaryReferences,
             Page<ApplicationBoundaryReferenceView>>(
-            "/v1/applications/{application_id}/system-instances/{system_instance_id}/boundary-references", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/application-boundary-references?system_instance_id={system_instance_id}&application_id={application_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("List current draft and approved boundary references for a system instance")
         .WithTags("System instances");
@@ -2584,12 +2584,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithSummary("Approve an effective-dated access-review scope decision")
         .WithTags("System instances");
     app.MapPortiaGet<GetAccessReviewScope, AccessReviewScopeView>(
-            "/v1/applications/{application_id}/system-instances/{system_instance_id}/access-review-scope", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/system-instances/{system_instance_id}/access-review-scope?application_id={application_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Read the effective access-review scope decision and its history")
         .WithTags("System instances");
     app.MapPortiaGet<ListAccessReviewScopes, Page<AccessReviewScopeStatusView>>(
-            "/v1/applications/{application_id}/access-review-scopes", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/access-review-scopes?application_id={application_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("List the projected access-review scope status of an application's system instances")
         .WithTags("Applications");
@@ -2632,7 +2632,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithSummary("Read bounded rejected-item findings from retained import rows")
         .WithTags("Application imports");
     app.MapPortiaPut<AcceptApplicationImport, OperationAcceptedResponse>(
-            "/v1/application-imports/{batch_id}/acceptances/{command_id}",
+            "/v1/application-imports/{batch_id}/status",
             config => config.FromHeader(x => x.TenantId, "Tenant-Id")
                 .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
                 .OnNativeResult((http, result) =>
@@ -2670,20 +2670,20 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Application imports");
     app.MapPortiaGet<ListApplicationImportRows, Page<ApplicationImportRowView>>(
-            "/v1/application-imports/{batch_id}/rows", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/application-import-rows?batch_id={batch_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Application imports");
     app.MapPortiaGet<PreviewApplicationImport, Page<ApplicationImportPreviewRow>>(
-            "/v1/application-imports/{batch_id}/preview", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/application-import-rows?batch_id={batch_id}&state=preview", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Application imports");
     app.MapPortiaGet<PreviewMissingApplicationImportRows, Page<ApplicationImportMissingRow>>(
-            "/v1/application-imports/{batch_id}/preview/missing", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/application-import-rows?batch_id={batch_id}&state=missing", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Preview complete-source omissions as blocked retirement proposals")
         .WithTags("Application imports");
     app.MapPortiaGet<PreviewApplicationImportOmissionProposal, ApplicationImportOmissionPreview>(
-            "/v1/application-imports/{batch_id}/omission-proposal/preview", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/application-imports/{batch_id}/omission-proposal?view=preview", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Application imports");
     app.MapPortiaPut<FreezeApplicationImportOmissionProposal>(
@@ -2732,11 +2732,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaGet<ListProgramBoundaries, Page<BoundaryView>>(
-            "/v1/boundaries", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/boundaries?program_id={program_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaPut<ReviseBoundaryDraft>(
-            "/v1/boundaries/{boundary_id}/drafts/{draft_version_id}/revisions/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ReviseBoundaryDraft>()
+            "/v1/boundary-versions/{draft_version_id}/content", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ReviseBoundaryDraft>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaPut<DiscardBoundaryDraft>(
@@ -2765,11 +2765,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithDescription("The type query value must be control_owner, evidence_contributor, assigned_reviewer, access_reviewer, corrective_action_owner, or policy_approver.")
         .WithTags("Responsibilities");
     app.MapPortiaGet<GetBoundaryVersion, BoundaryVersionView>(
-            "/v1/boundaries/{boundary_id}/versions/{version_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/boundary-versions/{version_id}?boundary_id={boundary_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaGet<ListBoundaryVersions, Page<BoundaryVersionView>>(
-            "/v1/boundaries/{boundary_id}/versions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/boundary-versions?boundary_id={boundary_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaGet<GetEffectiveBoundaryVersion, BoundaryVersionView>(
@@ -2777,11 +2777,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaGet<GetBoundaryDecision, BoundaryDecisionView>(
-            "/v1/boundaries/{boundary_id}/decisions/{decision_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/boundary-decisions/{decision_id}?boundary_id={boundary_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaGet<ListBoundaryDecisions, Page<BoundaryDecisionView>>(
-            "/v1/boundaries/{boundary_id}/decisions", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/boundary-decisions?boundary_id={boundary_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaGet<GetSeparationOfDutiesWaiver, SeparationOfDutiesWaiverView>(
@@ -2838,7 +2838,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Snapshots");
     app.MapPortiaGet<PreviewBoundaryImpact, BoundaryImpactPreview>(
-            "/v1/boundaries/{boundary_id}/drafts/{draft_version_id}/impact-preview", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
+            "/v1/boundary-versions/{draft_version_id}/impact?boundary_id={boundary_id}", endpoint => endpoint.FromHeader(x => x.TenantId, "Tenant-Id"))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaPut<ReviewBoundary>(
@@ -3032,7 +3032,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Audit packages");
     app.MapPortiaPut<RecordAuditPackageDelivery, OperationAcceptedResponse>(
-            "/v1/audit-packages/{package_id}/versions/{package_version}/deliveries/{delivery_id}",
+            "/v1/audit-package-deliveries/{delivery_id}",
             config => config.FromHeader(x => x.TenantId, "Tenant-Id")
                 .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
                 .OnNativeResult((http, result) =>
@@ -3050,7 +3050,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Examinations");
     app.MapPortiaPut<ReviseExaminationEngagement>(
-            "/v1/examinations/{examination_id}/revisions", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ReviseExaminationEngagement>()
+            "/v1/examinations/{examination_id}/engagement", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<ReviseExaminationEngagement>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Examinations");
     app.MapPortiaGet<GetExaminationEngagement, ExaminationEngagementView>(
@@ -3308,11 +3308,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("System descriptions");
     app.MapPortiaPut<BindSystemDescriptionSources>(
-            "/v1/system-descriptions/{description_id}/bind-system-description-sources/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<BindSystemDescriptionSources>()
+            "/v1/system-descriptions/{description_id}/sources", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<BindSystemDescriptionSources>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("System descriptions");
     app.MapPortiaPut<BindSystemDescriptionToExamination>(
-            "/v1/system-descriptions/{description_id}/bind-system-description-to-examination/{command_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<BindSystemDescriptionToExamination>()
+            "/v1/system-descriptions/{description_id}/examinations/{examination_id}", config => config.FromHeader(x => x.TenantId, "Tenant-Id").OnNativeResult()).WithNativeFirstResponse<BindSystemDescriptionToExamination>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("System descriptions");
     app.MapPortiaPut<CreateSystemDescriptionDraft>(
