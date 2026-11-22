@@ -14,7 +14,7 @@
     <PackageVersion Include="Cntryl.Portia.Analyzers" Version="0.14.7" />
     <PackageVersion Include="Cntryl.Portia.AspNetCore" Version="0.14.7" />
     <PackageVersion Include="Cntryl.Portia.Cassie" Version="0.14.7" />
-    <PackageVersion Include="Cntryl.Portia.Communications.Abstractions" Version="0.14.7" />
+    <PackageVersion Include="Cntryl.Portia.Communications.Abstractions" Version="0.14.9" />
     <PackageVersion Include="Cntryl.Portia.Communications.Aws" Version="0.14.7" />
     <PackageVersion Include="Cntryl.Portia.Fitz" Version="0.14.7" />
     <PackageVersion Include="Cntryl.Portia.Mcp" Version="0.14.7" />
